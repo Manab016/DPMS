@@ -8,8 +8,12 @@
     <!-- SheetJS for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
-        /* প্রিন্ট করার সময় শুধু আইডি কার্ডটি সঠিক মাপে প্রিন্ট করার জন্য */
+        /* প্রিন্ট করার সময় ব্যাকগ্রাউন্ড কালার এবং সঠিক মাপ ঠিক রাখার জন্য */
         @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
             body * {
                 visibility: hidden;
             }
@@ -78,10 +82,6 @@
             
             <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm">
                 <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাশিকারী</span>
-                <div class="flex gap-2">
-                    <span class="bg-amber-700 px-2 py-0.5 rounded text-sm">+</span>
-                    <span>▼</span>
-                </div>
             </div>
 
             <!-- প্রথম সারি: মোট সদস্য ও মোট চাঁদা -->
@@ -96,14 +96,6 @@
                     <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
                     <div class="text-2xl font-bold mt-1">₹0</div>
                 </div>
-            </div>
-
-            <div class="bg-indigo-600 text-white p-4 rounded-xl shadow-md flex justify-between items-center">
-                <div>
-                    <div class="text-xs font-medium opacity-90">দায়িত্ব বণ্টন সংগ্রহ</div>
-                    <div class="text-2xl font-bold mt-1">₹0</div>
-                </div>
-                <div class="text-3xl opacity-80">📋</div>
             </div>
 
             <!-- অন্যান্য কার্ডগুলো -->
@@ -144,7 +136,7 @@
             <!-- অ্যাকশন বাটন -->
             <div class="flex flex-wrap gap-2 mb-4">
                 <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">
-                    ➕ যোগ
+                    ➕ যোগ করুন
                 </button>
                 <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">
                     📥 এক্সেল এক্সপোর্ট
@@ -202,6 +194,7 @@
         <div id="section-settings" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
             <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
             <h2 class="text-lg font-bold text-gray-800 mb-2">⚙️ সেটিংস প্যানেল</h2>
+            <p class="text-sm text-gray-600">এখানে ভবিষ্যতে আইডি, পাসওয়ার্ড ও লোগো পরিবর্তনের অপশন যুক্ত করা হবে।</p>
         </div>
 
     </div>
@@ -233,13 +226,13 @@
             <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর (ঐচ্ছিক - ১০ ডিজিট)</label>
             <input type="number" id="newMemberMobile" placeholder="১০ ডিজিটের মোবাইল নম্বর" class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500">
             
-            <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি (গ্যালারি থেকে সিলেক্ট করুন)</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি</label>
             <input type="file" id="newMemberPhoto" accept="image/*" onchange="processImage(this, 'photoPreview', 300, 300)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50 cursor-pointer">
             <div class="mb-3 flex justify-center">
                 <img id="photoPreview" class="w-16 h-16 object-cover rounded-full border border-gray-300 hidden" alt="Photo Preview">
             </div>
 
-            <label class="block text-xs font-semibold text-gray-600 mb-1">স্বাক্ষর (গ্যালারি থেকে সিলেক্ট করুন)</label>
+            <label class="block text-xs font-semibold text-gray-600 mb-1">স্বাক্ষর</label>
             <input type="file" id="newMemberSignature" accept="image/*" onchange="processImage(this, 'sigPreview', 300, 100)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50 cursor-pointer">
             <div class="mb-4 flex justify-center">
                 <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded hidden px-2 py-1" alt="Signature Preview">
@@ -252,17 +245,15 @@
         </div>
     </div>
 
-    <!-- সঠিক আইডি কার্ড মাপ (Standard ID Card Size: 3.375in x 2.125in / 85.6mm x 54mm) -->
+    <!-- আইডি কার্ড মডাল -->
     <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
         <div id="idCardBox" class="bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col justify-between relative">
             
-            <!-- হেডার অংশ (সাধারণ বনাম ভিআইপি থিম) -->
-            <div id="idCardHeader" class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center transition-all">
+            <div id="idCardHeader" class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center">
                 <h4 id="idCardHeaderTitle" class="font-bold text-[11px] leading-tight">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
                 <p id="idCardHeaderSub" class="text-[9px] opacity-90 leading-tight">অফিশিয়াল পরিচয়পত্র</p>
             </div>
 
-            <!-- মূল বডি (বড় ও ক্লিয়ার রাউন্ড ছবি এবং তথ্য) -->
             <div class="px-3 py-1 flex items-center gap-3 bg-amber-50/20 my-auto">
                 <div class="shrink-0">
                     <img id="idCardPhoto" src="" class="w-[72px] h-[72px] object-cover rounded-full border-2 border-orange-500 shadow-sm" alt="Member Photo">
@@ -279,21 +270,17 @@
                 </div>
             </div>
 
-            <!-- ফুটার অংশ: আরও সুন্দর ও প্রফেশনাল স্বাক্ষর লেবেল -->
             <div class="bg-gray-50 px-3 py-1.5 border-t flex justify-between items-end text-[9px]">
-                <!-- সাধারণ সদস্যের ক্ষেত্রে বাম দিকের স্বাক্ষর -->
                 <div id="normalMemberSigContainer" class="text-center w-24">
                     <img id="idCardSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5" alt="Signature">
                     <div class="border-t border-gray-400 text-gray-700 font-semibold text-[8px] tracking-tight">সদস্যের স্বাক্ষর</div>
                 </div>
                 
-                <!-- সভাপতির একক স্বাক্ষর কন্টেইনার (VIP ID Card-এর জন্য) -->
                 <div id="presidentSingleSigContainer" class="text-center w-full hidden">
                     <img id="idCardPresSingleSig" src="" class="h-6 max-w-[100px] object-contain mx-auto mb-0.5" alt="President Signature">
                     <div class="border-t border-orange-500 text-orange-700 font-bold text-[8.5px] max-w-[120px] mx-auto tracking-tight">মাননীয় সভাপতি</div>
                 </div>
 
-                <!-- সাধারণ সদস্যের ক্ষেত্রে ডান দিকের সভাপতির স্বাক্ষর -->
                 <div class="text-center w-24" id="presidentSigContainer">
                     <img id="idCardPresSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5 hidden" alt="President Signature">
                     <div id="idCardPresPlaceholder" class="h-5 flex items-center justify-center text-[7px] text-gray-400 italic">প্রযোজ্য নয়</div>
@@ -303,9 +290,8 @@
 
         </div>
 
-        <!-- প্রিন্ট এবং বন্ধ করার বাটন (প্রিন্টের সময় লুকানো থাকবে) -->
         <div class="absolute bottom-5 flex gap-2 no-print">
-            <button onclick="triggerPrint()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md">🖨️ প্রিন্ট করুন</button>
+            <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700 shadow-md">🖨️ প্রিন্ট করুন</button>
             <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-700 shadow-md">বন্ধ করুন</button>
         </div>
     </div>
@@ -333,7 +319,6 @@
         let processedPhotoBase64 = "";
         let processedSigBase64 = "";
 
-        // গ্লোবাল ইমেজ প্রসেসিং
         window.processImage = function(input, previewId, targetWidth, targetHeight) {
             const file = input.files[0];
             if (!file) return;
@@ -380,20 +365,6 @@
             reader.readAsDataURL(file);
         }
 
-        // নিরাপদ প্রিন্ট ফাংশন (Hopweb বা WebView প্রটেকশন হ্যান্ডেল করার জন্য)
-        window.triggerPrint = function() {
-            try {
-                if (window.self !== window.top || navigator.userAgent.includes("WebView")) {
-                    window.print();
-                } else {
-                    window.print();
-                }
-            } catch (err) {
-                alert("আপনার অ্যাপ্লিকেশনে সরাসরি প্রিন্ট করার অপশন ব্লক করা আছে। দয়া করে পেজটি ক্রোম ব্রাউজারে ওপেন করুন।");
-            }
-        }
-
-        // অথেন্টিকেশন চেক
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 loadMembers();
@@ -402,14 +373,12 @@
             }
         });
 
-        // লগআউট
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth).then(() => {
                 window.location.replace("index.html");
             });
         });
 
-        // ফায়ারবেস থেকে সদস্য তালিকা লোড
         function loadMembers() {
             onSnapshot(collection(db, "members"), (snapshot) => {
                 allMembersData = [];
@@ -429,7 +398,6 @@
             });
         }
 
-        // টেব্ল রেন্ডার
         window.renderTable = function(data) {
             const tbody = document.getElementById('memberTableBody');
             tbody.innerHTML = '';
@@ -456,7 +424,7 @@
                         ${member.signature ? `<img src="${member.signature}" class="h-6 object-contain mx-auto border px-1">` : '<span class="text-xs text-gray-400">নেই</span>'}
                     </td>
                     <td class="p-2.5 text-center flex justify-center gap-1">
-                        <button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition" title="ID Card">আইডি</button>
+                        <button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">আইডি</button>
                         <button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">এডিট</button>
                         <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">ডিলিট</button>
                     </td>
@@ -465,7 +433,6 @@
             });
         }
 
-        // সার্চ ও ফিল্টার
         window.filterMembers = function() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allMembersData.filter(m => {
@@ -479,7 +446,6 @@
             renderTable(filtered);
         }
 
-        // নতুন সদস্য যোগ করার মোডাল খোলা
         window.openAddModal = function() {
             document.getElementById('modalTitle').innerText = "নতুন সদস্য যুক্ত করুন";
             document.getElementById('editMemberDocId').value = "";
@@ -494,10 +460,8 @@
             processedPhotoBase64 = "";
             processedSigBase64 = "";
             document.getElementById('addMemberModal').classList.remove('hidden');
-            history.pushState({ modal: 'add' }, "", "#add-member");
         }
 
-        // এডিট করার মোডাল খোলা
         window.openEditModal = function(docId) {
             const member = allMembersData.find(m => m.id === docId);
             if(!member) return;
@@ -528,10 +492,8 @@
             }
 
             document.getElementById('addMemberModal').classList.remove('hidden');
-            history.pushState({ modal: 'edit' }, "", "#edit-member");
         }
 
-        // সেভ বা আপডেট করা
         window.saveOrUpdateMember = async function() {
             const docId = document.getElementById('editMemberDocId').value;
             const name = document.getElementById('newMemberName').value.trim();
@@ -584,7 +546,6 @@
             }
         }
 
-        // আইডি কার্ড পপআপ দেখানো (সভাপতির জন্য বিশেষ VIP ID Card লজিক)
         window.openIdCard = function(docId) {
             const member = allMembersData.find(m => m.id === docId);
             if(!member) return;
@@ -659,14 +620,12 @@
             }
 
             document.getElementById('idCardModal').classList.remove('hidden');
-            history.pushState({ modal: 'idcard' }, "", "#id-card");
         }
 
         window.closeIdCardModal = function() {
             document.getElementById('idCardModal').classList.add('hidden');
         }
 
-        // সদস্য ডিলিট
         window.deleteMember = async function(docId) {
             if(confirm("আপনি কি নিশ্চিতভাবে এই সদস্যকে ডিলিট করতে চান?")) {
                 try {
@@ -677,7 +636,6 @@
             }
         }
 
-        // এক্সেল এক্সপোর্ট
         window.exportToExcel = function() {
             if(allMembersData.length === 0) {
                 alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
@@ -699,11 +657,9 @@
         }
     </script>
 
-    <!-- ট্যাব পরিবর্তন, মিনিমাইজ, ব্যাক বাটন এবং মডাল কন্ট্রোল স্ক্রিপ্ট -->
+    <!-- ট্যাব পরিবর্তন ও ইউজার ইন্টারফেস স্ক্রিপ্ট -->
     <script>
-        let currentActiveTab = 'dashboard';
-
-        function switchTab(tabName, pushState = true) {
+        function switchTab(tabName) {
             const tabs = ['dashboard', 'member', 'subscription', 'expense', 'booking', 'sales', 'treasurer', 'settings'];
             tabs.forEach(t => {
                 const el = document.getElementById('section-' + t);
@@ -713,35 +669,8 @@
             const targetSection = document.getElementById('section-' + tabName);
             if(targetSection) targetSection.classList.remove('hidden');
             
-            currentActiveTab = tabName;
-
-            if (pushState && tabName !== 'dashboard') {
-                history.pushState({ tab: tabName }, "", "#" + tabName);
-            }
-
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
-        // মোবাইল ব্যাক বাটন হ্যান্ডেল করার লজিক
-        window.addEventListener('popstate', function(event) {
-            const addModal = document.getElementById('addMemberModal');
-            const idCardModal = document.getElementById('idCardModal');
-            
-            if (!addModal.classList.contains('hidden')) {
-                addModal.classList.add('hidden');
-                return;
-            }
-            if (!idCardModal.classList.contains('hidden')) {
-                idCardModal.classList.add('hidden');
-                return;
-            }
-
-            if (currentActiveTab !== 'dashboard') {
-                switchTab('dashboard', false);
-            }
-        });
-
-        window.history.replaceState({ tab: 'dashboard' }, "", "#dashboard");
 
         function toggleQuickMenu() {
             const menuContent = document.getElementById('quickMenuContent');
@@ -762,4 +691,3 @@
     </script>
 </body>
 </html>
-,
