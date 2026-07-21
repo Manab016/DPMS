@@ -8,6 +8,14 @@
     <!-- SheetJS for Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
+        /* টেবিলের সেলগুলোর ডেটা মিডল অ্যালাইনমেন্ট এবং অটো-ফিট সাইজ করার জন্য */
+        #memberTableBody td, #memberTableBody th {
+            text-align: center;
+            vertical-align: middle;
+            white-space: nowrap;
+            width: auto;
+        }
+
         /* প্রিন্ট করার সময় ব্যাকগ্রাউন্ড কালার এবং সঠিক মাপ ঠিক রাখার জন্য */
         @media print {
             * {
@@ -81,7 +89,7 @@
         <div id="section-dashboard" class="space-y-3">
             
             <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm">
-                <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাশিকারী</span>
+                <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাধিকারী</span>
             </div>
 
             <!-- প্রথম সারি: মোট সদস্য ও মোট চাঁদা -->
@@ -153,14 +161,14 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 border-b">
-                            <th class="p-2.5 border-r w-12 text-center">ID</th>
-                            <th class="p-2.5 border-r">ছবি</th>
-                            <th class="p-2.5 border-r">নাম</th>
-                            <th class="p-2.5 border-r">গ্রাম</th>
-                            <th class="p-2.5 border-r">পদ</th>
-                            <th class="p-2.5 border-r">মোবাইল</th>
-                            <th class="p-2.5 border-r">স্বাক্ষর</th>
-                            <th class="p-2.5 text-center">অ্যাকশন</th>
+                            <th class="p-2.5 border-r text-center align-middle">ID</th>
+                            <th class="p-2.5 border-r text-center align-middle">ছবি</th>
+                            <th class="p-2.5 border-r text-center align-middle">নাম</th>
+                            <th class="p-2.5 border-r text-center align-middle">গ্রাম</th>
+                            <th class="p-2.5 border-r text-center align-middle">পদ</th>
+                            <th class="p-2.5 border-r text-center align-middle">মোবাইল</th>
+                            <th class="p-2.5 border-r text-center align-middle">স্বাক্ষর</th>
+                            <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
                         </tr>
                     </thead>
                     <tbody id="memberTableBody">
@@ -314,7 +322,7 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
-        // ব্রাউজার বা ট্যাব বন্ধ করলে লগইন সেশন মুছে যাবে (লগআউট সমস্যা সমাধান)
+        // ব্রাউজার বা ট্যাব বন্ধ করলে লগইন সেশন মুছে যাবে
         setPersistence(auth, browserSessionPersistence);
 
         const db = getFirestore(app);
@@ -322,6 +330,10 @@
         let allMembersData = [];
         let processedPhotoBase64 = "";
         let processedSigBase64 = "";
+
+        // পেজ লোড হওয়ার সাথে সাথে ড্যাশবোর্ডের জন্য হিস্ট্রি লক সেটআপ
+        window.history.replaceState({ page: "dashboard" }, "", window.location.href);
+        window.history.pushState({ page: "dashboard" }, "", window.location.href);
 
         window.processImage = function(input, previewId, targetWidth, targetHeight) {
             const file = input.files[0];
@@ -416,18 +428,18 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-b', 'hover:bg-gray-50');
                 tr.innerHTML = `
-                    <td class="p-2.5 border-r font-bold text-orange-600 text-center">${member.autoId}</td>
-                    <td class="p-2.5 border-r text-center">
+                    <td class="p-2.5 border-r font-bold text-orange-600 text-center align-middle whitespace-nowrap">${member.autoId}</td>
+                    <td class="p-2.5 border-r text-center align-middle whitespace-nowrap">
                         ${member.photo ? `<img src="${member.photo}" class="w-9 h-9 object-cover rounded-full mx-auto border">` : '<span class="text-xs text-gray-400">নেই</span>'}
                     </td>
-                    <td class="p-2.5 border-r font-medium text-gray-800">${member.name || '-'}</td>
-                    <td class="p-2.5 border-r text-gray-700">${member.village || '-'}</td>
-                    <td class="p-2.5 border-r text-gray-700">${member.role || 'সাধারণ সদস্য'}</td>
-                    <td class="p-2.5 border-r text-gray-600">${member.mobile || '-'}</td>
-                    <td class="p-2.5 border-r text-center">
+                    <td class="p-2.5 border-r font-medium text-gray-800 text-center align-middle whitespace-nowrap">${member.name || '-'}</td>
+                    <td class="p-2.5 border-r text-gray-700 text-center align-middle whitespace-nowrap">${member.village || '-'}</td>
+                    <td class="p-2.5 border-r text-gray-700 text-center align-middle whitespace-nowrap">${member.role || 'সাধারণ সদস্য'}</td>
+                    <td class="p-2.5 border-r text-gray-600 text-center align-middle whitespace-nowrap">${member.mobile || '-'}</td>
+                    <td class="p-2.5 border-r text-center align-middle whitespace-nowrap">
                         ${member.signature ? `<img src="${member.signature}" class="h-6 object-contain mx-auto border px-1">` : '<span class="text-xs text-gray-400">নেই</span>'}
                     </td>
-                    <td class="p-2.5 text-center flex justify-center gap-1">
+                    <td class="p-2.5 text-center align-middle whitespace-nowrap flex justify-center gap-1">
                         <button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">আইডি</button>
                         <button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">এডিট</button>
                         <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">ডিলিট</button>
@@ -464,6 +476,7 @@
             processedPhotoBase64 = "";
             processedSigBase64 = "";
             document.getElementById('addMemberModal').classList.remove('hidden');
+            window.history.pushState({ modalOpen: true }, "");
         }
 
         window.openEditModal = function(docId) {
@@ -496,6 +509,7 @@
             }
 
             document.getElementById('addMemberModal').classList.remove('hidden');
+            window.history.pushState({ modalOpen: true }, "");
         }
 
         window.saveOrUpdateMember = async function() {
@@ -624,21 +638,51 @@
             }
 
             document.getElementById('idCardModal').classList.remove('hidden');
-            
-            // মোবাইলের ব্যাক বাটন প্রেস করলে যেন ওয়েবসাইট থেকে বের না হয়ে মডাল বন্ধ হয়
-            window.history.pushState({modalOpen: true}, "");
+            window.history.pushState({ modalOpen: true }, "");
         }
 
         window.closeIdCardModal = function() {
-            document.getElementById('idCardModal').classList.add('hidden');
-        }
-
-        // মোবাইলের ব্যাক বাটন কন্ট্রোল
-        window.addEventListener('popstate', function(event) {
             const modal = document.getElementById('idCardModal');
             if (!modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
+                window.history.back();
             }
+        }
+
+        window.closeAddModal = function() {
+            const modal = document.getElementById('addMemberModal');
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+                window.history.back();
+            }
+        }
+
+        // সঠিক ব্যাক বাটন ও ট্যাব নেভিগেশন লজিক
+        window.addEventListener('popstate', function(event) {
+            const idCardModal = document.getElementById('idCardModal');
+            const addModal = document.getElementById('addMemberModal');
+
+            if (!idCardModal.classList.contains('hidden')) {
+                idCardModal.classList.add('hidden');
+                window.history.pushState({ modalOpen: true }, "");
+                return;
+            }
+
+            if (!addModal.classList.contains('hidden')) {
+                addModal.classList.add('hidden');
+                window.history.pushState({ modalOpen: true }, "");
+                return;
+            }
+
+            // যদি কোনো সাব-ট্যাবে থাকা অবস্থায় ব্যাক করা হয়, তবে ড্যাশবোর্ডে নিয়ে আসবে
+            const dashboardSection = document.getElementById('section-dashboard');
+            if (dashboardSection.classList.contains('hidden')) {
+                switchTab('dashboard', false); // সাবট্যাব থেকে হোমে ফিরবে
+                return;
+            }
+
+            // একদম হোম ড্যাশবোর্ডে থাকলে ব্যাক করলে যাতে হুট করে অ্যাপ থেকে বের না হয়ে যায়
+            window.history.pushState({ page: "dashboard" }, "", window.location.href);
         });
 
         window.deleteMember = async function(docId) {
@@ -651,6 +695,7 @@
             }
         }
 
+        // এক্সেল এক্সপোর্টে সিগনেচার সহ সমস্ত ফিল্ড ফিক্সড
         window.exportToExcel = function() {
             if(allMembersData.length === 0) {
                 alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
@@ -658,23 +703,25 @@
             }
 
             const excelData = allMembersData.map((m) => ({
-                "সদস্য ID": m.autoId,
-                "নাম": m.name,
-                "গ্রাম": m.village,
-                "পদ": m.role,
-                "মোবাইল নম্বর": m.mobile
+                "সদস্য ID": m.autoId || '',
+                "নাম": m.name || '',
+                "গ্রাম": m.village || '',
+                "পদ": m.role || '',
+                "মোবাইল নম্বর": m.mobile || '',
+                "ছবি (URL/Data)": m.photo || 'নেই',
+                "স্বাক্ষর (Signature Data)": m.signature || 'নেই'
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(excelData);
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Members List");
-            XLSX.writeFile(workbook, "Durga_Puja_Members_List.xlsx");
+            XLSX.writeFile(workbook, "Durga_Puja_Members_List.csv", { bookType: "csv", encoding: "utf8" });
         }
     </script>
 
     <!-- ট্যাব পরিবর্তন ও ইউজার ইন্টারফেস স্ক্রিপ্ট -->
     <script>
-        function switchTab(tabName) {
+        function switchTab(tabName, pushHistory = true) {
             const tabs = ['dashboard', 'member', 'subscription', 'expense', 'booking', 'sales', 'treasurer', 'settings'];
             tabs.forEach(t => {
                 const el = document.getElementById('section-' + t);
@@ -685,6 +732,10 @@
             if(targetSection) targetSection.classList.remove('hidden');
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
+
+            if (tabName !== 'dashboard' && pushHistory) {
+                window.history.pushState({ tab: tabName }, "", window.location.href);
+            }
         }
 
         function toggleQuickMenu() {
@@ -698,10 +749,6 @@
                 menuContent.classList.add('hidden');
                 arrowIcon.style.transform = 'rotate(-90deg)';
             }
-        }
-
-        function closeAddModal() {
-            document.getElementById('addMemberModal').classList.add('hidden');
         }
     </script>
 </body>
