@@ -3,34 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>লগইন - দুর্গাপূজা ২০২৬</title>
+    <title>লগইন - কমিটি ম্যানেজমেন্ট সিস্টেম</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-100 flex items-center justify-center h-screen font-sans">
+<body class="bg-[#fcf8f2] min-h-screen flex flex-col items-center justify-center p-4 font-sans">
 
-    <!-- লগইন বক্স -->
-    <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
-        <h2 class="text-2xl font-bold text-center mb-6 text-orange-600">দুর্গাপূজা ২০২৬ - লগইন</h2>
-        <input type="email" id="email" placeholder="আপনার ইমেইল" class="w-full p-3 mb-4 border rounded">
+    <div class="w-full max-w-sm mx-auto flex flex-col items-center">
         
-        <!-- পাসওয়ার্ড বক্স এবং Eye Icon -->
-        <div class="relative mb-4">
-            <input type="password" id="password" placeholder="পাসওয়ার্ড" class="w-full p-3 border rounded pr-10">
-            <button type="button" id="togglePassword" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none">
-                👁️
-            </button>
+        <!-- ক্লাবের লোগো -->
+        <div class="mb-4 text-center">
+            <img src="https://i.ibb.co.com/84w2N9Z/logo.png" alt="Club Logo" id="loginLogo" class="w-28 h-28 object-contain mx-auto rounded-full shadow-md border-2 border-orange-200 bg-white p-1" onerror="this.src='https://via.rect/150?text=Logo'">
         </div>
-        
-        <button id="loginBtn" class="w-full bg-blue-500 text-white p-3 rounded mb-3 hover:bg-blue-600 font-bold">লগইন করুন</button>
-        <button id="registerBtn" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 font-bold">নতুন অ্যাকাউন্ট তৈরি করুন</button>
-        <p id="authMessage" class="text-red-500 text-center mt-3 text-sm"></p>
+
+        <!-- কমিটি ম্যানেজমেন্ট সিস্টেম ব্যাজ -->
+        <div class="bg-gradient-to-r from-amber-100 via-amber-50 to-orange-100 text-orange-800 font-bold text-sm md:text-base px-6 py-2 rounded-xl shadow-sm border border-orange-200 mb-6 text-center tracking-wide">
+            কমিটি ম্যানেজমেন্ট সিস্টেম
+        </div>
+
+        <!-- লগইন ফর্ম বক্স -->
+        <div class="bg-white w-full p-6 rounded-2xl shadow-xl border border-orange-100 relative">
+            
+            <form id="loginForm" onsubmit="handleLogin(event)">
+                
+                <!-- ইউজার আইডি / ইমেইল -->
+                <div class="mb-4">
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">ইউজার আইডি / ইমেইল</label>
+                    <input type="text" id="loginEmail" required placeholder="আপনার ইউজার আইডি বা ইমেইল লিখুন" class="w-full p-3 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500 focus:bg-white transition">
+                </div>
+
+                <!-- পাসওয়ার্ড -->
+                <div class="mb-6 relative">
+                    <label class="block text-xs font-bold text-gray-700 mb-1.5">পাসওয়ার্ড</label>
+                    <div class="relative">
+                        <input type="password" id="loginPassword" required placeholder="আপনার পাসওয়ার্ড লিখুন" class="w-full p-3 pr-10 bg-gray-50/50 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-orange-500 focus:bg-white transition">
+                        <button type="button" onclick="togglePassword()" class="absolute right-3 top-3.5 text-gray-400 hover:text-gray-600 focus:outline-none text-sm">
+                            👁️
+                        </button>
+                    </div>
+                </div>
+
+                <!-- লগইন বাটন -->
+                <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-orange-600 to-amber-600 text-white font-bold py-3 rounded-xl shadow-md hover:from-orange-700 hover:to-amber-700 transition duration-200 text-sm tracking-wide">
+                    লগইন করুন
+                </button>
+
+            </form>
+
+            <!-- ডেটাবেস সংযোগ পরীক্ষা সেকশন -->
+            <div class="mt-6 pt-4 border-t border-gray-100 text-center">
+                <p class="text-[11px] text-gray-500 mb-2">ডেটাবেস সমস্যা হলে:</p>
+                <button onclick="checkDatabaseConnection()" class="inline-flex items-center gap-1.5 px-4 py-1.5 bg-gray-50 border border-gray-200 rounded-lg text-xs font-semibold text-gray-700 hover:bg-gray-100 transition shadow-sm">
+                    🔍 সংযোগ পরীক্ষা
+                </button>
+            </div>
+
+        </div>
     </div>
 
-    <!-- Firebase স্ক্রিপ্ট -->
+    <!-- Firebase এবং লজিক স্ক্রিপ্ট -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -43,67 +76,55 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
-        const db = getFirestore(app);
 
-        const authMessage = document.getElementById('authMessage');
-        const passwordInput = document.getElementById('password');
-        const togglePassword = document.getElementById('togglePassword');
-
-        // পাসওয়ার্ড দেখানো বা লুকানোর ফাংশন
-        togglePassword.addEventListener('click', () => {
-            if (passwordInput.type === "password") {
-                passwordInput.type = "text";
-                togglePassword.innerText = "🙈"; 
-            } else {
-                passwordInput.type = "password";
-                togglePassword.innerText = "👁️"; 
-            }
-        });
-
-        // ব্রাউজার পেজ ক্যাশ (Back cache) থেকে লোড হলে রিলোড করে স্টেট ঠিক করার জন্য
-        window.addEventListener('pageshow', (event) => {
-            if (event.persisted) {
-                window.location.reload();
-            }
-        });
-
-        // রেজিস্ট্রেশন
-        document.getElementById('registerBtn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = passwordInput.value;
-            createUserWithEmailAndPassword(auth, email, password)
-                .then((userCredential) => {
-                    setDoc(doc(db, "users", userCredential.user.uid), { email: email, role: "viewer" });
-                    authMessage.style.color = 'green';
-                    authMessage.innerText = "অ্যাকাউন্ট তৈরি সফল! এবার লগইন করুন।";
-                })
-                .catch((error) => {
-                    authMessage.style.color = 'red';
-                    authMessage.innerText = "ত্রুটি: " + error.message;
-                });
-        });
-
-        // লগইন করার পর ড্যাশবোর্ড পেজে রিডাইরেক্ট হবে
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = passwordInput.value;
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    window.location.replace("dashboard.html"); 
-                })
-                .catch((error) => {
-                    authMessage.style.color = 'red';
-                    authMessage.innerText = "লগইন ব্যর্থ: " + error.message;
-                });
-        });
-
-        // অটো রিডাইরেক্ট (শুধু তখনই কাজ করবে যখন ইউজার রিয়েল লগইন অবস্থায় থাকবে)
+        // যদি ইউজার আগে থেকেই লগইন করা থাকে, সরাসরি ড্যাশবোর্ডে পাঠিয়ে দেবে
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                // পেজ হিস্ট্রি রিপ্লেস ব্যবহার করা হয়েছে যাতে ফ্ল্যাকচুয়েট না করে
                 window.location.replace("dashboard.html");
             }
         });
+
+        // লগইন হ্যান্ডলার
+        window.handleLogin = function(event) {
+            event.preventDefault();
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value.trim();
+            const loginBtn = document.getElementById('loginBtn');
+
+            loginBtn.innerText = "লগইন হচ্ছে...";
+            loginBtn.disabled = true;
+
+            signInWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    window.location.replace("dashboard.html");
+                })
+                .catch((error) => {
+                    alert("লগইন ব্যর্থ হয়েছে! সঠিক ইউজার আইডি ও পাসওয়ার্ড দিন।\nত্রুটি: " + error.message);
+                    loginBtn.innerText = "লগইন করুন";
+                    loginBtn.disabled = false;
+                });
+        }
+
+        // ডেটাবেস সংযোগ পরীক্ষা ফাংশন
+        window.checkDatabaseConnection = function() {
+            if (navigator.onLine) {
+                alert("ইন্টারনেট সংযোগ সক্রিয় আছে এবং ফায়ারবেস ডেটাবেস প্রস্তুত রয়েছে।");
+            } else {
+                alert("আপনার ইন্টারনেট সংযোগ বিচ্ছিন্ন রয়েছে! দয়া করে ইন্টারনেট অন করুন।");
+            }
+        }
+    </script>
+
+    <!-- পাসওয়ার্ড শো/হাইড স্ক্রিপ্ট -->
+    <script>
+        function togglePassword() {
+            const passwordInput = document.getElementById('loginPassword');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+            } else {
+                passwordInput.type = 'password';
+            }
+        }
     </script>
 </body>
 </html>
