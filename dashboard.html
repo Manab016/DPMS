@@ -299,7 +299,7 @@
     <!-- Firebase ও লজিক স্ক্রিপ্ট -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -313,6 +313,10 @@
 
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
+        
+        // ব্রাউজার বা ট্যাব বন্ধ করলে লগইন সেশন মুছে যাবে (লগআউট সমস্যা সমাধান)
+        setPersistence(auth, browserSessionPersistence);
+
         const db = getFirestore(app);
 
         let allMembersData = [];
@@ -620,11 +624,22 @@
             }
 
             document.getElementById('idCardModal').classList.remove('hidden');
+            
+            // মোবাইলের ব্যাক বাটন প্রেস করলে যেন ওয়েবসাইট থেকে বের না হয়ে মডাল বন্ধ হয়
+            window.history.pushState({modalOpen: true}, "");
         }
 
         window.closeIdCardModal = function() {
             document.getElementById('idCardModal').classList.add('hidden');
         }
+
+        // মোবাইলের ব্যাক বাটন কন্ট্রোল
+        window.addEventListener('popstate', function(event) {
+            const modal = document.getElementById('idCardModal');
+            if (!modal.classList.contains('hidden')) {
+                modal.classList.add('hidden');
+            }
+        });
 
         window.deleteMember = async function(docId) {
             if(confirm("আপনি কি নিশ্চিতভাবে এই সদস্যকে ডিলিট করতে চান?")) {
