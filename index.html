@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগইন - দুর্গাপূজা ২০২৬</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 flex items-center justify-center h-screen font-sans">
+
+    <!-- লগইন বক্স -->
+    <div class="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+        <h2 class="text-2xl font-bold text-center mb-6 text-orange-600">দুর্গাপূজা ২০২৬ - লগইন</h2>
+        <input type="email" id="email" placeholder="আপনার ইমেইল" class="w-full p-3 mb-4 border rounded">
+        
+        <!-- পাসওয়ার্ড বক্স এবং Eye Icon -->
+        <div class="relative mb-4">
+            <input type="password" id="password" placeholder="পাসওয়ার্ড" class="w-full p-3 border rounded pr-10">
+            <button type="button" id="togglePassword" class="absolute right-3 top-3 text-gray-500 hover:text-gray-700 focus:outline-none">
+                👁️
+            </button>
+        </div>
+        
+        <button id="loginBtn" class="w-full bg-blue-500 text-white p-3 rounded mb-3 hover:bg-blue-600 font-bold">লগইন করুন</button>
+        <button id="registerBtn" class="w-full bg-green-500 text-white p-3 rounded hover:bg-green-600 font-bold">নতুন অ্যাকাউন্ট তৈরি করুন</button>
+        <p id="authMessage" class="text-red-500 text-center mt-3 text-sm"></p>
+    </div>
+
+    <!-- Firebase স্ক্রিপ্ট -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+            authDomain: "durgapuja-2026.firebaseapp.com",
+            projectId: "durgapuja-2026",
+            storageBucket: "durgapuja-2026.firebasestorage.app",
+            messagingSenderId: "625976130920",
+            appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const authMessage = document.getElementById('authMessage');
+        const passwordInput = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+
+        // পাসওয়ার্ড দেখানো বা লুকানোর ফাংশন
+        togglePassword.addEventListener('click', () => {
+            if (passwordInput.type === "password") {
+                passwordInput.type = "text";
+                togglePassword.innerText = "🙈"; 
+            } else {
+                passwordInput.type = "password";
+                togglePassword.innerText = "👁️"; 
+            }
+        });
+
+        // ব্রাউজার পেজ ক্যাশ (Back cache) থেকে লোড হলে রিলোড করে স্টেট ঠিক করার জন্য
+        window.addEventListener('pageshow', (event) => {
+            if (event.persisted) {
+                window.location.reload();
+            }
+        });
+
+        // রেজিস্ট্রেশন
+        document.getElementById('registerBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+            createUserWithEmailAndPassword(auth, email, password)
+                .then((userCredential) => {
+                    setDoc(doc(db, "users", userCredential.user.uid), { email: email, role: "viewer" });
+                    authMessage.style.color = 'green';
+                    authMessage.innerText = "অ্যাকাউন্ট তৈরি সফল! এবার লগইন করুন।";
+                })
+                .catch((error) => {
+                    authMessage.style.color = 'red';
+                    authMessage.innerText = "ত্রুটি: " + error.message;
+                });
+        });
+
+        // লগইন করার পর ড্যাশবোর্ড পেজে রিডাইরেক্ট হবে
+        document.getElementById('loginBtn').addEventListener('click', () => {
+            const email = document.getElementById('email').value;
+            const password = passwordInput.value;
+            signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.replace("dashboard.html"); 
+                })
+                .catch((error) => {
+                    authMessage.style.color = 'red';
+                    authMessage.innerText = "লগইন ব্যর্থ: " + error.message;
+                });
+        });
+
+        // অটো রিডাইরেক্ট (শুধু তখনই কাজ করবে যখন ইউজার রিয়েল লগইন অবস্থায় থাকবে)
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // পেজ হিস্ট্রি রিপ্লেস ব্যবহার করা হয়েছে যাতে ফ্ল্যাকচুয়েট না করে
+                window.location.replace("dashboard.html");
+            }
+        });
+    </script>
+</body>
+</html>
