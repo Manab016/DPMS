@@ -674,14 +674,12 @@
                 return;
             }
 
-            // যদি কোনো সাব-ট্যাবে থাকা অবস্থায় ব্যাক করা হয়, তবে ড্যাশবোর্ডে নিয়ে আসবে
             const dashboardSection = document.getElementById('section-dashboard');
             if (dashboardSection.classList.contains('hidden')) {
-                switchTab('dashboard', false); // সাবট্যাব থেকে হোমে ফিরবে
+                switchTab('dashboard', false);
                 return;
             }
 
-            // একদম হোম ড্যাশবোর্ডে থাকলে ব্যাক করলে যাতে হুট করে অ্যাপ থেকে বের না হয়ে যায়
             window.history.pushState({ page: "dashboard" }, "", window.location.href);
         });
 
@@ -695,7 +693,7 @@
             }
         }
 
-        // এক্সেল এক্সপোর্টে সিগনেচার সহ সমস্ত ফিল্ড ফিক্সড
+        // এক্সেল এক্সপোর্টে ছবি ও স্বাক্ষর পরিষ্কার স্ট্যাটাস হিসেবে দেখানোর ফিক্সড কোড
         window.exportToExcel = function() {
             if(allMembersData.length === 0) {
                 alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
@@ -708,8 +706,8 @@
                 "গ্রাম": m.village || '',
                 "পদ": m.role || '',
                 "মোবাইল নম্বর": m.mobile || '',
-                "ছবি (URL/Data)": m.photo || 'নেই',
-                "স্বাক্ষর (Signature Data)": m.signature || 'নেই'
+                "ছবি": (m.photo && m.photo.trim() !== "") ? "ছবি আছে" : "নেই",
+                "স্বাক্ষর": (m.signature && m.signature.trim() !== "") ? "স্বাক্ষর আছে" : "নেই"
             }));
 
             const worksheet = XLSX.utils.json_to_sheet(excelData);
