@@ -13,8 +13,8 @@
     <div class="text-center mb-6">
         <div id="logoContainer" class="flex justify-center mb-3">
             <div class="w-28 h-28 rounded-full border-4 border-amber-100 shadow-md bg-white flex items-center justify-center overflow-hidden relative">
-                <!-- লোগো ইমেজ (লোড না হলে ফন্ট-অ্যাসাম আইকন দেখাবে) -->
-                <img src="Logo.png?v=2" alt="Committee Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');">
+                <!-- লোগো ইমেজ (পাথ ঠিক করা হয়েছে) -->
+                <img src="./Logo.png?v=2" alt="Committee Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');">
                 <!-- ফলব্যাক আইকন -->
                 <div id="fallbackLogo" class="hidden absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-600">
                     <i class="fa-solid fa-place-of-worship text-3xl"></i>
@@ -23,7 +23,7 @@
         </div>
         
         <div class="inline-block bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 border border-amber-200/80 px-6 py-2 rounded-2xl shadow-sm">
-            <h1 class="text-lg sm:text-xl font-bold text-[#b45309] tracking-wide">কমিটি ম্যানেজমেন্ট সিস্টেম-2026</h1>
+            <h1 class="text-lg sm:text-xl font-bold text-[#b45309] tracking-wide">কমিটি ম্যানেজমেন্ট সিস্টেম-২০২৬</h1>
         </div>
     </div>
 
@@ -53,7 +53,7 @@
 
         <div id="errorMsg" class="mt-3 text-center text-xs text-red-600 font-semibold hidden"></div>
 
-        <!-- কমিটির নাম রিমুভ করে নতুন আকর্ষণীয় স্লোগান -->
+        <!-- স্লোগান -->
         <div class="mt-6 pt-5 border-t border-gray-100 text-center">
             <p class="text-xs font-medium text-amber-900/80 tracking-wide">ঐতিহ্য, সম্প্রীতি ও আনন্দ উদযাপনের এক অনন্য প্রয়াস</p>
         </div>
@@ -64,7 +64,6 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
-        // পাসওয়ার্ড শো/হাইডের টগল ফাংশন
         window.togglePassword = function() {
             const passwordInput = document.getElementById('password');
             const eyeIcon = document.getElementById('eyeIcon');
