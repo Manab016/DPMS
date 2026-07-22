@@ -16,6 +16,20 @@
             width: auto;
         }
 
+        /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশনের জন্য */
+        @keyframes autoScroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        .animate-auto-slide {
+            display: flex;
+            width: max-content;
+            animation: autoScroll 20s linear infinite;
+        }
+        .animate-auto-slide:hover {
+            animation-play-state: paused;
+        }
+
         /* স্ক্রলবার লুকানোর জন্য */
         .hide-scrollbar::-webkit-scrollbar {
             display: none;
@@ -65,7 +79,7 @@
                 সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
             </p>
             <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">
-                📞 ৯৯৩৩৩৭১৭০২
+                📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
             </p>
         </div>
 
@@ -80,7 +94,7 @@
 
             <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
                 <button id="menu-btn-member" onclick="switchTab('member')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
-                <button id="menu-btn-subscription" onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+                <button id="menu-btn-subscription" onclick="openSubscriptionPage()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
                 <button id="menu-btn-expense" onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
                 <button id="menu-btn-booking" onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
                 <button id="menu-btn-sales" onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
@@ -91,8 +105,14 @@
 
         <!-- ড্যাশবোর্ড সেকশন -->
         <div id="section-dashboard" class="space-y-3">
-            <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm">
+            <!-- কমিটির প্রধান পদাধিকারী সেকশন (অটো স্লাইডসহ) -->
+            <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm cursor-pointer" onclick="toggleOfficeBearersMenu()">
                 <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাধিকারী</span>
+                <span id="officeBearersArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
+            </div>
+
+            <div id="officeBearersContent" class="bg-white p-3 rounded-xl shadow-sm border border-amber-200 overflow-hidden relative">
+                <!-- ডাইনামিকভাবে স্লাইডিং তালিকা লোড হবে -->
             </div>
 
             <div class="grid grid-cols-2 gap-3">
@@ -101,7 +121,7 @@
                     <div class="text-xs font-medium opacity-90">মোট সদস্য</div>
                     <div class="text-2xl font-bold mt-1" id="dashTotalMembers">0</div>
                 </div>
-                <div id="dash-card-subscription" onclick="switchTab('subscription')" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-subscription" onclick="openSubscriptionPage()" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">💰</div>
                     <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
                     <div class="text-2xl font-bold mt-1">₹0</div>
@@ -181,10 +201,6 @@
         </div>
 
         <!-- অন্যান্য ট্যাব সেকশন -->
-        <div id="section-subscription" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-            <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
-            <h2 class="text-lg font-bold text-gray-800 mb-2">💰 চাঁদা সংগ্রহ প্যানেল</h2>
-        </div>
         <div id="section-expense" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
             <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
             <h2 class="text-lg font-bold text-gray-800 mb-2">💵 খরচ ব্যবস্থাপনা প্যানেল</h2>
@@ -264,12 +280,11 @@
                 </div>
             </div>
 
-            <!-- সাব-ট্যাব ২: সিস্টেম সেটিংস (সম্পূর্ণ অরেঞ্জ থিম) -->
+            <!-- সাব-ট্যাব ২: সিস্টেম সেটিংস -->
             <div id="subSectionSystem" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
                 <h2 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">⚙️ সিস্টেম সেটিংস</h2>
                 <p class="text-xs text-gray-500 mb-6">এখানে লোগো এবং ডেভেলপার সম্পর্কিত সেটিংস পরিবর্তন করতে পারবেন।</p>
 
-                <!-- ১. লোগো পরিবর্তনের অপশন -->
                 <div class="mb-8 p-4 bg-orange-50/60 rounded-xl border border-orange-100">
                     <h3 class="text-sm font-bold text-orange-800 mb-3 flex items-center gap-1.5">🖼️ ক্লাবের লোগো পরিবর্তন</h3>
                     <div class="flex flex-col md:flex-row items-center gap-4">
@@ -288,7 +303,6 @@
 
                 <hr class="my-6 border-gray-200">
 
-                <!-- ২. ডেভেলপার তথ্য অপশন (অরেঞ্জ থিমে রূপান্তর) -->
                 <div>
                     <h3 class="text-sm font-bold text-orange-900 mb-3 flex items-center gap-1.5">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
                     <form id="devConfigForm" onsubmit="saveDevData(event)" class="space-y-4">
@@ -312,7 +326,7 @@
                 </div>
             </div>
 
-            <!-- সাব-ট্যাব ৩: ব্যবহারকারী (User Management) -->
+            <!-- সাব-ট্যাব ৩: ব্যবহারকারী -->
             <div id="subSectionUsers" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
                 <div class="flex justify-between items-center mb-4">
                     <div>
@@ -335,13 +349,12 @@
                             </tr>
                         </thead>
                         <tbody id="usersTableBody">
-                            <!-- ডাইনামিকভাবে ইউজার ডাটা বসবে -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <!-- সাব-ট্যাব ৪: লগইন ইতিহাস (Login History) -->
+            <!-- সাব-ট্যাব ৪: লগইন ইতিহাস -->
             <div id="subSectionHistory" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
                     <div>
@@ -405,7 +418,7 @@
         </div>
     </div>
 
-    <!-- 👨‍💻 ডেভেলপার পপআপ মডাল (অরেঞ্জ থিম) -->
+    <!-- 👨‍💻 ডেভেলপার পপআপ মডাল -->
     <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
             <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
@@ -425,11 +438,11 @@
                 </div>
                 <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
                     <span class="text-gray-500 font-semibold">মোবাইল:</span>
-                    <span id="popDevMobile" class="font-bold text-orange-700">লোড হচ্ছে...</span>
+                    <a id="popDevMobile" href="#" class="font-bold text-orange-700 hover:underline">লোড হচ্ছে...</a>
                 </div>
                 <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
                     <span class="text-gray-500 font-semibold">ইমেইল:</span>
-                    <span id="popDevEmail" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+                    <a id="popDevEmail" href="#" class="font-bold text-gray-800 hover:underline">লোড হচ্ছে...</a>
                 </div>
             </div>
 
@@ -632,7 +645,6 @@
                     window.userPermissions = ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'];
                 } else {
                     window.currentUserRole = 'user';
-                    // ফায়ারবেস Firestore থেকে ইউজারের নির্দিষ্ট পারমিশন লোড করা
                     try {
                         const userDoc = await getDoc(doc(db, "app_users", user.uid));
                         if(userDoc.exists()){
@@ -646,7 +658,6 @@
                     }
                 }
 
-                // লগইন হিস্ট্রি ফায়ারবেসে সেভ করা
                 logUserLogin(user);
 
                 setupUIBasedOnRoleAndPermissions(user);
@@ -661,7 +672,6 @@
             }
         });
 
-        // লগইন হিস্ট্রি ফায়ারবেসে সেভ করা
         async function logUserLogin(user) {
             try {
                 await addDoc(collection(db, "login_history"), {
@@ -676,7 +686,6 @@
             }
         }
 
-        // পারমিশন ও রোল অনুযায়ী ইউজার ইন্টারফেস অ্যাডজাস্ট করা
         function setupUIBasedOnRoleAndPermissions(user) {
             const roleBadge = document.getElementById('userRoleBadge');
             const profileEmail = document.getElementById('profileEmailDisplay');
@@ -690,7 +699,6 @@
                 profileName.innerText = user.displayName || user.email.split('@')[0];
             }
 
-            // প্রোফাইল পারমিশন ব্যাজ লোড করা
             const permContainer = document.getElementById('profilePermissionsContainer');
             if(permContainer) {
                 permContainer.innerHTML = '';
@@ -720,13 +728,11 @@
                 if(adminControls) adminControls.classList.add('hidden');
                 adminCols.forEach(col => col.classList.add('hidden'));
 
-                // সাব-ট্যাব হাইড করা সাধারণ ইউজার থেকে
                 document.getElementById('tabBtnUsers').style.display = 'none';
                 document.getElementById('tabBtnHistory').style.display = 'none';
                 document.getElementById('tabBtnSystem').style.display = 'none';
             }
 
-            // পারমিশন অনুযায়ী ড্যাশবোর্ড কার্ড ও মেনু ফিল্টার করা
             const allModules = ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'];
             allModules.forEach(mod => {
                 const menuBtn = document.getElementById(`menu-btn-${mod}`);
@@ -742,7 +748,6 @@
             });
         }
 
-        // ইউজার লিস্ট লোড করা (শুধুমাত্র অ্যাডমিন)
         function loadAppUsers() {
             onSnapshot(collection(db, "app_users"), (snapshot) => {
                 allUsersData = [];
@@ -786,13 +791,11 @@
             });
         }
 
-        // নতুন ইউজার বা পারমিশন সেভ করা
         window.handleSaveUser = async function(event) {
             event.preventDefault();
             const editId = document.getElementById('editUserId').value;
             const name = document.getElementById('uNameInput').value.trim();
             const email = document.getElementById('uEmailInput').value.trim();
-            const pass = document.getElementById('uPassInput').value.trim();
 
             const selectedPerms = [];
             if(document.getElementById('perm_member').checked) selectedPerms.push('member');
@@ -880,7 +883,6 @@
             }
         };
 
-        // লগইন ইতিহাস লোড ও ফিল্টারিং (শুধুমাত্র অ্যাডমিন)
         function loadLoginHistory() {
             onSnapshot(collection(db, "login_history"), (snapshot) => {
                 allLoginHistory = [];
@@ -968,7 +970,6 @@
             }
         };
 
-        // পাসওয়ার্ড পরিবর্তনের ফায়ারবেস লজিক
         window.handlePasswordChange = async function(event) {
             event.preventDefault();
             const newPass = document.getElementById('newPasswordInput').value;
@@ -1012,7 +1013,7 @@
                 }
             } else {
                 alert("ইউজার সেশন পাওয়া যায়নি। দয়া করে আবার লগইন করুন।");
-                saveBtn.innerText = "আপডেট করুন";
+                    saveBtn.innerText = "আপডেট করুন";
                 saveBtn.disabled = false;
             }
         };
@@ -1095,11 +1096,53 @@
                 });
 
                 renderTable(allMembersData);
+                renderOfficeBearers(allMembersData);
                 document.getElementById('dashTotalMembers').innerText = allMembersData.length;
                 
                 const selectAllCheckbox = document.getElementById('selectAll');
                 if(selectAllCheckbox) selectAllCheckbox.checked = false;
             });
+        }
+
+        // প্রধান পদাধিকারী রেন্ডার ও অটো স্লাইড লজিক
+        function renderOfficeBearers(members) {
+            const container = document.getElementById('officeBearersContent');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const officeBearers = members.filter(m => m.role && m.role !== 'সাধারণ সদস্য');
+
+            if (officeBearers.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-500 text-center py-2">কোনো প্রধান পদাধিকারী পাওয়া যায়নি।</p>`;
+                return;
+            }
+
+            // ডান দিক থেকে বাম দিকে অটো স্লাইড করার জন্য র‍্যাপার কন্টেইনার
+            const sliderWrapper = document.createElement('div');
+            sliderWrapper.className = "animate-auto-slide gap-3";
+
+            // লিস্টগুলোকে দুইবার লুপ করা হচ্ছে যাতে স্লাইডটি নিখুঁত ও অবিচ্ছিন্ন লুপ (seamless loop) হয়
+            for (let i = 0; i < 2; i++) {
+                officeBearers.forEach(person => {
+                    const card = document.createElement('div');
+                    card.className = "flex items-center justify-between bg-amber-50/80 p-2.5 rounded-lg border border-amber-200 text-xs shrink-0 min-w-[260px] shadow-sm";
+                    
+                    const mobileLink = person.mobile && person.mobile !== '-' ? `<a href="tel:${person.mobile}" class="font-bold text-orange-700 hover:underline flex items-center gap-1">📞 ${person.mobile}</a>` : `<span class="text-gray-400">নম্বর নেই</span>`;
+
+                    card.innerHTML = `
+                        <div>
+                            <span class="font-bold text-gray-800">${person.name || '-'}</span>
+                            <span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-[10px] font-semibold ml-2">${person.role}</span>
+                        </div>
+                        <div class="ml-4">
+                            ${mobileLink}
+                        </div>
+                    `;
+                    sliderWrapper.appendChild(card);
+                });
+            }
+
+            container.appendChild(sliderWrapper);
         }
 
         window.renderTable = function(data) {
@@ -1145,7 +1188,7 @@
                     <td class="p-2.5 border-r font-medium text-gray-800 text-center align-middle whitespace-nowrap">${member.name || '-'}</td>
                     <td class="p-2.5 border-r text-gray-700 text-center align-middle whitespace-nowrap">${member.village || '-'}</td>
                     <td class="p-2.5 border-r text-gray-700 text-center align-middle whitespace-nowrap">${member.role || 'সাধারণ সদস্য'}</td>
-                    <td class="p-2.5 border-r text-gray-600 text-center align-middle whitespace-nowrap">${member.mobile || '-'}</td>
+                    <td class="p-2.5 border-r text-gray-600 text-center align-middle whitespace-nowrap">${member.mobile !== '-' ? `<a href="tel:${member.mobile}" class="text-orange-700 font-semibold hover:underline">${member.mobile}</a>` : '-'}</td>
                     <td class="p-2.5 border-r text-center align-middle whitespace-nowrap">
                         ${member.signature ? `<img src="${member.signature}" class="h-6 object-contain mx-auto border px-1">` : '<span class="text-xs text-gray-400">নেই</span>'}
                     </td>
@@ -1447,6 +1490,7 @@
             }
         }
 
+        // এক্সেল এক্সপোর্টে ছবি ও স্বাক্ষরের কোষ (Cell) সাইজ এবং প্রপার অ্যালাইনমেন্ট ফিক্স করা হয়েছে
         window.exportToExcel = async function() {
             if (window.currentUserRole === 'user') return;
 
@@ -1495,20 +1539,21 @@
                     };
                 });
 
+                // পারফেক্ট কলাম উইডথ সেট করা হয়েছে যাতে সিগনেচার ও ছবি সেলের সাথে সুন্দরভাবে মানানসই হয়
                 worksheet.columns = [
-                    { key: 'id', width: 15 },
-                    { key: 'name', width: 25 },
-                    { key: 'mobile', width: 15 },
-                    { key: 'village', width: 15 },
-                    { key: 'role', width: 15 },
-                    { key: 'photo', width: 15 },
-                    { key: 'signature', width: 30 }
+                    { key: 'id', width: 14 },
+                    { key: 'name', width: 22 },
+                    { key: 'mobile', width: 16 },
+                    { key: 'village', width: 16 },
+                    { key: 'role', width: 16 },
+                    { key: 'photo', width: 18 },
+                    { key: 'signature', width: 22 }
                 ];
 
                 let rowIndex = 4;
                 for (const member of allMembersData) {
                     const row = worksheet.getRow(rowIndex);
-                    row.height = 65; 
+                    row.height = 50; // রো-এর উচ্চতা সুনির্দিষ্ট করা হয়েছে
                     
                     row.getCell(1).value = member.autoId || '';
                     row.getCell(2).value = member.name || '';
@@ -1526,9 +1571,10 @@
                             base64: base64Data,
                             extension: ext,
                         });
+                        // ছবির সেল সাইজ ও প্রোপোরশন ঠিক রাখা হয়েছে
                         worksheet.addImage(imageId, {
-                            tl: { col: 5.1, row: rowIndex - 1 + 0.1 },
-                            br: { col: 5.9, row: rowIndex - 0.1 },
+                            tl: { col: 5.15, row: rowIndex - 1 + 0.12 },
+                            br: { col: 5.85, row: rowIndex - 0.12 },
                             editAs: 'oneCell'
                         });
                     } else {
@@ -1545,9 +1591,10 @@
                             base64: base64Data,
                             extension: ext,
                         });
+                        // স্বাক্ষরের সেল বক্স সাইজ কম্প্যাক্ট ও সঠিক অ্যালাইনমেন্টে রাখা হয়েছে
                         worksheet.addImage(imageId, {
-                            tl: { col: 6.1, row: rowIndex - 1 + 0.1 },
-                            br: { col: 6.9, row: rowIndex - 0.1 },
+                            tl: { col: 6.12, row: rowIndex - 1 + 0.2 },
+                            br: { col: 6.88, row: rowIndex - 0.2 },
                             editAs: 'oneCell'
                         });
                     } else {
@@ -1592,7 +1639,6 @@
 
     <!-- ইউজার ইন্টারফেস, লোগো, ডেভেলপার ও সেটিংস সাব-ট্যাব স্ক্রিপ্ট -->
     <script>
-        // ডিফল্ট ডেভেলপার তথ্য
         const defaultDevInfo = {
             name: "Manabendra Nath Sarkar",
             mobile: "9933371702",
@@ -1601,7 +1647,6 @@
 
         let tempLogoBase64 = "";
 
-        // লোগো প্রিভিউ দেখা
         function previewClubLogo(input) {
             const file = input.files[0];
             if (!file) return;
@@ -1613,7 +1658,6 @@
             reader.readAsDataURL(file);
         }
 
-        // ক্লাবের লোগো সেভ করা
         function saveClubLogo() {
             if(!tempLogoBase64) {
                 alert("দয়া করে একটি লোগো ফাইল সিলেক্ট করুন!");
@@ -1624,7 +1668,6 @@
             alert("ক্লাবের লোগো সফলভাবে সেভ করা হয়েছে!");
         }
 
-        // লোগো লোড করা
         function loadClubLogo() {
             const savedLogo = localStorage.getItem('pujaClubLogo');
             if(savedLogo) {
@@ -1633,11 +1676,9 @@
             }
         }
 
-        // লোকাল স্টোরেজ থেকে ডেভেলপার ডাটা লোড ও আপডেট করা
         function loadDevData() {
             const savedDev = JSON.parse(localStorage.getItem('pujaDevData')) || defaultDevInfo;
             
-            // সেটিংস ফর্মের ইনপুটে মান বসানো
             const devNameIn = document.getElementById('devNameInput');
             const devMobileIn = document.getElementById('devMobileInput');
             const devEmailIn = document.getElementById('devEmailInput');
@@ -1646,17 +1687,21 @@
             if(devMobileIn) devMobileIn.value = savedDev.mobile;
             if(devEmailIn) devEmailIn.value = savedDev.email;
 
-            // পপআপ মডালে মান বসানো
             const popName = document.getElementById('popDevName');
             const popMobile = document.getElementById('popDevMobile');
             const popEmail = document.getElementById('popDevEmail');
 
             if(popName) popName.textContent = savedDev.name;
-            if(popMobile) popMobile.textContent = savedDev.mobile;
-            if(popEmail) popEmail.textContent = savedDev.email;
+            if(popMobile) {
+                popMobile.textContent = savedDev.mobile;
+                popMobile.href = `tel:${savedDev.mobile}`;
+            }
+            if(popEmail) {
+                popEmail.textContent = savedDev.email;
+                popEmail.href = `mailto:${savedDev.email}`;
+            }
         }
 
-        // ডেভেলপার ডাটা সেভ করা
         function saveDevData(e) {
             e.preventDefault();
             const updatedDev = {
@@ -1670,7 +1715,6 @@
             alert("ডেভেলপার তথ্য সফলভাবে সেভ করা হয়েছে!");
         }
 
-        // ডেভেলপার পপআপ টগল
         function toggleDevModal() {
             const devModal = document.getElementById('devModal');
             if (devModal.classList.contains('hidden')) {
@@ -1681,7 +1725,24 @@
             }
         }
 
-        // পাসওয়ার্ড মডাল কন্ট্রোল
+        // প্রধান পদাধিকারী সেকশন মিনিমাইজ/টগল ফাংশন
+        function toggleOfficeBearersMenu() {
+            const content = document.getElementById('officeBearersContent');
+            const arrow = document.getElementById('officeBearersArrowIcon');
+            if (content.classList.contains('hidden')) {
+                content.classList.remove('hidden');
+                arrow.style.transform = 'rotate(0deg)';
+            } else {
+                content.classList.add('hidden');
+                arrow.style.transform = 'rotate(-90deg)';
+            }
+        }
+
+        // চাঁদা কালেকশন ফাইলের জন্য রিডাইরেক্ট ফাংশন
+        function openSubscriptionPage() {
+            window.location.href = 'subscription.html';
+        }
+
         function openPasswordModal() {
             document.getElementById('changePasswordModal').classList.remove('hidden');
             document.getElementById('passErrorMsg').classList.add('hidden');
@@ -1692,7 +1753,6 @@
             document.getElementById('changePasswordModal').classList.add('hidden');
         }
 
-        // সেটিংস প্যানেলের সাব-ট্যাব পরিবর্তন লজিক
         function switchSettingsSubTab(subTabName) {
             const subTabs = ['profile', 'system', 'users', 'history'];
             
@@ -1720,7 +1780,6 @@
             }
         }
 
-        // মূল ড্যাশবোর্ড ট্যাব সুইচিং
         function switchTab(tabName, pushHistory = true) {
             if (tabName === 'settings' && typeof window.checkAdminPermissionForTab === 'function') {
                 if (!window.checkAdminPermissionForTab(tabName)) {
@@ -1728,7 +1787,7 @@
                 }
             }
 
-            const tabs = ['dashboard', 'member', 'subscription', 'expense', 'booking', 'sales', 'treasurer', 'settings'];
+            const tabs = ['dashboard', 'member', 'expense', 'booking', 'sales', 'treasurer', 'settings'];
             tabs.forEach(t => {
                 const el = document.getElementById('section-' + t);
                 if(el) el.classList.add('hidden');
@@ -1757,7 +1816,6 @@
             }
         }
 
-        // প্রাথমিক পেজ লোড
         window.addEventListener('DOMContentLoaded', () => {
             loadDevData();
             loadClubLogo();
