@@ -16,27 +16,29 @@
             width: auto;
         }
 
+        /* স্ক্রলবার লুকানোর জন্য */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
         @media print {
-            * {
-                -webkit-print-color-adjust: exact !important;
-                print-color-adjust: exact !important;
+            body {
+                background: white !important;
             }
-            body * {
-                visibility: hidden;
-            }
-            #idCardModal, #idCardModal * {
-                visibility: visible;
+            body > *:not(#idCardModal) {
+                display: none !important;
             }
             #idCardModal {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                height: 100%;
+                position: fixed !important;
+                inset: 0 !important;
                 background: white !important;
                 display: flex !important;
-                align-items: center;
-                justify-content: center;
+                align-items: center !important;
+                justify-content: center !important;
             }
             .no-print {
                 display: none !important;
@@ -44,11 +46,17 @@
         }
     </style>
 </head>
-<body class="bg-amber-50/40 p-3 font-sans pb-16">
+<body class="bg-amber-50/40 p-3 font-sans pb-20">
+
+    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
+    <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
+        <span class="text-base">👨‍💻</span>
+        <span class="hidden md:inline">ডেভেলপার</span>
+    </button>
 
     <div class="max-w-4xl mx-auto">
         
-        <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
+        <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
             <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
             <p class="text-xs md:text-sm text-gray-700 mt-1">
                 স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong>
@@ -65,34 +73,35 @@
             <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
                 <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
                 <div class="flex items-center gap-2">
-                    <button id="logoutBtn" class="bg-red-600 text-white text-xs px-2.5 py-1 rounded hover:bg-red-700 font-semibold" onclick="event.stopPropagation()">লগআউট</button>
+                    <span id="userRoleBadge" class="bg-amber-800 text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
                     <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
                 </div>
             </div>
 
             <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-                <button onclick="switchTab('member')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
-                <button onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-                <button onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-                <button onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-                <button onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
-                <button onclick="switchTab('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📊 কোষাধ্যক্ষ</button>
-                <button onclick="switchTab('settings')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+                <button id="menu-btn-member" onclick="switchTab('member')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
+                <button id="menu-btn-subscription" onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+                <button id="menu-btn-expense" onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+                <button id="menu-btn-booking" onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+                <button id="menu-btn-sales" onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
+                <button id="menu-btn-treasurer" onclick="switchTab('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📊 কোষাধ্যক্ষ</button>
+                <button id="quickSettingsBtn" onclick="switchTab('settings')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
             </div>
         </div>
 
+        <!-- ড্যাশবোর্ড সেকশন -->
         <div id="section-dashboard" class="space-y-3">
             <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm">
                 <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাধিকারী</span>
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div onclick="switchTab('member')" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-member" onclick="switchTab('member')" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">👥</div>
                     <div class="text-xs font-medium opacity-90">মোট সদস্য</div>
                     <div class="text-2xl font-bold mt-1" id="dashTotalMembers">0</div>
                 </div>
-                <div onclick="switchTab('subscription')" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-subscription" onclick="switchTab('subscription')" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">💰</div>
                     <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
                     <div class="text-2xl font-bold mt-1">₹0</div>
@@ -100,30 +109,30 @@
             </div>
 
             <div class="grid grid-cols-2 gap-3">
-                <div onclick="switchTab('expense')" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-expense" onclick="switchTab('expense')" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">💵</div>
                     <div class="text-xs opacity-90">মোট খরচ</div>
                     <div class="text-xl font-bold mt-1">₹0</div>
                 </div>
-                <div onclick="switchTab('booking')" class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-booking" onclick="switchTab('booking')" class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">🎫</div>
                     <div class="text-xs opacity-90">বুকিং</div>
                     <div class="text-xl font-bold mt-1">0</div>
                 </div>
-                <div onclick="switchTab('sales')" class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-sales" onclick="switchTab('sales')" class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">🛒</div>
                     <div class="text-xs opacity-90">বিক্রয়</div>
                     <div class="text-xl font-bold mt-1">0</div>
                 </div>
-                <div onclick="switchTab('treasurer')" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
+                <div id="dash-card-treasurer" onclick="switchTab('treasurer')" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">📊</div>
                     <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
                 </div>
             </div>
         </div>
 
+        <!-- সদস্য সেকশন -->
         <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hidden">
-            
             <div class="flex items-center justify-between mb-4 border-b pb-3">
                 <div class="flex items-center gap-2">
                     <button onclick="switchTab('dashboard')" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
@@ -132,14 +141,13 @@
                 <span class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full" id="totalMembersCount">মোট সদস্য: ০</span>
             </div>
 
-            <div class="flex flex-wrap gap-2 mb-4">
+            <div id="adminMemberControls" class="flex flex-wrap gap-2 mb-4 hidden">
                 <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">
                     ➕ যোগ করুন
                 </button>
                 <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">
                     📥 এক্সেল এক্সপোর্ট
                 </button>
-                <!-- নতুন যুক্ত হওয়া: মার্ক ডিলিট বাটন -->
                 <button id="bulkDeleteBtn" onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">
                     🗑️ সিলেক্টেড ডিলিট
                 </button>
@@ -153,8 +161,7 @@
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 border-b">
-                            <!-- নতুন যুক্ত হওয়া: Select All চেকবক্স -->
-                            <th class="p-2.5 border-r text-center align-middle w-10">
+                            <th class="p-2.5 border-r text-center align-middle w-10 admin-only-col hidden">
                                 <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="cursor-pointer w-4 h-4">
                             </th>
                             <th class="p-2.5 border-r text-center align-middle">ID</th>
@@ -194,14 +201,299 @@
             <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
             <h2 class="text-lg font-bold text-gray-800 mb-2">📊 কোষাধ্যক্ষ ব্যবস্থাপনা</h2>
         </div>
-        <div id="section-settings" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-            <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
-            <h2 class="text-lg font-bold text-gray-800 mb-2">⚙️ সেটিংস প্যানেল</h2>
+
+        <!-- ⚙️ সেটিংস প্যানেল -->
+        <div id="section-settings" class="hidden">
+            <div class="mb-4">
+                <button onclick="switchTab('dashboard')" class="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m7 7h18"></path></svg>
+                    ফিরে যান
+                </button>
+            </div>
+
+            <div class="flex bg-gray-100/70 rounded-lg p-1.5 mb-4 overflow-x-auto hide-scrollbar border border-gray-200/60 gap-1">
+                <button id="tabBtnProfile" onclick="switchSettingsSubTab('profile')" class="bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition">প্রোফাইল</button>
+                <button id="tabBtnSystem" onclick="switchSettingsSubTab('system')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">সিস্টেম</button>
+                <button id="tabBtnUsers" onclick="switchSettingsSubTab('users')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">ব্যবহারকারী</button>
+                <button id="tabBtnHistory" onclick="switchSettingsSubTab('history')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">লগইন ইতিহাস</button>
+            </div>
+
+            <!-- সাব-ট্যাব ১: প্রোফাইল -->
+            <div id="subSectionProfile" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100">
+                <h2 class="text-2xl font-black text-gray-900 mb-6 tracking-tight">প্রোফাইল তথ্য</h2>
+                
+                <div class="space-y-5">
+                    <div class="flex items-start gap-4">
+                        <div class="mt-0.5 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
+                            <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">Manabendra Nath Sarkar</p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-start gap-4">
+                        <div class="mt-0.5 text-gray-500">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                        </div>
+                        <div>
+                            <p class="text-xs font-semibold text-gray-500 mb-0.5">ব্যবহারকারী ইমেইল / আইডি</p>
+                            <p id="profileEmailDisplay" class="text-[17px] font-semibold text-gray-800">manabendra@gmail.com</p>
+                            <div id="profileRoleBadge" class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide">admin</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-7">
+                    <p class="text-[15px] font-bold text-gray-800 mb-3">অনুমতি:</p>
+                    <div id="profilePermissionsContainer" class="flex flex-wrap gap-2">
+                        <!-- ডাইনামিকভাবে পারমিশন লোড হবে -->
+                    </div>
+                </div>
+
+                <div class="mt-8 flex gap-3">
+                    <button onclick="openPasswordModal()" class="flex-1 flex items-center justify-center gap-2 border border-orange-500 bg-orange-50 rounded-lg py-3 text-[13px] font-bold text-orange-700 hover:bg-orange-100 transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
+                        পাসওয়ার্ড পরিবর্তন
+                    </button>
+                    <button onclick="handleLogout()" class="flex-1 flex items-center justify-center gap-2 bg-[#F04445] text-white rounded-lg py-3 text-[13px] font-bold hover:bg-red-600 transition shadow-sm">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        লগ আউট
+                    </button>
+                </div>
+            </div>
+
+            <!-- সাব-ট্যাব ২: সিস্টেম সেটিংস (সম্পূর্ণ অরেঞ্জ থিম) -->
+            <div id="subSectionSystem" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
+                <h2 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">⚙️ সিস্টেম সেটিংস</h2>
+                <p class="text-xs text-gray-500 mb-6">এখানে লোগো এবং ডেভেলপার সম্পর্কিত সেটিংস পরিবর্তন করতে পারবেন।</p>
+
+                <!-- ১. লোগো পরিবর্তনের অপশন -->
+                <div class="mb-8 p-4 bg-orange-50/60 rounded-xl border border-orange-100">
+                    <h3 class="text-sm font-bold text-orange-800 mb-3 flex items-center gap-1.5">🖼️ ক্লাবের লোগো পরিবর্তন</h3>
+                    <div class="flex flex-col md:flex-row items-center gap-4">
+                        <div class="shrink-0 text-center">
+                            <img id="clubLogoPreview" src="https://via.placeholder.com/100?text=Logo" class="w-20 h-20 object-cover rounded-full border-2 border-orange-400 shadow-sm mx-auto" alt="Club Logo Preview">
+                            <span class="text-[10px] text-gray-500 mt-1 block">বর্তমান লোগো</span>
+                        </div>
+                        <div class="flex-1 w-full space-y-2">
+                            <input type="file" id="logoFileInput" accept="image/*" onchange="previewClubLogo(this)" class="w-full p-2 border rounded-lg text-xs bg-white cursor-pointer">
+                            <button onclick="saveClubLogo()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-700 transition shadow-sm w-full md:w-auto">
+                                💾 লোগো সেভ করুন
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <hr class="my-6 border-gray-200">
+
+                <!-- ২. ডেভেলপার তথ্য অপশন (অরেঞ্জ থিমে রূপান্তর) -->
+                <div>
+                    <h3 class="text-sm font-bold text-orange-900 mb-3 flex items-center gap-1.5">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
+                    <form id="devConfigForm" onsubmit="saveDevData(event)" class="space-y-4">
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">ডেভেলপারের নাম</label>
+                            <input type="text" id="devNameInput" required placeholder="যেমন: Manabendra Nath Sarkar" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
+                            <input type="text" id="devMobileInput" required placeholder="যেমন: 9933371702" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল এড্রেস</label>
+                            <input type="email" id="devEmailInput" required placeholder="যেমন: dev@example.com" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                        </div>
+                        
+                        <button type="submit" class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition shadow-sm w-full md:w-auto">
+                            💾 ডেভেলপার তথ্য সেভ করুন
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- সাব-ট্যাব ৩: ব্যবহারকারী (User Management) -->
+            <div id="subSectionUsers" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">ব্যবহারকারী ব্যবস্থাপনা</h2>
+                        <p class="text-xs text-gray-500">কমিটির নির্ধারিত ব্যবহারকারীদের তালিকা ও পারমিশন কন্ট্রোল।</p>
+                    </div>
+                    <button onclick="openCreateUserModal()" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-orange-700 transition shadow-sm flex items-center gap-1">
+                        ➕ নতুন ব্যবহারকারী
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 border-b">
+                                <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
+                                <th class="p-2.5 border-r text-center align-middle">নাম</th>
+                                <th class="p-2.5 border-r text-center align-middle">অনুমোদিত পারমিশন</th>
+                                <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- ডাইনামিকভাবে ইউজার ডাটা বসবে -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- সাব-ট্যাব ৪: লগইন ইতিহাস (Login History) -->
+            <div id="subSectionHistory" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 mb-4">
+                    <div>
+                        <h2 class="text-xl font-bold text-gray-900">লগইন ইতিহাস</h2>
+                        <p class="text-xs text-gray-500"> সিস্টেমে সাম্প্রতিক লগইন হওয়া একাউন্টের তথ্য।</p>
+                    </div>
+                    <button id="deleteHistoryBtn" onclick="deleteSelectedHistory()" class="bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-red-700 transition shadow-sm hidden">
+                        🗑️ সিলেক্টেড ইতিহাস ডিলিট
+                    </button>
+                </div>
+
+                <div class="mb-3">
+                    <input type="text" id="historySearchInput" onkeyup="filterLoginHistory()" placeholder="ইউজার নাম বা ইমেইল দিয়ে সার্চ করুন..." class="w-full p-2.5 border rounded-lg text-xs focus:outline-none focus:border-orange-500">
+                </div>
+
+                <div class="overflow-x-auto border rounded-lg">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr class="bg-gray-100 text-gray-700 border-b">
+                                <th class="p-2.5 border-r text-center align-middle w-10">
+                                    <input type="checkbox" id="selectAllHistory" onclick="toggleSelectAllHistory()" class="cursor-pointer w-4 h-4">
+                                </th>
+                                <th class="p-2.5 border-r text-center align-middle">ইউজার আইডি/ইমেইল</th>
+                                <th class="p-2.5 border-r text-center align-middle">লগইন সময়</th>
+                                <th class="p-2.5 text-center align-middle">ডিভাইস / IP</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
 
     </div>
 
-    <!-- নতুন বা এডিট সদস্য পপআপ মডাল -->
+    <!-- 🔑 পাসওয়ার্ড পরিবর্তন মডাল -->
+    <div id="changePasswordModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl border border-gray-100">
+            <h3 class="text-lg font-bold text-orange-600 mb-4 flex items-center gap-2">
+                🔒 পাসওয়ার্ড পরিবর্তন করুন
+            </h3>
+            
+            <form id="changePasswordForm" onsubmit="handlePasswordChange(event)" class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">নতুন পাসওয়ার্ড *</label>
+                    <input type="password" id="newPasswordInput" required minlength="6" placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">নতুন পাসওয়ার্ড কনফার্ম করুন *</label>
+                    <input type="password" id="confirmPasswordInput" required minlength="6" placeholder="পুনরায় নতুন পাসওয়ার্ড লিখুন" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                </div>
+
+                <div id="passErrorMsg" class="text-xs font-bold text-red-600 hidden"></div>
+
+                <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
+                    <button type="button" onclick="closePasswordModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-300">বাতিল</button>
+                    <button type="submit" id="savePassBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-700 shadow-sm">আপডেট করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 👨‍💻 ডেভেলপার পপআপ মডাল (অরেঞ্জ থিম) -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+            <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
+            
+            <div class="text-center mb-4">
+                <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl shadow-inner">
+                    👨‍💻
+                </div>
+                <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+                <span class="text-[10px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full font-bold">System Developer</span>
+            </div>
+
+            <div class="space-y-2.5 text-xs border-t pt-3">
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-gray-500 font-semibold">নাম:</span>
+                    <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-gray-500 font-semibold">মোবাইল:</span>
+                    <span id="popDevMobile" class="font-bold text-orange-700">লোড হচ্ছে...</span>
+                </div>
+                <div class="flex justify-between items-center bg-gray-50 p-2 rounded-lg border">
+                    <span class="text-gray-500 font-semibold">ইমেইল:</span>
+                    <span id="popDevEmail" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+                </div>
+            </div>
+
+            <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-orange-700 shadow-sm transition">
+                বন্ধ করুন
+            </button>
+        </div>
+    </div>
+
+    <!-- 👤 নতুন ইউজার তৈরি ও পারমিশন এডিট মডাল -->
+    <div id="createUserModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl border border-gray-100">
+            <h3 id="userModalTitle" class="text-lg font-bold text-orange-600 mb-4 flex items-center gap-2">
+                👤 নতুন ব্যবহারকারী আইডি তৈরি করুন
+            </h3>
+            
+            <form id="createUserForm" onsubmit="handleSaveUser(event)" class="space-y-3">
+                <input type="hidden" id="editUserId">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">ব্যবহারকারীর নাম *</label>
+                    <input type="text" id="uNameInput" required placeholder="পূর্ণ নাম" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">ইমেইল / আইডি *</label>
+                    <input type="email" id="uEmailInput" required placeholder="example@gmail.com" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                </div>
+                <div id="passInputContainer">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">পাসওয়ার্ড *</label>
+                    <input type="password" id="uPassInput" minlength="6" placeholder="কমপক্ষে ৬ অক্ষরের পাসওয়ার্ড" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-700 mb-2">অ্যাপের অনুমতি (Permissions) নির্ধারণ করুন:</label>
+                    <div class="grid grid-cols-2 gap-2 text-xs">
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_member" class="accent-orange-600 w-4 h-4"> সদস্য ব্যবস্থাপনা
+                        </label>
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_subscription" class="accent-orange-600 w-4 h-4"> চাঁদা সংগ্রহ
+                        </label>
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_expense" class="accent-orange-600 w-4 h-4"> খরচ ট্র্যাকিং
+                        </label>
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_booking" class="accent-orange-600 w-4 h-4"> টিকিট বুকিং
+                        </label>
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_sales" class="accent-orange-600 w-4 h-4"> টিকিট বিক্রয়
+                        </label>
+                        <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-orange-50">
+                            <input type="checkbox" id="perm_treasurer" class="accent-orange-600 w-4 h-4"> প্রধান কোষাধ্যক্ষ
+                        </label>
+                    </div>
+                </div>
+
+                <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
+                    <button type="button" onclick="closeCreateUserModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-300">বাতিল</button>
+                    <button type="submit" id="saveUserBtn" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-700 shadow-sm">সেভ করুন</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- সদস্য মডাল ও আইডি কার্ড মডাল -->
     <div id="addMemberModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
         <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
             <h3 id="modalTitle" class="text-lg font-bold text-orange-600 mb-4">নতুন সদস্য যুক্ত করুন</h3>
@@ -226,7 +518,7 @@
             </select>
             
             <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর (ঐচ্ছিক - ১০ ডিজিট)</label>
-            <input type="number" id="newMemberMobile" placeholder="১০ ডিজিটের মোবাইল নম্বর" class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500">
+            <input type="tel" id="newMemberMobile" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" placeholder="১০ ডিজিটের মোবাইল নম্বর" class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500">
             
             <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি</label>
             <input type="file" id="newMemberPhoto" accept="image/*" onchange="processImage(this, 'photoPreview', 300, 300)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50 cursor-pointer">
@@ -274,12 +566,12 @@
 
             <div class="bg-gray-50 px-3 py-1.5 border-t flex justify-between items-end text-[9px]">
                 <div id="normalMemberSigContainer" class="text-center w-24">
-                    <img id="idCardSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5" alt="Signature">
+                    <img id="idCardSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5 hidden" alt="Signature">
                     <div class="border-t border-gray-400 text-gray-700 font-semibold text-[8px] tracking-tight">সদস্যের স্বাক্ষর</div>
                 </div>
                 
                 <div id="presidentSingleSigContainer" class="text-center w-full hidden">
-                    <img id="idCardPresSingleSig" src="" class="h-6 max-w-[100px] object-contain mx-auto mb-0.5" alt="President Signature">
+                    <img id="idCardPresSingleSig" src="" class="h-6 max-w-[100px] object-contain mx-auto mb-0.5 hidden" alt="President Signature">
                     <div class="border-t border-orange-500 text-orange-700 font-bold text-[8.5px] max-w-[120px] mx-auto tracking-tight">মাননীয় সভাপতি</div>
                 </div>
 
@@ -298,11 +590,11 @@
         </div>
     </div>
 
-    <!-- Firebase ও লজিক স্ক্রিপ্ট -->
+    <!-- Firebase ও মূল লজিক স্ক্রিপ্ট -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -321,11 +613,409 @@
         const db = getFirestore(app);
 
         let allMembersData = [];
+        let allUsersData = [];
+        let allLoginHistory = [];
         let processedPhotoBase64 = "";
         let processedSigBase64 = "";
 
-        // ব্রাউজারকে জানিয়ে দেওয়া যে, অ্যাপ খোলার সময় আমরা ড্যাশবোর্ডে আছি
+        // 🔐 অ্যাডমিন ইমেইল কনফিগারেশন
+        const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+        window.currentUserRole = 'user'; 
+        window.userPermissions = [];
+
         window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                if (user.email === ADMIN_EMAIL) {
+                    window.currentUserRole = 'admin';
+                    window.userPermissions = ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'];
+                } else {
+                    window.currentUserRole = 'user';
+                    // ফায়ারবেস Firestore থেকে ইউজারের নির্দিষ্ট পারমিশন লোড করা
+                    try {
+                        const userDoc = await getDoc(doc(db, "app_users", user.uid));
+                        if(userDoc.exists()){
+                            window.userPermissions = userDoc.data().permissions || [];
+                        } else {
+                            window.userPermissions = [];
+                        }
+                    } catch(e) {
+                        console.error("Error loading permissions:", e);
+                        window.userPermissions = [];
+                    }
+                }
+
+                // লগইন হিস্ট্রি ফায়ারবেসে সেভ করা
+                logUserLogin(user);
+
+                setupUIBasedOnRoleAndPermissions(user);
+                loadMembers();
+
+                if (window.currentUserRole === 'admin') {
+                    loadAppUsers();
+                    loadLoginHistory();
+                }
+            } else {
+                window.location.replace("index.html");
+            }
+        });
+
+        // লগইন হিস্ট্রি ফায়ারবেসে সেভ করা
+        async function logUserLogin(user) {
+            try {
+                await addDoc(collection(db, "login_history"), {
+                    userId: user.uid,
+                    email: user.email,
+                    name: user.displayName || user.email.split('@')[0],
+                    timestamp: Date.now(),
+                    device: navigator.userAgent
+                });
+            } catch(e) {
+                console.error("Error logging history:", e);
+            }
+        }
+
+        // পারমিশন ও রোল অনুযায়ী ইউজার ইন্টারফেস অ্যাডজাস্ট করা
+        function setupUIBasedOnRoleAndPermissions(user) {
+            const roleBadge = document.getElementById('userRoleBadge');
+            const profileEmail = document.getElementById('profileEmailDisplay');
+            const profileName = document.getElementById('profileNameDisplay');
+            const profileBadge = document.getElementById('profileRoleBadge');
+            const adminControls = document.getElementById('adminMemberControls');
+            const adminCols = document.querySelectorAll('.admin-only-col');
+
+            if (profileEmail) profileEmail.innerText = user.email || 'ইউজার';
+            if (profileName && user.email) {
+                profileName.innerText = user.displayName || user.email.split('@')[0];
+            }
+
+            // প্রোফাইল পারমিশন ব্যাজ লোড করা
+            const permContainer = document.getElementById('profilePermissionsContainer');
+            if(permContainer) {
+                permContainer.innerHTML = '';
+                const permMap = {
+                    'member': 'সদস্য ব্যবস্থাপনা',
+                    'subscription': 'চাঁদা সংগ্রহ',
+                    'expense': 'খরচ ট্র্যাকিং',
+                    'booking': 'টিকিট বুকিং',
+                    'sales': 'টিকিট বিক্রয়',
+                    'treasurer': 'প্রধান কোষাধ্যক্ষ'
+                };
+                window.userPermissions.forEach(p => {
+                    if(permMap[p]) {
+                        permContainer.innerHTML += `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${permMap[p]}</span>`;
+                    }
+                });
+            }
+
+            if (window.currentUserRole === 'admin') {
+                if(roleBadge) roleBadge.innerText = "রোল: Admin";
+                if(profileBadge) profileBadge.innerText = "admin";
+                if(adminControls) adminControls.classList.remove('hidden');
+                adminCols.forEach(col => col.classList.remove('hidden'));
+            } else {
+                if(roleBadge) roleBadge.innerText = "রোল: User";
+                if(profileBadge) profileBadge.innerText = "user";
+                if(adminControls) adminControls.classList.add('hidden');
+                adminCols.forEach(col => col.classList.add('hidden'));
+
+                // সাব-ট্যাব হাইড করা সাধারণ ইউজার থেকে
+                document.getElementById('tabBtnUsers').style.display = 'none';
+                document.getElementById('tabBtnHistory').style.display = 'none';
+                document.getElementById('tabBtnSystem').style.display = 'none';
+            }
+
+            // পারমিশন অনুযায়ী ড্যাশবোর্ড কার্ড ও মেনু ফিল্টার করা
+            const allModules = ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'];
+            allModules.forEach(mod => {
+                const menuBtn = document.getElementById(`menu-btn-${mod}`);
+                const dashCard = document.getElementById(`dash-card-${mod}`);
+                
+                if (window.currentUserRole === 'admin' || window.userPermissions.includes(mod)) {
+                    if(menuBtn) menuBtn.style.display = 'flex';
+                    if(dashCard) dashCard.style.display = 'flex';
+                } else {
+                    if(menuBtn) menuBtn.style.display = 'none';
+                    if(dashCard) dashCard.style.display = 'none';
+                }
+            });
+        }
+
+        // ইউজার লিস্ট লোড করা (শুধুমাত্র অ্যাডমিন)
+        function loadAppUsers() {
+            onSnapshot(collection(db, "app_users"), (snapshot) => {
+                allUsersData = [];
+                snapshot.forEach((docSnap) => {
+                    allUsersData.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                renderUsersTable(allUsersData);
+            });
+        }
+
+        function renderUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            const permNames = {
+                'member': 'সদস্য',
+                'subscription': 'চাঁদা',
+                'expense': 'খরচ',
+                'booking': 'বুকিং',
+                'sales': 'বিক্রয়',
+                'treasurer': 'কোষাধ্যক্ষ'
+            };
+
+            users.forEach(u => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+
+                let pTags = (u.permissions || []).map(p => `<span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold mr-1">${permNames[p] || p}</span>`).join('');
+
+                tr.innerHTML = `
+                    <td class="p-2.5 border-r font-medium text-gray-800 text-center">${u.email}</td>
+                    <td class="p-2.5 border-r text-gray-700 text-center">${u.name || '-'}</td>
+                    <td class="p-2.5 border-r text-center">${pTags || '<span class="text-xs text-gray-400">কোনো পারমিশন নেই</span>'}</td>
+                    <td class="p-2.5 text-center flex justify-center gap-1">
+                        <button onclick="editUserPermissions('${u.id}')" class="bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">এডিট</button>
+                        <button onclick="deleteUserAccount('${u.id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">ডিলিট</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // নতুন ইউজার বা পারমিশন সেভ করা
+        window.handleSaveUser = async function(event) {
+            event.preventDefault();
+            const editId = document.getElementById('editUserId').value;
+            const name = document.getElementById('uNameInput').value.trim();
+            const email = document.getElementById('uEmailInput').value.trim();
+            const pass = document.getElementById('uPassInput').value.trim();
+
+            const selectedPerms = [];
+            if(document.getElementById('perm_member').checked) selectedPerms.push('member');
+            if(document.getElementById('perm_subscription').checked) selectedPerms.push('subscription');
+            if(document.getElementById('perm_expense').checked) selectedPerms.push('expense');
+            if(document.getElementById('perm_booking').checked) selectedPerms.push('booking');
+            if(document.getElementById('perm_sales').checked) selectedPerms.push('sales');
+            if(document.getElementById('perm_treasurer').checked) selectedPerms.push('treasurer');
+
+            const saveBtn = document.getElementById('saveUserBtn');
+            saveBtn.innerText = "সেভ হচ্ছে...";
+            saveBtn.disabled = true;
+
+            try {
+                if(editId) {
+                    await updateDoc(doc(db, "app_users", editId), {
+                        name: name,
+                        email: email,
+                        permissions: selectedPerms
+                    });
+                    alert("ব্যবহারকারীর তথ্য সফলভাবে আপডেট করা হয়েছে!");
+                } else {
+                    const uId = "user_" + Date.now();
+                    await setDoc(doc(db, "app_users", uId), {
+                        name: name,
+                        email: email,
+                        permissions: selectedPerms,
+                        createdAt: Date.now()
+                    });
+                    alert("নতুন ব্যবহারকারী আইডি যুক্ত করা হয়েছে!");
+                }
+                closeCreateUserModal();
+            } catch(e) {
+                alert("ত্রুটি: " + e.message);
+            } finally {
+                saveBtn.innerText = "সেভ করুন";
+                saveBtn.disabled = false;
+            }
+        };
+
+        window.openCreateUserModal = function() {
+            document.getElementById('userModalTitle').innerText = "👤 নতুন ব্যবহারকারী আইডি তৈরি করুন";
+            document.getElementById('editUserId').value = "";
+            document.getElementById('uNameInput').value = "";
+            document.getElementById('uEmailInput').value = "";
+            document.getElementById('uPassInput').value = "";
+            document.getElementById('passInputContainer').style.display = 'block';
+
+            ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'].forEach(p => {
+                document.getElementById('perm_' + p).checked = false;
+            });
+
+            document.getElementById('createUserModal').classList.remove('hidden');
+        };
+
+        window.closeCreateUserModal = function() {
+            document.getElementById('createUserModal').classList.add('hidden');
+        };
+
+        window.editUserPermissions = function(uId) {
+            const user = allUsersData.find(u => u.id === uId);
+            if(!user) return;
+
+            document.getElementById('userModalTitle').innerText = "✏️ ব্যবহারকারীর পারমিশন এডিট করুন";
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('uNameInput').value = user.name || "";
+            document.getElementById('uEmailInput').value = user.email || "";
+            document.getElementById('passInputContainer').style.display = 'none';
+
+            const userPerms = user.permissions || [];
+            ['member', 'subscription', 'expense', 'booking', 'sales', 'treasurer'].forEach(p => {
+                document.getElementById('perm_' + p).checked = userPerms.includes(p);
+            });
+
+            document.getElementById('createUserModal').classList.remove('hidden');
+        };
+
+        window.deleteUserAccount = async function(uId) {
+            if(confirm("আপনি কি নিশ্চিতভাবে এই ব্যবহারকারীকে ডিলিট করতে চান?")) {
+                try {
+                    await deleteDoc(doc(db, "app_users", uId));
+                } catch(e) {
+                    alert("ডিলিট করতে ব্যর্থ: " + e.message);
+                }
+            }
+        };
+
+        // লগইন ইতিহাস লোড ও ফিল্টারিং (শুধুমাত্র অ্যাডমিন)
+        function loadLoginHistory() {
+            onSnapshot(collection(db, "login_history"), (snapshot) => {
+                allLoginHistory = [];
+                snapshot.forEach((docSnap) => {
+                    allLoginHistory.push({ id: docSnap.id, ...docSnap.data() });
+                });
+                allLoginHistory.sort((a,b) => b.timestamp - a.timestamp);
+                renderHistoryTable(allLoginHistory);
+            });
+        }
+
+        function renderHistoryTable(data) {
+            const tbody = document.getElementById('historyTableBody');
+            if(!tbody) return;
+            tbody.innerHTML = '';
+
+            if(data.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-500">কোনো লগইন ইতিহাস পাওয়া যায়নি।</td></tr>`;
+                return;
+            }
+
+            data.forEach(h => {
+                const tr = document.createElement('tr');
+                tr.className = 'border-b hover:bg-gray-50';
+                const dateStr = new Date(h.timestamp).toLocaleString('bn-IN');
+
+                tr.innerHTML = `
+                    <td class="p-2.5 border-r text-center align-middle">
+                        <input type="checkbox" class="history-checkbox cursor-pointer w-4 h-4" value="${h.id}">
+                    </td>
+                    <td class="p-2.5 border-r font-medium text-gray-800 text-center">${h.email} (${h.name || 'N/A'})</td>
+                    <td class="p-2.5 border-r text-gray-700 text-center">${dateStr}</td>
+                    <td class="p-2.5 text-center text-xs text-gray-500 max-w-xs truncate">${h.device || 'N/A'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.filterLoginHistory = function() {
+            const query = document.getElementById('historySearchInput').value.toLowerCase();
+            const filtered = allLoginHistory.filter(h => 
+                (h.email || '').toLowerCase().includes(query) || 
+                (h.name || '').toLowerCase().includes(query)
+            );
+            renderHistoryTable(filtered);
+        };
+
+        window.toggleSelectAllHistory = function() {
+            const selectAll = document.getElementById('selectAllHistory');
+            const checkboxes = document.querySelectorAll('.history-checkbox');
+            checkboxes.forEach(cb => cb.checked = selectAll.checked);
+            toggleDeleteHistoryBtn();
+        };
+
+        function toggleDeleteHistoryBtn() {
+            const checked = document.querySelectorAll('.history-checkbox:checked');
+            const delBtn = document.getElementById('deleteHistoryBtn');
+            if(checked.length > 0) {
+                delBtn.classList.remove('hidden');
+            } else {
+                delBtn.classList.add('hidden');
+            }
+        }
+
+        document.addEventListener('change', (e) => {
+            if(e.target.classList.contains('history-checkbox')) {
+                toggleDeleteHistoryBtn();
+            }
+        });
+
+        window.deleteSelectedHistory = async function() {
+            const checkboxes = document.querySelectorAll('.history-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if(selectedIds.length === 0) return;
+
+            if(confirm(`আপনি কি নিশ্চিতভাবে সিলেক্ট করা ${selectedIds.length} টি ইতিহাস ডিলিট করতে চান?`)) {
+                try {
+                    await Promise.all(selectedIds.map(id => deleteDoc(doc(db, "login_history", id))));
+                    document.getElementById('selectAllHistory').checked = false;
+                    toggleDeleteHistoryBtn();
+                } catch(e) {
+                    alert("ত্রুটি: " + e.message);
+                }
+            }
+        };
+
+        // পাসওয়ার্ড পরিবর্তনের ফায়ারবেস লজিক
+        window.handlePasswordChange = async function(event) {
+            event.preventDefault();
+            const newPass = document.getElementById('newPasswordInput').value;
+            const confirmPass = document.getElementById('confirmPasswordInput').value;
+            const errBox = document.getElementById('passErrorMsg');
+            const saveBtn = document.getElementById('savePassBtn');
+
+            errBox.classList.add('hidden');
+
+            if (newPass !== confirmPass) {
+                errBox.innerText = "নতুন পাসওয়ার্ড দুটি মিলছে না!";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            if (newPass.length < 6) {
+                errBox.innerText = "পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে!";
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            saveBtn.innerText = "আপডেট হচ্ছে...";
+            saveBtn.disabled = true;
+
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    await updatePassword(user, newPass);
+                    alert("পাসওয়ার্ড সফলভাবে পরিবর্তন করা হয়েছে!");
+                    closePasswordModal();
+                    document.getElementById('changePasswordForm').reset();
+                } catch (error) {
+                    if (error.code === 'auth/requires-recent-login') {
+                        alert("নিরাপত্তাজনিত কারণে পুনরায় লগইন করে আবার পাসওয়ার্ড পরিবর্তন করার চেষ্টা করুন।");
+                    } else {
+                        alert("পাসওয়ার্ড পরিবর্তন ব্যর্থ হয়েছে: " + error.message);
+                    }
+                } finally {
+                    saveBtn.innerText = "আপডেট করুন";
+                    saveBtn.disabled = false;
+                }
+            } else {
+                alert("ইউজার সেশন পাওয়া যায়নি। দয়া করে আবার লগইন করুন।");
+                saveBtn.innerText = "আপডেট করুন";
+                saveBtn.disabled = false;
+            }
+        };
 
         window.processImage = function(input, previewId, targetWidth, targetHeight) {
             const file = input.files[0];
@@ -339,6 +1029,9 @@
                     canvas.width = targetWidth;
                     canvas.height = targetHeight;
                     const ctx = canvas.getContext('2d');
+
+                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillRect(0, 0, targetWidth, targetHeight);
 
                     let sourceWidth = img.width;
                     let sourceHeight = img.height;
@@ -356,7 +1049,7 @@
                     }
 
                     ctx.drawImage(img, sourceX, sourceY, sourceWidth, sourceHeight, 0, 0, targetWidth, targetHeight);
-                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                    const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
 
                     const previewElement = document.getElementById(previewId);
                     previewElement.src = compressedDataUrl;
@@ -373,19 +1066,19 @@
             reader.readAsDataURL(file);
         }
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                loadMembers();
-            } else {
-                window.location.replace("index.html");
+        window.checkAdminPermissionForTab = function(tabName) {
+            if (tabName === 'settings' && window.currentUserRole !== 'admin') {
+                alert("এই সেটিংস পেজটি শুধুমাত্র প্রধান অ্যাডমিনের জন্য সংরক্ষিত!");
+                return false;
             }
-        });
+            return true;
+        };
 
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        window.handleLogout = function() {
             signOut(auth).then(() => {
                 window.location.replace("index.html");
             });
-        });
+        };
 
         function loadMembers() {
             onSnapshot(collection(db, "members"), (snapshot) => {
@@ -404,7 +1097,6 @@
                 renderTable(allMembersData);
                 document.getElementById('dashTotalMembers').innerText = allMembersData.length;
                 
-                // ডেটা রিফ্রেশ হলে Select All চেকবক্স আনচেক করে দেওয়া হবে
                 const selectAllCheckbox = document.getElementById('selectAll');
                 if(selectAllCheckbox) selectAllCheckbox.checked = false;
             });
@@ -416,17 +1108,36 @@
             document.getElementById('totalMembersCount').innerText = `মোট সদস্য: ${data.length}`;
 
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো সদস্য পাওয়া যায়নি।</td></tr>`;
+                const colSpan = window.currentUserRole === 'user' ? 8 : 9;
+                tbody.innerHTML = `<tr><td colspan="${colSpan}" class="p-4 text-center text-gray-500">কোনো সদস্য পাওয়া যায়নি।</td></tr>`;
                 return;
             }
+
+            const canEdit = window.currentUserRole === 'admin';
 
             data.forEach((member) => {
                 const tr = document.createElement('tr');
                 tr.classList.add('border-b', 'hover:bg-gray-50');
-                tr.innerHTML = `
-                    <td class="p-2.5 border-r text-center align-middle">
+                
+                let actionButtons = `
+                    <button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">আইডি</button>
+                `;
+
+                if (canEdit) {
+                    actionButtons += `
+                        <button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">এডিট</button>
+                        <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">ডিলিট</button>
+                    `;
+                }
+
+                let checkboxCell = canEdit ? `
+                    <td class="p-2.5 border-r text-center align-middle admin-only-col">
                         <input type="checkbox" class="member-checkbox cursor-pointer w-4 h-4" value="${member.id}">
                     </td>
+                ` : '';
+
+                tr.innerHTML = `
+                    ${checkboxCell}
                     <td class="p-2.5 border-r font-bold text-orange-600 text-center align-middle whitespace-nowrap">${member.autoId}</td>
                     <td class="p-2.5 border-r text-center align-middle whitespace-nowrap">
                         ${member.photo ? `<img src="${member.photo}" class="w-9 h-9 object-cover rounded-full mx-auto border">` : '<span class="text-xs text-gray-400">নেই</span>'}
@@ -439,18 +1150,13 @@
                         ${member.signature ? `<img src="${member.signature}" class="h-6 object-contain mx-auto border px-1">` : '<span class="text-xs text-gray-400">নেই</span>'}
                     </td>
                     <td class="p-2.5 text-center align-middle whitespace-nowrap flex justify-center gap-1">
-                        <button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 hover:bg-indigo-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">আইডি</button>
-                        <button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 hover:bg-amber-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">এডিট</button>
-                        <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 hover:bg-red-600 hover:text-white px-2 py-1 rounded text-xs font-semibold transition">ডিলিট</button>
+                        ${actionButtons}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        // =====================================
-        // নতুন: Select All & Bulk Delete লজিক
-        // =====================================
         window.toggleSelectAll = function() {
             const selectAllCheckbox = document.getElementById('selectAll');
             const checkboxes = document.querySelectorAll('.member-checkbox');
@@ -460,6 +1166,8 @@
         }
 
         window.deleteSelectedMembers = async function() {
+            if (window.currentUserRole === 'user') return;
+
             const checkboxes = document.querySelectorAll('.member-checkbox:checked');
             const selectedIds = Array.from(checkboxes).map(cb => cb.value);
 
@@ -475,9 +1183,7 @@
                 deleteBtn.disabled = true;
 
                 try {
-                    // Promise.all ব্যবহার করে একসাথে সব সিলেক্টেড ডেটা ডিলিট করা হচ্ছে
                     await Promise.all(selectedIds.map(id => deleteDoc(doc(db, "members", id))));
-                    // সফল হলে অ্যালার্ট বা রিফ্রেশ করার দরকার নেই, onSnapshot নিজে থেকেই টেবিল আপডেট করে দেবে
                 } catch(e) {
                     alert("ডিলিট করতে সমস্যা হয়েছে: " + e.message);
                 } finally {
@@ -486,7 +1192,6 @@
                 }
             }
         }
-        // =====================================
 
         window.filterMembers = function() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
@@ -500,12 +1205,13 @@
             });
             renderTable(filtered);
             
-            // সার্চ করলে Select All আনচেক করা ভালো
             const selectAllCheckbox = document.getElementById('selectAll');
             if(selectAllCheckbox) selectAllCheckbox.checked = false;
         }
 
         window.openAddModal = function() {
+            if (window.currentUserRole === 'user') return;
+
             document.getElementById('modalTitle').innerText = "নতুন সদস্য যুক্ত করুন";
             document.getElementById('editMemberDocId').value = "";
             document.getElementById('newMemberName').value = '';
@@ -520,11 +1226,12 @@
             processedSigBase64 = "";
             
             document.getElementById('addMemberModal').classList.remove('hidden');
-            // মডাল ওপেন করার সময় ব্রাউজারকে জানিয়ে দেওয়া যে আমরা member ট্যাবেই আছি
             window.history.pushState({ modalOpen: true, tab: 'member' }, "");
         }
 
         window.openEditModal = function(docId) {
+            if (window.currentUserRole === 'user') return;
+
             const member = allMembersData.find(m => m.id === docId);
             if(!member) return;
 
@@ -558,6 +1265,8 @@
         }
 
         window.saveOrUpdateMember = async function() {
+            if (window.currentUserRole === 'user') return;
+
             const docId = document.getElementById('editMemberDocId').value;
             const name = document.getElementById('newMemberName').value.trim();
             const village = document.getElementById('newMemberVillage').value.trim();
@@ -600,7 +1309,7 @@
                     });
                 }
 
-                closeAddModal(); // সফলভাবে সেভ হলে মডালটি বন্ধ হয়ে যাবে
+                closeAddModal();
             } catch(e) {
                 alert("ত্রুটি: " + e.message);
             } finally {
@@ -647,9 +1356,9 @@
                 const presSingleSigEl = document.getElementById('idCardPresSingleSig');
                 if (member.signature) {
                     presSingleSigEl.src = member.signature;
-                    presSingleSigEl.style.display = 'block';
+                    presSingleSigEl.classList.remove('hidden');
                 } else {
-                    presSingleSigEl.style.display = 'none';
+                    presSingleSigEl.classList.add('hidden');
                 }
             } else {
                 headerEl.className = "bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center";
@@ -663,9 +1372,9 @@
                 const sigEl = document.getElementById('idCardSig');
                 if(member.signature) {
                     sigEl.src = member.signature;
-                    sigEl.style.display = 'block';
+                    sigEl.classList.remove('hidden');
                 } else {
-                    sigEl.style.display = 'none';
+                    sigEl.classList.add('hidden');
                 }
 
                 const president = allMembersData.find(m => m.role === 'সভাপতি' && m.signature);
@@ -706,16 +1415,19 @@
             }
         }
 
-        // হিস্টোরি পপ-স্টেট লজিক (History Back API)
         window.addEventListener('popstate', function(event) {
             const idCardModal = document.getElementById('idCardModal');
             const addModal = document.getElementById('addMemberModal');
+            const devModal = document.getElementById('devModal');
+            const passModal = document.getElementById('changePasswordModal');
+            const createUModal = document.getElementById('createUserModal');
 
-            // কোনো মডাল খোলা থাকলে সেগুলো আগে হাইড করে দাও
             if(idCardModal) idCardModal.classList.add('hidden');
             if(addModal) addModal.classList.add('hidden');
+            if(devModal) devModal.classList.add('hidden');
+            if(passModal) passModal.classList.add('hidden');
+            if(createUModal) createUModal.classList.add('hidden');
 
-            // স্টেট চেক করে সঠিক ট্যাবে ফিরে যাও
             if (event.state && event.state.tab) {
                 switchTab(event.state.tab, false);
             } else {
@@ -724,6 +1436,8 @@
         });
 
         window.deleteMember = async function(docId) {
+            if (window.currentUserRole === 'user') return;
+
             if(confirm("আপনি কি নিশ্চিতভাবে এই সদস্যকে ডিলিট করতে চান?")) {
                 try {
                     await deleteDoc(doc(db, "members", docId));
@@ -733,10 +1447,9 @@
             }
         }
 
-        // ==========================================
-        // Advanced ExcelJS Export Logic (With Images)
-        // ==========================================
         window.exportToExcel = async function() {
+            if (window.currentUserRole === 'user') return;
+
             if(allMembersData.length === 0) {
                 alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
                 return;
@@ -805,10 +1518,13 @@
 
                     if (member.photo && member.photo.includes('base64,')) {
                         const base64Data = member.photo.split(';base64,').pop();
-                        const ext = member.photo.substring("data:image/".length, member.photo.indexOf(";base64"));
+                        let ext = 'png';
+                        if(member.photo.includes('data:image/jpeg') || member.photo.includes('data:image/jpg')) {
+                            ext = 'jpeg';
+                        }
                         const imageId = workbook.addImage({
                             base64: base64Data,
-                            extension: ext === 'jpeg' ? 'jpeg' : 'png',
+                            extension: ext,
                         });
                         worksheet.addImage(imageId, {
                             tl: { col: 5.1, row: rowIndex - 1 + 0.1 },
@@ -821,10 +1537,13 @@
 
                     if (member.signature && member.signature.includes('base64,')) {
                         const base64Data = member.signature.split(';base64,').pop();
-                        const ext = member.signature.substring("data:image/".length, member.signature.indexOf(";base64"));
+                        let ext = 'png';
+                        if(member.signature.includes('data:image/jpeg') || member.signature.includes('data:image/jpg')) {
+                            ext = 'jpeg';
+                        }
                         const imageId = workbook.addImage({
                             base64: base64Data,
-                            extension: ext === 'jpeg' ? 'jpeg' : 'png',
+                            extension: ext,
                         });
                         worksheet.addImage(imageId, {
                             tl: { col: 6.1, row: rowIndex - 1 + 0.1 },
@@ -871,9 +1590,144 @@
         }
     </script>
 
-    <!-- ট্যাব পরিবর্তন ও ইউজার ইন্টারফেস স্ক্রিপ্ট -->
+    <!-- ইউজার ইন্টারফেস, লোগো, ডেভেলপার ও সেটিংস সাব-ট্যাব স্ক্রিপ্ট -->
     <script>
+        // ডিফল্ট ডেভেলপার তথ্য
+        const defaultDevInfo = {
+            name: "Manabendra Nath Sarkar",
+            mobile: "9933371702",
+            email: "manabendra@gmail.com"
+        };
+
+        let tempLogoBase64 = "";
+
+        // লোগো প্রিভিউ দেখা
+        function previewClubLogo(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                tempLogoBase64 = e.target.result;
+                document.getElementById('clubLogoPreview').src = tempLogoBase64;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // ক্লাবের লোগো সেভ করা
+        function saveClubLogo() {
+            if(!tempLogoBase64) {
+                alert("দয়া করে একটি লোগো ফাইল সিলেক্ট করুন!");
+                return;
+            }
+            localStorage.setItem('pujaClubLogo', tempLogoBase64);
+            loadClubLogo();
+            alert("ক্লাবের লোগো সফলভাবে সেভ করা হয়েছে!");
+        }
+
+        // লোগো লোড করা
+        function loadClubLogo() {
+            const savedLogo = localStorage.getItem('pujaClubLogo');
+            if(savedLogo) {
+                const preview = document.getElementById('clubLogoPreview');
+                if(preview) preview.src = savedLogo;
+            }
+        }
+
+        // লোকাল স্টোরেজ থেকে ডেভেলপার ডাটা লোড ও আপডেট করা
+        function loadDevData() {
+            const savedDev = JSON.parse(localStorage.getItem('pujaDevData')) || defaultDevInfo;
+            
+            // সেটিংস ফর্মের ইনপুটে মান বসানো
+            const devNameIn = document.getElementById('devNameInput');
+            const devMobileIn = document.getElementById('devMobileInput');
+            const devEmailIn = document.getElementById('devEmailInput');
+
+            if(devNameIn) devNameIn.value = savedDev.name;
+            if(devMobileIn) devMobileIn.value = savedDev.mobile;
+            if(devEmailIn) devEmailIn.value = savedDev.email;
+
+            // পপআপ মডালে মান বসানো
+            const popName = document.getElementById('popDevName');
+            const popMobile = document.getElementById('popDevMobile');
+            const popEmail = document.getElementById('popDevEmail');
+
+            if(popName) popName.textContent = savedDev.name;
+            if(popMobile) popMobile.textContent = savedDev.mobile;
+            if(popEmail) popEmail.textContent = savedDev.email;
+        }
+
+        // ডেভেলপার ডাটা সেভ করা
+        function saveDevData(e) {
+            e.preventDefault();
+            const updatedDev = {
+                name: document.getElementById('devNameInput').value.trim(),
+                mobile: document.getElementById('devMobileInput').value.trim(),
+                email: document.getElementById('devEmailInput').value.trim()
+            };
+
+            localStorage.setItem('pujaDevData', JSON.stringify(updatedDev));
+            loadDevData();
+            alert("ডেভেলপার তথ্য সফলভাবে সেভ করা হয়েছে!");
+        }
+
+        // ডেভেলপার পপআপ টগল
+        function toggleDevModal() {
+            const devModal = document.getElementById('devModal');
+            if (devModal.classList.contains('hidden')) {
+                loadDevData();
+                devModal.classList.remove('hidden');
+            } else {
+                devModal.classList.add('hidden');
+            }
+        }
+
+        // পাসওয়ার্ড মডাল কন্ট্রোল
+        function openPasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('hidden');
+            document.getElementById('passErrorMsg').classList.add('hidden');
+            document.getElementById('changePasswordForm').reset();
+        }
+
+        function closePasswordModal() {
+            document.getElementById('changePasswordModal').classList.add('hidden');
+        }
+
+        // সেটিংস প্যানেলের সাব-ট্যাব পরিবর্তন লজিক
+        function switchSettingsSubTab(subTabName) {
+            const subTabs = ['profile', 'system', 'users', 'history'];
+            
+            subTabs.forEach(tab => {
+                const section = document.getElementById('subSection' + tab.charAt(0).toUpperCase() + tab.slice(1));
+                const btn = document.getElementById('tabBtn' + tab.charAt(0).toUpperCase() + tab.slice(1));
+                
+                if (section) section.classList.add('hidden');
+                if (btn) {
+                    btn.className = "px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition";
+                }
+            });
+
+            const activeSection = document.getElementById('subSection' + subTabName.charAt(0).toUpperCase() + subTabName.slice(1));
+            const activeBtn = document.getElementById('tabBtn' + subTabName.charAt(0).toUpperCase() + subTabName.slice(1));
+
+            if (activeSection) activeSection.classList.remove('hidden');
+            if (activeBtn) {
+                activeBtn.className = "bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition";
+            }
+
+            if(subTabName === 'system') {
+                loadClubLogo();
+                loadDevData();
+            }
+        }
+
+        // মূল ড্যাশবোর্ড ট্যাব সুইচিং
         function switchTab(tabName, pushHistory = true) {
+            if (tabName === 'settings' && typeof window.checkAdminPermissionForTab === 'function') {
+                if (!window.checkAdminPermissionForTab(tabName)) {
+                    return;
+                }
+            }
+
             const tabs = ['dashboard', 'member', 'subscription', 'expense', 'booking', 'sales', 'treasurer', 'settings'];
             tabs.forEach(t => {
                 const el = document.getElementById('section-' + t);
@@ -885,7 +1739,6 @@
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            // এখন যেকোনো ট্যাবে গেলে ব্রাউজার সেটা মনে রাখবে
             if (pushHistory) {
                 window.history.pushState({ tab: tabName }, "", window.location.href);
             }
@@ -903,6 +1756,12 @@
                 arrowIcon.style.transform = 'rotate(-90deg)';
             }
         }
+
+        // প্রাথমিক পেজ লোড
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDevData();
+            loadClubLogo();
+        });
     </script>
 </body>
 </html>
