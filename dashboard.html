@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS for Excel Export -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- ExcelJS for Advanced Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <style>
-        /* টেবিলের সেলগুলোর ডেটা মিডল অ্যালাইনমেন্ট এবং অটো-ফিট সাইজ করার জন্য */
         #memberTableBody td, #memberTableBody th {
             text-align: center;
             vertical-align: middle;
@@ -16,7 +16,6 @@
             width: auto;
         }
 
-        /* প্রিন্ট করার সময় ব্যাকগ্রাউন্ড কালার এবং সঠিক মাপ ঠিক রাখার জন্য */
         @media print {
             * {
                 -webkit-print-color-adjust: exact !important;
@@ -49,7 +48,6 @@
 
     <div class="max-w-4xl mx-auto">
         
-        <!-- ক্লাবের অফিশিয়াল হেডার -->
         <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
             <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
             <p class="text-xs md:text-sm text-gray-700 mt-1">
@@ -63,7 +61,6 @@
             </p>
         </div>
 
-        <!-- ড্যাশবোর্ড মিনিমাইজ/ম্যাক্সিমাইজ সিস্টেম -->
         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
             <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
                 <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
@@ -73,26 +70,22 @@
                 </div>
             </div>
 
-            <!-- ছোট কুইক মেনু আইকনসমূহ -->
             <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-                <button onclick="switchTab('member')" id="top-tab-member" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
-                <button onclick="switchTab('subscription')" id="top-tab-subscription" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-                <button onclick="switchTab('expense')" id="top-tab-expense" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-                <button onclick="switchTab('booking')" id="top-tab-booking" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-                <button onclick="switchTab('sales')" id="top-tab-sales" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
-                <button onclick="switchTab('treasurer')" id="top-tab-treasurer" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📊 কোষাধ্যক্ষ</button>
-                <button onclick="switchTab('settings')" id="top-tab-settings" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+                <button onclick="switchTab('member')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
+                <button onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+                <button onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+                <button onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+                <button onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
+                <button onclick="switchTab('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📊 কোষাধ্যক্ষ</button>
+                <button onclick="switchTab('settings')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
             </div>
         </div>
 
-        <!-- ================= মূল ড্যাশবোর্ড ওভারভিউ সেকশন ================= -->
         <div id="section-dashboard" class="space-y-3">
-            
             <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm">
                 <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাধিকারী</span>
             </div>
 
-            <!-- প্রথম সারি: মোট সদস্য ও মোট চাঁদা -->
             <div class="grid grid-cols-2 gap-3">
                 <div onclick="switchTab('member')" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">👥</div>
@@ -106,7 +99,6 @@
                 </div>
             </div>
 
-            <!-- অন্যান্য কার্ডগুলো -->
             <div class="grid grid-cols-2 gap-3">
                 <div onclick="switchTab('expense')" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
                     <div class="text-2xl mb-1">💵</div>
@@ -130,7 +122,6 @@
             </div>
         </div>
 
-        <!-- ================= সদস্য ব্যবস্থাপনা সেকশন ================= -->
         <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hidden">
             
             <div class="flex items-center justify-between mb-4 border-b pb-3">
@@ -141,7 +132,6 @@
                 <span class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full" id="totalMembersCount">মোট সদস্য: ০</span>
             </div>
 
-            <!-- অ্যাকশন বাটন -->
             <div class="flex flex-wrap gap-2 mb-4">
                 <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">
                     ➕ যোগ করুন
@@ -149,18 +139,24 @@
                 <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">
                     📥 এক্সেল এক্সপোর্ট
                 </button>
+                <!-- নতুন যুক্ত হওয়া: মার্ক ডিলিট বাটন -->
+                <button id="bulkDeleteBtn" onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">
+                    🗑️ সিলেক্টেড ডিলিট
+                </button>
             </div>
 
-            <!-- সার্চ বার -->
             <div class="flex flex-col md:flex-row gap-2 mb-4">
                 <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, গ্রাম, পদ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
             </div>
 
-            <!-- সদস্য তালিকা টেবিল -->
             <div class="overflow-x-auto border rounded-lg">
                 <table class="w-full text-left border-collapse text-sm">
                     <thead>
                         <tr class="bg-gray-100 text-gray-700 border-b">
+                            <!-- নতুন যুক্ত হওয়া: Select All চেকবক্স -->
+                            <th class="p-2.5 border-r text-center align-middle w-10">
+                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="cursor-pointer w-4 h-4">
+                            </th>
                             <th class="p-2.5 border-r text-center align-middle">ID</th>
                             <th class="p-2.5 border-r text-center align-middle">ছবি</th>
                             <th class="p-2.5 border-r text-center align-middle">নাম</th>
@@ -172,7 +168,6 @@
                         </tr>
                     </thead>
                     <tbody id="memberTableBody">
-                        <!-- ডেটা ডাইনামিক লোড হবে -->
                     </tbody>
                 </table>
             </div>
@@ -202,7 +197,6 @@
         <div id="section-settings" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
             <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
             <h2 class="text-lg font-bold text-gray-800 mb-2">⚙️ সেটিংস প্যানেল</h2>
-            <p class="text-sm text-gray-600">এখানে ভবিষ্যতে আইডি, পাসওয়ার্ড ও লোগো পরিবর্তনের অপশন যুক্ত করা হবে।</p>
         </div>
 
     </div>
@@ -322,7 +316,6 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         
-        // ব্রাউজার বা ট্যাব বন্ধ করলে লগইন সেশন মুছে যাবে
         setPersistence(auth, browserSessionPersistence);
 
         const db = getFirestore(app);
@@ -331,9 +324,8 @@
         let processedPhotoBase64 = "";
         let processedSigBase64 = "";
 
-        // পেজ লোড হওয়ার সাথে সাথে ড্যাশবোর্ডের জন্য হিস্ট্রি লক সেটআপ
-        window.history.replaceState({ page: "dashboard" }, "", window.location.href);
-        window.history.pushState({ page: "dashboard" }, "", window.location.href);
+        // ব্রাউজারকে জানিয়ে দেওয়া যে, অ্যাপ খোলার সময় আমরা ড্যাশবোর্ডে আছি
+        window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
 
         window.processImage = function(input, previewId, targetWidth, targetHeight) {
             const file = input.files[0];
@@ -411,6 +403,10 @@
 
                 renderTable(allMembersData);
                 document.getElementById('dashTotalMembers').innerText = allMembersData.length;
+                
+                // ডেটা রিফ্রেশ হলে Select All চেকবক্স আনচেক করে দেওয়া হবে
+                const selectAllCheckbox = document.getElementById('selectAll');
+                if(selectAllCheckbox) selectAllCheckbox.checked = false;
             });
         }
 
@@ -420,7 +416,7 @@
             document.getElementById('totalMembersCount').innerText = `মোট সদস্য: ${data.length}`;
 
             if(data.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো সদস্য পাওয়া যায়নি।</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো সদস্য পাওয়া যায়নি।</td></tr>`;
                 return;
             }
 
@@ -428,6 +424,9 @@
                 const tr = document.createElement('tr');
                 tr.classList.add('border-b', 'hover:bg-gray-50');
                 tr.innerHTML = `
+                    <td class="p-2.5 border-r text-center align-middle">
+                        <input type="checkbox" class="member-checkbox cursor-pointer w-4 h-4" value="${member.id}">
+                    </td>
                     <td class="p-2.5 border-r font-bold text-orange-600 text-center align-middle whitespace-nowrap">${member.autoId}</td>
                     <td class="p-2.5 border-r text-center align-middle whitespace-nowrap">
                         ${member.photo ? `<img src="${member.photo}" class="w-9 h-9 object-cover rounded-full mx-auto border">` : '<span class="text-xs text-gray-400">নেই</span>'}
@@ -449,6 +448,46 @@
             });
         }
 
+        // =====================================
+        // নতুন: Select All & Bulk Delete লজিক
+        // =====================================
+        window.toggleSelectAll = function() {
+            const selectAllCheckbox = document.getElementById('selectAll');
+            const checkboxes = document.querySelectorAll('.member-checkbox');
+            checkboxes.forEach(cb => {
+                cb.checked = selectAllCheckbox.checked;
+            });
+        }
+
+        window.deleteSelectedMembers = async function() {
+            const checkboxes = document.querySelectorAll('.member-checkbox:checked');
+            const selectedIds = Array.from(checkboxes).map(cb => cb.value);
+
+            if (selectedIds.length === 0) {
+                alert("ডিলিট করার জন্য অন্তত একজন সদস্য সিলেক্ট করুন।");
+                return;
+            }
+
+            if (confirm(`আপনি কি নিশ্চিতভাবে সিলেক্ট করা ${selectedIds.length} জন সদস্যকে ডিলিট করতে চান?`)) {
+                const deleteBtn = document.getElementById('bulkDeleteBtn');
+                const originalText = deleteBtn.innerHTML;
+                deleteBtn.innerHTML = "⏳ ডিলিট হচ্ছে...";
+                deleteBtn.disabled = true;
+
+                try {
+                    // Promise.all ব্যবহার করে একসাথে সব সিলেক্টেড ডেটা ডিলিট করা হচ্ছে
+                    await Promise.all(selectedIds.map(id => deleteDoc(doc(db, "members", id))));
+                    // সফল হলে অ্যালার্ট বা রিফ্রেশ করার দরকার নেই, onSnapshot নিজে থেকেই টেবিল আপডেট করে দেবে
+                } catch(e) {
+                    alert("ডিলিট করতে সমস্যা হয়েছে: " + e.message);
+                } finally {
+                    deleteBtn.innerHTML = originalText;
+                    deleteBtn.disabled = false;
+                }
+            }
+        }
+        // =====================================
+
         window.filterMembers = function() {
             const searchText = document.getElementById('searchInput').value.toLowerCase();
             const filtered = allMembersData.filter(m => {
@@ -460,6 +499,10 @@
                 return name.includes(searchText) || village.includes(searchText) || role.includes(searchText) || mobile.includes(searchText) || autoId.includes(searchText);
             });
             renderTable(filtered);
+            
+            // সার্চ করলে Select All আনচেক করা ভালো
+            const selectAllCheckbox = document.getElementById('selectAll');
+            if(selectAllCheckbox) selectAllCheckbox.checked = false;
         }
 
         window.openAddModal = function() {
@@ -475,8 +518,10 @@
             document.getElementById('sigPreview').classList.add('hidden');
             processedPhotoBase64 = "";
             processedSigBase64 = "";
+            
             document.getElementById('addMemberModal').classList.remove('hidden');
-            window.history.pushState({ modalOpen: true }, "");
+            // মডাল ওপেন করার সময় ব্রাউজারকে জানিয়ে দেওয়া যে আমরা member ট্যাবেই আছি
+            window.history.pushState({ modalOpen: true, tab: 'member' }, "");
         }
 
         window.openEditModal = function(docId) {
@@ -509,7 +554,7 @@
             }
 
             document.getElementById('addMemberModal').classList.remove('hidden');
-            window.history.pushState({ modalOpen: true }, "");
+            window.history.pushState({ modalOpen: true, tab: 'member' }, "");
         }
 
         window.saveOrUpdateMember = async function() {
@@ -555,7 +600,7 @@
                     });
                 }
 
-                closeAddModal();
+                closeAddModal(); // সফলভাবে সেভ হলে মডালটি বন্ধ হয়ে যাবে
             } catch(e) {
                 alert("ত্রুটি: " + e.message);
             } finally {
@@ -638,14 +683,16 @@
             }
 
             document.getElementById('idCardModal').classList.remove('hidden');
-            window.history.pushState({ modalOpen: true }, "");
+            window.history.pushState({ modalOpen: true, tab: 'member' }, "");
         }
 
         window.closeIdCardModal = function() {
             const modal = document.getElementById('idCardModal');
             if (!modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                window.history.back();
+                if (window.history.state && window.history.state.modalOpen) {
+                    window.history.back();
+                }
             }
         }
 
@@ -653,34 +700,27 @@
             const modal = document.getElementById('addMemberModal');
             if (!modal.classList.contains('hidden')) {
                 modal.classList.add('hidden');
-                window.history.back();
+                if (window.history.state && window.history.state.modalOpen) {
+                    window.history.back();
+                }
             }
         }
 
-        // সঠিক ব্যাক বাটন ও ট্যাব নেভিগেশন লজিক
+        // হিস্টোরি পপ-স্টেট লজিক (History Back API)
         window.addEventListener('popstate', function(event) {
             const idCardModal = document.getElementById('idCardModal');
             const addModal = document.getElementById('addMemberModal');
 
-            if (!idCardModal.classList.contains('hidden')) {
-                idCardModal.classList.add('hidden');
-                window.history.pushState({ modalOpen: true }, "");
-                return;
-            }
+            // কোনো মডাল খোলা থাকলে সেগুলো আগে হাইড করে দাও
+            if(idCardModal) idCardModal.classList.add('hidden');
+            if(addModal) addModal.classList.add('hidden');
 
-            if (!addModal.classList.contains('hidden')) {
-                addModal.classList.add('hidden');
-                window.history.pushState({ modalOpen: true }, "");
-                return;
-            }
-
-            const dashboardSection = document.getElementById('section-dashboard');
-            if (dashboardSection.classList.contains('hidden')) {
+            // স্টেট চেক করে সঠিক ট্যাবে ফিরে যাও
+            if (event.state && event.state.tab) {
+                switchTab(event.state.tab, false);
+            } else {
                 switchTab('dashboard', false);
-                return;
             }
-
-            window.history.pushState({ page: "dashboard" }, "", window.location.href);
         });
 
         window.deleteMember = async function(docId) {
@@ -693,27 +733,141 @@
             }
         }
 
-        // এক্সেল এক্সপোর্টে ছবি ও স্বাক্ষর পরিষ্কার স্ট্যাটাস হিসেবে দেখানোর ফিক্সড কোড
-        window.exportToExcel = function() {
+        // ==========================================
+        // Advanced ExcelJS Export Logic (With Images)
+        // ==========================================
+        window.exportToExcel = async function() {
             if(allMembersData.length === 0) {
                 alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
                 return;
             }
 
-            const excelData = allMembersData.map((m) => ({
-                "সদস্য ID": m.autoId || '',
-                "নাম": m.name || '',
-                "গ্রাম": m.village || '',
-                "পদ": m.role || '',
-                "মোবাইল নম্বর": m.mobile || '',
-                "ছবি": (m.photo && m.photo.trim() !== "") ? "ছবি আছে" : "নেই",
-                "স্বাক্ষর": (m.signature && m.signature.trim() !== "") ? "স্বাক্ষর আছে" : "নেই"
-            }));
+            const exportBtn = document.querySelector('button[onclick="exportToExcel()"]');
+            exportBtn.innerHTML = "⏳ এক্সপোর্ট হচ্ছে...";
+            exportBtn.disabled = true;
 
-            const worksheet = XLSX.utils.json_to_sheet(excelData);
-            const workbook = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(workbook, worksheet, "Members List");
-            XLSX.writeFile(workbook, "Durga_Puja_Members_List.csv", { bookType: "csv", encoding: "utf8" });
+            try {
+                const workbook = new ExcelJS.Workbook();
+                const worksheet = workbook.addWorksheet('Members List');
+
+                worksheet.mergeCells('A1:G1');
+                const titleCell = worksheet.getCell('A1');
+                titleCell.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+                titleCell.font = { size: 16, bold: true };
+                titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(1).height = 30;
+
+                worksheet.mergeCells('A2:G2');
+                const subtitleCell = worksheet.getCell('A2');
+                subtitleCell.value = 'সদস্য তালিকা';
+                subtitleCell.font = { size: 12, bold: true };
+                subtitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+                worksheet.getRow(2).height = 25;
+
+                const headers = ['সদস্য ID', 'নাম', 'মোবাইল', 'গ্রাম', 'পদ', 'ছবি', 'স্বাক্ষর'];
+                const headerRow = worksheet.getRow(3);
+                headerRow.values = headers;
+                headerRow.height = 25;
+
+                headerRow.eachCell((cell) => {
+                    cell.fill = {
+                        type: 'pattern',
+                        pattern: 'solid',
+                        fgColor: { argb: 'FFF97316' } 
+                    };
+                    cell.font = { color: { argb: 'FFFFFFFF' }, bold: true };
+                    cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                    cell.border = {
+                        top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+                    };
+                });
+
+                worksheet.columns = [
+                    { key: 'id', width: 15 },
+                    { key: 'name', width: 25 },
+                    { key: 'mobile', width: 15 },
+                    { key: 'village', width: 15 },
+                    { key: 'role', width: 15 },
+                    { key: 'photo', width: 15 },
+                    { key: 'signature', width: 30 }
+                ];
+
+                let rowIndex = 4;
+                for (const member of allMembersData) {
+                    const row = worksheet.getRow(rowIndex);
+                    row.height = 65; 
+                    
+                    row.getCell(1).value = member.autoId || '';
+                    row.getCell(2).value = member.name || '';
+                    row.getCell(3).value = member.mobile || '';
+                    row.getCell(4).value = member.village || '';
+                    row.getCell(5).value = member.role || '';
+
+                    if (member.photo && member.photo.includes('base64,')) {
+                        const base64Data = member.photo.split(';base64,').pop();
+                        const ext = member.photo.substring("data:image/".length, member.photo.indexOf(";base64"));
+                        const imageId = workbook.addImage({
+                            base64: base64Data,
+                            extension: ext === 'jpeg' ? 'jpeg' : 'png',
+                        });
+                        worksheet.addImage(imageId, {
+                            tl: { col: 5.1, row: rowIndex - 1 + 0.1 },
+                            br: { col: 5.9, row: rowIndex - 0.1 },
+                            editAs: 'oneCell'
+                        });
+                    } else {
+                        row.getCell(6).value = 'নেই';
+                    }
+
+                    if (member.signature && member.signature.includes('base64,')) {
+                        const base64Data = member.signature.split(';base64,').pop();
+                        const ext = member.signature.substring("data:image/".length, member.signature.indexOf(";base64"));
+                        const imageId = workbook.addImage({
+                            base64: base64Data,
+                            extension: ext === 'jpeg' ? 'jpeg' : 'png',
+                        });
+                        worksheet.addImage(imageId, {
+                            tl: { col: 6.1, row: rowIndex - 1 + 0.1 },
+                            br: { col: 6.9, row: rowIndex - 0.1 },
+                            editAs: 'oneCell'
+                        });
+                    } else {
+                        row.getCell(7).value = 'নেই';
+                    }
+
+                    row.eachCell((cell) => {
+                        cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                        cell.border = {
+                            top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'}
+                        };
+                    });
+
+                    rowIndex++;
+                }
+
+                const buffer = await workbook.xlsx.writeBuffer();
+                const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                if (window.saveAs) {
+                    saveAs(blob, 'Durga_Puja_Members_List.xlsx');
+                } else {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'Durga_Puja_Members_List.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);
+                }
+
+            } catch (error) {
+                console.error(error);
+                alert("এক্সপোর্ট করার সময় সমস্যা হয়েছে: " + error.message);
+            } finally {
+                exportBtn.innerHTML = "📥 এক্সেল এক্সপোর্ট";
+                exportBtn.disabled = false;
+            }
         }
     </script>
 
@@ -731,7 +885,8 @@
             
             window.scrollTo({ top: 0, behavior: 'smooth' });
 
-            if (tabName !== 'dashboard' && pushHistory) {
+            // এখন যেকোনো ট্যাবে গেলে ব্রাউজার সেটা মনে রাখবে
+            if (pushHistory) {
                 window.history.pushState({ tab: tabName }, "", window.location.href);
             }
         }
