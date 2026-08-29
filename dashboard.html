@@ -1856,12 +1856,39 @@
       window.openIdCard = function (id) {
         const member = allMembersData.find((m) => m.id === id);
         if (!member) return;
+
+        // সাধারণ তথ্য আপডেট
         document.getElementById("idCardName").innerText = member.name || "-";
         document.getElementById("idCardRole").innerText = member.role || "সাধারণ সদস্য";
         document.getElementById("idCardAutoId").innerText = member.autoId || "-";
         document.getElementById("idCardVillage").innerText = member.village || "-";
         document.getElementById("idCardMobile").innerText = member.mobile || "-";
         document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150?text=No+Photo";
+
+        // ১. সদস্যের স্বাক্ষর আপডেট
+        const memberSig = document.getElementById("idCardSig");
+        if (member.signature) {
+            memberSig.src = member.signature;
+            memberSig.classList.remove("hidden");
+        } else {
+            memberSig.classList.add("hidden");
+        }
+
+        // ২. সভাপতির স্বাক্ষর আপডেট (ডাটাবেস থেকে সভাপতিকে খুঁজে বের করে)
+        const president = allMembersData.find(m => m.role === "সভাপতি");
+        const presSig = document.getElementById("idCardPresSig");
+        const presPlaceholder = document.getElementById("idCardPresPlaceholder");
+
+        if (president && president.signature) {
+            presSig.src = president.signature;
+            presSig.classList.remove("hidden");
+            if (presPlaceholder) presPlaceholder.classList.add("hidden");
+        } else {
+            presSig.classList.add("hidden");
+            if (presPlaceholder) presPlaceholder.classList.remove("hidden");
+        }
+
+        // মডাল ওপেন করা
         document.getElementById("idCardModal").classList.remove("hidden");
       };
 
