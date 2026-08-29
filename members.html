@@ -44,7 +44,12 @@
       </div>
 
       <div class="flex flex-col md:flex-row gap-2 mb-4">
-        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, গ্রাম, পদ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <!-- সার্চ বক্স -->
+        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <!-- গ্রামের ড্রপডাউন -->
+        <select id="villageFilter" onchange="filterMembers()" class="w-full md:w-48 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
+          <option value="">সব গ্রাম (All)</option>
+        </select>
       </div>
 
       <div class="overflow-x-auto border rounded-lg">
@@ -108,9 +113,8 @@
     </div>
   </div>
 
-  <!-- ID Card Modal (unchanged) -->
+  <!-- ID Card Modal -->
   <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-    <!-- ... (ID Card UI remains exactly the same) ... -->
     <div id="idCardBox" class="bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
       <div id="idCardHeader" class="px-2 py-1.5 flex flex-col justify-center items-center relative">
         <h4 class="font-bold text-[13px] leading-tight text-center">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
@@ -166,6 +170,7 @@
     const db = getFirestore(app);
 
     let allMembersData = [];
+    window.filteredMembersData = []; // নতুন ভেরিয়েবল যা ফিল্টার করা ডেটা রাখবে
     let processedPhotoBase64 = "";
     let processedSigBase64 = "";
 
@@ -190,8 +195,32 @@
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
         
-        renderTable(allMembersData);
+        // গ্রামের ড্রপডাউন আপডেট করা
+        populateVillageDropdown(allMembersData);
+        
+        // ডেটা লোড হওয়ার পর ফিল্টার অ্যাপ্লাই করা
+        window.filterMembers();
       });
+    }
+
+    function populateVillageDropdown(data) {
+      const villageFilter = document.getElementById("villageFilter");
+      const currentSelection = villageFilter.value; // আগের সিলেকশন ধরে রাখতে
+      
+      // ইউনিক গ্রামের নাম বের করা
+      const uniqueVillages = [...new Set(data.map(m => m.village))].filter(v => v).sort();
+      
+      let optionsHtml = '<option value="">সব গ্রাম (All)</option>';
+      uniqueVillages.forEach(village => {
+        optionsHtml += `<option value="${village}">${village}</option>`;
+      });
+      
+      villageFilter.innerHTML = optionsHtml;
+      
+      // যদি আগে কোনো গ্রাম সিলেক্ট করা থাকে এবং সেটা লিস্টে থাকে
+      if(uniqueVillages.includes(currentSelection)) {
+        villageFilter.value = currentSelection;
+      }
     }
 
     window.renderTable = function(data) {
@@ -336,16 +365,23 @@
       }
     };
 
+    // 필্টার ফাংশন আপডেট করা হলো - সার্চ টেক্সট এবং গ্রাম দুটোই চেক করবে
     window.filterMembers = function() {
       const searchText = document.getElementById("searchInput").value.toLowerCase();
-      const filteredData = allMembersData.filter(m => 
-        m.name.toLowerCase().includes(searchText) || 
-        m.mobile.includes(searchText) || 
-        m.village.toLowerCase().includes(searchText) ||
-        m.role.toLowerCase().includes(searchText) ||
-        m.autoId.toLowerCase().includes(searchText)
-      );
-      renderTable(filteredData);
+      const selectedVillage = document.getElementById("villageFilter").value;
+
+      window.filteredMembersData = allMembersData.filter(m => {
+        const matchSearch = m.name.toLowerCase().includes(searchText) || 
+                            m.mobile.includes(searchText) || 
+                            m.role.toLowerCase().includes(searchText) ||
+                            m.autoId.toLowerCase().includes(searchText);
+                            
+        const matchVillage = selectedVillage === "" || m.village === selectedVillage;
+        
+        return matchSearch && matchVillage;
+      });
+      
+      renderTable(window.filteredMembersData);
     };
 
     window.toggleSelectAll = function() {
@@ -354,15 +390,17 @@
     };
 
     // =================================================================
-    // NEW ADVANCED EXCEL EXPORT (Exactly like Screenshot 2026-08-29 161428.png)
+    // NEW ADVANCED EXCEL EXPORT (Exports Filtered Data ONLY)
     // =================================================================
     window.exportToExcel = async function() {
-      if(allMembersData.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
+      const dataToExport = window.filteredMembersData || allMembersData;
+      const selectedVillage = document.getElementById("villageFilter").value;
+
+      if(dataToExport.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
       
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("সদস্য তালিকা");
       
-      // কলামের সাইজ ফিক্স করা (আপনার স্ক্রিনশট অনুযায়ী ৫টি কলাম)
       worksheet.columns = [
         { width: 15 }, // A: সদস্য ID
         { width: 35 }, // B: নাম
@@ -383,10 +421,10 @@
       };
       worksheet.getRow(1).height = 35;
 
-      // Row 2: সাব টাইটেল
+      // Row 2: সাব টাইটেল (গ্রামের নাম সহ, যদি সিলেক্ট করা থাকে)
       worksheet.mergeCells('A2:E2');
       const subTitleCell = worksheet.getCell('A2');
-      subTitleCell.value = 'সদস্য তালিকা';
+      subTitleCell.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : 'সদস্য তালিকা (সকল গ্রাম)';
       subTitleCell.font = { name: 'Kalpurush', size: 14, bold: true, color: { argb: 'FF000000' } };
       subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
       subTitleCell.border = {
@@ -401,8 +439,8 @@
       headerRow.height = 30;
 
       headerRow.eachCell((cell) => {
-        cell.font = { name: 'Kalpurush', size: 12, bold: true, color: { argb: 'FFFFFFFF' } }; // সাদা লেখা
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF26522' } }; // কমলা ব্যাকগ্রাউন্ড
+        cell.font = { name: 'Kalpurush', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF26522' } };
         cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
         cell.border = {
           top: { style: 'thin' }, left: { style: 'thin' },
@@ -410,12 +448,11 @@
         };
       });
 
-      // Rows Data Generation
+      // Rows Data Generation (ফিল্টার করা ডেটা ব্যবহার করা হচ্ছে)
       let currentRow = 4;
-      allMembersData.forEach((m) => {
+      dataToExport.forEach((m) => {
         const row = worksheet.getRow(currentRow);
         
-        // সিগনেচার থাকলে টেক্সট ফাঁকা থাকবে, না থাকলে "নেই" দেখাবে
         row.values = [
           m.autoId,
           m.name,
@@ -424,10 +461,8 @@
           m.signature ? "" : "নেই"
         ];
         
-        // সিগনেচার ইমেজের জন্য রো এর উচ্চতা বড় করা হলো
         row.height = 65; 
         
-        // Center Alignment, Auto Fit (Wrap Text) এবং All Side Border
         row.eachCell((cell) => {
           cell.font = { size: 11, color: { argb: 'FF000000' } };
           cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
@@ -446,16 +481,14 @@
             let ext = 'png';
             if(mime.includes('jpeg') || mime.includes('jpg')) ext = 'jpeg';
 
-            // ইমেজ এক্সেল ওয়ার্কবুকে যুক্ত করা
             const imageId = workbook.addImage({
               base64: base64Data,
               extension: ext,
             });
 
-            // ইমেজটিকে E কলামের (Index 4) সেলের মাঝখানে বসানো
             worksheet.addImage(imageId, {
-              tl: { col: 4.1, row: currentRow - 0.9 }, // সামান্য মার্জিন দিয়ে পজিশনিং
-              ext: { width: 170, height: 70 }, // ইমেজের সাইজ
+              tl: { col: 4.1, row: currentRow - 0.9 },
+              ext: { width: 170, height: 70 },
               editAs: 'oneCell'
             });
           } catch(e) {
@@ -469,7 +502,7 @@
       // সবার শেষে Total Members রো
       worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
       const totalCell = worksheet.getCell(`A${currentRow}`);
-      totalCell.value = `মোট সদস্য: ${allMembersData.length} জন`;
+      totalCell.value = `মোট সদস্য: ${dataToExport.length} জন`;
       totalCell.font = { size: 14, bold: true, color: { argb: 'FF000000' } };
       totalCell.alignment = { horizontal: 'center', vertical: 'middle' };
       totalCell.border = {
@@ -478,9 +511,10 @@
       };
       worksheet.getRow(currentRow).height = 30;
 
-      // Excel ফাইল ডাউনলোড
+      // Excel ফাইল ডাউনলোড (গ্রামের নাম অনুযায়ী ফাইলের নাম)
+      const fileName = selectedVillage ? `Members_${selectedVillage}.xlsx` : "Members_All_Villages.xlsx";
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(new Blob([buffer]), "Members_List_Report.xlsx");
+      saveAs(new Blob([buffer]), fileName);
     };
 
     // =================================================================
@@ -517,7 +551,6 @@
       document.getElementById("idCardMobile").innerText = member.mobile;
       document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
 
-      // QR Code
       const qrData = `ID: ${member.autoId}\nনাম: ${member.name}\nগ্রাম: ${member.village}\nপদ: ${member.role}\nমোবাইল: ${member.mobile}`;
       new QRious({
         element: document.getElementById('idCardQrCode'),
