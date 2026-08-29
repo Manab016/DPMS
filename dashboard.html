@@ -20,7 +20,7 @@
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
     <!-- Header -->
-    <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+    <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative cursor-pointer" onclick="switchTab('dashboard')">
       <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
       <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
       <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
@@ -38,18 +38,18 @@
       </div>
       <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
         <!-- LINK TO MEMBER PAGE -->
-        <button onclick="window.location.href='member.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
-        <button onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-        <button onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-        <button onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-        <button onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
-        <button onclick="switchTab('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📊 কোষাধ্যক্ষ</button>
-        <button onclick="switchTab('settings')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+        <button onclick="window.location.href='member.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">👥 সদস্য</button>
+        <button onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">💰 চাঁদা</button>
+        <button onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">💵 খরচ</button>
+        <button onclick="switchTab('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">🎫 বুকিং</button>
+        <button onclick="switchTab('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">🛒 বিক্রয়</button>
+        <button onclick="switchTab('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm col-span-2">📊 কোষাধ্যক্ষ</button>
+        <button onclick="switchTab('settings')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border shadow-sm">⚙️ সেটিংস</button>
       </div>
     </div>
 
-    <!-- Dashboard Section -->
-    <div id="section-dashboard" class="space-y-3">
+    <!-- ================== DASHBOARD SECTION ================== -->
+    <div id="section-dashboard" class="app-section space-y-3 block">
       <div class="bg-amber-600 text-white p-3 rounded-xl font-bold flex justify-between items-center shadow-sm cursor-pointer" onclick="toggleOfficeBearersMenu()">
         <span class="flex items-center gap-1">👥 কমিটির প্রধান পদাধিকারী</span>
         <span id="officeBearersArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
@@ -57,7 +57,6 @@
       <div id="officeBearersContent" class="bg-white p-3 rounded-xl shadow-sm border border-amber-200 overflow-hidden relative"></div>
 
       <div class="grid grid-cols-2 gap-3">
-        <!-- LINK TO MEMBER PAGE -->
         <div onclick="window.location.href='member.html'" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
           <div class="text-2xl mb-1">👥</div>
           <div class="text-xs font-medium opacity-90">মোট সদস্য</div>
@@ -71,14 +70,66 @@
       </div>
     </div>
 
-    <!-- Other Sections (Subscription, Settings etc. will remain here to function normally) -->
-    <!-- (এখানে আপনার পূর্বের চাঁদা, সেটিংস, খরচ, বুকিং মডিউলগুলো থাকবে। স্পেসের জন্য পুরো কোড দেওয়া হলো না, আপনি আপনার আগের কোড থেকে <div id="section-subscription"> থেকে শুরু করে সেটিংসের শেষ পর্যন্ত অংশটুকু কপি করে এখানে বসিয়ে দেবেন।) -->
+    <!-- ================== SETTINGS SECTION ================== -->
+    <div id="section-settings" class="app-section hidden">
+      <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200">
+        <h2 class="text-lg font-bold text-gray-800 border-b pb-3 mb-4 flex items-center gap-2">⚙️ সেটিংস</h2>
+        
+        <div class="space-y-4">
+          <!-- Profile Info -->
+          <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 flex items-center gap-4">
+            <div class="bg-orange-100 text-orange-600 w-12 h-12 rounded-full flex items-center justify-center text-xl font-bold shadow-sm">
+              👤
+            </div>
+            <div>
+              <p class="text-sm font-bold text-gray-800" id="settingUserEmail">লোড হচ্ছে...</p>
+              <p class="text-xs text-gray-500 mt-0.5">অ্যাকাউন্ট টাইপ: <span id="settingUserRole" class="font-semibold text-orange-600">...</span></p>
+            </div>
+          </div>
+
+          <!-- App Info -->
+          <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm">
+            <p class="font-bold text-blue-800 mb-1">ℹ️ অ্যাপ সম্পর্কিত তথ্য</p>
+            <p class="text-blue-600 text-xs mt-1">ভার্সন: 1.0.0 (Durga Puja 2026)</p>
+            <p class="text-blue-600 text-xs mt-1">ডেভেলপার: Anigravity / AppSheet</p>
+          </div>
+
+          <!-- Logout Button -->
+          <button onclick="logoutUser()" class="w-full bg-red-600 text-white font-bold py-3 rounded-lg mt-4 hover:bg-red-700 transition shadow-md flex items-center justify-center gap-2">
+            <span>🚪 লগ আউট করুন</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================== OTHER SECTIONS (PLACEHOLDERS) ================== -->
+    <div id="section-subscription" class="app-section hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center py-10">
+      <h2 class="text-xl font-bold text-gray-600">💰 চাঁদা মডিউল</h2>
+      <p class="text-sm text-gray-500 mt-2">আপনার চাঁদা সংক্রান্ত পূর্বের কোড এখানে বসবে।</p>
+    </div>
+    <div id="section-expense" class="app-section hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center py-10">
+      <h2 class="text-xl font-bold text-gray-600">💵 খরচের হিসাব</h2>
+      <p class="text-sm text-gray-500 mt-2">আপনার খরচ সংক্রান্ত পূর্বের কোড এখানে বসবে।</p>
+    </div>
+    <div id="section-booking" class="app-section hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center py-10">
+      <h2 class="text-xl font-bold text-gray-600">🎫 বুকিং</h2>
+      <p class="text-sm text-gray-500 mt-2">বুকিং মডিউল এখানে যুক্ত করুন।</p>
+    </div>
+    <div id="section-sales" class="app-section hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center py-10">
+      <h2 class="text-xl font-bold text-gray-600">🛒 বিক্রয়</h2>
+      <p class="text-sm text-gray-500 mt-2">বিক্রয় মডিউল এখানে যুক্ত করুন।</p>
+    </div>
+    <div id="section-treasurer" class="app-section hidden bg-white p-4 rounded-xl shadow-sm border border-gray-200 text-center py-10">
+      <h2 class="text-xl font-bold text-gray-600">📊 কোষাধ্যক্ষ প্যানেল</h2>
+      <p class="text-sm text-gray-500 mt-2">কোষাধ্যক্ষের রিপোর্ট এখানে দেখাবে।</p>
+    </div>
+
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, onSnapshot, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -97,40 +148,54 @@
     let allMembersData = [];
     const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
 
+    // Authentication Check
     onAuthStateChanged(auth, async (user) => {
       if (user) {
-        if (user.email === ADMIN_EMAIL) window.currentUserRole = "admin";
-        else window.currentUserRole = "user";
+        window.currentUserRole = user.email === ADMIN_EMAIL ? "অ্যাডমিন (Admin)" : "ব্যবহারকারী (User)";
         
-        loadMembersForDashboard(); // Only loading data for dashboard counters
+        // Update UI with User Info
+        document.getElementById("userRoleBadge").innerText = `রোল: ${window.currentUserRole}`;
+        document.getElementById("settingUserEmail").innerText = user.email;
+        document.getElementById("settingUserRole").innerText = window.currentUserRole;
+
+        loadMembersForDashboard();
       } else {
-        window.location.replace("index.html");
+        window.location.replace("index.html"); // Redirect to login if not logged in
       }
     });
 
+    // Load Dashboard Statistics
     function loadMembersForDashboard() {
       onSnapshot(collection(db, "members"), (snapshot) => {
         allMembersData = [];
         snapshot.forEach((docSnap) => { allMembersData.push({ id: docSnap.id, ...docSnap.data() }); });
+        
         document.getElementById("dashTotalMembers").innerText = allMembersData.length;
         renderOfficeBearers(allMembersData);
       });
     }
 
+    // Render Auto-sliding Office Bearers
     function renderOfficeBearers(members) {
       const container = document.getElementById("officeBearersContent");
       if (!container) return;
       container.innerHTML = "";
+      
       const officeBearers = members.filter((m) => m.role && m.role !== "সাধারণ সদস্য");
       if (officeBearers.length === 0) {
         container.innerHTML = `<p class="text-xs text-gray-500 text-center py-2">কোনো প্রধান পদাধিকারী নেই।</p>`;
         return;
       }
+      
       const sliderWrapper = document.createElement("div");
       sliderWrapper.className = "animate-auto-slide gap-3";
+      
       for (let i = 0; i < 2; i++) {
         officeBearers.forEach((person) => {
-          const mobileLink = person.mobile && person.mobile !== "-" ? `<a href="tel:${person.mobile}" class="font-bold text-orange-700">📞 ${person.mobile}</a>` : `<span class="text-gray-400">নম্বর নেই</span>`;
+          const mobileLink = person.mobile && person.mobile !== "-" 
+            ? `<a href="tel:${person.mobile}" class="font-bold text-orange-700">📞 ${person.mobile}</a>` 
+            : `<span class="text-gray-400">নম্বর নেই</span>`;
+            
           const card = document.createElement("div");
           card.className = "flex items-center justify-between bg-amber-50/80 p-2.5 rounded-lg border border-amber-200 text-xs shrink-0 min-w-[260px] shadow-sm";
           card.innerHTML = `<div><span class="font-bold text-gray-800">${person.name}</span><span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full text-[10px] ml-2">${person.role}</span></div><div class="ml-4">${mobileLink}</div>`;
@@ -140,12 +205,55 @@
       container.appendChild(sliderWrapper);
     }
     
+    // UI Controls (Global Functions)
     window.toggleOfficeBearersMenu = function() {
         const content = document.getElementById("officeBearersContent");
         const arrow = document.getElementById("officeBearersArrowIcon");
         content.classList.toggle("hidden");
         arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
-    }
+    };
+
+    window.toggleQuickMenu = function() {
+      const menu = document.getElementById("quickMenuContent");
+      const arrow = document.getElementById("menuArrowIcon");
+      menu.classList.toggle("hidden");
+      arrow.style.transform = menu.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+    };
+
+    // Tab Switcher Function
+    window.switchTab = function(tabName) {
+      // Hide all sections first
+      const sections = document.querySelectorAll('.app-section');
+      sections.forEach(section => {
+        section.classList.add('hidden');
+        section.classList.remove('block');
+      });
+
+      // Show the targeted section
+      const activeSection = document.getElementById(`section-${tabName}`);
+      if (activeSection) {
+        activeSection.classList.remove('hidden');
+        activeSection.classList.add('block');
+      }
+
+      // Hide Quick Menu automatically on mobile after clicking a tab
+      if(window.innerWidth < 768) {
+         document.getElementById("quickMenuContent").classList.add("hidden");
+         document.getElementById("menuArrowIcon").style.transform = "rotate(-90deg)";
+      }
+    };
+
+    // Logout Function
+    window.logoutUser = async function() {
+      if(confirm("আপনি কি নিশ্চিত লগ আউট করতে চান?")) {
+        try {
+          await signOut(auth);
+          window.location.replace("index.html");
+        } catch (error) {
+          alert("লগ আউট করতে সমস্যা হচ্ছে: " + error.message);
+        }
+      }
+    };
   </script>
 </body>
 </html>
