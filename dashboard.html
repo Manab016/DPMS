@@ -101,7 +101,7 @@
           <div class="flex items-center gap-2">
             <span
               id="userRoleBadge"
-              class="bg-amber-800 text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner"
+              class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner"
             >
               রোল: লোড হচ্ছে...
             </span>
@@ -138,13 +138,20 @@
           >
             🛒 বিক্রয়
           </button>
-          <!-- নতুন সদস্য বাটন যা members.html এ রিডাইরেক্ট করবে -->
+          
           <button
             id="menu-btn-members"
             onclick="window.location.href='members.html'"
             class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
           >
             👥 সদস্য
+          </button>
+          <button
+            id="menu-btn-committee"
+            onclick="window.location.href='committee.html'"
+            class="bg-indigo-50 text-indigo-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 border border-indigo-200"
+          >
+            👑 পদাধিকারী
           </button>
           <button
             id="menu-btn-treasurer"
@@ -156,7 +163,7 @@
           <button
             id="quickSettingsBtn"
             onclick="switchTab('settings')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
           </button>
@@ -187,6 +194,17 @@
             <div class="text-2xl mb-1">👥</div>
             <div class="text-xs opacity-90 font-medium">সদস্য ব্যবস্থাপনা</div>
           </div>
+          
+          <!-- কমিটির প্রধান পদাধিকারী কার্ড -->
+          <div
+            id="dash-card-committee"
+            onclick="window.location.href='committee.html'"
+            class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2"
+          >
+            <div class="text-2xl mb-1">👑</div>
+            <div class="text-xs opacity-90 font-medium">কমিটির প্রধান পদাধিকারী</div>
+          </div>
+
           <div
             id="dash-card-expense"
             onclick="switchTab('expense')"
@@ -410,7 +428,7 @@
                   id="profileRoleBadge"
                   class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide"
                 >
-                  admin
+                  লোড হচ্ছে...
                 </div>
               </div>
             </div>
@@ -895,22 +913,25 @@
           });
         }
 
-        // সদস্য মেনুর ভিজিবিলিটি
         const menuBtnMembers = document.getElementById("menu-btn-members");
         const dashCardMembers = document.getElementById("dash-card-members");
+        const menuBtnCommittee = document.getElementById("menu-btn-committee");
+        const dashCardCommittee = document.getElementById("dash-card-committee");
 
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
-          if (profileBadge) profileBadge.innerText = "admin";
+          if (profileBadge) profileBadge.innerText = "Admin"; // Role fix
           if (adminSubControls) adminSubControls.classList.remove("hidden");
           adminCols.forEach((col) => col.classList.remove("hidden"));
           subActionCols.forEach((col) => (col.style.display = "table-cell"));
           
           if(menuBtnMembers) menuBtnMembers.style.display = "flex";
           if(dashCardMembers) dashCardMembers.style.display = "flex";
+          if(menuBtnCommittee) menuBtnCommittee.style.display = "flex";
+          if(dashCardCommittee) dashCardCommittee.style.display = "flex";
         } else {
           if (roleBadge) roleBadge.innerText = "রোল: User";
-          if (profileBadge) profileBadge.innerText = "user";
+          if (profileBadge) profileBadge.innerText = "User"; // Role fix
           if (adminSubControls) adminSubControls.classList.add("hidden");
           adminCols.forEach((col) => col.classList.add("hidden"));
           subActionCols.forEach(
@@ -919,6 +940,8 @@
           
           if(menuBtnMembers) menuBtnMembers.style.display = "none";
           if(dashCardMembers) dashCardMembers.style.display = "none";
+          if(menuBtnCommittee) menuBtnCommittee.style.display = "none";
+          if(dashCardCommittee) dashCardCommittee.style.display = "none";
 
           document.getElementById("tabBtnUsers").style.display = "none";
           document.getElementById("tabBtnHistory").style.display = "none";
