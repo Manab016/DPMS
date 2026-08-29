@@ -7,6 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <!-- QR Code Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
     th, td { text-align: center; vertical-align: middle; white-space: nowrap; }
     @media print {
@@ -26,7 +28,6 @@
     <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
       <div class="flex items-center justify-between mb-4 border-b pb-3">
         <div class="flex items-center gap-2">
-          <!-- LINK TO DASHBOARD PAGE -->
           <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
             ⬅️ হোম
           </button>
@@ -108,7 +109,8 @@
 
   <!-- ID Card Modal -->
   <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-    <div id="idCardBox" class="bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
+    <!-- Height slightly adjusted to fit the QR without messing the layout -->
+    <div id="idCardBox" class="bg-white w-[340px] h-[225px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
       
       <!-- Header -->
       <div id="idCardHeader" class="px-2 py-1.5 text-center">
@@ -116,9 +118,9 @@
       </div>
       
       <!-- Body -->
-      <div id="idCardBody" class="px-3 py-1 flex items-center gap-3 flex-1">
-        <img id="idCardPhoto" src="" class="w-[72px] h-[72px] object-cover rounded-full border-2" />
-        <div class="text-left flex-1 pl-2">
+      <div id="idCardBody" class="px-3 flex items-center gap-3 flex-1">
+        <img id="idCardPhoto" src="" class="w-[70px] h-[70px] object-cover rounded-full border-2" />
+        <div class="text-left flex-1 pl-1">
           <h3 id="idCardName" class="text-sm font-bold text-gray-800"></h3>
           <p id="idCardRole" class="text-[10px] font-semibold inline-block px-2 py-0.5 rounded-full mt-0.5"></p>
           <div class="mt-1 text-[10px] text-gray-700 space-y-0.5">
@@ -129,17 +131,19 @@
         </div>
       </div>
 
-      <!-- Signatures Section -->
-      <div class="px-5 pb-2 pt-1 flex justify-between items-end h-[45px] w-full">
+      <!-- Signatures Section with QR -->
+      <div class="px-5 pb-2 flex justify-between items-end h-[75px] w-full">
         <!-- Member Signature (Left) -->
-        <div id="memberSigContainer" class="text-center w-1/3">
-          <img id="idCardMemberSig" src="" class="h-6 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-          <div class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold">সদস্যের স্বাক্ষর</div>
+        <div id="memberSigContainer" class="text-center w-1/3 flex flex-col items-center justify-end">
+          <img id="idCardMemberSig" src="" class="h-5 object-contain mx-auto mb-1" onerror="this.style.display='none'">
+          <div class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
         </div>
-        <!-- President Signature (Right) -->
-        <div id="presSigContainer" class="text-center w-1/3">
-          <img id="idCardPresSig" src="" class="h-6 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-          <div id="presSigLabel" class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold">সভাপতির স্বাক্ষর</div>
+        <!-- QR Code & President Signature (Right) -->
+        <div id="presSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
+          <!-- QR Canvas -->
+          <canvas id="idCardQrCode" class="w-9 h-9 mb-1 shadow-sm"></canvas>
+          <img id="idCardPresSig" src="" class="h-5 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+          <div id="presSigLabel" class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
         </div>
       </div>
 
@@ -191,7 +195,6 @@
         allMembersData = [];
         snapshot.forEach((docSnap) => { allMembersData.push({ id: docSnap.id, ...docSnap.data() }); });
         
-        // পুরানো ডেটা আগে, নতুন ডেটা পরে সাজানোর জন্য (createdAt অনুযায়ী)
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
         
@@ -226,7 +229,6 @@
       });
     };
 
-    // --- Image Processing (Resize & Compress) ---
     window.processImage = function(input, previewId, maxWidth, maxHeight) {
       const file = input.files[0];
       if (!file) return;
@@ -259,7 +261,6 @@
       reader.readAsDataURL(file);
     };
 
-    // --- Save or Update Member ---
     window.saveOrUpdateMember = async function() {
       const name = document.getElementById("newMemberName").value.trim();
       const village = document.getElementById("newMemberVillage").value.trim();
@@ -272,21 +273,16 @@
         return;
       }
 
-      const memberData = {
-        name, village, role, mobile: mobile || "-",
-        updatedAt: Date.now()
-      };
+      const memberData = { name, village, role, mobile: mobile || "-", updatedAt: Date.now() };
 
       if (processedPhotoBase64) memberData.photo = processedPhotoBase64;
       if (processedSigBase64) memberData.signature = processedSigBase64;
 
       try {
         if (docId) {
-          // Update Existing
           await updateDoc(doc(db, "members", docId), memberData);
           alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
         } else {
-          // Create New
           memberData.createdAt = Date.now();
           await addDoc(collection(db, "members"), memberData);
           alert("নতুন সদস্য সফলভাবে যুক্ত হয়েছে!");
@@ -298,7 +294,6 @@
       }
     };
 
-    // --- Edit Member Modal ---
     window.openEditModal = function(id) {
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
@@ -324,7 +319,6 @@
       openAddModal();
     };
 
-    // --- Delete Single Member ---
     window.deleteMember = async function(id) {
       if(confirm("আপনি কি নিশ্চিত যে এই সদস্যকে মুছে ফেলতে চান?")) {
         try {
@@ -336,18 +330,12 @@
       }
     };
 
-    // --- Delete Multiple Members ---
     window.deleteSelectedMembers = async function() {
       const checkboxes = document.querySelectorAll(".member-checkbox:checked");
-      if(checkboxes.length === 0) {
-        alert("কোনো সদস্য নির্বাচন করা হয়নি!");
-        return;
-      }
+      if(checkboxes.length === 0) return alert("কোনো সদস্য নির্বাচন করা হয়নি!");
       if(confirm(`আপনি কি নিশ্চিত যে ${checkboxes.length} জন সদস্যকে মুছে ফেলতে চান?`)) {
         try {
-          for(let cb of checkboxes) {
-            await deleteDoc(doc(db, "members", cb.value));
-          }
+          for(let cb of checkboxes) await deleteDoc(doc(db, "members", cb.value));
           document.getElementById("selectAll").checked = false;
           alert("নির্বাচিত সদস্যদের মুছে ফেলা হয়েছে।");
         } catch (error) {
@@ -356,7 +344,6 @@
       }
     };
 
-    // --- Search & Filter ---
     window.filterMembers = function() {
       const searchText = document.getElementById("searchInput").value.toLowerCase();
       const filteredData = allMembersData.filter(m => 
@@ -369,22 +356,15 @@
       renderTable(filteredData);
     };
 
-    // --- Select All Checkbox ---
     window.toggleSelectAll = function() {
       const isChecked = document.getElementById("selectAll").checked;
-      document.querySelectorAll(".member-checkbox").forEach(cb => {
-        cb.checked = isChecked;
-      });
+      document.querySelectorAll(".member-checkbox").forEach(cb => cb.checked = isChecked);
     };
 
-    // --- Export to Excel ---
     window.exportToExcel = async function() {
       if(allMembersData.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
-      
       const workbook = new ExcelJS.Workbook();
       const sheet = workbook.addWorksheet("Members List");
-      
-      // Add Headers
       sheet.columns = [
         { header: "ID", key: "autoId", width: 10 },
         { header: "নাম", key: "name", width: 25 },
@@ -392,28 +372,17 @@
         { header: "পদ", key: "role", width: 15 },
         { header: "মোবাইল", key: "mobile", width: 15 }
       ];
-      
-      // Make Header Bold
       sheet.getRow(1).font = { bold: true };
-      
-      // Add Rows
       allMembersData.forEach(m => {
         sheet.addRow({ autoId: m.autoId, name: m.name, village: m.village, role: m.role, mobile: m.mobile });
       });
-      
-      // Generate & Download
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(new Blob([buffer]), "Members_List_Durgapuja.xlsx");
     };
     
-    // --- Modal Controls ---
-    window.openAddModal = function() {
-      document.getElementById("addMemberModal").classList.remove("hidden");
-    };
-
+    window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
     window.closeAddModal = function() {
       document.getElementById("addMemberModal").classList.add("hidden");
-      // Clear all inputs
       document.getElementById("editMemberDocId").value = "";
       document.getElementById("newMemberName").value = "";
       document.getElementById("newMemberVillage").value = "";
@@ -432,11 +401,9 @@
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
 
-      // ডেটাবেস থেকে সভাপতির সিগনেচার খোঁজার লজিক
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
 
-      // Basic Text Data
       document.getElementById("idCardName").innerText = member.name;
       document.getElementById("idCardRole").innerText = member.role;
       document.getElementById("idCardAutoId").innerText = member.autoId;
@@ -444,7 +411,17 @@
       document.getElementById("idCardMobile").innerText = member.mobile;
       document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
 
-      // UI Elements Selection
+      // ==========================================
+      // QR Code Generation (Dynamic Data)
+      // ==========================================
+      const qrData = `ID: ${member.autoId}\nনাম: ${member.name}\nগ্রাম: ${member.village}\nপদ: ${member.role}\nমোবাইল: ${member.mobile}`;
+      new QRious({
+        element: document.getElementById('idCardQrCode'),
+        value: qrData,
+        size: 100, // Medium resolution for printing
+        level: 'M' // Error correction level suitable for tight spaces
+      });
+
       const cardBox = document.getElementById("idCardBox");
       const cardHeader = document.getElementById("idCardHeader");
       const cardBody = document.getElementById("idCardBody");
@@ -457,36 +434,35 @@
       const presSigImg = document.getElementById("idCardPresSig");
       const presSigLabel = document.getElementById("presSigLabel");
 
-      // Reset image displays 
       memberSigImg.style.display = 'block';
       presSigImg.style.display = 'block';
 
       if (member.role === "সভাপতি") {
         // VIP DESIGN FOR PRESIDENT
-        cardBox.className = "bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-yellow-500 flex flex-col relative transition-all duration-300";
+        cardBox.className = "bg-white w-[340px] h-[225px] rounded-xl shadow-2xl overflow-hidden border-2 border-yellow-500 flex flex-col relative transition-all duration-300";
         cardHeader.className = "bg-gradient-to-r from-gray-900 via-gray-800 to-black text-yellow-500 px-2 py-1.5 text-center border-b border-yellow-600";
-        cardBody.className = "px-3 py-1 flex items-center gap-3 flex-1 bg-yellow-50/40";
-        photoImg.className = "w-[72px] h-[72px] object-cover rounded-full border-2 border-yellow-500 shadow-sm";
+        cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-yellow-50/40";
+        photoImg.className = "w-[70px] h-[70px] object-cover rounded-full border-2 border-yellow-500 shadow-sm";
         roleBadge.className = "text-[10px] font-bold text-yellow-700 bg-yellow-100 border border-yellow-400 inline-block px-2 py-0.5 rounded-full mt-0.5";
         
         memberSigContainer.classList.add("hidden"); 
         presSigContainer.classList.remove("hidden");
-        presSigContainer.className = "text-center w-1/3 ml-auto"; 
+        presSigContainer.className = "text-center w-[45%] ml-auto flex flex-col items-center justify-end"; 
         
         presSigImg.src = member.signature || "";
         presSigLabel.innerText = "স্বাক্ষর"; 
 
       } else {
         // STANDARD DESIGN FOR NORMAL MEMBERS
-        cardBox.className = "bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
+        cardBox.className = "bg-white w-[340px] h-[225px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
         cardHeader.className = "bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1.5 text-center";
-        cardBody.className = "px-3 py-1 flex items-center gap-3 flex-1 bg-amber-50/20";
-        photoImg.className = "w-[72px] h-[72px] object-cover rounded-full border-2 border-orange-500";
+        cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-amber-50/20";
+        photoImg.className = "w-[70px] h-[70px] object-cover rounded-full border-2 border-orange-500";
         roleBadge.className = "text-[10px] font-semibold text-orange-700 bg-orange-100 inline-block px-2 py-0.5 rounded-full mt-0.5";
         
         memberSigContainer.classList.remove("hidden");
         presSigContainer.classList.remove("hidden");
-        presSigContainer.className = "text-center w-1/3"; 
+        presSigContainer.className = "text-center w-[45%] flex flex-col items-center justify-end"; 
         
         memberSigImg.src = member.signature || ""; 
         presSigImg.src = presSignature || ""; 
