@@ -48,15 +48,12 @@
         </div>
 
         <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-          <!-- সদস্য প্রথমে -->
           <button id="menu-btn-members" onclick="window.location.href='members.html'" class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200">
             👥 সদস্য
           </button>
-          <!-- তারপর চাঁদা -->
           <button id="menu-btn-subscription" onclick="switchTab('subscription')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
             💰 চাঁদা
           </button>
-          
           <button id="menu-btn-expense" onclick="switchTab('expense')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
             💵 খরচ
           </button>
@@ -75,9 +72,7 @@
         </div>
       </div>
 
-      <!-- ড্যাশবোর্ড সেকশন -->
       <div id="section-dashboard" class="space-y-3">
-        <!-- সদস্য এবং চাঁদা পাশাপাশি -->
         <div class="grid grid-cols-2 gap-3">
           <div id="dash-card-members" onclick="window.location.href='members.html'" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">👥</div>
@@ -131,13 +126,12 @@
 
         <div id="adminSubControls" class="flex flex-wrap gap-2 mb-4 hidden">
           <button onclick="openAddSubModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন যুক্ত করুন</button>
-          <button onclick="deleteAllSubscriptions()" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-600 shadow-sm">🗑️ সব মুছুন</button>
         </div>
 
         <!-- এক্সপোর্ট অপশনস -->
         <div class="mb-5 bg-gray-50 p-3 rounded-lg border">
           <button onclick="exportMainReport()" class="w-full bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold shadow-md hover:bg-emerald-700 flex justify-center items-center gap-2 mb-3">
-            📥 বিস্তারিত সদস্য চাঁদা রিপোর্ট (Green Tick সহ)
+            📥 সদস্যদের চাঁদা রিপোর্ট (Green Tick সহ)
           </button>
           <p class="text-[11px] font-bold text-gray-500 mb-2">অন্যান্য এক্সপোর্ট:</p>
           <div class="flex flex-wrap gap-2">
@@ -206,30 +200,26 @@
         <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">📊 কোষাধ্যক্ষ ব্যবস্থাপনা</h2>
       </div>
-      <!-- Settings... (As provided earlier, unchanged layout) -->
       <div id="section-settings" class="hidden">
-        <!-- Settings Content From Original... -->
         <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">⬅️ হোমে ফিরুন</button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">⚙️ সেটিংস</h2>
       </div>
     </div>
 
-    <!-- 💰 চাঁদা যোগ করার মডাল -->
+    <!-- 💰 চাঁদা যোগ / এডিট করার মডাল -->
     <div id="addSubModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
       <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
         <h3 id="subModalTitle" class="text-lg font-bold text-orange-600 mb-3">চাঁদা/দান যুক্ত করুন</h3>
         <input type="hidden" id="editSubDocId" />
         
-        <!-- সদস্য এবং দাতা ট্যাব -->
         <div class="flex border-b mb-4">
           <button id="modal-tab-member" onclick="switchAddTypeTab('member')" class="flex-1 py-2 text-sm font-bold border-b-2 border-orange-600 text-orange-600">সদস্য চাঁদা</button>
           <button id="modal-tab-other" onclick="switchAddTypeTab('other')" class="flex-1 py-2 text-sm font-bold text-gray-500 hover:text-orange-600">অন্যান্য দান (দাতা)</button>
         </div>
         <input type="hidden" id="subDonorType" value="member">
 
-        <!-- সদস্য সেকশন (সার্চ) -->
         <div id="memberSelectContainer" class="mb-3">
-          <label class="block text-xs font-semibold text-gray-600 mb-1">অপ্রদানকারী সদস্য খুঁজুন *</label>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্য নির্বাচন করুন *</label>
           <div class="relative">
             <input type="text" id="subMemberSearchInput" onkeyup="filterModalMembersList()" placeholder="নাম, মোবাইল বা গ্রাম দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white focus:outline-none focus:border-orange-500" />
             <ul id="dropdownMemberList" class="absolute z-10 w-full bg-white border border-gray-200 mt-1 rounded-lg shadow-lg max-h-40 overflow-y-auto hidden"></ul>
@@ -242,7 +232,6 @@
           <input type="hidden" id="selectedMemberName">
         </div>
 
-        <!-- দাতা সেকশন -->
         <div id="otherNameContainer" class="hidden mb-3">
           <label class="block text-xs font-semibold text-gray-600 mb-1">দাতার নাম *</label>
           <input type="text" id="subOtherNameInput" placeholder="দাতার নাম লিখুন" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
@@ -264,11 +253,10 @@
       </div>
     </div>
 
-    <!-- Firebase Scripts -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-      import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+      import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -308,8 +296,6 @@
           setupUIBasedOnRoleAndPermissions(user);
           loadMembersData();
           loadSubscriptions();
-        } else {
-          // window.location.replace("index.html"); // Commented for testing offline
         }
       });
 
@@ -326,7 +312,6 @@
         }
       }
 
-      // Load Members
       function loadMembersData() {
         onSnapshot(collection(db, "members"), (snapshot) => {
           allMembersData = [];
@@ -376,13 +361,16 @@
         
         const membersData = allSubscriptionsData.filter(s => s.donorType === 'member');
         const donorsData = allSubscriptionsData.filter(s => s.donorType === 'other');
-        
         const canEdit = window.currentUserRole === "admin" || window.userPermissions.includes("subscription");
 
         membersData.forEach(item => {
           const tr = document.createElement("tr");
           tr.className = "border-b hover:bg-gray-50";
-          let actionBtns = canEdit ? `<button onclick="deleteSubscription('${item.id}', '${item.memberId}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold">ডিলিট</button>` : `-`;
+          let actionBtns = canEdit ? `
+            <div class="flex justify-center gap-1">
+                <button onclick="editSubscription('${item.id}')" class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[11px] font-bold">এডিট</button>
+                <button onclick="deleteSubscription('${item.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-[11px] font-bold">ডিলিট</button>
+            </div>` : `-`;
           
           tr.innerHTML = `
             <td class="p-2.5 border-r text-center"><span class="text-emerald-500 font-bold">✔️ পেইড</span></td>
@@ -398,7 +386,11 @@
         donorsData.forEach(item => {
           const tr = document.createElement("tr");
           tr.className = "border-b hover:bg-gray-50";
-          let actionBtns = canEdit ? `<button onclick="deleteSubscription('${item.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold">ডিলিট</button>` : `-`;
+          let actionBtns = canEdit ? `
+            <div class="flex justify-center gap-1">
+                <button onclick="editSubscription('${item.id}')" class="bg-blue-100 text-blue-600 px-2 py-1 rounded text-[11px] font-bold">এডিট</button>
+                <button onclick="deleteSubscription('${item.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-[11px] font-bold">ডিলিট</button>
+            </div>` : `-`;
           
           tr.innerHTML = `
             <td class="p-2.5 border-r text-center">${item.date || "-"}</td>
@@ -453,16 +445,20 @@
         list.innerHTML = "";
         if(!query) { list.classList.add("hidden"); return; }
         
-        // শুধু অপ্রদানকারী (যাদের আইডি paidMemberIds তে নেই)
-        const unpaidMembers = allMembersData.filter(m => !paidMemberIds.has(m.id));
-        const filtered = unpaidMembers.filter(m => 
+        // শুধু অপ্রদানকারী অথবা এডিট করার সময় বর্তমান সদস্যকে দেখাবে
+        const editId = document.getElementById("editSubDocId").value;
+        const currentMemberId = editId ? allSubscriptionsData.find(s=>s.id === editId)?.memberId : null;
+        
+        const validMembers = allMembersData.filter(m => !paidMemberIds.has(m.id) || m.id === currentMemberId);
+        
+        const filtered = validMembers.filter(m => 
             (m.name || "").toLowerCase().includes(query) ||
             (m.mobile || "").toLowerCase().includes(query) ||
             (m.village || "").toLowerCase().includes(query)
         );
 
         if(filtered.length === 0) {
-            list.innerHTML = `<li class="p-2 text-gray-500 text-xs">কোনো অপ্রদানকারী সদস্য পাওয়া যায়নি</li>`;
+            list.innerHTML = `<li class="p-2 text-gray-500 text-xs">কোনো যোগ্য সদস্য পাওয়া যায়নি</li>`;
         } else {
             filtered.forEach(m => {
                 const li = document.createElement("li");
@@ -493,6 +489,8 @@
       }
 
       window.openAddSubModal = function() {
+        document.getElementById("editSubDocId").value = "";
+        document.getElementById("subModalTitle").innerText = "চাঁদা/দান যুক্ত করুন";
         document.getElementById("subDate").value = new Date().toISOString().split("T")[0];
         document.getElementById("subAmountInput").value = "1500";
         document.getElementById("subNoteInput").value = "";
@@ -501,12 +499,37 @@
         switchAddTypeTab('member');
         document.getElementById("addSubModal").classList.remove("hidden");
       };
+      
+      // 📝 এডিট অপশন
+      window.editSubscription = function(id) {
+        const sub = allSubscriptionsData.find(s => s.id === id);
+        if(!sub) return;
+
+        document.getElementById("editSubDocId").value = sub.id;
+        document.getElementById("subModalTitle").innerText = "চাঁদার তথ্য আপডেট করুন";
+        document.getElementById("subDate").value = sub.date;
+        document.getElementById("subAmountInput").value = sub.amount;
+        document.getElementById("subNoteInput").value = sub.note || "";
+        
+        clearSelectedMember();
+        
+        if (sub.donorType === 'member') {
+            switchAddTypeTab('member');
+            selectMemberFromDropdown(sub.memberId, sub.name);
+        } else {
+            switchAddTypeTab('other');
+            document.getElementById("subOtherNameInput").value = sub.name;
+        }
+        
+        document.getElementById("addSubModal").classList.remove("hidden");
+      };
 
       window.closeAddSubModal = function() {
         document.getElementById("addSubModal").classList.add("hidden");
       };
 
       window.saveOrUpdateSubscription = async function() {
+        const editId = document.getElementById("editSubDocId").value;
         const date = document.getElementById("subDate").value;
         const donorType = document.getElementById("subDonorType").value;
         const amount = Number(document.getElementById("subAmountInput").value);
@@ -527,14 +550,18 @@
         const btn = document.getElementById("saveSubBtn");
         btn.innerText = "সেভ হচ্ছে..."; btn.disabled = true;
         try {
-            await addDoc(collection(db, "subscriptions"), { date, donorType, name, memberId, amount, note, timestamp: Date.now() });
+            if (editId) {
+                await updateDoc(doc(db, "subscriptions", editId), { date, donorType, name, memberId, amount, note });
+            } else {
+                await addDoc(collection(db, "subscriptions"), { date, donorType, name, memberId, amount, note, timestamp: Date.now() });
+            }
             closeAddSubModal();
         } catch(e) { alert("ত্রুটি: " + e.message); }
         finally { btn.innerText = "সেভ করুন"; btn.disabled = false; }
       };
 
-      window.deleteSubscription = async function(id, memberId) {
-        if(confirm("আপনি কি নিশ্চিতভাবে এই চাঁদার রেকর্ড ডিলিট করতে চান? সদস্য পুনরায় অপ্রদানকারী লিস্টে চলে যাবে।")) {
+      window.deleteSubscription = async function(id) {
+        if(confirm("আপনি কি নিশ্চিতভাবে এই চাঁদার রেকর্ড ডিলিট করতে চান?")) {
           try { await deleteDoc(doc(db, "subscriptions", id)); } 
           catch(e) { alert("ত্রুটি: " + e.message); }
         }
@@ -542,62 +569,162 @@
 
       window.filterSubscriptions = function() {
         const q = document.getElementById("subSearchInput").value.toLowerCase();
-        // Simple client side filter visual logic
         const rows = document.querySelectorAll(window.currentListTab === 'member' ? '#subTableBodyMember tr' : '#subTableBodyDonor tr');
         rows.forEach(r => {
             r.style.display = r.innerText.toLowerCase().includes(q) ? '' : 'none';
         });
       };
 
-      // Exports
+      // 📊 ExcelJS Export Function
+      async function exportToStyledExcel(title, columns, dataRows, filename, showTotalRow = true, amountColIndex = null) {
+          const workbook = new ExcelJS.Workbook();
+          const worksheet = workbook.addWorksheet('Report');
+
+          // Header 1: Committee Name
+          worksheet.mergeCells(`A1:${String.fromCharCode(64 + columns.length)}1`);
+          const h1 = worksheet.getCell('A1');
+          h1.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+          h1.font = { name: 'Kalpurush', size: 16, bold: true };
+          h1.alignment = { vertical: 'middle', horizontal: 'center' };
+          h1.border = { top: {style:'medium'}, left: {style:'medium'}, bottom: {style:'thin'}, right: {style:'medium'} };
+
+          // Header 2: Report Title
+          worksheet.mergeCells(`A2:${String.fromCharCode(64 + columns.length)}2`);
+          const h2 = worksheet.getCell('A2');
+          h2.value = title;
+          h2.font = { name: 'Kalpurush', size: 14, bold: true };
+          h2.alignment = { vertical: 'middle', horizontal: 'center' };
+          h2.border = { left: {style:'medium'}, bottom: {style:'thin'}, right: {style:'medium'} };
+
+          // Column Headers
+          const headerRow = worksheet.addRow(columns.map(c => c.header));
+          headerRow.eachCell((cell, colNumber) => {
+              cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF97316' } }; // Orange Background
+              cell.font = { color: { argb: 'FFFFFFFF' }, bold: true, size: 11 };
+              cell.alignment = { vertical: 'middle', horizontal: 'center' };
+              cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+          });
+
+          // Set Column Widths dynamically based on headers
+          worksheet.columns = columns.map(c => ({ width: c.width || 15 }));
+
+          // Data Rows
+          let totalAmount = 0;
+          dataRows.forEach(row => {
+              const dataRow = worksheet.addRow(row);
+              dataRow.eachCell((cell) => {
+                  cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+                  cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+              });
+              
+              if (showTotalRow && amountColIndex && row[amountColIndex - 1]) {
+                  let val = String(row[amountColIndex - 1]).replace(/[^0-9.-]+/g,"");
+                  totalAmount += Number(val) || 0;
+              }
+          });
+
+          // Auto-fit Logic for rows data
+          worksheet.columns.forEach((column, i) => {
+              let maxLength = 0;
+              column.eachCell({ includeEmpty: true }, (cell) => {
+                  const columnLength = cell.value ? cell.value.toString().length : 10;
+                  if (columnLength > maxLength) maxLength = columnLength;
+              });
+              column.width = maxLength < 10 ? 12 : maxLength + 2; 
+          });
+
+          // Total Row
+          if (showTotalRow && amountColIndex) {
+              const tRowData = new Array(columns.length).fill('');
+              tRowData[0] = 'সর্বমোট'; 
+              tRowData[amountColIndex - 1] = totalAmount.toLocaleString('en-IN'); 
+
+              const tRow = worksheet.addRow(tRowData);
+              // Merge total label cells
+              if(amountColIndex > 2) {
+                 worksheet.mergeCells(`A${tRow.number}:${String.fromCharCode(64 + amountColIndex - 1)}${tRow.number}`);
+              }
+              
+              tRow.eachCell((cell) => {
+                  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFF9C4' } }; // Light Yellow Background
+                  cell.font = { bold: true, size: 12 };
+                  cell.alignment = { vertical: 'middle', horizontal: 'center' };
+                  cell.border = { top: {style:'medium'}, left: {style:'thin'}, bottom: {style:'medium'}, right: {style:'thin'} };
+              });
+          }
+
+          // Generate & Download Excel
+          const buffer = await workbook.xlsx.writeBuffer();
+          saveAs(new Blob([buffer]), filename);
+      }
+
+      // 📥 Main Export (শুধুমাত্র সদস্য - Green Tick সহ)
       window.exportMainReport = function() {
           if (allMembersData.length === 0) return alert("সদস্য ডেটা পাওয়া যায়নি!");
-          let csv = "\uFEFFনাম,মোবাইল,স্ট্যাটাস,প্রদানের তারিখ,পরিমাণ\n";
-          allMembersData.forEach(m => {
+          
+          const columns = [
+              { header: 'SR', width: 6 },
+              { header: 'নাম', width: 20 },
+              { header: 'মোবাইল', width: 15 },
+              { header: 'স্ট্যাটাস', width: 12 },
+              { header: 'পরিমাণ (₹)', width: 12 },
+              { header: 'তারিখ', width: 12 }
+          ];
+
+          let dataRows = [];
+          allMembersData.forEach((m, index) => {
               const isPaid = paidMemberIds.has(m.id);
               const subData = isPaid ? allSubscriptionsData.find(s => s.memberId === m.id) : null;
-              const date = subData ? subData.date : "";
-              const amt = subData ? subData.amount : "";
-              const status = isPaid ? "✔️ Paid" : "";
-              csv += `"${m.name || ""}","${m.mobile || ""}","${status}","${date}","${amt}"\n`;
+              dataRows.push([
+                  index + 1,
+                  m.name || "-",
+                  m.mobile || "-",
+                  isPaid ? "✔️ Paid" : "Unpaid",
+                  subData ? subData.amount : "",
+                  subData ? subData.date : ""
+              ]);
           });
-          downloadCSV(csv, "Full_Members_Subscription_Report.csv");
+
+          exportToStyledExcel("সদস্য চাঁদা রিপোর্ট (সম্পূর্ণ তালিকা)", columns, dataRows, "Full_Members_Subscription_Report.xlsx", true, 5);
       }
 
+      // 📥 Other Exports
       window.exportSubReport = function(type) {
-          let csv = ""; let filename = "";
-          if (type === 'paid') {
-              csv = "\uFEFFনাম,মোবাইল,গ্রাম,পরিমাণ,তারিখ\n";
-              const paidList = allMembersData.filter(m => paidMemberIds.has(m.id));
-              paidList.forEach(m => {
-                  const s = allSubscriptionsData.find(sub => sub.memberId === m.id);
-                  csv += `"${m.name || ""}","${m.mobile || ""}","${m.village || ""}","${s ? s.amount : ""}","${s ? s.date : ""}"\n`;
-              });
-              filename = "Paid_Members_List.csv";
-          } else if (type === 'unpaid') {
-              csv = "\uFEFFনাম,মোবাইল,গ্রাম\n";
-              const unpaidList = allMembersData.filter(m => !paidMemberIds.has(m.id));
-              unpaidList.forEach(m => {
-                  csv += `"${m.name || ""}","${m.mobile || ""}","${m.village || ""}"\n`;
-              });
-              filename = "Unpaid_Due_Members_List.csv";
-          } else if (type === 'donor') {
-              csv = "\uFEFFদাতার নাম,পরিমাণ,তারিখ,মন্তব্য\n";
-              const donors = allSubscriptionsData.filter(s => s.donorType === 'other');
-              donors.forEach(d => {
-                  csv += `"${d.name || ""}","${d.amount || ""}","${d.date || ""}","${d.note || ""}"\n`;
-              });
-              filename = "Donors_List.csv";
-          }
-          downloadCSV(csv, filename);
-      }
+          let columns = []; let dataRows = []; let title = ""; let filename = ""; let amountIndex = null;
 
-      function downloadCSV(content, name) {
-          const blob = new Blob([content], { type: "text/csv;charset=utf-8;" });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url; a.download = name;
-          document.body.appendChild(a); a.click(); document.body.removeChild(a);
+          if (type === 'paid') {
+              title = "প্রদানকারী সদস্যদের চাঁদা তালিকা";
+              filename = "Paid_Members_List.xlsx";
+              columns = [ { header: 'SR' }, { header: 'নাম' }, { header: 'মোবাইল' }, { header: 'গ্রাম' }, { header: 'পরিমাণ (₹)' }, { header: 'তারিখ' } ];
+              amountIndex = 5;
+              let i = 1;
+              allMembersData.filter(m => paidMemberIds.has(m.id)).forEach(m => {
+                  const s = allSubscriptionsData.find(sub => sub.memberId === m.id);
+                  dataRows.push([ i++, m.name, m.mobile, m.village, s ? s.amount : "", s ? s.date : "" ]);
+              });
+
+          } else if (type === 'unpaid') {
+              title = "অপ্রদানকারী সদস্যদের তালিকা (বকেয়া)";
+              filename = "Unpaid_Due_Members_List.xlsx";
+              columns = [ { header: 'SR' }, { header: 'নাম' }, { header: 'মোবাইল' }, { header: 'গ্রাম' } ];
+              let i = 1;
+              allMembersData.filter(m => !paidMemberIds.has(m.id)).forEach(m => {
+                  dataRows.push([ i++, m.name, m.mobile, m.village ]);
+              });
+
+          } else if (type === 'donor') {
+              title = "অন্যান্য দাতা তালিকা";
+              filename = "Donors_List.xlsx";
+              columns = [ { header: 'SR' }, { header: 'দাতার নাম' }, { header: 'পরিমাণ (₹)' }, { header: 'তারিখ' }, { header: 'মন্তব্য' } ];
+              amountIndex = 3;
+              let i = 1;
+              allSubscriptionsData.filter(s => s.donorType === 'other').forEach(d => {
+                  dataRows.push([ i++, d.name, d.amount, d.date, d.note ]);
+              });
+          }
+
+          if(dataRows.length === 0) return alert("কোনো ডেটা পাওয়া যায়নি!");
+          exportToStyledExcel(title, columns, dataRows, filename, amountIndex !== null, amountIndex);
       }
     </script>
     <script>
