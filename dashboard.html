@@ -8,6 +8,8 @@
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- QR Code Library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
       #memberTableBody td,
       #memberTableBody th,
@@ -63,6 +65,11 @@
         }
         .no-print {
           display: none !important;
+        }
+        /* Print Background Colors Fix */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
         }
       }
     </style>
@@ -967,80 +974,52 @@
       </div>
     </div>
 
+    <!-- ID Card Modal -->
     <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-      <div
-        id="idCardBox"
-        class="bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col justify-between relative"
-      >
-        <div id="idCardHeader" class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center">
-          <h4 id="idCardHeaderTitle" class="font-bold text-[11px] leading-tight">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-          <p id="idCardHeaderSub" class="text-[9px] opacity-90 leading-tight">অফিশিয়াল পরিচয়পত্র</p>
-        </div>
-        <div class="px-3 py-1 flex items-center gap-3 bg-amber-50/20 my-auto">
-          <div class="shrink-0">
-            <img
-              id="idCardPhoto"
-              src=""
-              class="w-[72px] h-[72px] object-cover rounded-full border-2 border-orange-500 shadow-sm"
-              alt="Photo"
-            />
-          </div>
-          <div class="text-center flex-1">
-            <h3 id="idCardName" class="text-xs font-bold text-gray-800 leading-tight"></h3>
-            <p
-              id="idCardRole"
-              class="text-[9px] font-semibold text-orange-600 bg-orange-100 inline-block px-2 py-0.5 rounded-full mt-0.5"
-            ></p>
-            <div class="mt-1 text-[9px] text-gray-700 space-y-0.5">
-              <p>
-                <strong>আইডি:</strong>
-                <span id="idCardAutoId" class="font-bold text-orange-700"></span>
-              </p>
-              <p>
-                <strong>গ্রাম:</strong>
-                <span id="idCardVillage"></span>
-              </p>
-              <p>
-                <strong>মোবাইল:</strong>
-                <span id="idCardMobile"></span>
-              </p>
+        <div id="idCardBox" class="bg-white w-[340px] h-[225px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300">
+            <!-- Header -->
+            <div id="idCardHeader" class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center">
+              <h4 id="idCardHeaderTitle" class="font-bold text-[11px] leading-tight">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+              <p id="idCardHeaderSub" class="text-[9px] opacity-90 leading-tight">অফিশিয়াল পরিচয়পত্র</p>
             </div>
-          </div>
-        </div>
-        <div class="bg-gray-50 px-3 py-1.5 border-t flex justify-between items-end text-[9px]">
-          <div id="normalMemberSigContainer" class="text-center w-24">
-            <img id="idCardSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5 hidden" alt="Sig" />
-            <div class="border-t border-gray-400 text-gray-700 font-semibold text-[8px]">সদস্যের স্বাক্ষর</div>
-          </div>
-          <div id="presidentSingleSigContainer" class="text-center w-full hidden">
-            <img
-              id="idCardPresSingleSig"
-              src=""
-              class="h-6 max-w-[100px] object-contain mx-auto mb-0.5 hidden"
-              alt="Sig"
-            />
-            <div class="border-t border-orange-500 text-orange-700 font-bold text-[8.5px]">মাননীয় সভাপতি</div>
-          </div>
-          <div class="text-center w-24" id="presidentSigContainer">
-            <img id="idCardPresSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5 hidden" alt="Sig" />
-            <div
-              id="idCardPresPlaceholder"
-              class="h-5 flex items-center justify-center text-[7px] text-gray-400 italic"
-            >
-              প্রযোজ্য নয়
+            
+            <!-- Body -->
+            <div class="px-3 flex items-center gap-3 flex-1 bg-amber-50/20">
+              <div class="shrink-0">
+                <img id="idCardPhoto" src="" class="w-[70px] h-[70px] object-cover rounded-full border-2 border-orange-500 shadow-sm" alt="Photo" />
+              </div>
+              <div class="text-left flex-1 pl-1">
+                <h3 id="idCardName" class="text-xs font-bold text-gray-800 leading-tight"></h3>
+                <p id="idCardRole" class="text-[9px] font-semibold text-orange-600 bg-orange-100 inline-block px-2 py-0.5 rounded-full mt-0.5"></p>
+                <div class="mt-1 text-[9px] text-gray-700 space-y-0.5">
+                  <p><strong>আইডি:</strong> <span id="idCardAutoId" class="font-bold text-orange-700"></span></p>
+                  <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
+                  <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
+                </div>
+              </div>
             </div>
-            <div class="border-t border-gray-400 text-gray-700 font-semibold text-[8px]">মাননীয় সভাপতি</div>
-          </div>
+
+            <!-- Signatures Section with QR -->
+            <div class="bg-gray-50 px-5 pb-2 flex justify-between items-end h-[75px] w-full border-t border-gray-200">
+              <!-- Member Signature (Left) -->
+              <div id="memberSigContainer" class="text-center w-1/3 flex flex-col items-center justify-end">
+                <img id="idCardSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-1 hidden" alt="Sig">
+                <div class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
+              </div>
+              <!-- QR Code & President Signature (Right) -->
+              <div id="presSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
+                <canvas id="idCardQrCode" class="w-10 h-10 mb-1 shadow-sm"></canvas>
+                <img id="idCardPresSig" src="" class="h-5 max-w-[70px] object-contain mx-auto mb-0.5 hidden" alt="Sig">
+                <div id="idCardPresPlaceholder" class="h-5 flex items-center justify-center text-[7px] text-gray-400 italic">প্রযোজ্য নয়</div>
+                <div id="presSigLabel" class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">মাননীয় সভাপতি</div>
+              </div>
+            </div>
         </div>
-      </div>
-      <div class="absolute bottom-5 flex gap-2 no-print">
-        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">
-          🖨️ প্রিন্ট
-        </button>
-        <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">
-          বন্ধ
-        </button>
-      </div>
+        
+        <div class="absolute bottom-5 flex gap-2 no-print">
+          <button onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
+          <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
+        </div>
     </div>
 
     <!-- Firebase ও মূল লজিক স্ক্রিপ্ট -->
@@ -1874,7 +1853,7 @@
             memberSig.classList.add("hidden");
         }
 
-        // ২. সভাপতির স্বাক্ষর আপডেট (ডাটাবেস থেকে সভাপতিকে খুঁজে বের করে)
+        // ২. সভাপতির স্বাক্ষর আপডেট
         const president = allMembersData.find(m => m.role === "সভাপতি");
         const presSig = document.getElementById("idCardPresSig");
         const presPlaceholder = document.getElementById("idCardPresPlaceholder");
@@ -1887,6 +1866,15 @@
             presSig.classList.add("hidden");
             if (presPlaceholder) presPlaceholder.classList.remove("hidden");
         }
+
+        // ৩. QR কোড তৈরি করা (২য় ফাইল থেকে সংযুক্ত)
+        const qrCanvas = document.getElementById("idCardQrCode");
+        new QRious({
+            element: qrCanvas,
+            value: `ID: ${member.autoId || 'N/A'}\nName: ${member.name || 'N/A'}\nRole: ${member.role || 'N/A'}\nMobile: ${member.mobile || 'N/A'}`,
+            size: 150,
+            level: 'H'
+        });
 
         // মডাল ওপেন করা
         document.getElementById("idCardModal").classList.remove("hidden");
