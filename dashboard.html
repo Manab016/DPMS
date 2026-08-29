@@ -138,10 +138,18 @@
           >
             🛒 বিক্রয়
           </button>
+          <!-- নতুন সদস্য বাটন যা members.html এ রিডাইরেক্ট করবে -->
+          <button
+            id="menu-btn-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+          >
+            👥 সদস্য
+          </button>
           <button
             id="menu-btn-treasurer"
             onclick="switchTab('treasurer')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
@@ -170,6 +178,15 @@
         </div>
 
         <div class="grid grid-cols-2 gap-3">
+          <!-- নতুন সদস্য কার্ড যা members.html এ রিডাইরেক্ট করবে -->
+          <div
+            id="dash-card-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center col-span-2"
+          >
+            <div class="text-2xl mb-1">👥</div>
+            <div class="text-xs opacity-90 font-medium">সদস্য ব্যবস্থাপনা</div>
+          </div>
           <div
             id="dash-card-expense"
             onclick="switchTab('expense')"
@@ -178,6 +195,14 @@
             <div class="text-2xl mb-1">💵</div>
             <div class="text-xs opacity-90">মোট খরচ</div>
             <div class="text-xl font-bold mt-1">₹0</div>
+          </div>
+          <div
+            id="dash-card-treasurer"
+            onclick="switchTab('treasurer')"
+            class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center"
+          >
+            <div class="text-2xl mb-1">📊</div>
+            <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
           <div
             id="dash-card-booking"
@@ -196,14 +221,6 @@
             <div class="text-2xl mb-1">🛒</div>
             <div class="text-xs opacity-90">বিক্রয়</div>
             <div class="text-xl font-bold mt-1">0</div>
-          </div>
-          <div
-            id="dash-card-treasurer"
-            onclick="switchTab('treasurer')"
-            class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center"
-          >
-            <div class="text-2xl mb-1">📊</div>
-            <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
         </div>
       </div>
@@ -878,12 +895,19 @@
           });
         }
 
+        // সদস্য মেনুর ভিজিবিলিটি
+        const menuBtnMembers = document.getElementById("menu-btn-members");
+        const dashCardMembers = document.getElementById("dash-card-members");
+
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
           if (profileBadge) profileBadge.innerText = "admin";
           if (adminSubControls) adminSubControls.classList.remove("hidden");
           adminCols.forEach((col) => col.classList.remove("hidden"));
           subActionCols.forEach((col) => (col.style.display = "table-cell"));
+          
+          if(menuBtnMembers) menuBtnMembers.style.display = "flex";
+          if(dashCardMembers) dashCardMembers.style.display = "flex";
         } else {
           if (roleBadge) roleBadge.innerText = "রোল: User";
           if (profileBadge) profileBadge.innerText = "user";
@@ -892,6 +916,9 @@
           subActionCols.forEach(
             (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
           );
+          
+          if(menuBtnMembers) menuBtnMembers.style.display = "none";
+          if(dashCardMembers) dashCardMembers.style.display = "none";
 
           document.getElementById("tabBtnUsers").style.display = "none";
           document.getElementById("tabBtnHistory").style.display = "none";
