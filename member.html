@@ -14,6 +14,8 @@
       body > *:not(#idCardModal) { display: none !important; }
       #idCardModal { position: fixed !important; inset: 0 !important; background: white !important; display: flex !important; align-items: center !important; justify-content: center !important; }
       .no-print { display: none !important; }
+      /* Print Background Colors Fix */
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
 </head>
@@ -40,7 +42,7 @@
       </div>
 
       <div class="flex flex-col md:flex-row gap-2 mb-4">
-        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, গ্রাম, পদ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, গ্রাম, পদ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
       </div>
 
       <div class="overflow-x-auto border rounded-lg">
@@ -90,11 +92,11 @@
       <input type="tel" id="newMemberMobile" maxlength="10" oninput="this.value = this.value.replace(/[^0-9]/g, '')" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
       
       <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি</label>
-      <input type="file" onchange="processImage(this, 'photoPreview', 300, 300)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
+      <input type="file" id="photoInput" onchange="processImage(this, 'photoPreview', 300, 300)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
       <img id="photoPreview" class="w-16 h-16 object-cover rounded-full border border-gray-300 hidden mx-auto mb-3" />
       
       <label class="block text-xs font-semibold text-gray-600 mb-1">স্বাক্ষর</label>
-      <input type="file" onchange="processImage(this, 'sigPreview', 300, 100)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
+      <input type="file" id="sigInput" onchange="processImage(this, 'sigPreview', 300, 100)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
       <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded hidden px-2 py-1 mx-auto mb-4" />
       
       <div class="flex justify-end gap-2">
@@ -106,26 +108,46 @@
 
   <!-- ID Card Modal -->
   <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-    <div id="idCardBox" class="bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col justify-between relative">
-      <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1 text-center">
-        <h4 class="font-bold text-[11px] leading-tight">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+    <div id="idCardBox" class="bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
+      
+      <!-- Header -->
+      <div id="idCardHeader" class="px-2 py-1.5 text-center">
+        <h4 class="font-bold text-[12px] leading-tight">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
       </div>
-      <div class="px-3 py-1 flex items-center gap-3 bg-amber-50/20 my-auto">
-        <img id="idCardPhoto" src="" class="w-[72px] h-[72px] object-cover rounded-full border-2 border-orange-500" />
-        <div class="text-center flex-1">
-          <h3 id="idCardName" class="text-xs font-bold text-gray-800"></h3>
-          <p id="idCardRole" class="text-[9px] font-semibold text-orange-600 bg-orange-100 inline-block px-2 py-0.5 rounded-full"></p>
-          <div class="mt-1 text-[9px] text-gray-700 space-y-0.5">
+      
+      <!-- Body -->
+      <div id="idCardBody" class="px-3 py-1 flex items-center gap-3 flex-1">
+        <img id="idCardPhoto" src="" class="w-[72px] h-[72px] object-cover rounded-full border-2" />
+        <div class="text-left flex-1 pl-2">
+          <h3 id="idCardName" class="text-sm font-bold text-gray-800"></h3>
+          <p id="idCardRole" class="text-[10px] font-semibold inline-block px-2 py-0.5 rounded-full mt-0.5"></p>
+          <div class="mt-1 text-[10px] text-gray-700 space-y-0.5">
             <p><strong>আইডি:</strong> <span id="idCardAutoId"></span></p>
             <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
             <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
           </div>
         </div>
       </div>
+
+      <!-- Signatures Section -->
+      <div class="px-5 pb-2 pt-1 flex justify-between items-end h-[45px] w-full">
+        <!-- Member Signature (Left) -->
+        <div id="memberSigContainer" class="text-center w-1/3">
+          <img id="idCardMemberSig" src="" class="h-6 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+          <div class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold">সদস্যের স্বাক্ষর</div>
+        </div>
+        <!-- President Signature (Right) -->
+        <div id="presSigContainer" class="text-center w-1/3">
+          <img id="idCardPresSig" src="" class="h-6 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+          <div id="presSigLabel" class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold">সভাপতির স্বাক্ষর</div>
+        </div>
+      </div>
+
     </div>
+    
     <div class="absolute bottom-5 flex gap-2 no-print">
-      <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">🖨️ প্রিন্ট</button>
-      <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-1.5 rounded-lg text-xs font-bold">বন্ধ</button>
+      <button onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
+      <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
     </div>
   </div>
 
@@ -168,8 +190,11 @@
       onSnapshot(collection(db, "members"), (snapshot) => {
         allMembersData = [];
         snapshot.forEach((docSnap) => { allMembersData.push({ id: docSnap.id, ...docSnap.data() }); });
+        
+        // পুরানো ডেটা আগে, নতুন ডেটা পরে সাজানোর জন্য (createdAt অনুযায়ী)
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
+        
         renderTable(allMembersData);
       });
     }
@@ -201,25 +226,276 @@
       });
     };
 
-    // (এখানে আপনার image process, CRUD, ও Export ফাংশনগুলো আগের মতোই থাকবে, স্পেস বাঁচানোর জন্য মেইন লজিকটুকু দিয়েছি)
+    // --- Image Processing (Resize & Compress) ---
+    window.processImage = function(input, previewId, maxWidth, maxHeight) {
+      const file = input.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          let width = img.width;
+          let height = img.height;
+          if (width > height) {
+            if (width > maxWidth) { height = Math.round(height * (maxWidth / width)); width = maxWidth; }
+          } else {
+            if (height > maxHeight) { width = Math.round(width * (maxHeight / height)); height = maxHeight; }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, width, height);
+          const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
+          
+          document.getElementById(previewId).src = dataUrl;
+          document.getElementById(previewId).classList.remove("hidden");
+          
+          if (previewId === "photoPreview") processedPhotoBase64 = dataUrl;
+          else if (previewId === "sigPreview") processedSigBase64 = dataUrl;
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    };
+
+    // --- Save or Update Member ---
+    window.saveOrUpdateMember = async function() {
+      const name = document.getElementById("newMemberName").value.trim();
+      const village = document.getElementById("newMemberVillage").value.trim();
+      const role = document.getElementById("newMemberRole").value;
+      const mobile = document.getElementById("newMemberMobile").value.trim();
+      const docId = document.getElementById("editMemberDocId").value;
+
+      if (!name || !village) {
+        alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
+        return;
+      }
+
+      const memberData = {
+        name, village, role, mobile: mobile || "-",
+        updatedAt: Date.now()
+      };
+
+      if (processedPhotoBase64) memberData.photo = processedPhotoBase64;
+      if (processedSigBase64) memberData.signature = processedSigBase64;
+
+      try {
+        if (docId) {
+          // Update Existing
+          await updateDoc(doc(db, "members", docId), memberData);
+          alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
+        } else {
+          // Create New
+          memberData.createdAt = Date.now();
+          await addDoc(collection(db, "members"), memberData);
+          alert("নতুন সদস্য সফলভাবে যুক্ত হয়েছে!");
+        }
+        closeAddModal();
+      } catch (error) {
+        console.error("Error saving member: ", error);
+        alert("ডাটা সেভ করতে সমস্যা হয়েছে!");
+      }
+    };
+
+    // --- Edit Member Modal ---
+    window.openEditModal = function(id) {
+      const member = allMembersData.find(m => m.id === id);
+      if (!member) return;
+      
+      document.getElementById("modalTitle").innerText = "সদস্যের তথ্য আপডেট করুন";
+      document.getElementById("editMemberDocId").value = member.id;
+      document.getElementById("newMemberName").value = member.name;
+      document.getElementById("newMemberVillage").value = member.village;
+      document.getElementById("newMemberRole").value = member.role;
+      document.getElementById("newMemberMobile").value = member.mobile !== "-" ? member.mobile : "";
+      
+      processedPhotoBase64 = member.photo || "";
+      processedSigBase64 = member.signature || "";
+      
+      const photoPreview = document.getElementById("photoPreview");
+      if(member.photo) { photoPreview.src = member.photo; photoPreview.classList.remove("hidden"); }
+      else { photoPreview.classList.add("hidden"); }
+      
+      const sigPreview = document.getElementById("sigPreview");
+      if(member.signature) { sigPreview.src = member.signature; sigPreview.classList.remove("hidden"); }
+      else { sigPreview.classList.add("hidden"); }
+      
+      openAddModal();
+    };
+
+    // --- Delete Single Member ---
+    window.deleteMember = async function(id) {
+      if(confirm("আপনি কি নিশ্চিত যে এই সদস্যকে মুছে ফেলতে চান?")) {
+        try {
+          await deleteDoc(doc(db, "members", id));
+          alert("সদস্যকে মুছে ফেলা হয়েছে।");
+        } catch(error) {
+          alert("মুছে ফেলতে সমস্যা হয়েছে!");
+        }
+      }
+    };
+
+    // --- Delete Multiple Members ---
+    window.deleteSelectedMembers = async function() {
+      const checkboxes = document.querySelectorAll(".member-checkbox:checked");
+      if(checkboxes.length === 0) {
+        alert("কোনো সদস্য নির্বাচন করা হয়নি!");
+        return;
+      }
+      if(confirm(`আপনি কি নিশ্চিত যে ${checkboxes.length} জন সদস্যকে মুছে ফেলতে চান?`)) {
+        try {
+          for(let cb of checkboxes) {
+            await deleteDoc(doc(db, "members", cb.value));
+          }
+          document.getElementById("selectAll").checked = false;
+          alert("নির্বাচিত সদস্যদের মুছে ফেলা হয়েছে।");
+        } catch (error) {
+          alert("ডিলিট করতে সমস্যা হয়েছে!");
+        }
+      }
+    };
+
+    // --- Search & Filter ---
+    window.filterMembers = function() {
+      const searchText = document.getElementById("searchInput").value.toLowerCase();
+      const filteredData = allMembersData.filter(m => 
+        m.name.toLowerCase().includes(searchText) || 
+        m.mobile.includes(searchText) || 
+        m.village.toLowerCase().includes(searchText) ||
+        m.role.toLowerCase().includes(searchText) ||
+        m.autoId.toLowerCase().includes(searchText)
+      );
+      renderTable(filteredData);
+    };
+
+    // --- Select All Checkbox ---
+    window.toggleSelectAll = function() {
+      const isChecked = document.getElementById("selectAll").checked;
+      document.querySelectorAll(".member-checkbox").forEach(cb => {
+        cb.checked = isChecked;
+      });
+    };
+
+    // --- Export to Excel ---
+    window.exportToExcel = async function() {
+      if(allMembersData.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
+      
+      const workbook = new ExcelJS.Workbook();
+      const sheet = workbook.addWorksheet("Members List");
+      
+      // Add Headers
+      sheet.columns = [
+        { header: "ID", key: "autoId", width: 10 },
+        { header: "নাম", key: "name", width: 25 },
+        { header: "গ্রাম", key: "village", width: 20 },
+        { header: "পদ", key: "role", width: 15 },
+        { header: "মোবাইল", key: "mobile", width: 15 }
+      ];
+      
+      // Make Header Bold
+      sheet.getRow(1).font = { bold: true };
+      
+      // Add Rows
+      allMembersData.forEach(m => {
+        sheet.addRow({ autoId: m.autoId, name: m.name, village: m.village, role: m.role, mobile: m.mobile });
+      });
+      
+      // Generate & Download
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(new Blob([buffer]), "Members_List_Durgapuja.xlsx");
+    };
     
+    // --- Modal Controls ---
     window.openAddModal = function() {
       document.getElementById("addMemberModal").classList.remove("hidden");
     };
+
     window.closeAddModal = function() {
       document.getElementById("addMemberModal").classList.add("hidden");
+      // Clear all inputs
+      document.getElementById("editMemberDocId").value = "";
+      document.getElementById("newMemberName").value = "";
+      document.getElementById("newMemberVillage").value = "";
+      document.getElementById("newMemberRole").value = "সাধারণ সদস্য";
+      document.getElementById("newMemberMobile").value = "";
+      document.getElementById("photoInput").value = "";
+      document.getElementById("sigInput").value = "";
+      document.getElementById("photoPreview").classList.add("hidden");
+      document.getElementById("sigPreview").classList.add("hidden");
+      processedPhotoBase64 = "";
+      processedSigBase64 = "";
+      document.getElementById("modalTitle").innerText = "নতুন সদস্য যুক্ত করুন";
     };
+
     window.openIdCard = function(id) {
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
+
+      // ডেটাবেস থেকে সভাপতির সিগনেচার খোঁজার লজিক
+      const president = allMembersData.find(m => m.role === "সভাপতি");
+      const presSignature = president ? president.signature : "";
+
+      // Basic Text Data
       document.getElementById("idCardName").innerText = member.name;
       document.getElementById("idCardRole").innerText = member.role;
       document.getElementById("idCardAutoId").innerText = member.autoId;
       document.getElementById("idCardVillage").innerText = member.village;
       document.getElementById("idCardMobile").innerText = member.mobile;
       document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
+
+      // UI Elements Selection
+      const cardBox = document.getElementById("idCardBox");
+      const cardHeader = document.getElementById("idCardHeader");
+      const cardBody = document.getElementById("idCardBody");
+      const photoImg = document.getElementById("idCardPhoto");
+      const roleBadge = document.getElementById("idCardRole");
+      
+      const memberSigContainer = document.getElementById("memberSigContainer");
+      const presSigContainer = document.getElementById("presSigContainer");
+      const memberSigImg = document.getElementById("idCardMemberSig");
+      const presSigImg = document.getElementById("idCardPresSig");
+      const presSigLabel = document.getElementById("presSigLabel");
+
+      // Reset image displays 
+      memberSigImg.style.display = 'block';
+      presSigImg.style.display = 'block';
+
+      if (member.role === "সভাপতি") {
+        // VIP DESIGN FOR PRESIDENT
+        cardBox.className = "bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-yellow-500 flex flex-col relative transition-all duration-300";
+        cardHeader.className = "bg-gradient-to-r from-gray-900 via-gray-800 to-black text-yellow-500 px-2 py-1.5 text-center border-b border-yellow-600";
+        cardBody.className = "px-3 py-1 flex items-center gap-3 flex-1 bg-yellow-50/40";
+        photoImg.className = "w-[72px] h-[72px] object-cover rounded-full border-2 border-yellow-500 shadow-sm";
+        roleBadge.className = "text-[10px] font-bold text-yellow-700 bg-yellow-100 border border-yellow-400 inline-block px-2 py-0.5 rounded-full mt-0.5";
+        
+        memberSigContainer.classList.add("hidden"); 
+        presSigContainer.classList.remove("hidden");
+        presSigContainer.className = "text-center w-1/3 ml-auto"; 
+        
+        presSigImg.src = member.signature || "";
+        presSigLabel.innerText = "স্বাক্ষর"; 
+
+      } else {
+        // STANDARD DESIGN FOR NORMAL MEMBERS
+        cardBox.className = "bg-white w-[340px] h-[215px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
+        cardHeader.className = "bg-gradient-to-r from-orange-600 to-amber-600 text-white px-2 py-1.5 text-center";
+        cardBody.className = "px-3 py-1 flex items-center gap-3 flex-1 bg-amber-50/20";
+        photoImg.className = "w-[72px] h-[72px] object-cover rounded-full border-2 border-orange-500";
+        roleBadge.className = "text-[10px] font-semibold text-orange-700 bg-orange-100 inline-block px-2 py-0.5 rounded-full mt-0.5";
+        
+        memberSigContainer.classList.remove("hidden");
+        presSigContainer.classList.remove("hidden");
+        presSigContainer.className = "text-center w-1/3"; 
+        
+        memberSigImg.src = member.signature || ""; 
+        presSigImg.src = presSignature || ""; 
+        presSigLabel.innerText = "সভাপতির স্বাক্ষর";
+      }
+
       document.getElementById("idCardModal").classList.remove("hidden");
     };
+
     window.closeIdCardModal = function() {
       document.getElementById("idCardModal").classList.add("hidden");
     };
