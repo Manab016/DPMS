@@ -23,26 +23,21 @@
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
-     >
-        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
-        <p class="text-xs md:text-sm text-gray-700 mt-1">
-          স্থাপিত:- ২০০৯ |
-          <strong>Regd.No.:- S0014684</strong>
-        </p>
-        <p class="text-xs md:text-sm text-gray-700">
-          সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
-        </p>
-        <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">
-          📞
-          <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
-        </p>
+    
+    <!-- Top Committee Header Banner -->
+    <div class="bg-amber-100/70 border border-amber-300/80 rounded-2xl p-4 text-center shadow-sm mb-4">
+      <h1 class="text-xl md:text-2xl font-black text-red-700 tracking-wide">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+      <p class="text-xs md:text-sm font-semibold text-gray-700 mt-1">
+        স্থাপিত:- ২০০৯ | <span class="font-bold">Regd.No.:- S0014684</span>
+      </p>
+      <p class="text-xs md:text-sm text-gray-700 mt-0.5">
+        সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
+      </p>
+      <div class="text-xs md:text-sm font-bold text-gray-800 mt-1 flex items-center justify-center gap-1">
+        📞 <span>৯৯৩৩৩৭৯৭০২</span>
       </div>
+    </div>
 
-      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
-        <div
-          class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer"
-          onclick="toggleQuickMenu()"
-          
     <!-- Member Section -->
     <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
       <div class="flex items-center justify-between mb-4 border-b pb-3">
@@ -110,8 +105,12 @@
       <select id="newMemberRole" class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white">
         <option value="সাধারণ সদস্য">সাধারণ সদস্য</option>
         <option value="সভাপতি">সভাপতি</option>
+        <option value="সহ সভাপতি">সহ সভাপতি</option>
         <option value="সম্পাদক">সম্পাদক</option>
+        <option value="সহ সম্পাদক">সহ সম্পাদক</option>
         <option value="কোষাধ্যক্ষ">কোষাধ্যক্ষ</option>
+        <option value="সহ কোষাধ্যক্ষ">সহ কোষাধ্যক্ষ</option>
+        <option value="পূজা কোষাধ্যক্ষ">পূজা কোষাধ্যক্ষ</option>
       </select>
       
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
@@ -189,7 +188,7 @@
     const db = getFirestore(app);
 
     let allMembersData = [];
-    window.filteredMembersData = []; // নতুন ভেরিয়েবল যা ফিল্টার করা ডেটা রাখবে
+    window.filteredMembersData = [];
     let processedPhotoBase64 = "";
     let processedSigBase64 = "";
 
@@ -214,19 +213,15 @@
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
         
-        // গ্রামের ড্রপডাউন আপডেট করা
         populateVillageDropdown(allMembersData);
-        
-        // ডেটা লোড হওয়ার পর ফিল্টার অ্যাপ্লাই করা
         window.filterMembers();
       });
     }
 
     function populateVillageDropdown(data) {
       const villageFilter = document.getElementById("villageFilter");
-      const currentSelection = villageFilter.value; // আগের সিলেকশন ধরে রাখতে
+      const currentSelection = villageFilter.value;
       
-      // ইউনিক গ্রামের নাম বের করা
       const uniqueVillages = [...new Set(data.map(m => m.village))].filter(v => v).sort();
       
       let optionsHtml = '<option value="">সব গ্রাম (All)</option>';
@@ -236,7 +231,6 @@
       
       villageFilter.innerHTML = optionsHtml;
       
-      // যদি আগে কোনো গ্রাম সিলেক্ট করা থাকে এবং সেটা লিস্টে থাকে
       if(uniqueVillages.includes(currentSelection)) {
         villageFilter.value = currentSelection;
       }
@@ -384,7 +378,6 @@
       }
     };
 
-    // 필্টার ফাংশন আপডেট করা হলো - সার্চ টেক্সট এবং গ্রাম দুটোই চেক করবে
     window.filterMembers = function() {
       const searchText = document.getElementById("searchInput").value.toLowerCase();
       const selectedVillage = document.getElementById("villageFilter").value;
@@ -408,9 +401,6 @@
       document.querySelectorAll(".member-checkbox").forEach(cb => cb.checked = isChecked);
     };
 
-    // =================================================================
-    // NEW ADVANCED EXCEL EXPORT (Exports Filtered Data ONLY)
-    // =================================================================
     window.exportToExcel = async function() {
       const dataToExport = window.filteredMembersData || allMembersData;
       const selectedVillage = document.getElementById("villageFilter").value;
@@ -421,14 +411,13 @@
       const worksheet = workbook.addWorksheet("সদস্য তালিকা");
       
       worksheet.columns = [
-        { width: 15 }, // A: সদস্য ID
-        { width: 35 }, // B: নাম
-        { width: 20 }, // C: মোবাইল
-        { width: 25 }, // D: গ্রাম
-        { width: 35 }  // E: স্বাক্ষর (Image + Text)
+        { width: 15 },
+        { width: 35 },
+        { width: 20 },
+        { width: 25 },
+        { width: 35 }
       ];
 
-      // Row 1: মেইন টাইটেল
       worksheet.mergeCells('A1:E1');
       const titleCell = worksheet.getCell('A1');
       titleCell.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
@@ -440,7 +429,6 @@
       };
       worksheet.getRow(1).height = 35;
 
-      // Row 2: সাব টাইটেল (গ্রামের নাম সহ, যদি সিলেক্ট করা থাকে)
       worksheet.mergeCells('A2:E2');
       const subTitleCell = worksheet.getCell('A2');
       subTitleCell.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : 'সদস্য তালিকা (সকল গ্রাম)';
@@ -451,7 +439,6 @@
       };
       worksheet.getRow(2).height = 25;
 
-      // Row 3: কমলা হেডার
       const headers = ['সদস্য ID', 'নাম', 'মোবাইল', 'গ্রাম', 'স্বাক্ষর'];
       const headerRow = worksheet.getRow(3);
       headerRow.values = headers;
@@ -467,7 +454,6 @@
         };
       });
 
-      // Rows Data Generation (ফিল্টার করা ডেটা ব্যবহার করা হচ্ছে)
       let currentRow = 4;
       dataToExport.forEach((m) => {
         const row = worksheet.getRow(currentRow);
@@ -491,7 +477,6 @@
           };
         });
 
-        // সিগনেচার ইমেজ এক্সেল সেলে ইম্পোর্ট করা
         if (m.signature) {
           try {
             const parts = m.signature.split(',');
@@ -518,7 +503,6 @@
         currentRow++;
       });
 
-      // সবার শেষে Total Members রো
       worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
       const totalCell = worksheet.getCell(`A${currentRow}`);
       totalCell.value = `মোট সদস্য: ${dataToExport.length} জন`;
@@ -530,15 +514,11 @@
       };
       worksheet.getRow(currentRow).height = 30;
 
-      // Excel ফাইল ডাউনলোড (গ্রামের নাম অনুযায়ী ফাইলের নাম)
       const fileName = selectedVillage ? `Members_${selectedVillage}.xlsx` : "Members_All_Villages.xlsx";
       const buffer = await workbook.xlsx.writeBuffer();
       saveAs(new Blob([buffer]), fileName);
     };
 
-    // =================================================================
-    // Modal Helpers
-    // =================================================================
     window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
     window.closeAddModal = function() {
       document.getElementById("addMemberModal").classList.add("hidden");
