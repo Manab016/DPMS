@@ -135,7 +135,29 @@ window.filterExpenses=()=>{const q=document.getElementById("expenseSearch").valu
 window.openExpenseModal=()=>{if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}document.getElementById("expenseModalTitle").innerText="খরচ যুক্ত করুন";document.getElementById("expenseDocId").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseName").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseDescription").value="";document.getElementById("expenseTreasurer").value=pujaTreasurerName||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
 window.closeExpenseModal=()=>{const m=document.getElementById("expenseModal");m.classList.add("hidden");m.classList.remove("flex");};
 window.editExpense=(id)=>{if(!canManage())return;const x=allExpenses.find(e=>e.id===id);if(!x)return;document.getElementById("expenseModalTitle").innerText="খরচ সম্পাদনা";document.getElementById("expenseDocId").value=id;document.getElementById("expenseDate").value=x.date||"";document.getElementById("expenseName").value=x.name||x.payerName||"";document.getElementById("expenseAmount").value=x.amount||"";document.getElementById("expenseDescription").value=x.description||x.note||"";document.getElementById("expenseTreasurer").value=x.treasurer||x.pujaTreasurer||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
-window.saveExpense=async()=>{if(!canManage())return;const date=document.getElementById("expenseDate").value,name=document.getElementById("expenseName").value.trim(),amount=Number(document.getElementById("expenseAmount").value),description=document.getElementById("expenseDescription").value.trim(),treasurer=document.getElementById("expenseTreasurer").value.trim(),id=document.getElementById("expenseDocId").value;if(!date||!name||!amount){alert("দয়া করে তারিখ, প্রাপকের নাম এবং পরিমাণ দিন।");return;}const b=document.getElementById("saveExpenseBtn");b.disabled=true;b.innerText="সেভ হচ্ছে...";try{const data={date,name,amount,description,treasurer,updatedAt:Date.now()};if(id)await updateDoc(doc(db,"expenses",id),data);else await addDoc(collection(db,"expenses"),{...data,createdAt:Date.now(),createdBy:auth.currentUser.uid});closeExpenseModal();}catch(e){alert("ত্রুটি: "+e.message);}finally{b.disabled=false;b.innerText="সেভ করুন";}};
+window.saveExpense=async()=>{
+ if(!canManage()){alert("আপনার খরচ যোগ করার Permission নেই।");return;}
+ const user=auth.currentUser;
+ if(!user){alert("লগইন সেশন পাওয়া যায়নি। আবার লগইন করুন।");return;}
+ const date=document.getElementById("expenseDate").value;
+ const name=document.getElementById("expenseName").value.trim();
+ const amount=Number(document.getElementById("expenseAmount").value);
+ const description=document.getElementById("expenseDescription").value.trim();
+ const treasurer=document.getElementById("expenseTreasurer").value.trim();
+ const id=document.getElementById("expenseDocId").value;
+ if(!date||!name||!(amount>0)){alert("দয়া করে তারিখ, প্রাপকের নাম এবং ০-এর বেশি পরিমাণ দিন।");return;}
+ const b=document.getElementById("saveExpenseBtn");b.disabled=true;b.innerText="সেভ হচ্ছে...";
+ try{
+   const data={date,name,amount,description,treasurer,updatedAt:Date.now()};
+   if(id){await updateDoc(doc(db,"expenses",id),data);}
+   else{await addDoc(collection(db,"expenses"),{...data,createdAt:Date.now(),createdBy:user.uid});}
+   closeExpenseModal();
+ }catch(e){
+   console.error("Expense save error:",e);
+   const msg=(e&&e.code==="permission-denied")?"খরচ সেভ করার Firestore Permission নেই। Firebase Console → Firestore → Rules-এ expenses-এর create permission দিন।":"ত্রুটি: "+(e?.message||e);
+   alert(msg);
+ }finally{b.disabled=false;b.innerText="সেভ করুন";}
+};
 window.deleteExpense=async(id)=>{if(!canManage())return;if(!confirm("এই খরচটি ডিলিট করতে চান?"))return;try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}};
 window.exportExpenses=async()=>{if(!allExpenses.length){alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");return;}let csv="তারিখ,প্রাপকের নাম,পরিমাণ (₹),বিবরণ,পূজা কোষাধ্যক্ষ\n";allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||x.payerName||""}","${x.amount||0}","${x.description||x.note||""}","${x.treasurer||x.pujaTreasurer||""}"\n`);const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);};
 
@@ -143,9 +165,12 @@ async function loadPujaTreasurer(){try{const snap=await getDocs(collection(db,"m
 
 onAuthStateChanged(auth,async user=>{
  if(!user){window.location.replace("index.html");return;}
- window.isMasterAdmin=(user.email||"").toLowerCase()===ADMIN_EMAIL.toLowerCase();
+ const emailIsAdmin=(user.email||"").toLowerCase()===ADMIN_EMAIL.toLowerCase();
+ let profileData={};
+ try{const snap=await getDoc(doc(db,"app_users",user.uid));profileData=snap.exists()?snap.data():{};}catch(e){profileData={};}
+ window.isMasterAdmin=emailIsAdmin || String(profileData.role||"").toLowerCase()==="admin";
  if(window.isMasterAdmin){window.currentUserRole="admin";window.userPermissions=["members","subscription","expense","booking","sales","treasurer"];}
- else{try{const snap=await getDoc(doc(db,"app_users",user.uid));const d=snap.exists()?snap.data():{};window.currentUserRole=d.role||"member";window.userPermissions=Array.isArray(d.permissions)?d.permissions:[];}catch(e){window.currentUserRole="member";window.userPermissions=[];}}
+ else{window.currentUserRole=profileData.role||"member";window.userPermissions=Array.isArray(profileData.permissions)?profileData.permissions:[];}
  document.getElementById("userRoleBadge").innerText="রোল: "+roleText();
  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
  await loadPujaTreasurer();
