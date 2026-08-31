@@ -122,7 +122,7 @@
           <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
           <button
             id="menu-btn-members"
-            onclick="window.location.href='members.html'"
+            onclick="window.location.replace('members.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             👥 সদস্য
@@ -130,7 +130,7 @@
           <!-- ২. চাঁদা বাটন -->
           <button
             id="menu-btn-subscription"
-            onclick="window.location.href='chada.html'"
+            onclick="window.location.replace('chada.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💰 চাঁদা
@@ -165,7 +165,7 @@
           </button>
           <button
             id="quickSettingsBtn"
-            onclick="window.location.href='settings.html'"
+            onclick="window.location.replace('settings.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
@@ -201,7 +201,7 @@
           <!-- বামে: মোট সদস্য -->
           <div
             id="dash-card-members"
-            onclick="window.location.href='members.html'"
+            onclick="window.location.replace('members.html')"
             class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">👥</div>
@@ -212,7 +212,7 @@
           <!-- ডানে: মোট চাঁদা -->
           <div
             id="dash-card-subscription"
-            onclick="window.location.href='chada.html'"
+            onclick="window.location.replace('chada.html')"
             class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💰</div>
@@ -708,7 +708,39 @@
       window.currentUserRole = "user";
       window.userPermissions = [];
 
-      window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
+      
+      // Keep only one Dashboard entry as the app's Back destination.
+      // Do not create a guard when Dashboard was opened with ?tab=...; in that case
+      // Back must return to the plain Dashboard entry.
+      const dashboardHasTab = new URLSearchParams(window.location.search).has("tab");
+      let dashboardBackGuardActive = false;
+
+      function installDashboardBackGuard() {
+        if (dashboardHasTab || dashboardBackGuardActive) return;
+        dashboardBackGuardActive = true;
+        window.history.pushState({ dashboardGuard: true }, "", window.location.href);
+
+        window.addEventListener("popstate", async () => {
+          const leave = window.confirm("আপনি কি অ্যাপ থেকে বের হয়ে Logout করতে চান?\n\nহ্যাঁ = Logout\nনা = Dashboard-এ থাকুন");
+          if (leave) {
+            try {
+              await signOut(auth);
+              window.__pujaAuthCache?.clear();
+              window.location.replace("index.html");
+            } catch (e) {
+              alert("Logout করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
+              window.history.pushState({ dashboardGuard: true }, "", window.location.href);
+            }
+          } else {
+            window.history.pushState({ dashboardGuard: true }, "", window.location.href);
+          }
+        });
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        installDashboardBackGuard();
+      });
+
 
       onAuthStateChanged(auth, async (user) => {
         if (user) {
