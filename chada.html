@@ -61,7 +61,11 @@
           print-color-adjust: exact !important;
         }
       }
-    </style>
+          /* Dashboard menu active state: only the currently open page/tab is highlighted */
+      #quickMenuContent .dashboard-menu-btn.menu-active { background-color:#ea580c !important; color:#fff !important; border-color:#ea580c !important; }
+      #quickMenuContent .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
+
+</style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
@@ -113,7 +117,7 @@
           <button
             id="menu-btn-members"
             onclick="window.location.href='members.html'"
-            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
           >
             👥 সদস্য
           </button>
@@ -121,42 +125,42 @@
           <button
             id="menu-btn-subscription"
             onclick="switchTab('subscription')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💰 চাঁদা
           </button>
           <button
             id="menu-btn-expense"
-            onclick="window.location.href='dashboard.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='dashboard.html?tab=subscription'"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
           </button>
           <button
             id="menu-btn-booking"
-            onclick="window.location.href='dashboard.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='dashboard.html?tab=expense'"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🎫 বুকিং
           </button>
           <button
             id="menu-btn-sales"
-            onclick="window.location.href='dashboard.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='dashboard.html?tab=booking'"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🛒 বিক্রয়
           </button>
           <button
             id="menu-btn-treasurer"
-            onclick="window.location.href='dashboard.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='dashboard.html?tab=sales'"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
           <button
             id="quickSettingsBtn"
-            onclick="window.location.href='dashboard.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='dashboard.html?tab=treasurer'"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
           </button>
@@ -1547,15 +1551,31 @@
         }
       }
 
+      function updateActiveDashboardMenu(tabName) {
+        document.querySelectorAll("#quickMenuContent .dashboard-menu-btn").forEach((btn) => btn.classList.remove("menu-active"));
+        const id = tabName === "settings" ? "quickSettingsBtn" : `menu-btn-${tabName}`;
+        const btn = document.getElementById(id);
+        if (btn) btn.classList.add("menu-active");
+      }
+
       function switchTab(tabName) {
-        if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
-        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
-          const el = document.getElementById("section-" + t);
-          if (el) el.classList.add("hidden");
-        });
-        const target = document.getElementById("section-" + tabName);
-        if (target) target.classList.remove("hidden");
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (tabName === "subscription") {
+          ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+            const el = document.getElementById("section-" + t);
+            if (el) el.classList.add("hidden");
+          });
+          const target = document.getElementById("section-subscription");
+          if (target) target.classList.remove("hidden");
+          updateActiveDashboardMenu("subscription");
+          window.history.replaceState({ tab: "subscription" }, "", window.location.pathname + "?tab=subscription");
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
+        // All other modules live on dashboard.html. Pass the tab in the URL so the dashboard opens directly.
+        if (["expense", "booking", "sales", "treasurer", "settings", "dashboard"].includes(tabName)) {
+          window.location.replace(tabName === "dashboard" ? "dashboard.html" : `dashboard.html?tab=${encodeURIComponent(tabName)}`);
+          return;
+        }
       }
 
       function toggleQuickMenu() {
@@ -1568,6 +1588,7 @@
       window.addEventListener("DOMContentLoaded", () => {
         loadDevData();
         loadClubLogo();
+        updateActiveDashboardMenu("subscription");
       });
     </script>
   </body>
