@@ -22,6 +22,19 @@
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
+
+<style id="auth-pending-style">
+  html.auth-pending body { visibility: hidden !important; }
+  html.auth-ready body { visibility: visible !important; }
+</style>
+<script>
+  document.documentElement.classList.add("auth-pending");
+  window.__finishAuthRender = function () {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
+  };
+</script>
+
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
@@ -261,18 +274,19 @@
             window.userPermissions = userDoc.exists() ? (userDoc.data().permissions || []) : [];
           } catch (e) { window.userPermissions = []; }
         }
-        setupMemberDashboardMenu();
+        setupMemberDashboardMenu(user);
         if(window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
         }
         loadMembers();
+        window.__finishAuthRender();
       } else {
         window.location.replace("index.html");
       }
     });
 
-    function setupMemberDashboardMenu() {
+    function setupMemberDashboardMenu(user) {
       const badge = document.getElementById("memberUserRoleBadge");
       if (badge) badge.innerText = `রোল: ${({member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"}[window.currentUserRole] || "সাধারণ সদস্য")}`;
       const modules = ["subscription", "expense", "booking", "sales", "treasurer"];
@@ -296,14 +310,23 @@
     };
 
     window.goMemberMenu = function(tabName) {
-      if (tabName === "members") { window.location.replace("members.html"); return; }
-      if (tabName === "subscription") { window.location.replace("chada.html"); return; }
-      if (["expense", "booking", "sales", "treasurer", "settings"].includes(tabName)) {
+      if (tabName === "members") {
+        window.location.replace("members.html");
+        return;
+      }
+      if (tabName === "subscription") {
+        window.location.replace("chada.html");
+        return;
+      }
+      if (tabName === "settings") {
+        window.location.replace("settings.html");
+        return;
+      }
+      if (["expense", "booking", "sales", "treasurer"].includes(tabName)) {
         if (window.currentUserRole !== "admin" && !window.userPermissions.includes(tabName)) return;
         window.location.replace(`dashboard.html?tab=${encodeURIComponent(tabName)}`);
         return;
       }
-      window.location.replace("dashboard.html");
     };
 
     function loadMembers() {
