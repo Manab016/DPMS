@@ -191,9 +191,35 @@
     </div>
   </div>
 
-  <script type="module">
+  <script>
+(function () {
+  const KEY = "pujaAuthSessionV2";
+  window.__pujaAuthCache = {
+    get() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
+    },
+    set(user, role, permissions) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          uid: user.uid, email: user.email || "",
+          role: role || "user",
+          permissions: Array.isArray(permissions) ? permissions : [],
+          savedAt: Date.now()
+        }));
+      } catch (_) {}
+    },
+    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
+  };
+  const cached = window.__pujaAuthCache.get();
+  window.currentUserRole = cached?.role || "user";
+  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
+  window.__pujaAuthReady = !!cached;
+})();
+</script>
+
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
@@ -207,6 +233,7 @@
 
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
+    setPersistence(auth, browserLocalPersistence);
     const db = getFirestore(app);
 
     let allMembersData = [];
