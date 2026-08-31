@@ -133,13 +133,13 @@
 <div class="flex items-start gap-4">
 <div>
 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
-<p class="text-[17px] font-semibold text-gray-800" id="profileNameDisplay">Manabendra Nath Sarkar</p>
+<p class="text-[17px] font-semibold text-gray-800" id="profileNameDisplay">লোড হচ্ছে...</p>
 </div>
 </div>
 <div class="flex items-start gap-4">
 <div>
 <p class="text-xs font-semibold text-gray-500 mb-0.5">ব্যবহারকারী ইমেইল / আইডি</p>
-<p class="text-[17px] font-semibold text-gray-800" id="profileEmailDisplay">manabendra@gmail.com</p>
+<p class="text-[17px] font-semibold text-gray-800" id="profileEmailDisplay">লোড হচ্ছে...</p>
 <div class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide" id="profileRoleBadge">
                   লোড হচ্ছে...
                 </div>
@@ -207,7 +207,7 @@
 <tr class="bg-gray-100 text-gray-700 border-b">
 <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
 <th class="p-2.5 border-r text-center align-middle">নাম</th>
-<th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
+<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
 <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
 </tr>
 </thead>
@@ -303,27 +303,27 @@
 <div id="passInputContainer">
 <input class="w-full p-2.5 border rounded-lg text-sm" id="uPassInput" minlength="6" placeholder="পাসওয়ার্ড" type="password"/>
 </div>
+<div class="mb-3">
+<label class="block text-xs font-bold text-gray-700 mb-1">রোল নির্বাচন করুন</label>
+<select id="uRoleInput" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+  <option value="member">সাধারণ সদস্য</option>
+  <option value="admin">Admin</option>
+  <option value="treasurer">কোষাধ্যক্ষ</option>
+  <option value="puja_treasurer">পূজা কোষাধ্যক্ষ</option>
+</select>
+<p class="text-[10px] text-gray-500 mt-1">রোল পরিচয় নির্ধারণ করে; কোন মডিউল দেখা যাবে তা নিচের Permission দিয়ে নির্ধারিত হবে।</p>
+</div>
+<div class="mb-2">
+<label class="block text-xs font-bold text-gray-700 mb-2">Permission — যা দেওয়া হবে শুধু সেটাই দেখা যাবে</label>
+<p class="text-[10px] text-red-600 font-semibold mb-2">কোনো Permission না দিলে এই ব্যবহারকারী কোনো module দেখতে বা খুলতে পারবে না।</p>
 <div class="grid grid-cols-2 gap-2 text-xs">
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
-<input id="perm_subscription" type="checkbox"/>
-              চাঁদা
-            </label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
-<input id="perm_expense" type="checkbox"/>
-              খরচ
-            </label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
-<input id="perm_booking" type="checkbox"/>
-              বুকিং
-            </label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
-<input id="perm_sales" type="checkbox"/>
-              বিক্রয়
-            </label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
-<input id="perm_treasurer" type="checkbox"/>
-              কোষাধ্যক্ষ
-            </label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_members" type="checkbox"/> সদস্য</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_subscription" type="checkbox"/> চাঁদা</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_expense" type="checkbox"/> খরচ</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_booking" type="checkbox"/> বুকিং</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_sales" type="checkbox"/> বিক্রয়</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasurer" type="checkbox"/> কোষাধ্যক্ষ</label>
+</div>
 </div>
 <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
 <button class="bg-gray-200 px-4 py-2 rounded-lg text-xs font-bold" onclick="closeCreateUserModal()" type="button">
@@ -372,7 +372,8 @@ import {
   browserLocalPersistence,
   onAuthStateChanged,
   signOut,
-  updatePassword
+  updatePassword,
+  createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {
   getFirestore,
@@ -400,49 +401,51 @@ setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 
 const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+const ROLE_NAMES = {
+  member: "সাধারণ সদস্য",
+  admin: "Admin",
+  treasurer: "কোষাধ্যক্ষ",
+  puja_treasurer: "পূজা কোষাধ্যক্ষ"
+};
+const PERMISSION_NAMES = {
+  members: "সদস্য",
+  subscription: "চাঁদা",
+  expense: "খরচ",
+  booking: "বুকিং",
+  sales: "বিক্রয়",
+  treasurer: "কোষাধ্যক্ষ"
+};
 let allUsersData = [];
 let allLoginHistory = [];
 
-window.currentUserRole = "user";
+window.currentUserRole = "member";
 window.userPermissions = [];
+window.isMasterAdmin = false;
 
 onAuthStateChanged(auth, async (user) => {
   if (!user) {
+    window.__pujaAuthCache.clear();
     window.location.replace("index.html");
     return;
   }
 
-  if (user.email !== ADMIN_EMAIL) {
-    
+  window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  if (!window.isMasterAdmin) {
+    // Settings is a master-admin function. No warning popup while auth is resolving.
     window.location.replace("dashboard.html");
     return;
   }
 
   window.currentUserRole = "admin";
-  window.userPermissions = ["subscription","expense","booking","sales","treasurer"];
-  window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
+  window.userPermissions = Object.keys(PERMISSION_NAMES);
+  window.__pujaAuthCache.set(user, "admin", window.userPermissions);
 
-  const emailEl = document.getElementById("profileEmailDisplay");
-  const nameEl = document.getElementById("profileNameDisplay");
-  const roleEl = document.getElementById("profileRoleBadge");
-
-  if (emailEl) emailEl.innerText = user.email || "Admin";
-  if (nameEl) nameEl.innerText = user.displayName || (user.email ? user.email.split("@")[0] : "Admin");
-  if (roleEl) roleEl.innerText = "Admin";
-
-  const permMap = {
-    subscription: "চাঁদা সংগ্রহ",
-    expense: "খরচ ট্র্যাকিং",
-    booking: "টিকিট বুকিং",
-    sales: "টিকিট বিক্রয়",
-    treasurer: "প্রধান কোষাধ্যক্ষ"
-  };
-  const permContainer = document.getElementById("profilePermissionsContainer");
-  if (permContainer) {
-    permContainer.innerHTML = Object.values(permMap)
-      .map(x => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${x}</span>`)
-      .join("");
-  }
+  document.getElementById("profileEmailDisplay").innerText = user.email || "-";
+  document.getElementById("profileNameDisplay").innerText = (user.displayName && user.displayName.trim()) ? user.displayName : "Admin";
+  document.getElementById("profileRoleBadge").innerText = "Admin";
+  document.getElementById("profilePermissionsContainer").innerHTML = Object.values(PERMISSION_NAMES)
+    .map(x => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${x}</span>`).join("");
 
   loadAppUsers();
   loadLoginHistory();
@@ -450,6 +453,11 @@ onAuthStateChanged(auth, async (user) => {
   loadClubLogo();
   switchSettingsSubTab("profile");
 });
+
+function roleName(role) { return ROLE_NAMES[role] || "সাধারণ সদস্য"; }
+function permissionText(perms) {
+  return (perms || []).map(p => PERMISSION_NAMES[p] || p).join(", ") || "কোনো Permission নেই";
+}
 
 function loadAppUsers() {
   onSnapshot(collection(db, "app_users"), (snapshot) => {
@@ -465,51 +473,62 @@ function renderUsersTable(users) {
   const tbody = document.getElementById("usersTableBody");
   if (!tbody) return;
   tbody.innerHTML = "";
-
   users.forEach((u) => {
     const tr = document.createElement("tr");
     tr.className = "border-b hover:bg-gray-50";
     tr.innerHTML = `
       <td class="p-2.5 border-r font-medium text-gray-800 text-center">${u.email || "-"}</td>
       <td class="p-2.5 border-r text-gray-700 text-center">${u.name || "-"}</td>
-      <td class="p-2.5 border-r text-center">${(u.permissions || []).join(", ") || "-"}</td>
-      <td class="p-2.5 text-center">
-        <div class="flex justify-center gap-1">
-          <button onclick="editUserPermissions('${u.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">এডিট</button>
-          <button onclick="deleteUserAccount('${u.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">ডিলিট</button>
-        </div>
-      </td>`;
+      <td class="p-2.5 border-r text-center font-bold">${roleName(u.role)}</td>
+      <td class="p-2.5 border-r text-center text-xs">${permissionText(u.permissions)}</td>
+      <td class="p-2.5 text-center"><div class="flex justify-center gap-1">
+        <button onclick="editUserPermissions('${u.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">এডিট</button>
+        <button onclick="deleteUserAccount('${u.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">ডিলিট</button>
+      </div></td>`;
     tbody.appendChild(tr);
   });
 }
 
 window.handleSaveUser = async function(event) {
   event.preventDefault();
+  if (!window.isMasterAdmin) return;
 
   const editId = document.getElementById("editUserId").value;
   const name = document.getElementById("uNameInput").value.trim();
-  const email = document.getElementById("uEmailInput").value.trim();
-  const selectedPerms = [];
-
-  ["subscription","expense","booking","sales","treasurer"].forEach((p) => {
-    const el = document.getElementById("perm_" + p);
-    if (el && el.checked) selectedPerms.push(p);
-  });
+  const email = document.getElementById("uEmailInput").value.trim().toLowerCase();
+  const role = document.getElementById("uRoleInput").value;
+  const selectedPerms = ["members","subscription","expense","booking","sales","treasurer"]
+    .filter(p => document.getElementById("perm_" + p)?.checked);
 
   try {
     if (editId) {
       await updateDoc(doc(db, "app_users", editId), {
-        name, email, permissions: selectedPerms
+        name, email, role, permissions: selectedPerms, updatedAt: Date.now()
       });
+      alert("ব্যবহারকারীর তথ্য ও Permission আপডেট হয়েছে।");
     } else {
-      const uId = "user_" + Date.now();
-      await setDoc(doc(db, "app_users", uId), {
-        name, email, permissions: selectedPerms, createdAt: Date.now()
+      const pass = document.getElementById("uPassInput").value;
+      if (pass.length < 6) { alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"); return; }
+
+      // Secondary Firebase app creates the new Auth account without logging out the master admin.
+      const secondaryName = "user-create-" + Date.now();
+      const secondaryApp = initializeApp(firebaseConfig, secondaryName);
+      const secondaryAuth = getAuth(secondaryApp);
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+      await setDoc(doc(db, "app_users", cred.user.uid), {
+        uid: cred.user.uid,
+        name, email, role, permissions: selectedPerms,
+        disabled: false,
+        createdAt: Date.now(),
+        createdBy: auth.currentUser.uid,
+        createdByEmail: auth.currentUser.email
       });
+      await signOut(secondaryAuth);
+      alert("নতুন ব্যবহারকারী ID সফলভাবে তৈরি হয়েছে।");
     }
     closeCreateUserModal();
   } catch (e) {
-    alert("ত্রুটি: " + e.message);
+    alert("ব্যবহারকারী তৈরি/আপডেট করা যায়নি: " + (e.code === "auth/email-already-in-use" ? "এই ইমেইল/ID আগে থেকেই আছে।" : e.message));
   }
 };
 
@@ -519,45 +538,44 @@ window.openCreateUserModal = function() {
   document.getElementById("uNameInput").value = "";
   document.getElementById("uEmailInput").value = "";
   document.getElementById("uPassInput").value = "";
+  document.getElementById("uRoleInput").value = "member";
   document.getElementById("passInputContainer").style.display = "block";
-
-  ["subscription","expense","booking","sales","treasurer"].forEach((p) => {
-    document.getElementById("perm_" + p).checked = false;
-  });
-
+  ["members","subscription","expense","booking","sales","treasurer"].forEach(p => document.getElementById("perm_" + p).checked = false);
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
-window.closeCreateUserModal = function() {
-  document.getElementById("createUserModal").classList.add("hidden");
-};
+window.closeCreateUserModal = function() { document.getElementById("createUserModal").classList.add("hidden"); };
 
 window.editUserPermissions = function(uId) {
-  const user = allUsersData.find((u) => u.id === uId);
+  if (!window.isMasterAdmin) return;
+  const user = allUsersData.find(u => u.id === uId);
   if (!user) return;
-
   document.getElementById("userModalTitle").innerText = "✏️ ব্যবহারকারী এডিট করুন";
   document.getElementById("editUserId").value = user.id;
   document.getElementById("uNameInput").value = user.name || "";
   document.getElementById("uEmailInput").value = user.email || "";
+  document.getElementById("uRoleInput").value = user.role || "member";
   document.getElementById("passInputContainer").style.display = "none";
-
-  const userPerms = user.permissions || [];
-  ["subscription","expense","booking","sales","treasurer"].forEach((p) => {
-    document.getElementById("perm_" + p).checked = userPerms.includes(p);
-  });
-
+  const perms = user.permissions || [];
+  ["members","subscription","expense","booking","sales","treasurer"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
 window.deleteUserAccount = async function(uId) {
-  if (!confirm("নিশ্চিতভাবে ডিলিট করতে চান?")) return;
+  if (!window.isMasterAdmin) return;
+  const user = allUsersData.find(u => u.id === uId);
+  if (!user) return;
+  if (!confirm(`"${user.name || user.email}"-কে নিষ্ক্রিয়/ডিলিট করতে চান?\nডিলিট করলে এই অ্যাপ থেকে আর কোনো Permission থাকবে না।`)) return;
   try {
-    await deleteDoc(doc(db, "app_users", uId));
-  } catch (e) {
-    alert("ত্রুটি: " + e.message);
-  }
+    // Client-side Firebase cannot delete another user's Auth account safely.
+    // We permanently disable the application account; Firebase Auth account remains inaccessible to this app.
+    await updateDoc(doc(db, "app_users", uId), {
+      disabled: true, permissions: [], deleted: true, deletedAt: Date.now(), deletedBy: auth.currentUser.uid
+    });
+    alert("ব্যবহারকারী এই অ্যাপ থেকে ডিলিট/নিষ্ক্রিয় করা হয়েছে।");
+  } catch (e) { alert("ডিলিট করা যায়নি: " + e.message); }
 };
+
 
 function loadLoginHistory() {
   onSnapshot(collection(db, "login_history"), (snapshot) => {
