@@ -173,7 +173,6 @@ window.goDashboard=()=>window.location.replace("dashboard.html");
 window.goPage=(p)=>window.location.replace(p);
 window.toggleQuickMenu=()=>document.getElementById("quickMenuContent").classList.toggle("hidden");
 
-// টেবিল রেন্ডারিং ও Due আপডেট
 function renderExpenses(list=allExpenses){
  const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
  actionHead.classList.toggle("hidden",!canManage());
@@ -225,7 +224,6 @@ function renderExpenses(list=allExpenses){
  document.getElementById("totalReturned").innerText = money(totalRet);
 }
 
-// Due লিস্ট ক্লিয়ার করার সরাসরি বাটন (ফেরত পেয়ে গেলে)
 window.clearDue = async (id) => {
   if(!canManage()) return;
   const x = allExpenses.find(e => e.id === id);
@@ -252,7 +250,6 @@ window.filterExpenses=()=>{
  renderExpenses(allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.advance,x.spent,x.returned,x.dueAmount,x.description,x.note,x.treasurer,x.date].join(" ").toLowerCase().includes(q)));
 };
 
-// অটোমেটিক ফেরত টাকার হিসাব
 window.updateReturnCalculation=()=>{
  const advance=Number(document.getElementById("expenseAdvance").value||0);
  const spent=Number(document.getElementById("expenseSpent").value||0);
