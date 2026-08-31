@@ -104,7 +104,7 @@
 </div>
 
 
-  <div class="hidden" id="section-settings">
+  <div id="section-settings">
 <div class="mb-4">
 <button class="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition" onclick="goDashboard()">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
@@ -753,17 +753,17 @@ function switchSettingsSubTab(subTabName) {
 }
 
 function goDashboard() {
-  window.location.href = "dashboard.html";
+  window.location.replace("dashboard.html");
 }
 
 function goMenu(tab) {
   const allowed = ["subscription","expense","booking","sales","treasurer"];
   if (tab === "members") {
-    window.location.href = "members.html";
+    window.location.replace("members.html");
   } else if (tab === "subscription") {
-    window.location.href = "chada.html";
+    window.location.replace("chada.html");
   } else if (allowed.includes(tab)) {
-    window.location.href = "dashboard.html?tab=" + encodeURIComponent(tab);
+    window.location.replace("dashboard.html?tab=" + encodeURIComponent(tab));
   }
 }
 
@@ -781,5 +781,22 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 </script>
+
+<script>
+(function () {
+  window.goMenu = function(tab) {
+    const routes = {
+      members: "members.html",
+      subscription: "chada.html",
+      expense: "dashboard.html?tab=expense",
+      booking: "dashboard.html?tab=booking",
+      sales: "dashboard.html?tab=sales",
+      treasurer: "dashboard.html?tab=treasurer"
+    };
+    if (routes[tab]) window.location.replace(routes[tab]);
+  };
+})();
+</script>
+
 </body>
 </html>
