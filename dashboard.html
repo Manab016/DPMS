@@ -46,16 +46,6 @@
         scrollbar-width: none;
       }
 
-      /* ড্যাশবোর্ড মেনুর active state: শুধু বর্তমানে খোলা পেজ/ট্যাব orange থাকবে */
-      #quickMenuContent .dashboard-menu-btn.menu-active {
-        background-color: #ea580c !important;
-        color: #ffffff !important;
-        border-color: #ea580c !important;
-      }
-      #quickMenuContent .dashboard-menu-btn.menu-active:hover {
-        background-color: #c2410c !important;
-      }
-
       @media print {
         body {
           background: white !important;
@@ -72,21 +62,7 @@
         }
       }
     </style>
-  
-<style id="auth-pending-style">
-  /* Do not hide the whole application while Firebase restores the session.
-     Protected actions remain guarded by the auth/permission checks. */
-  html.auth-pending body { visibility: visible !important; }
-</style>
-<script>
-  document.documentElement.classList.add("auth-ready");
-  window.__finishAuthRender = function () {
-    document.documentElement.classList.remove("auth-pending");
-    document.documentElement.classList.add("auth-ready");
-  };
-</script>
-
-</head>
+  </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
     <button
@@ -136,51 +112,51 @@
           <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
           <button
             id="menu-btn-members"
-            onclick="window.location.replace('members.html')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
           >
             👥 সদস্য
           </button>
           <!-- ২. চাঁদা বাটন -->
           <button
             id="menu-btn-subscription"
-            onclick="window.location.replace('chada.html')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="window.location.href='chada.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💰 চাঁদা
           </button>
           <button
             id="menu-btn-expense"
-            onclick="window.location.replace('expense.html')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="switchTab('expense')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
           </button>
           <button
             id="menu-btn-booking"
             onclick="switchTab('booking')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🎫 বুকিং
           </button>
           <button
             id="menu-btn-sales"
             onclick="switchTab('sales')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🛒 বিক্রয়
           </button>
           <button
             id="menu-btn-treasurer"
             onclick="switchTab('treasurer')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
           <button
             id="quickSettingsBtn"
-            onclick="window.location.replace('settings.html')"
-            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            onclick="switchTab('settings')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
           </button>
@@ -215,18 +191,18 @@
           <!-- বামে: মোট সদস্য -->
           <div
             id="dash-card-members"
-            onclick="window.location.replace('members.html')"
+            onclick="window.location.href='members.html'"
             class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">👥</div>
-            <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
+            <div class="text-xs opacity-90 font-medium">Total Members</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
           </div>
 
           <!-- ডানে: মোট চাঁদা -->
           <div
             id="dash-card-subscription"
-            onclick="window.location.replace('chada.html')"
+            onclick="window.location.href='chada.html'"
             class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💰</div>
@@ -244,7 +220,7 @@
           >
             <div class="text-2xl mb-1">💵</div>
             <div class="text-xs opacity-90">মোট খরচ</div>
-            <div class="text-xl font-bold mt-1">₹0</div>
+            <div class="text-xl font-bold mt-1" id="dashTotalExpenseAmount">₹0</div>
           </div>
           <div
             id="dash-card-treasurer"
@@ -354,7 +330,7 @@
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
-                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">লোড হচ্ছে...</p>
+                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">Manabendra Nath Sarkar</p>
               </div>
             </div>
             <div class="flex items-start gap-4">
@@ -651,38 +627,12 @@
     </div>
 
     <!-- Firebase ও মূল লজিক স্ক্রিপ্ট -->
-    <script>
-(function () {
-  const KEY = "pujaAuthSessionV2";
-  window.__pujaAuthCache = {
-    get() {
-      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
-    },
-    set(user, role, permissions) {
-      try {
-        localStorage.setItem(KEY, JSON.stringify({
-          uid: user.uid, email: user.email || "",
-          role: role || "user",
-          permissions: Array.isArray(permissions) ? permissions : [],
-          savedAt: Date.now()
-        }));
-      } catch (_) {}
-    },
-    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
-  };
-  const cached = window.__pujaAuthCache.get();
-  window.currentUserRole = cached?.role || "user";
-  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
-  window.__pujaAuthReady = !!cached;
-})();
-</script>
-
-<script type="module">
+    <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import {
         getAuth,
         setPersistence,
-        browserLocalPersistence,
+        browserSessionPersistence,
         onAuthStateChanged,
         signOut,
         updatePassword,
@@ -711,7 +661,7 @@
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
-      setPersistence(auth, browserLocalPersistence);
+      setPersistence(auth, browserSessionPersistence);
       const db = getFirestore(app);
 
       let allSubscriptionsData = [];
@@ -722,47 +672,19 @@
       window.currentUserRole = "user";
       window.userPermissions = [];
 
-      
-      // Keep only one Dashboard entry as the app's Back destination.
-      // Do not create a guard when Dashboard was opened with ?tab=...; in that case
-      // Back must return to the plain Dashboard entry.
-      const dashboardHasTab = new URLSearchParams(window.location.search).has("tab");
-      let dashboardBackGuardActive = false;
+      window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
 
-      function installDashboardBackGuard() {
-        if (dashboardHasTab || dashboardBackGuardActive) return;
-        dashboardBackGuardActive = true;
-        window.history.pushState({ dashboardGuard: true }, "", window.location.href);
-
-        window.addEventListener("popstate", async () => {
-          const leave = window.confirm("আপনি কি অ্যাপ থেকে বের হয়ে Logout করতে চান?\n\nহ্যাঁ = Logout\nনা = Dashboard-এ থাকুন");
-          if (leave) {
-            try {
-              await signOut(auth);
-              window.__pujaAuthCache?.clear();
-              window.location.replace("index.html");
-            } catch (e) {
-              alert("Logout করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।");
-              window.history.pushState({ dashboardGuard: true }, "", window.location.href);
-            }
-          } else {
-            window.history.pushState({ dashboardGuard: true }, "", window.location.href);
-          }
-        });
-      }
-onAuthStateChanged(auth, async (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if (user) {
           if (user.email === ADMIN_EMAIL) {
             window.currentUserRole = "admin";
-            window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
+            window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
           } else {
             window.currentUserRole = "user";
             try {
               const userDoc = await getDoc(doc(db, "app_users", user.uid));
               if (userDoc.exists()) {
-                window.currentUserRole = userDoc.data().role || "member";
                 window.userPermissions = userDoc.data().permissions || [];
-                if (userDoc.data().disabled === true || userDoc.data().deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
               } else {
                 window.userPermissions = [];
               }
@@ -772,31 +694,12 @@ onAuthStateChanged(auth, async (user) => {
           }
 
           logUserLogin(user);
-          try {
-            const profileSnap = await getDoc(doc(db, "app_users", user.uid));
-            window.__pujaProfileName = profileSnap.exists() ? (profileSnap.data().name || "") : "";
-          } catch (_) {
-            window.__pujaProfileName = "";
-          }
-          window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
-
-          // The plain Dashboard is the single Back destination.
-          // Query-tab views must not create another Back-confirmation entry.
-          if (!new URLSearchParams(window.location.search).has("tab")) {
-            installDashboardBackGuard();
-          }
-
-          const requestedTab = new URLSearchParams(window.location.search).get("tab");
-          if (requestedTab && ["subscription","expense","booking","sales","treasurer"].includes(requestedTab)) {
-            switchTab(requestedTab);
-          }
-
-          window.__finishAuthRender();
+          loadSubscriptions();
           loadTotalMembersCount();
           loadCommitteeExecutives();
 
-          if ((user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+          if (window.currentUserRole === "admin") {
             loadAppUsers();
             loadLoginHistory();
           }
@@ -818,8 +721,8 @@ onAuthStateChanged(auth, async (user) => {
 
           // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
           membersList.forEach((m) => {
-            const post = m.designation || m.post || m.position || m.office || m.committeeRole || m.role || "";
-            if (post && post.trim() !== "" && !["সাধারণ সদস্য","সদস্য","member","general member"].includes(String(post).trim().toLowerCase())) {
+            const post = m.designation || m.post || m.role || m.position || "";
+            if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
               const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
               if (!exists) {
                 combined.push({
@@ -882,7 +785,22 @@ onAuthStateChanged(auth, async (user) => {
         onSnapshot(collection(db, "members"), (snapshot) => {
           const count = snapshot.size;
           const el = document.getElementById("dashTotalMembersCount");
-          if (el) el.innerText = count.toLocaleString("bn-IN");
+          if (el) el.innerText = count.toLocaleString("en-IN");
+        });
+      }
+
+      // 💵 মোট খরচ — expenses collection থেকে real-time total
+      function loadTotalExpenseCount() {
+        onSnapshot(collection(db, "expenses"), (snapshot) => {
+          let total = 0;
+          snapshot.forEach((docSnap) => {
+            const d = docSnap.data();
+            total += Number(d.spent ?? d.amount ?? 0) || 0;
+          });
+          const el = document.getElementById("dashTotalExpenseAmount");
+          if (el) el.innerText = `₹${total.toLocaleString("en-IN")}`;
+        }, (error) => {
+          console.error("Expense total load error:", error);
         });
       }
 
@@ -909,16 +827,13 @@ onAuthStateChanged(auth, async (user) => {
 
         if (profileEmail) profileEmail.innerText = user.email || "ইউজার";
         if (profileName && user.email) {
-          const cachedName = window.__pujaProfileName || "";
-          profileName.innerText = cachedName || user.displayName || user.email.split("@")[0];
+          profileName.innerText = user.displayName || user.email.split("@")[0];
         }
 
         const permContainer = document.getElementById("profilePermissionsContainer");
         if (permContainer) {
           permContainer.innerHTML = "";
           const permMap = {
-            members: "সদস্য",
-            members: "সদস্য",
             subscription: "চাঁদা সংগ্রহ",
             expense: "খরচ ট্র্যাকিং",
             booking: "টিকিট বুকিং",
@@ -932,13 +847,10 @@ onAuthStateChanged(auth, async (user) => {
           });
         }
 
-        const settingsBtn = document.getElementById("quickSettingsBtn");
-        if (settingsBtn) settingsBtn.style.display = "flex";
-
         const menuBtnMembers = document.getElementById("menu-btn-members");
         const dashCardMembers = document.getElementById("dash-card-members");
 
-        if (window.currentUserRole === "admin" && (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
           if (profileBadge) profileBadge.innerText = "Admin";
           if (adminSubControls) adminSubControls.classList.remove("hidden");
@@ -948,17 +860,15 @@ onAuthStateChanged(auth, async (user) => {
           if(menuBtnMembers) menuBtnMembers.style.display = "flex";
           if(dashCardMembers) dashCardMembers.style.display = "flex";
         } else {
-          const roleNames = {member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
-          const shownRole = roleNames[window.currentUserRole] || "সাধারণ সদস্য";
-          if (roleBadge) roleBadge.innerText = "রোল: " + shownRole;
-          if (profileBadge) profileBadge.innerText = shownRole;
+          if (roleBadge) roleBadge.innerText = "রোল: User";
+          if (profileBadge) profileBadge.innerText = "User";
           if (adminSubControls) adminSubControls.classList.add("hidden");
           adminCols.forEach((col) => col.classList.add("hidden"));
           subActionCols.forEach(
             (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
           );
           
-          if(menuBtnMembers) menuBtnMembers.style.display = window.userPermissions.includes("members") ? "flex" : "none";
+          if(menuBtnMembers) menuBtnMembers.style.display = "none";
           if(dashCardMembers) dashCardMembers.style.display = "none";
 
           document.getElementById("tabBtnUsers").style.display = "none";
@@ -970,7 +880,7 @@ onAuthStateChanged(auth, async (user) => {
         allModules.forEach((mod) => {
           const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
-          if ((user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase() || window.userPermissions.includes(mod)) {
+          if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
             if (menuBtn) menuBtn.style.display = "flex";
             if (dashCard) dashCard.style.display = "flex";
           } else {
@@ -1377,24 +1287,15 @@ onAuthStateChanged(auth, async (user) => {
       };
 
       window.checkAdminPermissionForTab = function (tabName) {
-        const cached = window.__pujaAuthCache?.get?.() || null;
-        const email = (cached?.email || "").toLowerCase();
-        const isMasterAdmin = email === ADMIN_EMAIL.toLowerCase();
-
-        if (isMasterAdmin) return true;
-        if (tabName === "dashboard") return true;
-
-        const allowed = ["members","subscription","expense","booking","sales","treasurer"];
-        if (allowed.includes(tabName)) {
-          return window.userPermissions.includes(tabName);
+        if (tabName === "settings" && window.currentUserRole !== "admin") {
+          alert("এই সেটিংস পেজটি শুধুমাত্র প্রধান অ্যাডমিনের জন্য!");
+          return false;
         }
-
-        if (tabName === "settings") return false;
-        return false;
+        return true;
       };
 
       window.handleLogout = function () {
-        signOut(auth).then(() => { window.__pujaAuthCache.clear(); window.location.replace("index.html"); });
+        signOut(auth).then(() => window.location.replace("index.html"));
       };
     </script>
 
@@ -1492,28 +1393,14 @@ onAuthStateChanged(auth, async (user) => {
         }
       }
 
-      function updateActiveDashboardMenu(tabName) {
-        document.querySelectorAll("#quickMenuContent .dashboard-menu-btn").forEach((btn) => {
-          btn.classList.remove("menu-active");
-        });
-        const activeId = tabName === "settings" ? "quickSettingsBtn" : `menu-btn-${tabName}`;
-        const activeBtn = document.getElementById(activeId);
-        if (activeBtn) activeBtn.classList.add("menu-active");
-      }
-
       function switchTab(tabName) {
-        if (!checkAdminPermissionForTab(tabName)) {
-          if (tabName !== "dashboard") window.history.replaceState({tab:"dashboard"}, "", "dashboard.html");
-          return;
-        }
+        if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
         ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
           const el = document.getElementById("section-" + t);
           if (el) el.classList.add("hidden");
         });
         const target = document.getElementById("section-" + tabName);
         if (target) target.classList.remove("hidden");
-        updateActiveDashboardMenu(tabName);
-        window.history.replaceState({ tab: tabName }, "", window.location.pathname + (tabName === "dashboard" ? "" : `?tab=${encodeURIComponent(tabName)}`));
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
@@ -1523,6 +1410,11 @@ onAuthStateChanged(auth, async (user) => {
         content.classList.toggle("hidden");
         arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
       }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        loadDevData();
+        loadClubLogo();
+      });
     </script>
   </body>
 </html>
