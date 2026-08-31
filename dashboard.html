@@ -165,7 +165,7 @@
           </button>
           <button
             id="quickSettingsBtn"
-            onclick="switchTab('settings')"
+            onclick="window.location.href='settings.html'"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
@@ -637,12 +637,38 @@
     </div>
 
     <!-- Firebase ও মূল লজিক স্ক্রিপ্ট -->
-    <script type="module">
+    <script>
+(function () {
+  const KEY = "pujaAuthSessionV2";
+  window.__pujaAuthCache = {
+    get() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
+    },
+    set(user, role, permissions) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          uid: user.uid, email: user.email || "",
+          role: role || "user",
+          permissions: Array.isArray(permissions) ? permissions : [],
+          savedAt: Date.now()
+        }));
+      } catch (_) {}
+    },
+    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
+  };
+  const cached = window.__pujaAuthCache.get();
+  window.currentUserRole = cached?.role || "user";
+  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
+  window.__pujaAuthReady = !!cached;
+})();
+</script>
+
+<script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import {
         getAuth,
         setPersistence,
-        browserSessionPersistence,
+        browserLocalPersistence,
         onAuthStateChanged,
         signOut,
         updatePassword,
@@ -671,7 +697,7 @@
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
-      setPersistence(auth, browserSessionPersistence);
+      setPersistence(auth, browserLocalPersistence);
       const db = getFirestore(app);
 
       let allSubscriptionsData = [];
@@ -704,6 +730,7 @@
           }
 
           logUserLogin(user);
+          window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
           loadTotalMembersCount();
@@ -1283,14 +1310,14 @@
 
       window.checkAdminPermissionForTab = function (tabName) {
         if (tabName === "settings" && window.currentUserRole !== "admin") {
-          alert("এই সেটিংস পেজটি শুধুমাত্র প্রধান অ্যাডমিনের জন্য!");
+          
           return false;
         }
         return true;
       };
 
       window.handleLogout = function () {
-        signOut(auth).then(() => window.location.replace("index.html"));
+        signOut(auth).then(() => { window.__pujaAuthCache.clear(); window.location.replace("index.html"); });
       };
     </script>
 
