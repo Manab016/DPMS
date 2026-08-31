@@ -239,7 +239,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div
             id="dash-card-expense"
-            onclick="window.location.replace('expense.html')"
+            onclick="switchTab('expense')"
             class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💵</div>
@@ -674,21 +674,6 @@
   window.currentUserRole = cached?.role || "user";
   window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
   window.__pujaAuthReady = !!cached;
-  // Paint cached identity immediately so returning Home does not briefly show Admin/default content.
-  document.addEventListener("DOMContentLoaded", () => {
-    const nameEl = document.getElementById("profileNameDisplay");
-    const emailEl = document.getElementById("profileEmailDisplay");
-    const badgeEl = document.getElementById("profileRoleBadge");
-    const roleBadge = document.getElementById("userRoleBadge");
-    if (cached) {
-      if (nameEl) nameEl.innerText = cached.name || cached.email?.split("@")[0] || "নাম দেওয়া নেই";
-      if (emailEl) emailEl.innerText = cached.email || "-";
-      const roles={member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
-      const r=roles[cached.role] || "সাধারণ সদস্য";
-      if (badgeEl) badgeEl.innerText=r;
-      if (roleBadge) roleBadge.innerText="রোল: "+r;
-    }
-  });
 })();
 </script>
 
@@ -770,30 +755,30 @@ onAuthStateChanged(auth, async (user) => {
           if (user.email === ADMIN_EMAIL) {
             window.currentUserRole = "admin";
             window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
-            window.__pujaProfileName = user.displayName || "";
           } else {
             window.currentUserRole = "user";
             try {
               const userDoc = await getDoc(doc(db, "app_users", user.uid));
               if (userDoc.exists()) {
-                const d = userDoc.data();
-                window.currentUserRole = d.role || "member";
-                window.userPermissions = Array.isArray(d.permissions) ? d.permissions : [];
-                window.__pujaProfileName = d.name || user.displayName || "";
-                if (d.disabled === true || d.deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
+                window.currentUserRole = userDoc.data().role || "member";
+                window.userPermissions = userDoc.data().permissions || [];
+                if (userDoc.data().disabled === true || userDoc.data().deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
               } else {
                 window.userPermissions = [];
-                window.__pujaProfileName = user.displayName || "";
               }
             } catch (e) {
               window.userPermissions = [];
-              window.__pujaProfileName = user.displayName || "";
             }
           }
 
           logUserLogin(user);
+          try {
+            const profileSnap = await getDoc(doc(db, "app_users", user.uid));
+            window.__pujaProfileName = profileSnap.exists() ? (profileSnap.data().name || "") : "";
+          } catch (_) {
+            window.__pujaProfileName = "";
+          }
           window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
-          try { const c=window.__pujaAuthCache.get?.()||{}; localStorage.setItem("pujaAuthSessionV2", JSON.stringify({...c,name:window.__pujaProfileName||"",savedAt:Date.now()})); } catch (_) {}
           setupUIBasedOnRoleAndPermissions(user);
 
           // The plain Dashboard is the single Back destination.
@@ -803,11 +788,7 @@ onAuthStateChanged(auth, async (user) => {
           }
 
           const requestedTab = new URLSearchParams(window.location.search).get("tab");
-          if (requestedTab === "expense") {
-            window.location.replace("expense.html");
-            return;
-          }
-          if (requestedTab && ["subscription","booking","sales","treasurer"].includes(requestedTab)) {
+          if (requestedTab && ["subscription","expense","booking","sales","treasurer"].includes(requestedTab)) {
             switchTab(requestedTab);
           }
 
@@ -1521,7 +1502,6 @@ onAuthStateChanged(auth, async (user) => {
       }
 
       function switchTab(tabName) {
-        if (tabName === "expense") { window.location.replace("expense.html"); return; }
         if (!checkAdminPermissionForTab(tabName)) {
           if (tabName !== "dashboard") window.history.replaceState({tab:"dashboard"}, "", "dashboard.html");
           return;
