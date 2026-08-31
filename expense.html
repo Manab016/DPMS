@@ -13,7 +13,7 @@
 .dashboard-menu-btn.menu-active{background:#ea580c!important;color:#fff!important;border-color:#ea580c!important}
 </style>
 </head>
-<body class="bg-amber-50/40 p-3 font-sans pb-20">
+<body class="bg-amber-50/40 p-3 font-sans pb-24 relative min-h-screen">
 <div class="max-w-4xl mx-auto">
   <!-- হেডার -->
   <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
@@ -29,17 +29,17 @@
       <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
       <div class="flex items-center gap-2">
         <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
-        <span id="menuArrowIcon" class="text-lg font-bold">▼</span>
+        <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
       </div>
     </div>
-    <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3">
+    <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
       <button id="menu-btn-members" onclick="goPage('members.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
       <button id="menu-btn-subscription" onclick="goPage('chada.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
       <button id="menu-btn-expense" class="dashboard-menu-btn menu-active bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
       <button id="menu-btn-booking" onclick="goPage('booking.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
       <button id="menu-btn-sales" onclick="goPage('sales.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
       <button id="menu-btn-treasurer" onclick="goPage('treasurer.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
-      <button id="quickSettingsBtn" onclick="goPage('settings.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+      <button id="quickSettingsBtn" onclick="goPage('dashboard.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
     </div>
   </div>
 
@@ -129,7 +129,6 @@
       </div>
     </div>
 
-    <!-- Due Checkbox Option -->
     <label class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 cursor-pointer">
       <input type="checkbox" id="expenseReturnDue" onchange="updateReturnCalculation()" class="w-4 h-4">
       <span class="text-xs md:text-sm font-semibold text-red-700">টাকা ফেরত পাব কিন্তু পাইনি (Due লিস্টে রাখুন)</span>
@@ -149,29 +148,110 @@
   </div>
 </div>
 
+<!-- Developer Floating Toggle Button & Drawer Container -->
+<div id="devToggleContainer" class="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+  <!-- Dev Tool Box (Popup) -->
+  <div id="devPanel" class="hidden mb-3 p-3 bg-gray-900 text-white rounded-xl shadow-2xl text-xs w-64 border border-gray-700 transition-all">
+    <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-700">
+      <span class="font-bold text-amber-400 flex items-center gap-1">🛠️ ডেভেলপার মোড</span>
+      <button onclick="toggleDevPanel()" class="text-gray-400 hover:text-white font-bold text-sm">✕</button>
+    </div>
+    <p class="text-[11px] text-gray-300 mb-2">ভিউ ও পারমিশন টেস্ট করার সুবিধা:</p>
+    <div class="flex gap-2 mb-2">
+      <button onclick="switchDevRole('admin')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-1 px-2 rounded text-[11px] font-semibold">Admin</button>
+      <button onclick="switchDevRole('user')" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded text-[11px] font-semibold">User</button>
+    </div>
+    <div class="text-[10px] text-gray-400 border-t border-gray-800 pt-1.5 mt-1 flex justify-between items-center">
+      <span>সক্রিয় রোল:</span>
+      <span id="devCurrentRoleText" class="font-bold text-emerald-400">Admin</span>
+    </div>
+  </div>
+
+  <!-- Floating Button -->
+  <button onclick="toggleDevPanel()" class="bg-gray-900 hover:bg-gray-800 text-amber-400 border border-amber-500/40 px-3.5 py-2.5 rounded-full shadow-2xl transition-transform active:scale-95 flex items-center gap-2 text-xs font-bold">
+    <span>🛠️ Dev Tools</span>
+    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+  </button>
+</div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {getAuth,setPersistence,browserSessionPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
-setPersistence(auth,browserLocalPersistence);
+
+setPersistence(auth,browserSessionPersistence);
+
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
-const ROLE_NAMES={admin:"Admin",member:"সাধারণ সদস্য",user:"সাধারণ সদস্য",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
 let allExpenses=[];
 let pujaTreasurerName="";
 
-window.currentUserRole="user";window.userPermissions=[];window.isMasterAdmin=false;
+window.currentUserRole="user";
+window.userPermissions=[];
 
-function canManage(){return window.isMasterAdmin || window.userPermissions.includes("expense");}
+function canManage(){return window.currentUserRole === "admin" || window.userPermissions.includes("expense");}
 function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
-function roleText(){return ROLE_NAMES[window.currentUserRole]||"সাধারণ সদস্য";}
 
 window.goDashboard=()=>window.location.replace("dashboard.html");
 window.goPage=(p)=>window.location.replace(p);
-window.toggleQuickMenu=()=>document.getElementById("quickMenuContent").classList.toggle("hidden");
+
+window.toggleQuickMenu=()=>{
+  const content = document.getElementById("quickMenuContent");
+  const arrow = document.getElementById("menuArrowIcon");
+  content.classList.toggle("hidden");
+  if(arrow) arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+};
+
+// Dev Toggle UI functions
+window.toggleDevPanel=()=>{
+  const panel = document.getElementById("devPanel");
+  if(panel) panel.classList.toggle("hidden");
+};
+
+window.switchDevRole=(role)=>{
+  if (role === "admin") {
+    window.currentUserRole = "admin";
+    window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+  } else {
+    window.currentUserRole = "user";
+    window.userPermissions = [];
+  }
+  const devRoleText = document.getElementById("devCurrentRoleText");
+  if(devRoleText) devRoleText.innerText = role === "admin" ? "Admin" : "User (সীমিত)";
+  
+  setupUIBasedOnRoleAndPermissions();
+  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
+  renderExpenses();
+};
+
+function setupUIBasedOnRoleAndPermissions() {
+  const roleBadge = document.getElementById("userRoleBadge");
+  const menuBtnMembers = document.getElementById("menu-btn-members");
+  const quickSettingsBtn = document.getElementById("quickSettingsBtn");
+
+  if (window.currentUserRole === "admin") {
+    if (roleBadge) roleBadge.innerText = "রোল: Admin";
+    if (menuBtnMembers) menuBtnMembers.style.display = "flex";
+    if (quickSettingsBtn) quickSettingsBtn.style.display = "flex";
+  } else {
+    if (roleBadge) roleBadge.innerText = "রোল: User";
+    if (menuBtnMembers) menuBtnMembers.style.display = "none";
+    if (quickSettingsBtn) quickSettingsBtn.style.display = "none";
+  }
+
+  const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
+  allModules.forEach((mod) => {
+    const menuBtn = document.getElementById(`menu-btn-${mod}`);
+    if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
+      if (menuBtn) menuBtn.style.display = "flex";
+    } else {
+      if (menuBtn) menuBtn.style.display = "none";
+    }
+  });
+}
 
 function renderExpenses(list=allExpenses){
  const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
@@ -404,22 +484,32 @@ async function loadPujaTreasurer(){
 
 onAuthStateChanged(auth,async user=>{
  if(!user){window.location.replace("index.html");return;}
- const emailIsAdmin=(user.email||"").toLowerCase()===ADMIN_EMAIL.toLowerCase();
- let profileData={};
- try{const snap=await getDoc(doc(db,"app_users",user.uid));profileData=snap.exists()?snap.data():{};}catch(e){}
- window.isMasterAdmin=emailIsAdmin || String(profileData.role||"").toLowerCase()==="admin";
- if(window.isMasterAdmin){
-   window.currentUserRole="admin";
-   window.userPermissions=["members","subscription","expense","booking","sales","treasurer"];
+ 
+ if (user.email === ADMIN_EMAIL) {
+   window.currentUserRole = "admin";
+   window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
  } else {
-   window.currentUserRole=profileData.role||"member";
-   window.userPermissions=Array.isArray(profileData.permissions)?profileData.permissions:[];
+   window.currentUserRole = "user";
+   try {
+     const snap = await getDoc(doc(db, "app_users", user.uid));
+     if (snap.exists()) {
+       window.userPermissions = snap.data().permissions || [];
+     } else {
+       window.userPermissions = [];
+     }
+   } catch(e) {
+     window.userPermissions = [];
+   }
  }
- document.getElementById("userRoleBadge").innerText="রোল: "+roleText();
+
+ const devRoleText = document.getElementById("devCurrentRoleText");
+ if(devRoleText) devRoleText.innerText = window.currentUserRole === "admin" ? "Admin" : "User";
+
+ setupUIBasedOnRoleAndPermissions();
  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
  await loadPujaTreasurer();
  
- onSnapshot(collection(db,"expenses"),snap=>{
+ onSnapshot(collection(db, "expenses"),snap=>{
    allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));
    renderExpenses();
  },err=>{
