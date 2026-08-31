@@ -24,24 +24,27 @@
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
     
-    <!-- Top Committee Header Banner (Fixed Font Sizes to prevent scaling lag) -->
-    <div class="bg-amber-100/70 border border-amber-300/80 rounded-2xl p-4 text-center shadow-sm mb-4">
-      <h1 class="text-xl font-black text-red-700 tracking-wide">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
-      <p class="text-xs font-semibold text-gray-700 mt-1">
-        স্থাপিত:- ২০০৯ | <span class="font-bold">Regd.No.:- S0014684</span>
+    <!-- Top Committee Header Banner (Fixed Uniform Styling) -->
+    <header class="w-full bg-white shadow-sm p-4 text-center space-y-1.5 border border-orange-100 rounded-2xl mb-4">
+      <h1 class="text-xl md:text-2xl font-bold text-orange-700 leading-tight">
+        নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি
+      </h1>
+      <p class="text-sm md:text-base font-medium text-gray-700">
+        রেজিস্ট্রেশন নং: <span class="font-semibold text-gray-900">S0014684</span> | স্থাপিত: <span class="font-semibold text-gray-900">২০০৯</span>
       </p>
-      <p class="text-xs text-gray-700 mt-0.5">
-        সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
+      <p class="text-sm md:text-base font-medium text-gray-700">
+        ঠিকানা: সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
       </p>
-      <div class="text-xs font-bold text-gray-800 mt-1 flex items-center justify-center gap-1">
-        📞 <span>৯৯৩৩৩৭৯৭০২</span>
-      </div>
-    </div>
+      <p class="text-sm md:text-base font-medium text-gray-700">
+        মোবাইল: <span class="font-semibold text-gray-900">৯৯৩৩৩৭৯৭০২</span>
+      </p>
+    </header>
 
     <!-- Member Section -->
     <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
       <div class="flex items-center justify-between mb-4 border-b pb-3">
         <div class="flex items-center gap-2">
+          <!-- হোম বাটন (Fix: History Loop Prevented) -->
           <button onclick="window.location.replace('dashboard.html')" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
             ⬅️ হোম
           </button>
