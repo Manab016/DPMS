@@ -37,6 +37,77 @@
         📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
       </p>
     </div>
+    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+        <div
+          class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer"
+          onclick="toggleQuickMenu()"
+        >
+          <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
+          <div class="flex items-center gap-2">
+            <span
+              id="userRoleBadge"
+              class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner"
+            >
+              রোল: লোড হচ্ছে...
+            </span>
+            <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
+          </div>
+        </div>
+
+        <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+          <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
+          <button
+            id="menu-btn-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+          >
+            👥 সদস্য
+          </button>
+          <!-- ২. চাঁদা বাটন -->
+          <button
+            id="menu-btn-subscription"
+            onclick="window.location.href='chada.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            💰 চাঁদা
+          </button>
+          <button
+            id="menu-btn-expense"
+            onclick="switchTab('expense')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            💵 খরচ
+          </button>
+          <button
+            id="menu-btn-booking"
+            onclick="switchTab('booking')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            🎫 বুকিং
+          </button>
+          <button
+            id="menu-btn-sales"
+            onclick="switchTab('sales')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            🛒 বিক্রয়
+          </button>
+          <button
+            id="menu-btn-treasurer"
+            onclick="switchTab('treasurer')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            📊 কোষাধ্যক্ষ
+          </button>
+          <button
+            id="quickSettingsBtn"
+            onclick="switchTab('settings')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            ⚙️ সেটিংস
+          </button>
+        </div>
+    </div>
 
     <!-- Member Section -->
     <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
