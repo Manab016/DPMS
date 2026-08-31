@@ -116,7 +116,7 @@
           <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
           <button
             id="menu-btn-members"
-            onclick="window.location.href='members.html'"
+            onclick="window.location.replace('members.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
           >
             👥 সদস্য
@@ -124,42 +124,42 @@
           <!-- ২. চাঁদা বাটন -->
           <button
             id="menu-btn-subscription"
-            onclick="switchTab('subscription')"
+            onclick="window.location.replace('chada.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💰 চাঁদা
           </button>
           <button
             id="menu-btn-expense"
-            onclick="window.location.href='dashboard.html?tab=subscription'"
+            onclick="window.location.replace('dashboard.html?tab=expense')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
           </button>
           <button
             id="menu-btn-booking"
-            onclick="window.location.href='dashboard.html?tab=expense'"
+            onclick="window.location.replace('dashboard.html?tab=booking')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🎫 বুকিং
           </button>
           <button
             id="menu-btn-sales"
-            onclick="window.location.href='dashboard.html?tab=booking'"
+            onclick="window.location.replace('dashboard.html?tab=sales')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🛒 বিক্রয়
           </button>
           <button
             id="menu-btn-treasurer"
-            onclick="window.location.href='dashboard.html?tab=sales'"
+            onclick="window.location.replace('dashboard.html?tab=treasurer')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
           <button
             id="quickSettingsBtn"
-            onclick="window.location.href='dashboard.html?tab=treasurer'"
+            onclick="window.location.replace('settings.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
@@ -195,7 +195,7 @@
           <!-- বামে: মোট সদস্য -->
           <div
             id="dash-card-members"
-            onclick="window.location.href='members.html'"
+            onclick="window.location.replace('members.html')"
             class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">👥</div>
@@ -219,7 +219,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div
             id="dash-card-expense"
-            onclick="window.location.href='dashboard.html'"
+            onclick="window.location.replace('dashboard.html')"
             class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💵</div>
@@ -228,7 +228,7 @@
           </div>
           <div
             id="dash-card-treasurer"
-            onclick="window.location.href='dashboard.html'"
+            onclick="window.location.replace('dashboard.html')"
             class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">📊</div>
@@ -236,7 +236,7 @@
           </div>
           <div
             id="dash-card-booking"
-            onclick="window.location.href='dashboard.html'"
+            onclick="window.location.replace('dashboard.html')"
             class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">🎫</div>
@@ -245,7 +245,7 @@
           </div>
           <div
             id="dash-card-sales"
-            onclick="window.location.href='dashboard.html'"
+            onclick="window.location.replace('dashboard.html')"
             class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">🛒</div>
@@ -260,7 +260,7 @@
         <div class="flex items-center justify-between mb-4 border-b pb-3">
           <div class="flex items-center gap-2">
             <button
-              onclick="window.location.href='dashboard.html'"
+              onclick="window.location.replace('dashboard.html')"
               class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200"
             >
               ⬅️ হোম
@@ -352,25 +352,25 @@
 
       <!-- অন্যান্য ট্যাব সেকশন -->
       <div id="section-expense" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
+        <button onclick="window.location.replace('dashboard.html')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
           ⬅️ হোমে ফিরুন
         </button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">💵 খরচ ব্যবস্থাপনা প্যানেল</h2>
       </div>
       <div id="section-booking" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
+        <button onclick="window.location.replace('dashboard.html')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
           ⬅️ হোমে ফিরুন
         </button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">🎫 বুকিং প্যানেল</h2>
       </div>
       <div id="section-sales" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
+        <button onclick="window.location.replace('dashboard.html')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
           ⬅️ হোমে ফিরুন
         </button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">🛒 বিক্রয় প্যানেল</h2>
       </div>
       <div id="section-treasurer" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
+        <button onclick="window.location.replace('dashboard.html')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
           ⬅️ হোমে ফিরুন
         </button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">📊 কোষাধ্যক্ষ ব্যবস্থাপনা</h2>
@@ -380,7 +380,7 @@
       <div id="section-settings" class="hidden">
         <div class="mb-4">
           <button
-            onclick="window.location.href='dashboard.html'"
+            onclick="window.location.replace('dashboard.html')"
             class="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition"
           >
             <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
