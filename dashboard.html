@@ -64,7 +64,7 @@
     </style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
-    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
+    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
     <button
       onclick="toggleDevModal()"
       class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
@@ -109,7 +109,7 @@
         </div>
 
         <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-          <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
+          <!-- ১. সদস্য বাটন -->
           <button
             id="menu-btn-members"
             onclick="window.location.href='members.html'"
@@ -125,34 +125,39 @@
           >
             💰 চাঁদা
           </button>
+          <!-- ৩. খরচ বাটন -->
           <button
             id="menu-btn-expense"
-            onclick="switchTab('expense')"
+            onclick="window.location.href='expense.html'"
             class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
           </button>
+          <!-- ৪. বুকিং বাটন -->
           <button
             id="menu-btn-booking"
-            onclick="switchTab('booking')"
+            onclick="window.location.href='booking.html'"
             class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🎫 বুকিং
           </button>
+          <!-- ৫. বিক্রয় বাটন -->
           <button
             id="menu-btn-sales"
-            onclick="switchTab('sales')"
+            onclick="window.location.href='sales.html'"
             class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🛒 বিক্রয়
           </button>
+          <!-- ৬. কোষাধ্যক্ষ বাটন -->
           <button
             id="menu-btn-treasurer"
-            onclick="switchTab('treasurer')"
+            onclick="window.location.href='treasurer.html'"
             class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
+          <!-- ৭. সেটিংস বাটন -->
           <button
             id="quickSettingsBtn"
             onclick="switchTab('settings')"
@@ -178,7 +183,6 @@
             </div>
           </div>
 
-          <!-- ডান থেকে বামে স্ক্রোল করা প্রধান পদাধিকারীদের তালিকা -->
           <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/40 rounded-lg p-2 border border-orange-400/30">
             <div id="committeeTickerContent" class="animate-auto-slide gap-3 items-center">
               <span class="text-xs text-orange-100">পদাধিকারী তথ্য লোড হচ্ছে...</span>
@@ -215,7 +219,7 @@
         <div class="grid grid-cols-2 gap-3">
           <div
             id="dash-card-expense"
-            onclick="switchTab('expense')"
+            onclick="window.location.href='expense.html'"
             class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💵</div>
@@ -224,7 +228,7 @@
           </div>
           <div
             id="dash-card-treasurer"
-            onclick="switchTab('treasurer')"
+            onclick="window.location.href='treasurer.html'"
             class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">📊</div>
@@ -232,7 +236,7 @@
           </div>
           <div
             id="dash-card-booking"
-            onclick="switchTab('booking')"
+            onclick="window.location.href='booking.html'"
             class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">🎫</div>
@@ -241,7 +245,7 @@
           </div>
           <div
             id="dash-card-sales"
-            onclick="switchTab('sales')"
+            onclick="window.location.href='sales.html'"
             class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">🛒</div>
@@ -249,32 +253,6 @@
             <div class="text-xl font-bold mt-1">0</div>
           </div>
         </div>
-      </div>
-
-      <!-- অন্যান্য ট্যাব সেকশন -->
-      <div id="section-expense" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
-          ⬅️ হোমে ফিরুন
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">💵 খরচ ব্যবস্থাপনা প্যানেল</h2>
-      </div>
-      <div id="section-booking" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
-          ⬅️ হোমে ফিরুন
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">🎫 বুকিং প্যানেল</h2>
-      </div>
-      <div id="section-sales" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
-          ⬅️ হোমে ফিরুন
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">🛒 বিক্রয় প্যানেল</h2>
-      </div>
-      <div id="section-treasurer" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
-        <button onclick="switchTab('dashboard')" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
-          ⬅️ হোমে ফিরুন
-        </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">📊 কোষাধ্যক্ষ ব্যবস্থাপনা</h2>
       </div>
 
       <!-- ⚙️ সেটিংস প্যানেল -->
@@ -697,6 +675,7 @@
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
           loadTotalMembersCount();
+          loadTotalExpenseCount();
           loadCommitteeExecutives();
 
           if (window.currentUserRole === "admin") {
@@ -708,7 +687,7 @@
         }
       });
 
-      // 👑 পদাধিকারীদের ডেটা ফেচ (committee ও members উভয় কালেকশন থেকেই পদাধিকারী থাকলে স্ক্রোলারে দেখাবে)
+      // 👑 পদাধিকারীদের ডেটা ফেচ
       function loadCommitteeExecutives() {
         let committeeList = [];
         let membersList = [];
@@ -719,7 +698,6 @@
 
           const combined = [...committeeList];
 
-          // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
           membersList.forEach((m) => {
             const post = m.designation || m.post || m.role || m.position || "";
             if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
@@ -757,11 +735,9 @@
             `;
           });
 
-          // মসৃণ স্লাইড অ্যানিমেশনের জন্য দুইবার লোড করা হচ্ছে
           container.innerHTML = itemsHtml + itemsHtml;
         }
 
-        // committee কালেকশন রিয়েলটাইম লিসেনার
         onSnapshot(collection(db, "committee"), (snapshot) => {
           committeeList = [];
           snapshot.forEach((docSnap) => {
@@ -770,7 +746,6 @@
           renderExecutiveTicker();
         });
 
-        // members কালেকশন রিয়েলটাইম লিসেনার
         onSnapshot(collection(db, "members"), (snapshot) => {
           membersList = [];
           snapshot.forEach((docSnap) => {
@@ -890,7 +865,6 @@
         });
       }
 
-      // --- 💰 চাঁদা সংগ্রহ মডিউল লজিক ---
       function loadSubscriptions() {
         onSnapshot(collection(db, "subscriptions"), (snapshot) => {
           allSubscriptionsData = [];
@@ -1134,7 +1108,6 @@
         document.body.removeChild(a);
       };
 
-      // --- অন্যান্য সাধারণ ফাংশন ---
       function loadAppUsers() {
         onSnapshot(collection(db, "app_users"), (snapshot) => {
           allUsersData = [];
@@ -1395,7 +1368,7 @@
 
       function switchTab(tabName) {
         if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
-        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+        ["dashboard", "settings"].forEach((t) => {
           const el = document.getElementById("section-" + t);
           if (el) el.classList.add("hidden");
         });
