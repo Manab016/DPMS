@@ -76,8 +76,6 @@
 </style>
 
 <style id="auth-pending-style">
-  /* Do not hide the whole application while Firebase restores the session.
-     Protected actions remain guarded by the auth/permission checks. */
   html.auth-pending body { visibility: visible !important; }
 </style>
 <script>
@@ -490,14 +488,13 @@ onAuthStateChanged(auth, async (user) => {
 
   const shownPerms = window.userPermissions;
 
-  // প্রোফাইল নাম এডিট হ্যান্ডলার বাইন্ড করা
   wireProfileNameEditor(user, userDocData);
 
   document.getElementById("profilePermissionsContainer").innerHTML = shownPerms.length
     ? shownPerms.map(p => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${PERMISSION_NAMES[p] || p}</span>`).join("")
     : `<span class="text-xs font-semibold text-red-600">কোনো Permission দেওয়া হয়নি</span>`;
 
-  if (!window.isMasterAdmin) {
+  if (!window.isMasterAdmin && window.currentUserRole !== "admin") {
     ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "none";
@@ -517,7 +514,6 @@ onAuthStateChanged(auth, async (user) => {
   window.__finishAuthRender();
 });
 
-// প্রোফাইল নাম সেভ করার ফাংশনালিটি
 function wireProfileNameEditor(user, data) {
   const input = document.getElementById("profileNameInput");
   const btn = document.getElementById("saveProfileNameBtn");
@@ -545,7 +541,6 @@ function wireProfileNameEditor(user, data) {
       const profileNameDisplay = document.getElementById("profileNameDisplay");
       if (profileNameDisplay) profileNameDisplay.innerText = newName;
 
-      // Local storage-এ সেশন আপডেট
       try {
         const cached = window.__pujaAuthCache?.get?.() || {};
         localStorage.setItem("pujaAuthSessionV2", JSON.stringify({
@@ -607,7 +602,7 @@ function renderUsersTable(users) {
 
 window.handleSaveUser = async function(event) {
   event.preventDefault();
-  if (!window.isMasterAdmin) return;
+  if (!window.isMasterAdmin && window.currentUserRole !== "admin") return;
 
   const editId = document.getElementById("editUserId").value;
   const name = document.getElementById("uNameInput").value.trim();
@@ -662,7 +657,6 @@ window.openCreateUserModal = function() {
 window.closeCreateUserModal = function() { document.getElementById("createUserModal").classList.add("hidden"); };
 
 window.editUserPermissions = function(uId) {
-  if (!window.isMasterAdmin) return;
   const user = allUsersData.find(u => u.id === uId);
   if (!user) return;
   document.getElementById("userModalTitle").innerText = "✏️ ব্যবহারকারী এডিট করুন";
@@ -677,10 +671,9 @@ window.editUserPermissions = function(uId) {
 };
 
 window.deleteUserAccount = async function(uId) {
-  if (!window.isMasterAdmin) return;
   const user = allUsersData.find(u => u.id === uId);
   if (!user) return;
-  if (!confirm(`"${user.name || user.email}"-কে নিষ্ক্রিয়/ডিলিট করতে চান?\nডিলিট করলে এই অ্যাপ থেকে আর কোনো Permission থাকবে না।`)) return;
+  if (!confirm(`"${user.name || user.email}"-কে নিষ্ক্রিয়/ডিলিট করতে চান?`)) return;
   try {
     await updateDoc(doc(db, "app_users", uId), {
       disabled: true, permissions: [], deleted: true, deletedAt: Date.now(), deletedBy: auth.currentUser.uid
@@ -895,15 +888,17 @@ function goDashboard() {
 }
 
 function goMenu(tab) {
-  const allowed = ["subscription","expense","booking","sales","treasurer"];
-  if (tab === "members") {
-    window.location.replace("members.html");
-  } else if (tab === "subscription") {
-    window.location.replace("chada.html");
-  } else if (tab === "expense") {
-    window.location.replace("expense.html");
-  } else if (allowed.includes(tab)) {
-    window.location.replace("dashboard.html?tab=" + encodeURIComponent(tab));
+  const routes = {
+    members: "members.html",
+    subscription: "chada.html",
+    expense: "expense.html",
+    booking: "dashboard.html?tab=booking",
+    sales: "dashboard.html?tab=sales",
+    treasurer: "dashboard.html?tab=treasurer",
+    settings: "settings.html"
+  };
+  if (routes[tab]) {
+    window.location.replace(routes[tab]);
   }
 }
 
@@ -920,22 +915,6 @@ document.addEventListener("DOMContentLoaded", () => {
   switchSettingsSubTab("profile");
 });
 
-</script>
-
-<script>
-(function () {
-  window.goMenu = function(tab) {
-    const routes = {
-      members: "members.html",
-      subscription: "chada.html",
-      expense: "expense.html",
-      booking: "dashboard.html?tab=booking",
-      sales: "dashboard.html?tab=sales",
-      treasurer: "dashboard.html?tab=treasurer"
-    };
-    if (routes[tab]) window.location.replace(routes[tab]);
-  };
-})();
 </script>
 
 </body>
