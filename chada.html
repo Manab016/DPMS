@@ -174,7 +174,7 @@
         <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
           <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
             <div class="flex items-center gap-2 font-bold text-sm md:text-base">
-              <span>👬</span>
+              <span>👥</span>
               <span>কমিটির প্রধান পদাধিকারী</span>
             </div>
             <div class="flex items-center gap-2">
@@ -375,8 +375,8 @@
         </button>
         <h2 class="text-lg font-bold text-gray-800 mb-2">📊 কোষাধ্যক্ষ ব্যবস্থাপনা</h2>
       </div>
-          ⬅️ হোম⚙️ সেটিংস প্যানেল
-      </div>
+
+      <!-- ⚙️ সেটিংস প্যানেল -->
       <div id="section-settings" class="hidden">
         <div class="mb-4">
           <button
@@ -429,13 +429,13 @@
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
-                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800"></p>
+                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">Manabendra Nath Sarkar</p>
               </div>
             </div>
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">ব্যবহারকারী ইমেইল / আইডি</p>
-                <p id="profileEmailDisplay" class="text-[17px] font-semibold text-gray-800"></p>
+                <p id="profileEmailDisplay" class="text-[17px] font-semibold text-gray-800">manabendra@gmail.com</p>
                 <div
                   id="profileRoleBadge"
                   class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide"
@@ -988,7 +988,7 @@
         });
       }
 
-      // 👥 মোট সদস্যের সংখ্যা ফেচ করা
+      // 👬 মোট সদস্যের সংখ্যা ফেচ করা
       function loadTotalMembersCount() {
         onSnapshot(collection(db, "members"), (snapshot) => {
           const count = snapshot.size;
@@ -1379,7 +1379,7 @@
       };
 
       window.openCreateUserModal = function () {
-        document.getElementById("userModalTitle").innerText = "👤 নতুন ব্যবহারকারী তৈরি করুন";
+        document.getElementById("userModalTitle").innerText = "🙎🏻 নতুন ব্যবহারকারী তৈরি করুন";
         document.getElementById("editUserId").value = "";
         document.getElementById("uNameInput").value = "";
         document.getElementById("uEmailInput").value = "";
