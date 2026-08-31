@@ -19,7 +19,7 @@
         width: auto;
       }
 
-      /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশনের জন্য */
+      /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশন (ডান থেকে বামে) */
       @keyframes autoScroll {
         0% {
           transform: translateX(0);
@@ -56,7 +56,6 @@
         .no-print {
           display: none !important;
         }
-        /* Print Background Colors Fix */
         * {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
@@ -110,6 +109,15 @@
         </div>
 
         <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+          <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
+          <button
+            id="menu-btn-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+          >
+            👥 সদস্য
+          </button>
+          <!-- ২. চাঁদা বাটন -->
           <button
             id="menu-btn-subscription"
             onclick="switchTab('subscription')"
@@ -138,21 +146,6 @@
           >
             🛒 বিক্রয়
           </button>
-          
-          <button
-            id="menu-btn-members"
-            onclick="window.location.href='members.html'"
-            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
-          >
-            👥 সদস্য
-          </button>
-          <button
-            id="menu-btn-committee"
-            onclick="window.location.href='committee.html'"
-            class="bg-indigo-50 text-indigo-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-indigo-100 border border-indigo-200"
-          >
-            👑 পদাধিকারী
-          </button>
           <button
             id="menu-btn-treasurer"
             onclick="switchTab('treasurer')"
@@ -172,11 +165,45 @@
 
       <!-- ড্যাশবোর্ড সেকশন -->
       <div id="section-dashboard" class="space-y-3">
+        
+        <!-- 👑 কমিটির প্রধান পদাধিকারী সেকশন -->
+        <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
+          <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
+            <div class="flex items-center gap-2 font-bold text-sm md:text-base">
+              <span>👥</span>
+              <span>কমিটির প্রধান পদাধিকারী</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="commArrowIcon" class="text-xs transition-transform duration-300">▼</span>
+            </div>
+          </div>
+
+          <!-- ডান থেকে বামে স্ক্রোল করা প্রধান পদাধিকারীদের তালিকা -->
+          <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/40 rounded-lg p-2 border border-orange-400/30">
+            <div id="committeeTickerContent" class="animate-auto-slide gap-3 items-center">
+              <span class="text-xs text-orange-100">পদাধিকারী তথ্য লোড হচ্ছে...</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- কার্ড সেকশন (বামে: মোট সদস্য, ডানে: মোট চাঁদা) -->
         <div class="grid grid-cols-2 gap-3">
+          <!-- বামে: মোট সদস্য -->
+          <div
+            id="dash-card-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center"
+          >
+            <div class="text-2xl mb-1">👥</div>
+            <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
+            <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
+          </div>
+
+          <!-- ডানে: মোট চাঁদা -->
           <div
             id="dash-card-subscription"
             onclick="switchTab('subscription')"
-            class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center col-span-2"
+            class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center"
           >
             <div class="text-2xl mb-1">💰</div>
             <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
@@ -184,27 +211,8 @@
           </div>
         </div>
 
+        <!-- অন্যান্য সেকশন গ্রিড -->
         <div class="grid grid-cols-2 gap-3">
-          <!-- নতুন সদস্য কার্ড যা members.html এ রিডাইরেক্ট করবে -->
-          <div
-            id="dash-card-members"
-            onclick="window.location.href='members.html'"
-            class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center col-span-2"
-          >
-            <div class="text-2xl mb-1">👥</div>
-            <div class="text-xs opacity-90 font-medium">সদস্য ব্যবস্থাপনা</div>
-          </div>
-          
-          <!-- কমিটির প্রধান পদাধিকারী কার্ড -->
-          <div
-            id="dash-card-committee"
-            onclick="window.location.href='committee.html'"
-            class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2"
-          >
-            <div class="text-2xl mb-1">👑</div>
-            <div class="text-xs opacity-90 font-medium">কমিটির প্রধান পদাধিকারী</div>
-          </div>
-
           <div
             id="dash-card-expense"
             onclick="switchTab('expense')"
@@ -860,6 +868,8 @@
           logUserLogin(user);
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
+          loadTotalMembersCount();
+          loadCommitteeExecutives();
 
           if (window.currentUserRole === "admin") {
             loadAppUsers();
@@ -869,6 +879,87 @@
           window.location.replace("index.html");
         }
       });
+
+      // 👑 পদাধিকারীদের ডেটা ফেচ (committee ও members উভয় কালেকশন থেকেই পদাধিকারী থাকলে স্ক্রোলারে দেখাবে)
+      function loadCommitteeExecutives() {
+        let committeeList = [];
+        let membersList = [];
+
+        function renderExecutiveTicker() {
+          const container = document.getElementById("committeeTickerContent");
+          if (!container) return;
+
+          const combined = [...committeeList];
+
+          // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
+          membersList.forEach((m) => {
+            const post = m.designation || m.post || m.role || m.position || "";
+            if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
+              const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
+              if (!exists) {
+                combined.push({
+                  name: m.name,
+                  designation: post,
+                  mobile: m.mobile || m.phone || m.contact || "",
+                });
+              }
+            }
+          });
+
+          if (combined.length === 0) {
+            container.innerHTML = `<span class="text-xs text-orange-100 italic px-2">কোনো প্রধান পদাধিকারী যুক্ত নেই</span>`;
+            return;
+          }
+
+          let itemsHtml = "";
+          combined.forEach((data) => {
+            const designation = data.designation ? `${data.designation}: ` : (data.post ? `${data.post}: ` : "");
+            const name = data.name || "নামহীন";
+            const mobile = data.mobile || data.phone || data.contact || "";
+
+            itemsHtml += `
+              <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
+                <span>👑 ${designation}${name}</span>
+                ${
+                  mobile
+                    ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>`
+                    : ""
+                }
+              </div>
+            `;
+          });
+
+          // মসৃণ স্লাইড অ্যানিমেশনের জন্য দুইবার লোড করা হচ্ছে
+          container.innerHTML = itemsHtml + itemsHtml;
+        }
+
+        // committee কালেকশন রিয়েলটাইম লিসেনার
+        onSnapshot(collection(db, "committee"), (snapshot) => {
+          committeeList = [];
+          snapshot.forEach((docSnap) => {
+            committeeList.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          renderExecutiveTicker();
+        });
+
+        // members কালেকশন রিয়েলটাইম লিসেনার
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          membersList = [];
+          snapshot.forEach((docSnap) => {
+            membersList.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          renderExecutiveTicker();
+        });
+      }
+
+      // 👥 মোট সদস্যের সংখ্যা ফেচ করা
+      function loadTotalMembersCount() {
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          const count = snapshot.size;
+          const el = document.getElementById("dashTotalMembersCount");
+          if (el) el.innerText = count.toLocaleString("bn-IN");
+        });
+      }
 
       async function logUserLogin(user) {
         try {
@@ -915,23 +1006,19 @@
 
         const menuBtnMembers = document.getElementById("menu-btn-members");
         const dashCardMembers = document.getElementById("dash-card-members");
-        const menuBtnCommittee = document.getElementById("menu-btn-committee");
-        const dashCardCommittee = document.getElementById("dash-card-committee");
 
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
-          if (profileBadge) profileBadge.innerText = "Admin"; // Role fix
+          if (profileBadge) profileBadge.innerText = "Admin";
           if (adminSubControls) adminSubControls.classList.remove("hidden");
           adminCols.forEach((col) => col.classList.remove("hidden"));
           subActionCols.forEach((col) => (col.style.display = "table-cell"));
           
           if(menuBtnMembers) menuBtnMembers.style.display = "flex";
           if(dashCardMembers) dashCardMembers.style.display = "flex";
-          if(menuBtnCommittee) menuBtnCommittee.style.display = "flex";
-          if(dashCardCommittee) dashCardCommittee.style.display = "flex";
         } else {
           if (roleBadge) roleBadge.innerText = "রোল: User";
-          if (profileBadge) profileBadge.innerText = "User"; // Role fix
+          if (profileBadge) profileBadge.innerText = "User";
           if (adminSubControls) adminSubControls.classList.add("hidden");
           adminCols.forEach((col) => col.classList.add("hidden"));
           subActionCols.forEach(
@@ -940,8 +1027,6 @@
           
           if(menuBtnMembers) menuBtnMembers.style.display = "none";
           if(dashCardMembers) dashCardMembers.style.display = "none";
-          if(menuBtnCommittee) menuBtnCommittee.style.display = "none";
-          if(dashCardCommittee) dashCardCommittee.style.display = "none";
 
           document.getElementById("tabBtnUsers").style.display = "none";
           document.getElementById("tabBtnHistory").style.display = "none";
@@ -1372,6 +1457,17 @@
     <script>
       const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
       let tempLogoBase64 = "";
+
+      function toggleCommitteeList() {
+        const wrapper = document.getElementById("committeeTickerWrapper");
+        const arrow = document.getElementById("commArrowIcon");
+        if (wrapper) {
+          wrapper.classList.toggle("hidden");
+          if (arrow) {
+            arrow.style.transform = wrapper.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+          }
+        }
+      }
 
       function previewClubLogo(input) {
         const file = input.files[0];
