@@ -22,20 +22,6 @@
       * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
     }
   </style>
-
-<style id="auth-pending-style">
-  /* Do not hide the whole application while Firebase restores the session.
-     Protected actions remain guarded by the auth/permission checks. */
-  html.auth-pending body { visibility: visible !important; }
-</style>
-<script>
-  document.documentElement.classList.add("auth-ready");
-  window.__finishAuthRender = function () {
-    document.documentElement.classList.remove("auth-pending");
-    document.documentElement.classList.add("auth-ready");
-  };
-</script>
-
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
@@ -265,8 +251,8 @@
           try { const accessDoc = await getDoc(doc(db, "app_users", user.uid)); if (!accessDoc.exists() || accessDoc.data().disabled || !(accessDoc.data().permissions || []).includes("members")) { window.location.replace("dashboard.html"); return; } } catch(e) { window.location.replace("dashboard.html"); return; }
         }
       if (user) {
-        if ((user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-          window.isMasterAdmin = true;
+        window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        if (window.isMasterAdmin) {
           window.currentUserRole = "admin";
           window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
         } else {
@@ -277,23 +263,18 @@
             window.userPermissions = userDoc.exists() ? (userDoc.data().permissions || []) : [];
           } catch (e) { window.userPermissions = []; }
         }
-        setupMemberDashboardMenu(user);
-        if (window.isMasterAdmin || window.userPermissions.includes("members")) {
-          document.getElementById("adminMemberControls")?.classList.remove("hidden");
-          document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
-        }
-        if(window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
+        setupMemberDashboardMenu();
+        if(window.isMasterAdmin) {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
         }
         loadMembers();
-        window.__finishAuthRender();
       } else {
         window.location.replace("index.html");
       }
     });
 
-    function setupMemberDashboardMenu(user) {
+    function setupMemberDashboardMenu() {
       const badge = document.getElementById("memberUserRoleBadge");
       if (badge) badge.innerText = `রোল: ${({member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"}[window.currentUserRole] || "সাধারণ সদস্য")}`;
       const modules = ["subscription", "expense", "booking", "sales", "treasurer"];
@@ -301,10 +282,10 @@
       if (membersBtn) membersBtn.style.display = (window.currentUserRole === "admin" || window.userPermissions.includes("members")) ? "flex" : "none";
       modules.forEach((mod) => {
         const btn = document.getElementById(`menu-btn-${mod}`);
-        if (btn) btn.style.display = ((user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase() || window.userPermissions.includes(mod)) ? "flex" : "none";
+        if (btn) btn.style.display = (window.isMasterAdmin || window.userPermissions.includes(mod)) ? "flex" : "none";
       });
       const settingsBtn = document.getElementById("quickSettingsBtn");
-      if (settingsBtn) settingsBtn.style.display = window.currentUserRole === "admin" ? "flex" : "none";
+      if (settingsBtn) settingsBtn.style.display = "flex";
       document.querySelectorAll("#memberQuickMenuContent .dashboard-menu-btn").forEach(btn => btn.classList.remove("menu-active"));
       if (membersBtn) membersBtn.classList.add("menu-active");
     }
@@ -317,23 +298,15 @@
     };
 
     window.goMemberMenu = function(tabName) {
-      if (tabName === "members") {
-        window.location.replace("members.html");
-        return;
-      }
-      if (tabName === "subscription") {
-        window.location.replace("chada.html");
-        return;
-      }
-      if (tabName === "settings") {
-        window.location.replace("settings.html");
-        return;
-      }
-      if (["expense", "booking", "sales", "treasurer"].includes(tabName)) {
+      if (tabName === "members") { window.location.replace("members.html"); return; }
+      if (tabName === "subscription") { window.location.replace("chada.html"); return; }
+      if (tabName === "expense") { if (window.isMasterAdmin || window.userPermissions.includes("expense")) window.location.replace("expense.html"); return; }
+      if (["booking", "sales", "treasurer"].includes(tabName)) {
         if (window.currentUserRole !== "admin" && !window.userPermissions.includes(tabName)) return;
         window.location.replace(`dashboard.html?tab=${encodeURIComponent(tabName)}`);
         return;
       }
+      window.location.replace("dashboard.html");
     };
 
     function loadMembers() {
@@ -375,7 +348,7 @@
         const tr = document.createElement("tr");
         tr.className = "border-b hover:bg-gray-50";
         let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">আইডি</button>`;
-        if (window.currentUserRole === "admin" && window.isMasterAdmin) {
+        if (window.isMasterAdmin) {
           actionButtons += `<button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs ml-1">এডিট</button>
                             <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">ডিলিট</button>`;
         }
@@ -427,7 +400,6 @@
     };
 
     window.saveOrUpdateMember = async function() {
-      if (!window.isMasterAdmin && !window.userPermissions.includes("members")) return;
       const name = document.getElementById("newMemberName").value.trim();
       const village = document.getElementById("newMemberVillage").value.trim();
       const role = document.getElementById("newMemberRole").value;
@@ -460,7 +432,7 @@
       }
     };
 
-    window.openEditModal = function(id) { if (!window.isMasterAdmin && !window.userPermissions.includes("members")) return;
+    window.openEditModal = function(id) {
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
       
@@ -485,7 +457,7 @@
       openAddModal();
     };
 
-    window.deleteMember = async function(id) { if (!window.isMasterAdmin && !window.userPermissions.includes("members")) return;
+    window.deleteMember = async function(id) {
       if(confirm("আপনি কি নিশ্চিত যে এই সদস্যকে মুছে ফেলতে চান?")) {
         try {
           await deleteDoc(doc(db, "members", id));
@@ -496,7 +468,7 @@
       }
     };
 
-    window.deleteSelectedMembers = async function() { if (!window.isMasterAdmin && !window.userPermissions.includes("members")) return;
+    window.deleteSelectedMembers = async function() {
       const checkboxes = document.querySelectorAll(".member-checkbox:checked");
       if(checkboxes.length === 0) return alert("কোনো সদস্য নির্বাচন করা হয়নি!");
       if(confirm(`আপনি কি নিশ্চিত যে ${checkboxes.length} জন সদস্যকে মুছে ফেলতে চান?`)) {
@@ -651,7 +623,7 @@
       saveAs(new Blob([buffer]), fileName);
     };
 
-    window.openAddModal = function() { if (!window.isMasterAdmin && !window.userPermissions.includes("members")) return; document.getElementById("addMemberModal").classList.remove("hidden"); };
+    window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
     window.closeAddModal = function() {
       document.getElementById("addMemberModal").classList.add("hidden");
       document.getElementById("editMemberDocId").value = "";
