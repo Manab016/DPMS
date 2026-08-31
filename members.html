@@ -12,6 +12,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
     th, td { text-align: center; vertical-align: middle; white-space: nowrap; }
+    .dashboard-menu-btn.menu-active { background-color:#ea580c !important; color:#fff !important; border-color:#ea580c !important; }
+    .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
     @media print {
       body { background: white !important; }
       body > *:not(#idCardModal) { display: none !important; }
@@ -36,6 +38,26 @@
       <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">
         📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
       </p>
+    </div>
+
+    <!-- 📊 Dashboard Menu — dashboard.html-এর একই menu -->
+    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+      <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleMemberQuickMenu()">
+        <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
+        <div class="flex items-center gap-2">
+          <span id="memberUserRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
+          <span id="memberMenuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
+        </div>
+      </div>
+      <div id="memberQuickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+        <button id="menu-btn-members" onclick="goMemberMenu('members')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
+        <button id="menu-btn-subscription" onclick="goMemberMenu('subscription')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+        <button id="menu-btn-expense" onclick="goMemberMenu('expense')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+        <button id="menu-btn-booking" onclick="goMemberMenu('booking')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+        <button id="menu-btn-sales" onclick="goMemberMenu('sales')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
+        <button id="menu-btn-treasurer" onclick="goMemberMenu('treasurer')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
+        <button id="quickSettingsBtn" onclick="goMemberMenu('settings')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+      </div>
     </div>
 
     <!-- Member Section -->
@@ -172,7 +194,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -192,9 +214,23 @@
     let processedPhotoBase64 = "";
     let processedSigBase64 = "";
 
-    onAuthStateChanged(auth, (user) => {
+    const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+    window.currentUserRole = "user";
+    window.userPermissions = [];
+
+    onAuthStateChanged(auth, async (user) => {
       if (user) {
-        window.currentUserRole = user.email === "bappasarkar1173@gmail.com" ? "admin" : "user";
+        if (user.email === ADMIN_EMAIL) {
+          window.currentUserRole = "admin";
+          window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+        } else {
+          window.currentUserRole = "user";
+          try {
+            const userDoc = await getDoc(doc(db, "app_users", user.uid));
+            window.userPermissions = userDoc.exists() ? (userDoc.data().permissions || []) : [];
+          } catch (e) { window.userPermissions = []; }
+        }
+        setupMemberDashboardMenu();
         if(window.currentUserRole === "admin") {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
@@ -204,6 +240,36 @@
         window.location.replace("index.html");
       }
     });
+
+    function setupMemberDashboardMenu() {
+      const badge = document.getElementById("memberUserRoleBadge");
+      if (badge) badge.innerText = `রোল: ${window.currentUserRole === "admin" ? "Admin" : "User"}`;
+      const modules = ["subscription", "expense", "booking", "sales", "treasurer"];
+      const membersBtn = document.getElementById("menu-btn-members");
+      if (membersBtn) membersBtn.style.display = window.currentUserRole === "admin" ? "flex" : "none";
+      modules.forEach((mod) => {
+        const btn = document.getElementById(`menu-btn-${mod}`);
+        if (btn) btn.style.display = (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) ? "flex" : "none";
+      });
+      const settingsBtn = document.getElementById("quickSettingsBtn");
+      if (settingsBtn) settingsBtn.style.display = window.currentUserRole === "admin" ? "flex" : "none";
+      document.querySelectorAll("#memberQuickMenuContent .dashboard-menu-btn").forEach(btn => btn.classList.remove("menu-active"));
+      if (membersBtn) membersBtn.classList.add("menu-active");
+    }
+
+    window.toggleMemberQuickMenu = function() {
+      const content = document.getElementById("memberQuickMenuContent");
+      const arrow = document.getElementById("memberMenuArrowIcon");
+      content.classList.toggle("hidden");
+      arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+    };
+
+    window.goMemberMenu = function(tabName) {
+      if (tabName === "members") { window.location.replace("members.html"); return; }
+      if (tabName === "subscription") { window.location.replace("chada.html"); return; }
+      if (window.currentUserRole !== "admin" && !window.userPermissions.includes(tabName)) return;
+      window.location.replace(`dashboard.html?tab=${encodeURIComponent(tabName)}`);
+    };
 
     function loadMembers() {
       onSnapshot(collection(db, "members"), (snapshot) => {
