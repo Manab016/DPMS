@@ -13,7 +13,7 @@
 .dashboard-menu-btn.menu-active{background:#ea580c!important;color:#fff!important;border-color:#ea580c!important}
 </style>
 </head>
-<body class="bg-amber-50/40 p-3 font-sans pb-20">
+<body class="bg-amber-50/40 p-3 font-sans pb-24 relative min-h-screen">
 <div class="max-w-4xl mx-auto">
   <!-- হেডার -->
   <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
@@ -148,6 +148,32 @@
   </div>
 </div>
 
+<!-- Developer Floating Toggle Button & Drawer Container -->
+<div id="devToggleContainer" class="fixed bottom-4 right-4 z-50 flex flex-col items-end">
+  <!-- Dev Tool Box (Popup) -->
+  <div id="devPanel" class="hidden mb-3 p-3 bg-gray-900 text-white rounded-xl shadow-2xl text-xs w-64 border border-gray-700 transition-all">
+    <div class="flex justify-between items-center mb-2 pb-1 border-b border-gray-700">
+      <span class="font-bold text-amber-400 flex items-center gap-1">🛠️ ডেভেলপার মোড</span>
+      <button onclick="toggleDevPanel()" class="text-gray-400 hover:text-white font-bold text-sm">✕</button>
+    </div>
+    <p class="text-[11px] text-gray-300 mb-2">ভিউ ও পারমিশন টেস্ট করার সুবিধা:</p>
+    <div class="flex gap-2 mb-2">
+      <button onclick="switchDevRole('admin')" class="flex-1 bg-amber-600 hover:bg-amber-700 text-white py-1 px-2 rounded text-[11px] font-semibold">Admin</button>
+      <button onclick="switchDevRole('user')" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-1 px-2 rounded text-[11px] font-semibold">User</button>
+    </div>
+    <div class="text-[10px] text-gray-400 border-t border-gray-800 pt-1.5 mt-1 flex justify-between items-center">
+      <span>সক্রিয় রোল:</span>
+      <span id="devCurrentRoleText" class="font-bold text-emerald-400">Admin</span>
+    </div>
+  </div>
+
+  <!-- Floating Button -->
+  <button onclick="toggleDevPanel()" class="bg-gray-900 hover:bg-gray-800 text-amber-400 border border-amber-500/40 px-3.5 py-2.5 rounded-full shadow-2xl transition-transform active:scale-95 flex items-center gap-2 text-xs font-bold">
+    <span>🛠️ Dev Tools</span>
+    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+  </button>
+</div>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,setPersistence,browserSessionPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -156,7 +182,6 @@ import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-// Dashboard-এর মতো browserSessionPersistence ব্যবহার
 setPersistence(auth,browserSessionPersistence);
 
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
@@ -180,7 +205,28 @@ window.toggleQuickMenu=()=>{
   if(arrow) arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
 };
 
-// রোল এবং পারমিশন অনুযায়ী ড্যাশবোর্ড মেনুর বাটন নিয়ন্ত্রণ
+// Dev Toggle UI functions
+window.toggleDevPanel=()=>{
+  const panel = document.getElementById("devPanel");
+  if(panel) panel.classList.toggle("hidden");
+};
+
+window.switchDevRole=(role)=>{
+  if (role === "admin") {
+    window.currentUserRole = "admin";
+    window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+  } else {
+    window.currentUserRole = "user";
+    window.userPermissions = [];
+  }
+  const devRoleText = document.getElementById("devCurrentRoleText");
+  if(devRoleText) devRoleText.innerText = role === "admin" ? "Admin" : "User (সীমিত)";
+  
+  setupUIBasedOnRoleAndPermissions();
+  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
+  renderExpenses();
+};
+
 function setupUIBasedOnRoleAndPermissions() {
   const roleBadge = document.getElementById("userRoleBadge");
   const menuBtnMembers = document.getElementById("menu-btn-members");
@@ -436,7 +482,6 @@ async function loadPujaTreasurer(){
  }catch(e){pujaTreasurerName="";}
 }
 
-// Dashboard-এর অনুরূপ Auth State Handler
 onAuthStateChanged(auth,async user=>{
  if(!user){window.location.replace("index.html");return;}
  
@@ -456,6 +501,9 @@ onAuthStateChanged(auth,async user=>{
      window.userPermissions = [];
    }
  }
+
+ const devRoleText = document.getElementById("devCurrentRoleText");
+ if(devRoleText) devRoleText.innerText = window.currentUserRole === "admin" ? "Admin" : "User";
 
  setupUIBasedOnRoleAndPermissions();
  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
