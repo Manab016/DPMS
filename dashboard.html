@@ -46,6 +46,16 @@
         scrollbar-width: none;
       }
 
+      /* ড্যাশবোর্ড মেনুর active state: শুধু বর্তমানে খোলা পেজ/ট্যাব orange থাকবে */
+      #quickMenuContent .dashboard-menu-btn.menu-active {
+        background-color: #ea580c !important;
+        color: #ffffff !important;
+        border-color: #ea580c !important;
+      }
+      #quickMenuContent .dashboard-menu-btn.menu-active:hover {
+        background-color: #c2410c !important;
+      }
+
       @media print {
         body {
           background: white !important;
@@ -113,7 +123,7 @@
           <button
             id="menu-btn-members"
             onclick="window.location.href='members.html'"
-            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             👥 সদস্য
           </button>
@@ -121,42 +131,42 @@
           <button
             id="menu-btn-subscription"
             onclick="window.location.href='chada.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💰 চাঁদা
           </button>
           <button
             id="menu-btn-expense"
             onclick="switchTab('expense')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
           </button>
           <button
             id="menu-btn-booking"
             onclick="switchTab('booking')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🎫 বুকিং
           </button>
           <button
             id="menu-btn-sales"
             onclick="switchTab('sales')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             🛒 বিক্রয়
           </button>
           <button
             id="menu-btn-treasurer"
             onclick="switchTab('treasurer')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             📊 কোষাধ্যক্ষ
           </button>
           <button
             id="quickSettingsBtn"
             onclick="switchTab('settings')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+            class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             ⚙️ সেটিংস
           </button>
@@ -1378,6 +1388,15 @@
         }
       }
 
+      function updateActiveDashboardMenu(tabName) {
+        document.querySelectorAll("#quickMenuContent .dashboard-menu-btn").forEach((btn) => {
+          btn.classList.remove("menu-active");
+        });
+        const activeId = tabName === "settings" ? "quickSettingsBtn" : `menu-btn-${tabName}`;
+        const activeBtn = document.getElementById(activeId);
+        if (activeBtn) activeBtn.classList.add("menu-active");
+      }
+
       function switchTab(tabName) {
         if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
         ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
@@ -1386,6 +1405,8 @@
         });
         const target = document.getElementById("section-" + tabName);
         if (target) target.classList.remove("hidden");
+        updateActiveDashboardMenu(tabName);
+        window.history.replaceState({ tab: tabName }, "", window.location.pathname + (tabName === "dashboard" ? "" : `?tab=${encodeURIComponent(tabName)}`));
         window.scrollTo({ top: 0, behavior: "smooth" });
       }
 
@@ -1399,6 +1420,12 @@
       window.addEventListener("DOMContentLoaded", () => {
         loadDevData();
         loadClubLogo();
+        const requestedTab = new URLSearchParams(window.location.search).get("tab");
+        if (requestedTab && ["subscription", "expense", "booking", "sales", "treasurer", "settings"].includes(requestedTab)) {
+          setTimeout(() => switchTab(requestedTab), 0);
+        } else {
+          updateActiveDashboardMenu("dashboard");
+        }
       });
     </script>
   </body>
