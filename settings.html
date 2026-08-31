@@ -106,7 +106,7 @@
 
   <div class="hidden" id="section-settings">
 <div class="mb-4">
-<button class="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition" onclick="switchTab('dashboard')">
+<button class="flex items-center gap-2 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition" onclick="goDashboard()">
 <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2.5" viewbox="0 0 24 24">
 <path d="M10 19l-7-7m0 0l7-7m7 7h18" stroke-linecap="round" stroke-linejoin="round"></path>
 </svg>
@@ -337,13 +337,39 @@
 </div>
 </div>
 
+<script>
+(function () {
+  const KEY = "pujaAuthSessionV2";
+  window.__pujaAuthCache = {
+    get() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
+    },
+    set(user, role, permissions) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          uid: user.uid, email: user.email || "",
+          role: role || "user",
+          permissions: Array.isArray(permissions) ? permissions : [],
+          savedAt: Date.now()
+        }));
+      } catch (_) {}
+    },
+    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
+  };
+  const cached = window.__pujaAuthCache.get();
+  window.currentUserRole = cached?.role || "user";
+  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
+  window.__pujaAuthReady = !!cached;
+})();
+</script>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
   getAuth,
   setPersistence,
-  browserSessionPersistence,
+  browserLocalPersistence,
   onAuthStateChanged,
   signOut,
   updatePassword
@@ -370,7 +396,7 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-setPersistence(auth, browserSessionPersistence);
+setPersistence(auth, browserLocalPersistence);
 const db = getFirestore(app);
 
 const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
@@ -387,13 +413,14 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   if (user.email !== ADMIN_EMAIL) {
-    alert("এই সেটিংস পেজটি শুধুমাত্র প্রধান অ্যাডমিনের জন্য!");
+    
     window.location.replace("dashboard.html");
     return;
   }
 
   window.currentUserRole = "admin";
   window.userPermissions = ["subscription","expense","booking","sales","treasurer"];
+  window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
 
   const emailEl = document.getElementById("profileEmailDisplay");
   const nameEl = document.getElementById("profileNameDisplay");
@@ -611,7 +638,7 @@ window.handlePasswordChange = async function(event) {
 };
 
 window.handleLogout = function() {
-  signOut(auth).then(() => window.location.replace("index.html"));
+  signOut(auth).then(() => { window.__pujaAuthCache.clear(); window.location.replace("index.html"); });
 };
 
 </script>
