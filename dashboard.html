@@ -117,14 +117,6 @@
           >
             👥 সদস্য
           </button>
-          <!-- ২. চাঁদা বাটন -->
-          <button
-            id="menu-btn-subscription"
-            onclick="switchTab('subscription')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            💰 চাঁদা
-          </button>
           <button
             id="menu-btn-expense"
             onclick="switchTab('expense')"
@@ -198,17 +190,7 @@
             <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
           </div>
-
-          <!-- ডানে: মোট চাঁদা -->
-          <div
-            id="dash-card-subscription"
-            onclick="switchTab('subscription')"
-            class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center"
-          >
-            <div class="text-2xl mb-1">💰</div>
-            <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
-            <div class="text-2xl font-bold mt-1" id="dashTotalSubAmount">₹0</div>
-          </div>
+        </div>
         </div>
 
         <!-- অন্যান্য সেকশন গ্রিড -->
@@ -248,101 +230,6 @@
             <div class="text-xs opacity-90">বিক্রয়</div>
             <div class="text-xl font-bold mt-1">0</div>
           </div>
-        </div>
-      </div>
-
-      <!-- 💰 চাঁদা সংগ্রহ সেকশন -->
-      <div id="section-subscription" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 hidden">
-        <div class="flex items-center justify-between mb-4 border-b pb-3">
-          <div class="flex items-center gap-2">
-            <button
-              onclick="switchTab('dashboard')"
-              class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200"
-            >
-              ⬅️ হোম
-            </button>
-            <h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ব্যবস্থাপনা</h2>
-          </div>
-        </div>
-
-        <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm space-y-1">
-          <div>
-            সদস্যদের মোট:
-            <strong id="subTotalMembersAmount" class="text-orange-700">₹0</strong>
-          </div>
-          <div>
-            অন্যান্যদের মোট:
-            <strong id="subTotalOthersAmount" class="text-orange-700">₹0</strong>
-          </div>
-          <div class="text-base font-bold text-emerald-700 pt-1 border-t border-amber-200">
-            সর্বমোট:
-            <span id="subGrandTotal">₹0</span>
-          </div>
-        </div>
-
-        <div id="adminSubControls" class="flex flex-wrap gap-2 mb-4 hidden">
-          <button
-            onclick="openAddSubModal()"
-            class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm"
-          >
-            ➕ যোগ
-          </button>
-          <button
-            onclick="deleteAllSubscriptions()"
-            class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-600 shadow-sm"
-          >
-            🗑️ সব মুছুন
-          </button>
-        </div>
-
-        <div class="mb-4">
-          <input
-            type="text"
-            id="subSearchInput"
-            onkeyup="filterSubscriptions()"
-            placeholder="নাম, পরিমাণ, তারিখ, মন্তব্য দিয়ে খুঁজুন..."
-            class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500"
-          />
-        </div>
-
-        <div class="mb-4">
-          <p class="text-xs font-bold text-gray-700 mb-2">চাঁদা রিপোর্ট:</p>
-          <div class="flex flex-wrap gap-2">
-            <button
-              onclick="exportSubReport('members')"
-              class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 flex items-center gap-1"
-            >
-              📥 সদস্যদের চাঁদা
-            </button>
-            <button
-              onclick="exportSubReport('others')"
-              class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 flex items-center gap-1"
-            >
-              📥 অন্যান্যদের চাঁদা
-            </button>
-            <button
-              onclick="exportSubReport('all')"
-              class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 flex items-center gap-1"
-            >
-              📥 সম্পূর্ণ চাঁদা রিপোর্ট
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto border rounded-lg">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-100 text-gray-700 border-b">
-                <th class="p-2.5 border-r text-center align-middle">তারিখ</th>
-                <th class="p-2.5 border-r text-center align-middle">নাম</th>
-                <th class="p-2.5 border-r text-center align-middle">ধরণ</th>
-                <th class="p-2.5 border-r text-center align-middle">পরিমাণ (₹)</th>
-                <th class="p-2.5 border-r text-center align-middle">মন্তব্য</th>
-                <th class="p-2.5 text-center align-middle sub-action-col">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody id="subTableBody"></tbody>
-          </table>
         </div>
       </div>
 
@@ -1033,7 +920,7 @@
           document.getElementById("tabBtnSystem").style.display = "none";
         }
 
-        const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
+        const allModules = ["expense", "booking", "sales", "treasurer"];
         allModules.forEach((mod) => {
           const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
@@ -1549,7 +1436,7 @@
 
       function switchTab(tabName) {
         if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
-        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+        ["dashboard", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
           const el = document.getElementById("section-" + t);
           if (el) el.classList.add("hidden");
         });
