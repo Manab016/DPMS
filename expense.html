@@ -46,18 +46,18 @@
   <!-- খরচ ব্যবস্থাপনা — চাঁদা পেজের একই স্টাইল -->
   <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
     <div class="flex items-center gap-3 mb-5 border-b pb-4">
-      <button onclick="goDashboard()" class="bg-gray-50 border-2 border-gray-200 px-4 py-2.5 rounded-xl text-sm md:text-base font-bold hover:bg-gray-100 flex items-center justify-center shadow-sm whitespace-nowrap" aria-label="হোমে ফিরুন">⬅️ হোম</button>
-      <h2 class="text-xl md:text-2xl font-black text-gray-900">খরচ ব্যবস্থাপনা</h2>
+      <button onclick="goDashboard()" class="bg-gray-50 border-2 border-gray-200 px-4 py-3 rounded-xl text-lg md:text-xl font-bold hover:bg-gray-100 flex items-center justify-center shadow-sm whitespace-nowrap" aria-label="হোমে ফিরুন">⬅️ হোম</button>
+      <h2 class="text-2xl md:text-3xl font-black text-gray-900">খরচ ব্যবস্থাপনা</h2>
     </div>
 
     <div class="rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-4 mb-5">
-      <div class="text-sm md:text-base font-semibold text-gray-800">মোট খরচ: <strong id="totalExpense" class="text-orange-700">₹0</strong></div>
+      <div class="text-base md:text-lg font-semibold text-gray-800">মোট খরচ: <strong id="totalExpense" class="text-orange-700">₹0</strong></div>
       <div class="border-t border-amber-200 mt-2 pt-2 text-xl md:text-2xl font-black text-emerald-700">সর্বমোট: <span id="totalExpense2">₹0</span></div>
     </div>
 
     <div id="expenseControls" class="flex flex-wrap gap-3 mb-5 hidden">
-      <button onclick="openExpenseModal()" class="bg-slate-900 text-white px-5 py-3 rounded-xl text-sm md:text-base font-bold shadow-sm">➕ যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl text-sm md:text-base font-bold shadow-sm">📥 সম্পূর্ণ এক্সপোর্ট</button>
+      <button onclick="openExpenseModal()" class="bg-slate-900 text-white px-5 py-3 rounded-xl text-base font-bold shadow-sm">➕ যোগ</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl text-base font-bold shadow-sm">📥 সম্পূর্ণ এক্সপোর্ট</button>
     </div>
 
     <div class="mb-4">
@@ -66,7 +66,7 @@
 
     <div class="font-bold text-gray-700 mb-2">খরচ রিপোর্ট:</div>
     <div class="overflow-x-auto border border-gray-200 rounded-xl">
-      <table id="expenseTable" class="w-full text-left border-collapse text-xs md:text-sm min-w-[720px]">
+      <table id="expenseTable" class="w-full text-left border-collapse text-sm md:text-base min-w-[720px]">
         <thead>
           <tr class="bg-gray-100 text-gray-700 border-b">
             <th class="p-4 text-center font-bold">তারিখ</th>
@@ -117,7 +117,6 @@ const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const ROLE_NAMES={admin:"Admin",member:"সাধারণ সদস্য",user:"সাধারণ সদস্য",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
 let allExpenses=[];
 let pujaTreasurerName="";
-let expenseSaveBusy=false;
 window.currentUserRole="user";window.userPermissions=[];window.isMasterAdmin=false;
 
 function canManage(){return window.isMasterAdmin || window.userPermissions.includes("expense");}
@@ -150,7 +149,7 @@ window.saveExpense=async()=>{
  const treasurer=document.getElementById("expenseTreasurer").value.trim();
  const id=document.getElementById("expenseDocId").value;
  if(!date||!name||!(amount>0)){alert("দয়া করে তারিখ, প্রাপকের নাম এবং ০-এর বেশি পরিমাণ দিন।");return;}
- const b=document.getElementById("saveExpenseBtn");expenseSaveBusy=true;b.disabled=true;b.innerText="সেভ হচ্ছে...";
+ const b=document.getElementById("saveExpenseBtn");b.disabled=true;b.innerText="সেভ হচ্ছে...";
  try{
    const data={date,name,amount,description,treasurer,updatedAt:Date.now()};
    if(id){await updateDoc(doc(db,"expenses",id),data);}
@@ -158,14 +157,14 @@ window.saveExpense=async()=>{
    closeExpenseModal();
  }catch(e){
    console.error("Expense save error:",e);
-   const msg=(e&&e.code==="permission-denied")?"এই কাজটি করার অনুমতি নেই। Expense permission এবং Firestore Rules পরীক্ষা করুন।":"ত্রুটি: "+(e?.message||e);
+   const msg=(e&&e.code==="permission-denied")?"খরচ সেভ করার Firestore Permission নেই। Firebase Console → Firestore → Rules-এ expenses-এর create permission দিন।":"ত্রুটি: "+(e?.message||e);
    alert(msg);
- }finally{expenseSaveBusy=false;b.disabled=false;b.innerText="সেভ করুন";}
+ }finally{b.disabled=false;b.innerText="সেভ করুন";}
 };
 window.deleteExpense=async(id)=>{if(!canManage())return;if(!confirm("এই খরচটি ডিলিট করতে চান?"))return;try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}};
 window.exportExpenses=async()=>{if(!allExpenses.length){alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");return;}let csv="তারিখ,প্রাপকের নাম,পরিমাণ (₹),বিবরণ,পূজা কোষাধ্যক্ষ\n";allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||x.payerName||""}","${x.amount||0}","${x.description||x.note||""}","${x.treasurer||x.pujaTreasurer||""}"\n`);const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);};
 
-async function loadPujaTreasurer(){try{const snap=await getDocs(collection(db,"members"));const list=snap.docs.map(d=>d.data());const found=list.find(m=>{const r=String(m.role||m.designation||m.position||m.office||m.committeeRole||m.committee_role||m.post||m.pod||m.podobi||m.title||"").trim().replace(/\s+/g," ").toLowerCase();return ["পূজা কোষাধ্যক্ষ","puja treasurer","puja_treasurer","pujatreasurer"].includes(r);});pujaTreasurerName=found?.name||found?.fullName||"";}catch(e){pujaTreasurerName="";}}
+async function loadPujaTreasurer(){try{const snap=await getDocs(collection(db,"members"));const list=snap.docs.map(d=>d.data());const found=list.find(m=>{const r=String(m.role||m.designation||m.position||m.office||m.committeeRole||"").trim();return r==="পূজা কোষাধ্যক্ষ";});pujaTreasurerName=found?.name||"";}catch(e){pujaTreasurerName="";}}
 
 onAuthStateChanged(auth,async user=>{
  if(!user){window.location.replace("index.html");return;}
