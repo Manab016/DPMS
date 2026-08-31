@@ -246,19 +246,23 @@
     window.userPermissions = [];
 
     onAuthStateChanged(auth, async (user) => {
+        if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          try { const accessDoc = await getDoc(doc(db, "app_users", user.uid)); if (!accessDoc.exists() || accessDoc.data().disabled || !(accessDoc.data().permissions || []).includes("members")) { window.location.replace("dashboard.html"); return; } } catch(e) { window.location.replace("dashboard.html"); return; }
+        }
       if (user) {
         if (user.email === ADMIN_EMAIL) {
           window.currentUserRole = "admin";
-          window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+          window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
         } else {
-          window.currentUserRole = "user";
+          window.currentUserRole = "member";
           try {
             const userDoc = await getDoc(doc(db, "app_users", user.uid));
+            window.currentUserRole = userDoc.exists() ? (userDoc.data().role || "member") : "member";
             window.userPermissions = userDoc.exists() ? (userDoc.data().permissions || []) : [];
           } catch (e) { window.userPermissions = []; }
         }
         setupMemberDashboardMenu();
-        if(window.currentUserRole === "admin") {
+        if(window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
         }
@@ -270,13 +274,13 @@
 
     function setupMemberDashboardMenu() {
       const badge = document.getElementById("memberUserRoleBadge");
-      if (badge) badge.innerText = `রোল: ${window.currentUserRole === "admin" ? "Admin" : "User"}`;
+      if (badge) badge.innerText = `রোল: ${({member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"}[window.currentUserRole] || "সাধারণ সদস্য")}`;
       const modules = ["subscription", "expense", "booking", "sales", "treasurer"];
       const membersBtn = document.getElementById("menu-btn-members");
-      if (membersBtn) membersBtn.style.display = window.currentUserRole === "admin" ? "flex" : "none";
+      if (membersBtn) membersBtn.style.display = (window.currentUserRole === "admin" || window.userPermissions.includes("members")) ? "flex" : "none";
       modules.forEach((mod) => {
         const btn = document.getElementById(`menu-btn-${mod}`);
-        if (btn) btn.style.display = (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) ? "flex" : "none";
+        if (btn) btn.style.display = ((user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase() || window.userPermissions.includes(mod)) ? "flex" : "none";
       });
       const settingsBtn = document.getElementById("quickSettingsBtn");
       if (settingsBtn) settingsBtn.style.display = window.currentUserRole === "admin" ? "flex" : "none";
@@ -341,7 +345,7 @@
         const tr = document.createElement("tr");
         tr.className = "border-b hover:bg-gray-50";
         let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">আইডি</button>`;
-        if (window.currentUserRole === "admin") {
+        if (window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
           actionButtons += `<button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs ml-1">এডিট</button>
                             <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">ডিলিট</button>`;
         }
