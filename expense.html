@@ -112,15 +112,15 @@
     <div class="px-6 pb-6 space-y-3">
       <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50">
         <span class="text-gray-600 text-sm font-semibold">নাম:</span>
-        <strong id="devName" class="text-gray-900 text-sm">লোড হচ্ছে...</strong>
+        <strong id="devName" class="text-gray-900 text-sm">Manabendra Nath Sarkar</strong>
       </div>
       <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50">
         <span class="text-gray-600 text-sm font-semibold">মোবাইল:</span>
-        <a href="#" id="devPhone" class="text-orange-700 font-bold text-sm">লোড হচ্ছে...</a>
+        <a href="tel:9002652507" id="devPhone" class="text-orange-700 font-bold text-sm">9002652507</a>
       </div>
       <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50 overflow-hidden">
         <span class="text-gray-600 text-sm font-semibold whitespace-nowrap mr-2">ইমেইল:</span>
-        <a href="#" id="devEmail" class="text-gray-800 font-bold text-sm truncate">লোড হচ্ছে...</a>
+        <a href="mailto:manabendranathsarkar112@gmail.com" id="devEmail" class="text-gray-800 font-bold text-sm truncate">manabendranathsarkar112@gmail.com</a>
       </div>
       <button onclick="closeDevModal()" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm">
         বন্ধ করুন
@@ -237,8 +237,8 @@ function setupUIBasedOnRoleAndPermissions() {
     if (quickSettingsBtn) quickSettingsBtn.style.display = "flex";
   } else {
     if (roleBadge) roleBadge.innerText = "রোল: User";
-    if (menuBtnMembers) menuBtnMembers.style.display = "flex";
-    if (quickSettingsBtn) quickSettingsBtn.style.display = "flex";
+    if (menuBtnMembers) menuBtnMembers.style.display = "none";
+    if (quickSettingsBtn) quickSettingsBtn.style.display = "none";
   }
 
   const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
