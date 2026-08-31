@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>দুর্গাপূজা ব্যবস্থাপনা - খরচ</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+#expenseTable td,#expenseTable th{vertical-align:middle;white-space:nowrap}
+.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+.dashboard-menu-btn.menu-active{background:#ea580c!important;color:#fff!important;border-color:#ea580c!important}
+</style>
+</head>
+<body class="bg-amber-50/40 p-3 font-sans pb-20">
+<div class="max-w-4xl mx-auto">
+  <!-- একই কমিটি heading -->
+  <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
+    <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+    <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
+    <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
+    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702">৯৯৩৩৩৭১৭০২</a></p>
+  </div>
+
+  <!-- Dashboard menu: অন্য page-এর মতো -->
+  <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+    <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
+      <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
+      <div class="flex items-center gap-2">
+        <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
+        <span id="menuArrowIcon" class="text-lg font-bold">▼</span>
+      </div>
+    </div>
+    <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3">
+      <button id="menu-btn-members" onclick="goPage('members.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👥 সদস্য</button>
+      <button id="menu-btn-subscription" onclick="goPage('chada.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+      <button id="menu-btn-expense" class="dashboard-menu-btn menu-active bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+      <button id="menu-btn-booking" onclick="goPage('booking.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+      <button id="menu-btn-sales" onclick="goPage('sales.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🛒 বিক্রয়</button>
+      <button id="menu-btn-treasurer" onclick="goPage('treasurer.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
+      <button id="quickSettingsBtn" onclick="goPage('settings.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+      <button onclick="goPage('dashboard.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🏠 হোম</button>
+    </div>
+  </div>
+
+  <!-- Screenshot অনুযায়ী Expense page -->
+  <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
+    <div class="flex items-center gap-3 mb-4 border-b pb-3">
+      <button onclick="goDashboard()" class="bg-gray-100 border px-3 py-2 rounded-lg text-xl font-bold hover:bg-gray-200">←</button>
+      <div>
+        <h2 class="text-2xl md:text-3xl font-black text-gray-900">খরচ ব্যবস্থাপনা</h2>
+        <p class="text-gray-600 text-base md:text-lg">মোট: <strong id="totalExpense" class="text-gray-800">₹0</strong></p>
+      </div>
+    </div>
+
+    <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
+      <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2.5 rounded-lg text-sm font-bold shadow-sm">➕ যোগ</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2.5 rounded-lg text-sm font-bold shadow-sm">📥 সম্পূর্ণ এক্সপোর্ট</button>
+    </div>
+
+    <div class="mb-4">
+      <input id="expenseSearch" oninput="filterExpenses()" type="text" placeholder="প্রাপক, বিবরণ, তারিখ, পরিমাণ দিয়ে খুঁজুন..." class="w-full p-3 border-2 rounded-xl text-sm focus:outline-none focus:border-orange-500">
+    </div>
+
+    <div class="overflow-x-auto border rounded-xl">
+      <table id="expenseTable" class="w-full text-left border-collapse text-sm">
+        <thead>
+          <tr class="bg-gray-100 text-gray-700 border-b">
+            <th class="p-3 text-center">প্রাপকের<br>নাম</th>
+            <th class="p-3 text-center">পরিমাণ<br>(₹)</th>
+            <th class="p-3 text-center">বিবরণ</th>
+            <th class="p-3 text-center">পূজা<br>কোষাধ্যক্ষ</th>
+            <th class="p-3 text-center">তারিখ</th>
+            <th id="actionHead" class="p-3 text-center hidden">অ্যাকশন</th>
+          </tr>
+        </thead>
+        <tbody id="expenseTableBody"><tr><td colspan="6" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Add/Edit modal -->
+<div id="expenseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
+    <h3 id="expenseModalTitle" class="text-lg font-bold text-orange-600 mb-4">খরচ যুক্ত করুন</h3>
+    <input type="hidden" id="expenseDocId">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ *</label>
+    <input type="date" id="expenseDate" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">প্রাপকের নাম *</label>
+    <input type="text" id="expenseName" placeholder="প্রাপকের নাম" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">পরিমাণ (₹) *</label>
+    <input type="number" id="expenseAmount" min="0" step="0.01" placeholder="টাকার পরিমাণ" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
+    <input type="text" id="expenseDescription" placeholder="খরচের বিবরণ" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
+    <input type="text" id="expenseTreasurer" placeholder="নাম" class="w-full p-2.5 border rounded-lg mb-4 text-sm">
+    <div class="flex justify-end gap-2">
+      <button onclick="closeExpenseModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
+      <button id="saveExpenseBtn" onclick="saveExpense()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold">সেভ করুন</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import {getAuth,setPersistence,browserLocalPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+setPersistence(auth,browserLocalPersistence);
+const ADMIN_EMAIL="bappasarkar1173@gmail.com";
+const ROLE_NAMES={admin:"Admin",member:"সাধারণ সদস্য",user:"সাধারণ সদস্য",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
+let allExpenses=[];
+window.currentUserRole="user";window.userPermissions=[];window.isMasterAdmin=false;
+
+function canManage(){return window.isMasterAdmin || window.userPermissions.includes("expense");}
+function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
+function roleText(){return ROLE_NAMES[window.currentUserRole]||"সাধারণ সদস্য";}
+window.goDashboard=()=>window.location.replace("dashboard.html");
+window.goPage=(p)=>window.location.replace(p);
+window.toggleQuickMenu=()=>document.getElementById("quickMenuContent").classList.toggle("hidden");
+
+function renderExpenses(list=allExpenses){
+ const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
+ actionHead.classList.toggle("hidden",!canManage());
+ if(!list.length){body.innerHTML='<tr><td colspan="6" class="p-8 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>';}
+ else body.innerHTML=list.map(x=>`<tr class="border-b hover:bg-gray-50"><td class="p-3 text-center">${esc(x.name||x.payerName||"-")}</td><td class="p-3 text-center">${money(x.amount)}</td><td class="p-3 text-center">${esc(x.description||x.note||"-")}</td><td class="p-3 text-center">${esc(x.treasurer||x.pujaTreasurer||"-")}</td><td class="p-3 text-center">${esc(x.date||"-")}</td><td class="p-3 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 px-2 py-1 rounded mr-1">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 px-2 py-1 rounded">🗑️</button></td></tr>`).join("");
+ document.getElementById("totalExpense").innerText=money(allExpenses.reduce((s,x)=>s+Number(x.amount||0),0));
+}
+window.filterExpenses=()=>{const q=document.getElementById("expenseSearch").value.toLowerCase().trim();renderExpenses(allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.description,x.note,x.treasurer,x.pujaTreasurer,x.date].join(" ").toLowerCase().includes(q)));};
+window.openExpenseModal=()=>{if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}document.getElementById("expenseModalTitle").innerText="খরচ যুক্ত করুন";document.getElementById("expenseDocId").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);["expenseName","expenseAmount","expenseDescription","expenseTreasurer"].forEach(id=>document.getElementById(id).value="");const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
+window.closeExpenseModal=()=>{const m=document.getElementById("expenseModal");m.classList.add("hidden");m.classList.remove("flex");};
+window.editExpense=(id)=>{if(!canManage())return;const x=allExpenses.find(e=>e.id===id);if(!x)return;document.getElementById("expenseModalTitle").innerText="খরচ সম্পাদনা";document.getElementById("expenseDocId").value=id;document.getElementById("expenseDate").value=x.date||"";document.getElementById("expenseName").value=x.name||x.payerName||"";document.getElementById("expenseAmount").value=x.amount||"";document.getElementById("expenseDescription").value=x.description||x.note||"";document.getElementById("expenseTreasurer").value=x.treasurer||x.pujaTreasurer||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
+window.saveExpense=async()=>{if(!canManage())return;const date=document.getElementById("expenseDate").value,name=document.getElementById("expenseName").value.trim(),amount=Number(document.getElementById("expenseAmount").value),description=document.getElementById("expenseDescription").value.trim(),treasurer=document.getElementById("expenseTreasurer").value.trim(),id=document.getElementById("expenseDocId").value;if(!date||!name||!amount){alert("দয়া করে তারিখ, প্রাপকের নাম এবং পরিমাণ দিন।");return;}const b=document.getElementById("saveExpenseBtn");b.disabled=true;b.innerText="সেভ হচ্ছে...";try{const data={date,name,amount,description,treasurer,updatedAt:Date.now()};if(id)await updateDoc(doc(db,"expenses",id),data);else await addDoc(collection(db,"expenses"),{...data,createdAt:Date.now(),createdBy:auth.currentUser.uid});closeExpenseModal();}catch(e){alert("ত্রুটি: "+e.message);}finally{b.disabled=false;b.innerText="সেভ করুন";}};
+window.deleteExpense=async(id)=>{if(!canManage())return;if(!confirm("এই খরচটি ডিলিট করতে চান?"))return;try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}};
+window.exportExpenses=async()=>{if(!allExpenses.length){alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");return;}let csv="তারিখ,প্রাপকের নাম,পরিমাণ (₹),বিবরণ,পূজা কোষাধ্যক্ষ\n";allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||x.payerName||""}","${x.amount||0}","${x.description||x.note||""}","${x.treasurer||x.pujaTreasurer||""}"\n`);const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);};
+
+onAuthStateChanged(auth,async user=>{
+ if(!user){window.location.replace("index.html");return;}
+ window.isMasterAdmin=(user.email||"").toLowerCase()===ADMIN_EMAIL.toLowerCase();
+ if(window.isMasterAdmin){window.currentUserRole="admin";window.userPermissions=["members","subscription","expense","booking","sales","treasurer"];}
+ else{try{const snap=await getDoc(doc(db,"app_users",user.uid));const d=snap.exists()?snap.data():{};window.currentUserRole=d.role||"member";window.userPermissions=Array.isArray(d.permissions)?d.permissions:[];}catch(e){window.currentUserRole="member";window.userPermissions=[];}}
+ document.getElementById("userRoleBadge").innerText="রোল: "+roleText();
+ document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
+ const expenseButton=document.getElementById("menu-btn-expense"); if(!canManage()&&!window.userPermissions.includes("expense")){expenseButton.classList.add("hidden");}
+ onSnapshot(collection(db,"expenses"),snap=>{allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExpenses();},err=>{console.error(err);document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="6" class="p-8 text-center text-red-500">খরচের তথ্য লোড করা যায়নি</td></tr>';});
+});
+</script>
+</body>
+</html>
