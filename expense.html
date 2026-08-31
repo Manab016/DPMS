@@ -8,7 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 <style>
-#expenseTable td,#expenseTable th{vertical-align:middle;white-space:nowrap}
+#expenseTable td,#expenseTable th{vertical-align:middle;white-space:nowrap;text-align:center}
 .hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 .dashboard-menu-btn.menu-active{background:#ea580c!important;color:#fff!important;border-color:#ea580c!important}
 </style>
@@ -44,41 +44,45 @@
   </div>
 
   <!-- খরচ ব্যবস্থাপনা — চাঁদা পেজের একই স্টাইল -->
-  <div class="bg-white p-5 md:p-6 rounded-2xl shadow-sm border border-gray-200">
-    <div class="flex items-center gap-3 mb-5 border-b pb-4">
-      <button onclick="goDashboard()" class="bg-gray-50 border-2 border-gray-200 px-4 py-3 rounded-xl text-lg md:text-xl font-bold hover:bg-gray-100 flex items-center justify-center shadow-sm whitespace-nowrap" aria-label="হোমে ফিরুন">⬅️ হোম</button>
-      <h2 class="text-2xl md:text-3xl font-black text-gray-900">খরচ ব্যবস্থাপনা</h2>
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+    <div class="flex items-center justify-between mb-4 border-b pb-3">
+      <div class="flex items-center gap-2">
+        <button onclick="goDashboard()" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200" aria-label="হোমে ফিরুন">⬅️ হোম</button>
+        <h2 class="text-lg font-bold text-gray-800">খরচ ব্যবস্থাপনা</h2>
+      </div>
     </div>
 
-    <div class="rounded-2xl border-2 border-amber-200 bg-amber-50/50 p-4 mb-5">
-      <div class="text-base md:text-lg font-semibold text-gray-800">মোট খরচ: <strong id="totalExpense" class="text-orange-700">₹0</strong></div>
-      <div class="border-t border-amber-200 mt-2 pt-2 text-xl md:text-2xl font-black text-emerald-700">সর্বমোট: <span id="totalExpense2">₹0</span></div>
+    <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm space-y-1">
+      <div>মোট খরচ: <strong id="totalExpense" class="text-orange-700">₹0</strong></div>
+      <div class="text-base font-bold text-emerald-700 pt-1 border-t border-amber-200">সর্বমোট: <span id="totalExpense2">₹0</span></div>
     </div>
 
-    <div id="expenseControls" class="flex flex-wrap gap-3 mb-5 hidden">
-      <button onclick="openExpenseModal()" class="bg-slate-900 text-white px-5 py-3 rounded-xl text-base font-bold shadow-sm">➕ যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-5 py-3 rounded-xl text-base font-bold shadow-sm">📥 সম্পূর্ণ এক্সপোর্ট</button>
+    <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
+      <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ যোগ</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 সম্পূর্ণ এক্সপোর্ট</button>
     </div>
 
     <div class="mb-4">
-      <input id="expenseSearch" oninput="filterExpenses()" type="text" placeholder="প্রাপক, বিবরণ, তারিখ, পরিমাণ দিয়ে খুঁজুন..." class="w-full p-3.5 border-2 border-gray-200 rounded-xl text-base focus:outline-none focus:border-orange-500">
+      <input id="expenseSearch" oninput="filterExpenses()" type="text" placeholder="প্রাপক, বিবরণ, তারিখ, পরিমাণ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
     </div>
 
-    <div class="font-bold text-gray-700 mb-2">খরচ রিপোর্ট:</div>
-    <div class="overflow-x-auto border border-gray-200 rounded-xl">
-      <table id="expenseTable" class="w-full text-left border-collapse text-sm md:text-base min-w-[720px]">
-        <thead>
-          <tr class="bg-gray-100 text-gray-700 border-b">
-            <th class="p-4 text-center font-bold">তারিখ</th>
-            <th class="p-4 text-center font-bold">প্রাপকের<br>নাম</th>
-            <th class="p-4 text-center font-bold">বিবরণ</th>
-            <th class="p-4 text-center font-bold">পরিমাণ<br>(₹)</th>
-            <th class="p-4 text-center font-bold">পূজা<br>কোষাধ্যক্ষ</th>
-            <th id="actionHead" class="p-4 text-center font-bold hidden">অ্যাকশন</th>
-          </tr>
-        </thead>
-        <tbody id="expenseTableBody"><tr><td colspan="6" class="p-10 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
-      </table>
+    <div class="mb-4">
+      <p class="text-xs font-bold text-gray-700 mb-2">খরচ রিপোর্ট:</p>
+      <div class="overflow-x-auto border rounded-lg">
+        <table id="expenseTable" class="w-full text-left border-collapse text-sm min-w-[720px]">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 border-b">
+              <th class="p-2.5 border-r text-center align-middle">তারিখ</th>
+              <th class="p-2.5 border-r text-center align-middle">প্রাপকের<br>নাম</th>
+              <th class="p-2.5 border-r text-center align-middle">বিবরণ</th>
+              <th class="p-2.5 border-r text-center align-middle">পরিমাণ<br>(₹)</th>
+              <th class="p-2.5 border-r text-center align-middle">পূজা<br>কোষাধ্যক্ষ</th>
+              <th id="actionHead" class="p-2.5 text-center align-middle hidden">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="expenseTableBody"><tr><td colspan="6" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
+        </table>
+      </div>
     </div>
   </div>
 </div>
@@ -131,7 +135,7 @@ function renderExpenses(list=allExpenses){
  const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
  actionHead.classList.toggle("hidden",!canManage());
  if(!list.length){body.innerHTML='<tr><td colspan="6" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>';}
- else body.innerHTML=list.map(x=>`<tr class="border-b hover:bg-gray-50"><td class="p-4 text-center">${esc(x.date||"-")}</td><td class="p-4 text-center">${esc(x.name||x.payerName||"-")}</td><td class="p-4 text-center">${esc(x.description||x.note||"-")}</td><td class="p-4 text-center font-bold text-emerald-700">${money(x.amount)}</td><td class="p-4 text-center">${esc(x.treasurer||x.pujaTreasurer||"-")}</td><td class="p-4 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 px-2 py-1 rounded mr-1">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 px-2 py-1 rounded">🗑️</button></td></tr>`).join("");
+ else body.innerHTML=list.map(x=>`<tr class="border-b hover:bg-gray-50"><td class="p-2.5 text-center align-middle">${esc(x.date||"-")}</td><td class="p-2.5 text-center align-middle">${esc(x.name||x.payerName||"-")}</td><td class="p-2.5 text-center align-middle">${esc(x.description||x.note||"-")}</td><td class="p-2.5 text-center font-bold text-emerald-700">${money(x.amount)}</td><td class="p-2.5 text-center align-middle">${esc(x.treasurer||x.pujaTreasurer||"-")}</td><td class="p-2.5 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 px-2 py-1 rounded mr-1">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 px-2 py-1 rounded">🗑️</button></td></tr>`).join("");
  const total=allExpenses.reduce((s,x)=>s+Number(x.amount||0),0); document.getElementById("totalExpense").innerText=money(total); document.getElementById("totalExpense2").innerText=money(total);
 }
 window.filterExpenses=()=>{const q=document.getElementById("expenseSearch").value.toLowerCase().trim();renderExpenses(allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.description,x.note,x.treasurer,x.pujaTreasurer,x.date].join(" ").toLowerCase().includes(q)));};
