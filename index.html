@@ -1,63 +1,117 @@
-from pathlib import Path
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>লগইন - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-[#FDFBF7] min-h-screen flex flex-col items-center justify-center p-4 font-sans">
 
-src = Path("/mnt/data/members.html")
-html = src.read_text(encoding="utf-8")
-
-menu_html = r'''
-    <!-- 📊 Dashboard Menu -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-3 mb-4">
-      <button onclick="toggleQuickMenu()" class="w-full flex items-center justify-between text-left">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">📊</span>
-          <span class="font-bold text-gray-800">ড্যাশবোর্ড মেনু</span>
+    <!-- লোগো এবং নিচের বিশেষ ডিজাইন ব্যাজ -->
+    <div class="text-center mb-6">
+        <div id="logoContainer" class="flex justify-center mb-3">
+            <div class="w-28 h-28 rounded-full border-4 border-amber-100 shadow-md bg-white flex items-center justify-center overflow-hidden relative">
+                <!-- লোগো ইমেজ (পাথ ঠিক করা হয়েছে) -->
+                <img src="./Logo.png?v=2" alt="Committee Logo" class="w-full h-full object-cover" onerror="this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');">
+                <!-- ফলব্যাক আইকন -->
+                <div id="fallbackLogo" class="hidden absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-600">
+                    <i class="fa-solid fa-place-of-worship text-3xl"></i>
+                </div>
+            </div>
         </div>
-        <span id="menuArrowIcon" class="text-xl transition-transform duration-300">⌄</span>
-      </button>
-
-      <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-        <button onclick="window.location.href='members.html'" class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200">
-          👥 সদস্য
-        </button>
-        <button onclick="window.location.href='chada.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          💰 চাঁদা
-        </button>
-        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          💵 খরচ
-        </button>
-        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          🎫 বুকিং
-        </button>
-        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          🛒 বিক্রয়
-        </button>
-        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          📊 কোষাধ্যক্ষ
-        </button>
-        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          ⚙️ সেটিংস
-        </button>
-      </div>
+        
+        <div class="inline-block bg-gradient-to-r from-amber-100 via-amber-50 to-amber-100 border border-amber-200/80 px-6 py-2 rounded-2xl shadow-sm">
+            <h1 class="text-lg sm:text-xl font-bold text-[#b45309] tracking-wide">কমিটি ম্যানেজমেন্ট সিস্টেম-২০২৬</h1>
+        </div>
     </div>
-'''
 
-needle = '''    <!-- Member Section -->'''
-if menu_html.strip() not in html:
-    html = html.replace(needle, menu_html + "\n" + needle, 1)
+    <!-- মেইন কার্ড ডিজাইন -->
+    <div class="bg-white w-full max-w-md p-6 sm:p-8 rounded-3xl shadow-xl border border-amber-100 relative">
+        
+        <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">ইমেইল</label>
+                <input type="email" id="email" required placeholder="আপনার ইমেইল লিখুন" class="w-full p-3.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50/30">
+            </div>
 
-script = r'''
-  <script>
-    function toggleQuickMenu() {
-      const content = document.getElementById("quickMenuContent");
-      const arrow = document.getElementById("menuArrowIcon");
-      content.classList.toggle("hidden");
-      arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
-    }
-  </script>
-'''
-if "function toggleQuickMenu()" not in html:
-    html = html.replace("</body>", script + "\n</body>", 1)
+            <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1.5">পাসওয়ার্ড</label>
+                <div class="relative">
+                    <input type="password" id="password" required placeholder="আপনার পাসওয়ার্ড লিখুন" class="w-full p-3.5 pr-10 border border-gray-200 rounded-xl text-sm focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 bg-gray-50/30">
+                    <button type="button" onclick="togglePassword()" class="absolute inset-y-0 right-0 pr-3.5 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none">
+                        <i id="eyeIcon" class="fa-regular fa-eye text-base"></i>
+                    </button>
+                </div>
+            </div>
 
-out = Path("/mnt/data/members_fixed.html")
-out.write_text(html, encoding="utf-8")
-print(f"Created: {out}")
-print("Dashboard menu added successfully.")
+            <button type="submit" id="loginBtn" class="w-full bg-gradient-to-r from-orange-600 via-amber-600 to-orange-600 text-white p-3.5 rounded-xl text-sm font-bold shadow-md hover:opacity-95 transition duration-200 mt-2">
+                লগইন করুন
+            </button>
+        </form>
+
+        <div id="errorMsg" class="mt-3 text-center text-xs text-red-600 font-semibold hidden"></div>
+
+        <!-- স্লোগান -->
+        <div class="mt-6 pt-5 border-t border-gray-100 text-center">
+            <p class="text-xs font-medium text-amber-900/80 tracking-wide">ঐতিহ্য, সম্প্রীতি ও আনন্দ উদযাপনের এক অনন্য প্রয়াস</p>
+        </div>
+    </div>
+
+    <!-- Firebase ও স্ক্রিপ্ট লজিক -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+
+        window.togglePassword = function() {
+            const passwordInput = document.getElementById('password');
+            const eyeIcon = document.getElementById('eyeIcon');
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                eyeIcon.classList.remove('fa-eye');
+                eyeIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                eyeIcon.classList.remove('fa-eye-slash');
+                eyeIcon.classList.add('fa-eye');
+            }
+        }
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+            authDomain: "durgapuja-2026.firebaseapp.com",
+            projectId: "durgapuja-2026",
+            storageBucket: "durgapuja-2026.firebasestorage.app",
+            messagingSenderId: "625976130920",
+            appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        window.handleLogin = async function(event) {
+            event.preventDefault();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorMsg = document.getElementById('errorMsg');
+
+            loginBtn.innerText = "লগইন হচ্ছে...";
+            loginBtn.disabled = true;
+            errorMsg.classList.add('hidden');
+
+            try {
+                await setPersistence(auth, browserSessionPersistence);
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.replace("dashboard.html");
+            } catch (error) {
+                errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে!";
+                errorMsg.classList.remove('hidden');
+                loginBtn.innerText = "লগইন করুন";
+                loginBtn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>
