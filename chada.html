@@ -66,7 +66,20 @@
       #quickMenuContent .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
 
 </style>
-  </head>
+  
+<style id="auth-pending-style">
+  html.auth-pending body { visibility: hidden !important; }
+  html.auth-ready body { visibility: visible !important; }
+</style>
+<script>
+  document.documentElement.classList.add("auth-pending");
+  window.__finishAuthRender = function () {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
+  };
+</script>
+
+</head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
     <button
@@ -883,7 +896,7 @@
         if (user) {
           if (user.email === ADMIN_EMAIL) {
             window.currentUserRole = "admin";
-            window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+            window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
           } else {
             window.currentUserRole = "user";
             try {
@@ -904,6 +917,7 @@
           window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
+          window.__finishAuthRender();
           loadTotalMembersCount();
           loadCommitteeExecutives();
 
@@ -1027,6 +1041,7 @@
         if (permContainer) {
           permContainer.innerHTML = "";
           const permMap = {
+            members: "সদস্য",
             subscription: "চাঁদা সংগ্রহ",
             expense: "খরচ ট্র্যাকিং",
             booking: "টিকিট বুকিং",
