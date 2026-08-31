@@ -76,11 +76,12 @@
 </style>
 
 <style id="auth-pending-style">
-  html.auth-pending body { visibility: hidden !important; }
-  html.auth-ready body { visibility: visible !important; }
+  /* Do not hide the whole application while Firebase restores the session.
+     Protected actions remain guarded by the auth/permission checks. */
+  html.auth-pending body { visibility: visible !important; }
 </style>
 <script>
-  document.documentElement.classList.add("auth-pending");
+  document.documentElement.classList.add("auth-ready");
   window.__finishAuthRender = function () {
     document.documentElement.classList.remove("auth-pending");
     document.documentElement.classList.add("auth-ready");
