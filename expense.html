@@ -4,6 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>দুর্গাপূজা ব্যবস্থাপনা - খরচ</title>
+<!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
+<button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
+<span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span></button>
+<!-- ডেভেলপার মডাল -->
+<div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+<div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+<button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+<div class="text-center mb-4"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div><h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3></div>
+<div class="space-y-2.5 text-xs border-t pt-3">
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
+</div><button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+</div></div>
+<script>
+window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -93,41 +109,10 @@
 </div>
 
 <!-- ফ্লোটিং ডেভেলপার বাটন -->
-<button onclick="openDevModal()" class="fixed bottom-6 right-6 bg-orange-600 text-white w-14 h-14 rounded-full shadow-[0_4px_12px_rgba(234,88,12,0.5)] flex items-center justify-center text-2xl hover:bg-orange-700 transition-colors z-40 border-2 border-white">
-  👨‍💻
-</button>
+
 
 <!-- ডেভেলপার ডিটেইলস মডাল -->
-<div id="devModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl relative">
-    <button onclick="closeDevModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-    </button>
-    <div class="text-center p-6 pb-4">
-      <div class="w-16 h-16 bg-orange-100 rounded-full mx-auto flex items-center justify-center text-3xl mb-3 border border-orange-200">
-        👨‍💻
-      </div>
-      <h3 class="text-lg font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
-    </div>
-    <div class="px-6 pb-6 space-y-3">
-      <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50">
-        <span class="text-gray-600 text-sm font-semibold">নাম:</span>
-        <strong id="devName" class="text-gray-900 text-sm">Manabendra Nath Sarkar</strong>
-      </div>
-      <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50">
-        <span class="text-gray-600 text-sm font-semibold">মোবাইল:</span>
-        <a href="tel:9002652507" id="devPhone" class="text-orange-700 font-bold text-sm">9002652507</a>
-      </div>
-      <div class="flex justify-between items-center border p-3 rounded-lg bg-gray-50 overflow-hidden">
-        <span class="text-gray-600 text-sm font-semibold whitespace-nowrap mr-2">ইমেইল:</span>
-        <a href="mailto:manabendranathsarkar112@gmail.com" id="devEmail" class="text-gray-800 font-bold text-sm truncate">manabendranathsarkar112@gmail.com</a>
-      </div>
-      <button onclick="closeDevModal()" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm">
-        বন্ধ করুন
-      </button>
-    </div>
-  </div>
-</div>
+
 
 <!-- Add/Edit modal -->
 <div id="expenseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
@@ -218,12 +203,10 @@ window.toggleQuickMenu=()=>{
 };
 
 // Developer Modal Handlers
-window.openDevModal=()=>{
-  const m=document.getElementById("devModal");
+
   m.classList.remove("hidden");m.classList.add("flex");
 };
-window.closeDevModal=()=>{
-  const m=document.getElementById("devModal");
+
   m.classList.add("hidden");m.classList.remove("flex");
 };
 
