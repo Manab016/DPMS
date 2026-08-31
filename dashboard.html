@@ -117,6 +117,14 @@
           >
             👥 সদস্য
           </button>
+          <!-- ২. চাঁদা বাটন -->
+          <button
+            id="menu-btn-subscription"
+            onclick="window.location.href='chada.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            💰 চাঁদা
+          </button>
           <button
             id="menu-btn-expense"
             onclick="switchTab('expense')"
@@ -190,7 +198,17 @@
             <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
           </div>
-        </div>
+
+          <!-- ডানে: মোট চাঁদা -->
+          <div
+            id="dash-card-subscription"
+            onclick="window.location.href='chada.html'"
+            class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center"
+          >
+            <div class="text-2xl mb-1">💰</div>
+            <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
+            <div class="text-2xl font-bold mt-1" id="dashTotalSubAmount">₹0</div>
+          </div>
         </div>
 
         <!-- অন্যান্য সেকশন গ্রিড -->
@@ -452,83 +470,6 @@
               <tbody id="historyTableBody"></tbody>
             </table>
           </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 💰 চাঁদা যোগ করার মডাল -->
-    <div id="addSubModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
-      <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
-        <h3 id="subModalTitle" class="text-lg font-bold text-orange-600 mb-4">চাঁদা সংগ্রহ যুক্ত করুন</h3>
-        <input type="hidden" id="editSubDocId" />
-
-        <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ *</label>
-        <input
-          type="date"
-          id="subDate"
-          class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
-        />
-
-        <label class="block text-xs font-semibold text-gray-600 mb-1">প্রদানকারীর ধরণ *</label>
-        <select
-          id="subDonorType"
-          onchange="toggleDonorInputType()"
-          class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white focus:outline-none focus:border-orange-500"
-        >
-          <option value="member">সদস্য</option>
-          <option value="other">অন্যান্য (অ-সদস্য)</option>
-        </select>
-
-        <div id="memberSelectContainer">
-          <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের নাম *</label>
-          <input
-            type="text"
-            id="subMemberNameInput"
-            placeholder="সদস্যের নাম লিখুন"
-            class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white focus:outline-none focus:border-orange-500"
-          />
-        </div>
-
-        <div id="otherNameContainer" class="hidden">
-          <label class="block text-xs font-semibold text-gray-600 mb-1">ব্যক্তির নাম *</label>
-          <input
-            type="text"
-            id="subOtherNameInput"
-            placeholder="নাম লিখুন"
-            class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
-          />
-        </div>
-
-        <label class="block text-xs font-semibold text-gray-600 mb-1">পরিমাণ (₹) *</label>
-        <input
-          type="number"
-          id="subAmountInput"
-          placeholder="টাকার পরিমাণ লিখুন"
-          class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
-        />
-
-        <label class="block text-xs font-semibold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
-        <input
-          type="text"
-          id="subNoteInput"
-          placeholder="যেমন: অগ্রিম চাঁদা"
-          class="w-full p-2.5 border rounded-lg mb-4 text-sm focus:outline-none focus:border-orange-500"
-        />
-
-        <div class="flex justify-end gap-2">
-          <button
-            onclick="closeAddSubModal()"
-            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold"
-          >
-            বাতিল
-          </button>
-          <button
-            onclick="saveOrUpdateSubscription()"
-            id="saveSubBtn"
-            class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold"
-          >
-            সেভ করুন
-          </button>
         </div>
       </div>
     </div>
@@ -920,7 +861,7 @@
           document.getElementById("tabBtnSystem").style.display = "none";
         }
 
-        const allModules = ["expense", "booking", "sales", "treasurer"];
+        const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
         allModules.forEach((mod) => {
           const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
@@ -960,9 +901,12 @@
         });
         const grandTotal = membersAmt + othersAmt;
 
-        document.getElementById("subTotalMembersAmount").innerText = `₹${membersAmt.toLocaleString("en-IN")}`;
-        document.getElementById("subTotalOthersAmount").innerText = `₹${othersAmt.toLocaleString("en-IN")}`;
-        document.getElementById("subGrandTotal").innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+        const subMembersEl = document.getElementById("subTotalMembersAmount");
+        const subOthersEl = document.getElementById("subTotalOthersAmount");
+        const subGrandEl = document.getElementById("subGrandTotal");
+        if (subMembersEl) subMembersEl.innerText = `₹${membersAmt.toLocaleString("en-IN")}`;
+        if (subOthersEl) subOthersEl.innerText = `₹${othersAmt.toLocaleString("en-IN")}`;
+        if (subGrandEl) subGrandEl.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
 
         const dashCardSub = document.querySelector("#dash-card-subscription .text-2xl.font-bold");
         if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
@@ -1436,7 +1380,7 @@
 
       function switchTab(tabName) {
         if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
-        ["dashboard", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
           const el = document.getElementById("section-" + t);
           if (el) el.classList.add("hidden");
         });
