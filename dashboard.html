@@ -19,6 +19,24 @@
         width: auto;
       }
 
+      /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশন (ডান থেকে বামে) */
+      @keyframes autoScroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+      .animate-auto-slide {
+        display: flex;
+        width: max-content;
+        animation: autoScroll 20s linear infinite;
+      }
+      .animate-auto-slide:hover {
+        animation-play-state: paused;
+      }
+
       /* স্ক্রলবার লুকানোর জন্য */
       .hide-scrollbar::-webkit-scrollbar {
         display: none;
@@ -90,65 +108,57 @@
           </div>
         </div>
 
-        <!-- ড্যাশবোর্ড মেনু (ছবির মতো আইকন ও টেক্সট পাশাপাশিসহ সুন্দর গ্রিড বিন্যাস) -->
-        <div id="quickMenuContent" class="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3 transition-all duration-300">
-          <!-- ১. সদস্য বাটন -->
+        <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+          <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
           <button
             id="menu-btn-members"
             onclick="window.location.href='members.html'"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
           >
-            <span class="text-base">👥</span>
-            <span>সদস্য</span>
+            👥 সদস্য
           </button>
           <!-- ২. চাঁদা বাটন -->
           <button
             id="menu-btn-subscription"
             onclick="window.location.href='chada.html'"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">💰</span>
-            <span>চাঁদা</span>
+            💰 চাঁদা
           </button>
           <button
             id="menu-btn-expense"
             onclick="switchTab('expense')"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">💵</span>
-            <span>খরচ</span>
+            💵 খরচ
           </button>
           <button
             id="menu-btn-booking"
             onclick="switchTab('booking')"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">🎫</span>
-            <span>বুকিং</span>
+            🎫 বুকিং
           </button>
           <button
             id="menu-btn-sales"
             onclick="switchTab('sales')"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">🛒</span>
-            <span>বিক্রয়</span>
+            🛒 বিক্রয়
           </button>
           <button
             id="menu-btn-treasurer"
             onclick="switchTab('treasurer')"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">📊</span>
-            <span>কোষাধ্যক্ষ</span>
+            📊 কোষাধ্যক্ষ
           </button>
           <button
             id="quickSettingsBtn"
             onclick="switchTab('settings')"
-            class="bg-gray-50 hover:bg-gray-100 text-gray-800 p-3 rounded-xl text-xs font-bold flex items-center justify-start gap-2.5 border border-gray-200/80 shadow-sm transition"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
-            <span class="text-base">⚙️</span>
-            <span>সেটিংস</span>
+            ⚙️ সেটিংস
           </button>
         </div>
       </div>
@@ -156,22 +166,22 @@
       <!-- ড্যাশবোর্ড সেকশন -->
       <div id="section-dashboard" class="space-y-3">
         
-        <!-- 👑 কমিটির প্রধান পদাধিকারী সেকশন (কম উচ্চতা ও আকর্ষণীয় কমপ্যাক্ট ডিজাইন) -->
+        <!-- 👑 কমিটির প্রধান পদাধিকারী সেকশন -->
         <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
           <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
-            <div class="flex items-center gap-2 font-bold text-xs md:text-sm">
-              <span>👑</span>
-              <span>কমিটির প্রধান পদাধিকারীগণ</span>
+            <div class="flex items-center gap-2 font-bold text-sm md:text-base">
+              <span>👥</span>
+              <span>কমিটির প্রধান পদাধিকারী</span>
             </div>
             <div class="flex items-center gap-2">
               <span id="commArrowIcon" class="text-xs transition-transform duration-300">▼</span>
             </div>
           </div>
 
-          <!-- কমপ্যাক্ট টাচ ও মাউস ড্র্যাগ স্ক্রোলযোগ্য কন্টেইনার -->
-          <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/30 rounded-lg p-1.5 border border-orange-400/30">
-            <div id="committeeTickerContent" class="flex overflow-x-auto gap-2 items-center hide-scrollbar touch-pan-x cursor-grab active:cursor-grabbing">
-              <span class="text-xs text-orange-100 italic px-2">পদাধিকারী তথ্য লোড হচ্ছে...</span>
+          <!-- ডান থেকে বামে স্ক্রোল করা প্রধান পদাধিকারীদের তালিকা -->
+          <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/40 rounded-lg p-2 border border-orange-400/30">
+            <div id="committeeTickerContent" class="animate-auto-slide gap-3 items-center">
+              <span class="text-xs text-orange-100">পদাধিকারী তথ্য লোড হচ্ছে...</span>
             </div>
           </div>
         </div>
@@ -698,7 +708,7 @@
         }
       });
 
-      // 👑 পদাধিকারীদের ডেটা ফেচ ও কমপ্যাক্ট টাচ-ড্র্যাগ স্ক্রোলযোগ্য আধুনিক ডিজাইন রেন্ডার
+      // 👑 পদাধিকারীদের ডেটা ফেচ (committee ও members উভয় কালেকশন থেকেই পদাধিকারী থাকলে স্ক্রোলারে দেখাবে)
       function loadCommitteeExecutives() {
         let committeeList = [];
         let membersList = [];
@@ -709,6 +719,7 @@
 
           const combined = [...committeeList];
 
+          // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
           membersList.forEach((m) => {
             const post = m.designation || m.post || m.role || m.position || "";
             if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
@@ -735,25 +746,22 @@
             const mobile = data.mobile || data.phone || data.contact || "";
 
             itemsHtml += `
-              <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-lg font-bold shadow-sm gap-2 whitespace-nowrap shrink-0 border border-orange-200">
-                <span class="text-orange-600 text-sm">👑</span>
-                <div class="flex flex-col">
-                  <span class="text-[9px] text-gray-500 font-semibold uppercase tracking-wide leading-none mb-0.5">${designation.replace(':', '')}</span>
-                  <span class="text-xs text-gray-900 font-bold leading-tight">${name}</span>
-                </div>
+              <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
+                <span>👑 ${designation}${name}</span>
                 ${
                   mobile
-                    ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2 py-1 rounded text-[10px] font-bold flex items-center gap-1 transition ml-1 shadow-sm">📞 ${mobile}</a>`
+                    ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>`
                     : ""
                 }
               </div>
             `;
           });
 
-          container.innerHTML = itemsHtml;
-          enableDragScroll(container);
+          // মসৃণ স্লাইড অ্যানিমেশনের জন্য দুইবার লোড করা হচ্ছে
+          container.innerHTML = itemsHtml + itemsHtml;
         }
 
+        // committee কালেকশন রিয়েলটাইম লিসেনার
         onSnapshot(collection(db, "committee"), (snapshot) => {
           committeeList = [];
           snapshot.forEach((docSnap) => {
@@ -762,6 +770,7 @@
           renderExecutiveTicker();
         });
 
+        // members কালেকশন রিয়েলটাইম লিসেনার
         onSnapshot(collection(db, "members"), (snapshot) => {
           membersList = [];
           snapshot.forEach((docSnap) => {
@@ -771,37 +780,7 @@
         });
       }
 
-      function enableDragScroll(slider) {
-        let isDown = false;
-        let startX;
-        let scrollLeft;
-
-        slider.addEventListener('mousedown', (e) => {
-          isDown = true;
-          slider.classList.add('cursor-grabbing');
-          startX = e.pageX - slider.offsetLeft;
-          scrollLeft = slider.scrollLeft;
-        });
-
-        slider.addEventListener('mouseleave', () => {
-          isDown = false;
-          slider.classList.remove('cursor-grabbing');
-        });
-
-        slider.addEventListener('mouseup', () => {
-          isDown = false;
-          slider.classList.remove('cursor-grabbing');
-        });
-
-        slider.addEventListener('mousemove', (e) => {
-          if (!isDown) return;
-          e.preventDefault();
-          const x = e.pageX - slider.offsetLeft;
-          const walk = (x - startX) * 2;
-          slider.scrollLeft = scrollLeft - walk;
-        });
-      }
-
+      // 👥 মোট সদস্যের সংখ্যা ফেচ করা
       function loadTotalMembersCount() {
         onSnapshot(collection(db, "members"), (snapshot) => {
           const count = snapshot.size;
@@ -896,6 +875,7 @@
         });
       }
 
+      // --- 💰 চাঁদা সংগ্রহ মডিউল লজিক ---
       function loadSubscriptions() {
         onSnapshot(collection(db, "subscriptions"), (snapshot) => {
           allSubscriptionsData = [];
@@ -979,6 +959,7 @@
         document.getElementById("subOtherNameInput").value = "";
 
         toggleDonorInputType();
+
         document.getElementById("addSubModal").classList.remove("hidden");
       };
 
@@ -1138,6 +1119,7 @@
         document.body.removeChild(a);
       };
 
+      // --- অন্যান্য সাধারণ ফাংশন ---
       function loadAppUsers() {
         onSnapshot(collection(db, "app_users"), (snapshot) => {
           allUsersData = [];
