@@ -66,21 +66,7 @@
       #quickMenuContent .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
 
 </style>
-  
-<style id="auth-pending-style">
-  /* Do not hide the whole application while Firebase restores the session.
-     Protected actions remain guarded by the auth/permission checks. */
-  html.auth-pending body { visibility: visible !important; }
-</style>
-<script>
-  document.documentElement.classList.add("auth-ready");
-  window.__finishAuthRender = function () {
-    document.documentElement.classList.remove("auth-pending");
-    document.documentElement.classList.add("auth-ready");
-  };
-</script>
-
-</head>
+  </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
     <button
@@ -145,7 +131,7 @@
           </button>
           <button
             id="menu-btn-expense"
-            onclick="window.location.replace('dashboard.html?tab=expense')"
+            onclick="window.location.replace('expense.html')"
             class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
           >
             💵 খরচ
@@ -897,7 +883,7 @@
         if (user) {
           if (user.email === ADMIN_EMAIL) {
             window.currentUserRole = "admin";
-            window.userPermissions = ["members", "subscription", "expense", "booking", "sales", "treasurer"];
+            window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
           } else {
             window.currentUserRole = "user";
             try {
@@ -918,7 +904,8 @@
           window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
-          window.__finishAuthRender();
+          loadTotalMembersCount();
+          loadCommitteeExecutives();
 
           if (window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             loadAppUsers();
@@ -1040,7 +1027,6 @@
         if (permContainer) {
           permContainer.innerHTML = "";
           const permMap = {
-            members: "সদস্য",
             subscription: "চাঁদা সংগ্রহ",
             expense: "খরচ ট্র্যাকিং",
             booking: "টিকিট বুকিং",
@@ -1067,16 +1053,10 @@
           if(menuBtnMembers) menuBtnMembers.style.display = "flex";
           if(dashCardMembers) dashCardMembers.style.display = "flex";
         } else {
-          const roleNames = {member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
-          const shownRole = roleNames[window.currentUserRole] || "সাধারণ সদস্য";
-          if (roleBadge) roleBadge.innerText = "রোল: " + shownRole;
-          if (profileBadge) profileBadge.innerText = shownRole;
-          if (adminSubControls) {
-            adminSubControls.classList.toggle("hidden", !window.userPermissions.includes("subscription"));
-          }
-          adminCols.forEach((col) => {
-            col.classList.toggle("hidden", !window.userPermissions.includes("subscription"));
-          });
+          if (roleBadge) roleBadge.innerText = "রোল: User";
+          if (profileBadge) profileBadge.innerText = "User";
+          if (adminSubControls) adminSubControls.classList.add("hidden");
+          adminCols.forEach((col) => col.classList.add("hidden"));
           subActionCols.forEach(
             (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
           );
@@ -1174,7 +1154,6 @@
       };
 
       window.openAddSubModal = function () {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         document.getElementById("subModalTitle").innerText = "নতুন চাঁদা সংগ্রহ যুক্ত করুন";
         document.getElementById("editSubDocId").value = "";
         document.getElementById("subDate").value = new Date().toISOString().split("T")[0];
@@ -1190,7 +1169,6 @@
       };
 
       window.openEditSubModal = function (id) {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         const item = allSubscriptionsData.find((s) => s.id === id);
         if (!item) return;
 
@@ -1228,7 +1206,6 @@
       };
 
       window.saveOrUpdateSubscription = async function () {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         const docId = document.getElementById("editSubDocId").value;
         const date = document.getElementById("subDate").value;
         const donorType = document.getElementById("subDonorType").value;
@@ -1280,7 +1257,6 @@
       };
 
       window.deleteSubscription = async function (id) {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         if (confirm("আপনি কি নিশ্চিতভাবে এই চাঁদার রেকর্ড ডিলিট করতে চান?")) {
           try {
             await deleteDoc(doc(db, "subscriptions", id));
@@ -1291,7 +1267,6 @@
       };
 
       window.deleteAllSubscriptions = async function () {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         if (confirm("সতর্কতা! আপনি কি নিশ্চিতভাবে সমস্ত চাঁদার রেকর্ড মুছে ফেলতে চান?")) {
           try {
             const snap = await getDocs(collection(db, "subscriptions"));
@@ -1630,7 +1605,7 @@
         }
         // All other modules live on dashboard.html. Pass the tab in the URL so the dashboard opens directly.
         if (["expense", "booking", "sales", "treasurer", "settings", "dashboard"].includes(tabName)) {
-          window.location.replace(tabName === "dashboard" ? "dashboard.html" : `dashboard.html?tab=${encodeURIComponent(tabName)}`);
+          window.location.replace(tabName === "expense" ? "expense.html" : (tabName === "dashboard" ? "dashboard.html" : `dashboard.html?tab=${encodeURIComponent(tabName)}`));
           return;
         }
       }
