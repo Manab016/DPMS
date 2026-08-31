@@ -68,11 +68,12 @@
 </style>
   
 <style id="auth-pending-style">
-  html.auth-pending body { visibility: hidden !important; }
-  html.auth-ready body { visibility: visible !important; }
+  /* Do not hide the whole application while Firebase restores the session.
+     Protected actions remain guarded by the auth/permission checks. */
+  html.auth-pending body { visibility: visible !important; }
 </style>
 <script>
-  document.documentElement.classList.add("auth-pending");
+  document.documentElement.classList.add("auth-ready");
   window.__finishAuthRender = function () {
     document.documentElement.classList.remove("auth-pending");
     document.documentElement.classList.add("auth-ready");
@@ -918,8 +919,6 @@
           setupUIBasedOnRoleAndPermissions(user);
           loadSubscriptions();
           window.__finishAuthRender();
-          loadTotalMembersCount();
-          loadCommitteeExecutives();
 
           if (window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             loadAppUsers();
@@ -1068,10 +1067,16 @@
           if(menuBtnMembers) menuBtnMembers.style.display = "flex";
           if(dashCardMembers) dashCardMembers.style.display = "flex";
         } else {
-          if (roleBadge) roleBadge.innerText = "রোল: User";
-          if (profileBadge) profileBadge.innerText = "User";
-          if (adminSubControls) adminSubControls.classList.add("hidden");
-          adminCols.forEach((col) => col.classList.add("hidden"));
+          const roleNames = {member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
+          const shownRole = roleNames[window.currentUserRole] || "সাধারণ সদস্য";
+          if (roleBadge) roleBadge.innerText = "রোল: " + shownRole;
+          if (profileBadge) profileBadge.innerText = shownRole;
+          if (adminSubControls) {
+            adminSubControls.classList.toggle("hidden", !window.userPermissions.includes("subscription"));
+          }
+          adminCols.forEach((col) => {
+            col.classList.toggle("hidden", !window.userPermissions.includes("subscription"));
+          });
           subActionCols.forEach(
             (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
           );
@@ -1169,6 +1174,7 @@
       };
 
       window.openAddSubModal = function () {
+        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         document.getElementById("subModalTitle").innerText = "নতুন চাঁদা সংগ্রহ যুক্ত করুন";
         document.getElementById("editSubDocId").value = "";
         document.getElementById("subDate").value = new Date().toISOString().split("T")[0];
@@ -1184,6 +1190,7 @@
       };
 
       window.openEditSubModal = function (id) {
+        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         const item = allSubscriptionsData.find((s) => s.id === id);
         if (!item) return;
 
@@ -1221,6 +1228,7 @@
       };
 
       window.saveOrUpdateSubscription = async function () {
+        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         const docId = document.getElementById("editSubDocId").value;
         const date = document.getElementById("subDate").value;
         const donorType = document.getElementById("subDonorType").value;
@@ -1272,6 +1280,7 @@
       };
 
       window.deleteSubscription = async function (id) {
+        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         if (confirm("আপনি কি নিশ্চিতভাবে এই চাঁদার রেকর্ড ডিলিট করতে চান?")) {
           try {
             await deleteDoc(doc(db, "subscriptions", id));
@@ -1282,6 +1291,7 @@
       };
 
       window.deleteAllSubscriptions = async function () {
+        if (window.currentUserRole !== "admin" && !window.userPermissions.includes("subscription")) return;
         if (confirm("সতর্কতা! আপনি কি নিশ্চিতভাবে সমস্ত চাঁদার রেকর্ড মুছে ফেলতে চান?")) {
           try {
             const snap = await getDocs(collection(db, "subscriptions"));
