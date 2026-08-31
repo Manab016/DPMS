@@ -877,6 +877,9 @@
       window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
 
       onAuthStateChanged(auth, async (user) => {
+      if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+        try { const chadaAccessDoc = await getDoc(doc(db, "app_users", user.uid)); if (!chadaAccessDoc.exists() || chadaAccessDoc.data().disabled || !(chadaAccessDoc.data().permissions || []).includes("subscription")) { window.location.replace("dashboard.html"); return; } } catch(e) { window.location.replace("dashboard.html"); return; }
+      }
         if (user) {
           if (user.email === ADMIN_EMAIL) {
             window.currentUserRole = "admin";
@@ -886,7 +889,9 @@
             try {
               const userDoc = await getDoc(doc(db, "app_users", user.uid));
               if (userDoc.exists()) {
+                window.currentUserRole = userDoc.data().role || "member";
                 window.userPermissions = userDoc.data().permissions || [];
+                if (userDoc.data().disabled === true || userDoc.data().deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
               } else {
                 window.userPermissions = [];
               }
@@ -902,7 +907,7 @@
           loadTotalMembersCount();
           loadCommitteeExecutives();
 
-          if (window.currentUserRole === "admin") {
+          if (window.currentUserRole === "admin" && (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
             loadAppUsers();
             loadLoginHistory();
           }
@@ -1038,7 +1043,7 @@
         const menuBtnMembers = document.getElementById("menu-btn-members");
         const dashCardMembers = document.getElementById("dash-card-members");
 
-        if (window.currentUserRole === "admin") {
+        if (window.currentUserRole === "admin" && (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
           if (profileBadge) profileBadge.innerText = "Admin";
           if (adminSubControls) adminSubControls.classList.remove("hidden");
@@ -1056,7 +1061,7 @@
             (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
           );
           
-          if(menuBtnMembers) menuBtnMembers.style.display = "none";
+          if(menuBtnMembers) menuBtnMembers.style.display = window.userPermissions.includes("members") ? "flex" : "none";
           if(dashCardMembers) dashCardMembers.style.display = "none";
 
           document.getElementById("tabBtnUsers").style.display = "none";
@@ -1068,7 +1073,7 @@
         allModules.forEach((mod) => {
           const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
-          if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
+          if ((user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase() || window.userPermissions.includes(mod)) {
             if (menuBtn) menuBtn.style.display = "flex";
             if (dashCard) dashCard.style.display = "flex";
           } else {
@@ -1472,7 +1477,7 @@
       };
 
       window.checkAdminPermissionForTab = function (tabName) {
-        if (tabName === "settings" && window.currentUserRole !== "admin") {
+        if (tabName === "settings" && (user?.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
           
           return false;
         }
