@@ -80,7 +80,7 @@
               <th id="actionHead" class="p-2.5 text-center align-middle hidden">অ্যাকশন</th>
             </tr>
           </thead>
-          <tbody id="expenseTableBody"><tr><td colspan="6" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
+          <tbody id="expenseTableBody"><tr><td colspan="8" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -100,6 +100,15 @@
     <input type="number" id="expenseAmount" min="0" step="0.01" placeholder="টাকার পরিমাণ" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
     <label class="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
     <input type="text" id="expenseDescription" placeholder="খরচের বিবরণ" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    <label class="block text-xs font-semibold text-gray-600 mb-1">অগ্রিম দেওয়া টাকা (₹) *</label>
+    <input type="number" id="expenseAdvance" min="0" step="0.01" placeholder="যাকে টাকা দেওয়া হয়েছে" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+
+    <label class="block text-xs font-semibold text-gray-600 mb-1">আসল খরচ (₹) *</label>
+    <input type="number" id="expenseSpent" min="0" step="0.01" placeholder="যত টাকা খরচ হয়েছে" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+
+    <label class="block text-xs font-semibold text-gray-600 mb-1">ফেরত দেওয়া টাকা (₹)</label>
+    <input type="number" id="expenseReturned" min="0" step="0.01" placeholder="বাকি টাকা ফেরত" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+
     <label class="block text-xs font-semibold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
     <input type="text" id="expenseTreasurer" placeholder="নাম" class="w-full p-2.5 border rounded-lg mb-4 text-sm">
     <div class="flex justify-end gap-2">
@@ -121,6 +130,7 @@ const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const ROLE_NAMES={admin:"Admin",member:"সাধারণ সদস্য",user:"সাধারণ সদস্য",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"};
 let allExpenses=[];
 let pujaTreasurerName="";
+let totalSubscriptions=0;
 window.currentUserRole="user";window.userPermissions=[];window.isMasterAdmin=false;
 
 function canManage(){return window.isMasterAdmin || window.userPermissions.includes("expense");}
@@ -134,14 +144,23 @@ window.toggleQuickMenu=()=>document.getElementById("quickMenuContent").classList
 function renderExpenses(list=allExpenses){
  const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
  actionHead.classList.toggle("hidden",!canManage());
- if(!list.length){body.innerHTML='<tr><td colspan="6" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>';}
+ if(!list.length){body.innerHTML='<tr><td colspan="8" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>';}
  else body.innerHTML=list.map(x=>`<tr class="border-b hover:bg-gray-50"><td class="p-2.5 text-center align-middle">${esc(x.date||"-")}</td><td class="p-2.5 text-center align-middle">${esc(x.name||x.payerName||"-")}</td><td class="p-2.5 text-center align-middle">${esc(x.description||x.note||"-")}</td><td class="p-2.5 text-center font-bold text-emerald-700">${money(x.amount)}</td><td class="p-2.5 text-center align-middle">${esc(x.treasurer||x.pujaTreasurer||"-")}</td><td class="p-2.5 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 px-2 py-1 rounded mr-1">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 px-2 py-1 rounded">🗑️</button></td></tr>`).join("");
- const total=allExpenses.reduce((s,x)=>s+Number(x.amount||0),0); document.getElementById("totalExpense").innerText=money(total); document.getElementById("totalExpense2").innerText=money(total);
+ const total=allExpenses.reduce((s,x)=>s+Number(x.spent ?? x.amount ?? 0),0);
+  const advance=allExpenses.reduce((s,x)=>s+Number(x.advance ?? x.amount ?? 0),0);
+  const returned=allExpenses.reduce((s,x)=>s+Number(x.returned ?? 0),0);
+  const outstanding=Math.max(0,advance-total-returned);
+  document.getElementById("totalExpense").innerText=money(total);
+  document.getElementById("totalExpense2").innerText=money(total);
+  document.getElementById("totalAdvance").innerText=money(advance);
+  document.getElementById("totalReturned").innerText=money(returned);
+  document.getElementById("outstandingAdvance").innerText=money(outstanding);
+  document.getElementById("currentFund").innerText=money(totalSubscriptions-total-outstanding);
 }
 window.filterExpenses=()=>{const q=document.getElementById("expenseSearch").value.toLowerCase().trim();renderExpenses(allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.description,x.note,x.treasurer,x.pujaTreasurer,x.date].join(" ").toLowerCase().includes(q)));};
-window.openExpenseModal=()=>{if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}document.getElementById("expenseModalTitle").innerText="খরচ যুক্ত করুন";document.getElementById("expenseDocId").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseName").value="";document.getElementById("expenseAmount").value="";document.getElementById("expenseDescription").value="";document.getElementById("expenseTreasurer").value=pujaTreasurerName||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
+window.openExpenseModal=()=>{if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}document.getElementById("expenseModalTitle").innerText="খরচ যুক্ত করুন";document.getElementById("expenseDocId").value="";document.getElementById("expenseDate").value=new Date().toISOString().slice(0,10);document.getElementById("expenseName").value="";document.getElementById("expenseAmount").value=""; document.getElementById("expenseAdvance").value=""; document.getElementById("expenseSpent").value=""; document.getElementById("expenseReturned").value="";document.getElementById("expenseDescription").value="";document.getElementById("expenseTreasurer").value=pujaTreasurerName||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
 window.closeExpenseModal=()=>{const m=document.getElementById("expenseModal");m.classList.add("hidden");m.classList.remove("flex");};
-window.editExpense=(id)=>{if(!canManage())return;const x=allExpenses.find(e=>e.id===id);if(!x)return;document.getElementById("expenseModalTitle").innerText="খরচ সম্পাদনা";document.getElementById("expenseDocId").value=id;document.getElementById("expenseDate").value=x.date||"";document.getElementById("expenseName").value=x.name||x.payerName||"";document.getElementById("expenseAmount").value=x.amount||"";document.getElementById("expenseDescription").value=x.description||x.note||"";document.getElementById("expenseTreasurer").value=x.treasurer||x.pujaTreasurer||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
+window.editExpense=(id)=>{if(!canManage())return;const x=allExpenses.find(e=>e.id===id);if(!x)return;document.getElementById("expenseModalTitle").innerText="খরচ সম্পাদনা";document.getElementById("expenseDocId").value=id;document.getElementById("expenseDate").value=x.date||"";document.getElementById("expenseName").value=x.name||x.payerName||"";document.getElementById("expenseAmount").value=x.amount||x.spent||""; document.getElementById("expenseAdvance").value=x.advance ?? x.amount ?? ""; document.getElementById("expenseSpent").value=x.spent ?? x.amount ?? ""; document.getElementById("expenseReturned").value=x.returned ?? "";document.getElementById("expenseDescription").value=x.description||x.note||"";document.getElementById("expenseTreasurer").value=x.treasurer||x.pujaTreasurer||"";const m=document.getElementById("expenseModal");m.classList.remove("hidden");m.classList.add("flex");};
 window.saveExpense=async()=>{
  if(!canManage()){alert("আপনার খরচ যোগ করার Permission নেই।");return;}
  const user=auth.currentUser;
@@ -149,13 +168,16 @@ window.saveExpense=async()=>{
  const date=document.getElementById("expenseDate").value;
  const name=document.getElementById("expenseName").value.trim();
  const amount=Number(document.getElementById("expenseAmount").value);
+  const advance=Number(document.getElementById("expenseAdvance").value || amount || 0);
+  const spent=Number(document.getElementById("expenseSpent").value || amount || 0);
+  const returned=Number(document.getElementById("expenseReturned").value || 0);
  const description=document.getElementById("expenseDescription").value.trim();
  const treasurer=document.getElementById("expenseTreasurer").value.trim();
  const id=document.getElementById("expenseDocId").value;
- if(!date||!name||!(amount>0)){alert("দয়া করে তারিখ, প্রাপকের নাম এবং ০-এর বেশি পরিমাণ দিন।");return;}
+ if(!date||!name||!(advance>0)||!(spent>0)||returned<0||Math.abs(advance-spent-returned)>0.01){alert("অগ্রিম টাকা = খরচ + ফেরত টাকা হতে হবে।");return;}
  const b=document.getElementById("saveExpenseBtn");b.disabled=true;b.innerText="সেভ হচ্ছে...";
  try{
-   const data={date,name,amount,description,treasurer,updatedAt:Date.now()};
+   const data={date,name,amount:spent,advance,spent,returned,description,treasurer,updatedAt:Date.now()};
    if(id){await updateDoc(doc(db,"expenses",id),data);}
    else{await addDoc(collection(db,"expenses"),{...data,createdAt:Date.now(),createdBy:user.uid});}
    closeExpenseModal();
@@ -166,7 +188,7 @@ window.saveExpense=async()=>{
  }finally{b.disabled=false;b.innerText="সেভ করুন";}
 };
 window.deleteExpense=async(id)=>{if(!canManage())return;if(!confirm("এই খরচটি ডিলিট করতে চান?"))return;try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}};
-window.exportExpenses=async()=>{if(!allExpenses.length){alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");return;}let csv="তারিখ,প্রাপকের নাম,পরিমাণ (₹),বিবরণ,পূজা কোষাধ্যক্ষ\n";allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||x.payerName||""}","${x.amount||0}","${x.description||x.note||""}","${x.treasurer||x.pujaTreasurer||""}"\n`);const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);};
+window.exportExpenses=async()=>{if(!allExpenses.length){alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");return;}let csv="তারিখ,প্রাপকের নাম,অগ্রিম (₹),খরচ (₹),ফেরত (₹),বিবরণ,পূজা কোষাধ্যক্ষ\n";allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||x.payerName||""}","${x.advance ?? x.amount ?? 0}","${x.spent ?? x.amount ?? 0}","${x.returned ?? 0}","${x.description||x.note||""}","${x.treasurer||x.pujaTreasurer||""}"\n`);const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);};
 
 async function loadPujaTreasurer(){try{const snap=await getDocs(collection(db,"members"));const list=snap.docs.map(d=>d.data());const found=list.find(m=>{const r=String(m.role||m.designation||m.position||m.office||m.committeeRole||"").trim();return r==="পূজা কোষাধ্যক্ষ";});pujaTreasurerName=found?.name||"";}catch(e){pujaTreasurerName="";}}
 
@@ -182,7 +204,8 @@ onAuthStateChanged(auth,async user=>{
  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
  await loadPujaTreasurer();
  const expenseButton=document.getElementById("menu-btn-expense"); if(!canManage()&&!window.userPermissions.includes("expense")){expenseButton.classList.add("hidden");}
- onSnapshot(collection(db,"expenses"),snap=>{allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExpenses();},err=>{console.error(err);document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="6" class="p-8 text-center text-red-500">খরচের তথ্য লোড করা যায়নি</td></tr>';});
+ onSnapshot(collection(db,"expenses"),snap=>{allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));renderExpenses();},err=>{console.error(err);document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="8" class="p-8 text-center text-red-500">খরচের তথ্য লোড করা যায়নি</td></tr>';});
+  onSnapshot(collection(db,"subscriptions"),snap=>{totalSubscriptions=snap.docs.reduce((sum,d)=>sum+Number(d.data().amount||0),0);renderExpenses();});
 });
 </script>
 </body>
