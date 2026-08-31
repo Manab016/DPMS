@@ -131,70 +131,56 @@
 
 <!-- Add/Edit modal -->
 <div id="expenseModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
-  <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl relative max-h-[90vh] overflow-y-auto">
-    <button onclick="closeExpenseModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 z-10">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-    </button>
-    <div class="text-center p-6 pb-4">
-      <h3 id="expenseModalTitle" class="text-lg font-bold text-orange-600">খরচ যুক্ত করুন</h3>
+  <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
+    <h3 id="expenseModalTitle" class="text-lg font-bold text-orange-600 mb-4">খরচ যুক্ত করুন</h3>
+    <input type="hidden" id="expenseDocId">
+    
+    <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ *</label>
+    <input type="date" id="expenseDate" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    
+    <label class="block text-xs font-semibold text-gray-600 mb-1">প্রাপকের নাম (যাকে টাকা দেওয়া হলো) *</label>
+    <input type="text" id="expenseName" placeholder="উদা: রাম দাস" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+    
+    <label class="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
+    <input type="text" id="expenseDescription" placeholder="উদা: ডেকোরেটর বাবদ অগ্রিম" class="w-full p-2.5 border rounded-lg mb-3 text-sm">
+
+    <div class="grid grid-cols-2 gap-2 mb-3">
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">অগ্রিম দেওয়া টাকা (₹) *</label>
+        <input type="number" id="expenseAdvance" min="0" step="0.01" placeholder="5000" class="w-full p-2.5 border rounded-lg text-sm font-bold text-blue-700">
+      </div>
+      <div>
+        <label class="block text-xs font-semibold text-gray-600 mb-1">আসল খরচ (₹)</label>
+        <input type="number" id="expenseSpent" min="0" step="0.01" placeholder="4000 বা 6000" class="w-full p-2.5 border rounded-lg text-sm font-bold text-orange-700">
+      </div>
     </div>
-    <div class="px-6 pb-6 space-y-3">
-      <input type="hidden" id="expenseDocId">
-      
+
+    <div class="grid grid-cols-2 gap-2 mb-3">
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ *</label>
-        <input type="date" id="expenseDate" class="w-full p-2.5 border rounded-lg text-sm">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">অবশিষ্ট ফেরত টাকা (₹)</label>
+        <input type="number" id="expenseReturnExpected" readonly class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 text-emerald-700 font-bold">
       </div>
-      
       <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">প্রাপকের নাম (যাকে টাকা দেওয়া হলো) *</label>
-        <input type="text" id="expenseName" placeholder="উদা: রাম দাস" class="w-full p-2.5 border rounded-lg text-sm">
+        <label class="block text-xs font-semibold text-gray-600 mb-1">ফেরত জমা হলো (₹)</label>
+        <input type="number" id="expenseReturned" readonly class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 text-blue-700 font-bold">
       </div>
-      
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">বিবরণ</label>
-        <input type="text" id="expenseDescription" placeholder="উদা: ডেকোরেটর বাবদ অগ্রিম" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
+    </div>
 
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">অগ্রিম দেওয়া টাকা (₹) *</label>
-          <input type="number" id="expenseAdvance" min="0" step="0.01" placeholder="5000" class="w-full p-2.5 border rounded-lg text-sm font-bold text-blue-700">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">আসল খরচ (₹)</label>
-          <input type="number" id="expenseSpent" min="0" step="0.01" placeholder="4000 বা 6000" class="w-full p-2.5 border rounded-lg text-sm font-bold text-orange-700">
-        </div>
-      </div>
+    <label class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 cursor-pointer">
+      <input type="checkbox" id="expenseReturnDue" onchange="updateReturnCalculation()" class="w-4 h-4">
+      <span class="text-xs md:text-sm font-semibold text-red-700">টাকা ফেরত পাব কিন্তু পাইনি (Due লিস্টে রাখুন)</span>
+    </label>
 
-      <div class="grid grid-cols-2 gap-2">
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">অবশিষ্ট ফেরত টাকা (₹)</label>
-          <input type="number" id="expenseReturnExpected" readonly class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 text-emerald-700 font-bold">
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-600 mb-1">ফেরত জমা হলো (₹)</label>
-          <input type="number" id="expenseReturned" readonly class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 text-blue-700 font-bold">
-        </div>
-      </div>
+    <div id="expenseDuePreview" class="hidden mb-4 p-3 rounded-lg bg-red-100 border border-red-300 text-xs md:text-sm text-red-800">
+      ⚠️ <strong id="duePersonPreview"></strong> এর কাছে বাকি: <strong id="dueAmountPreview">₹0</strong> (Due লিস্টে যোগ হবে)
+    </div>
 
-      <label class="flex items-center gap-2 p-3 rounded-lg bg-red-50 border border-red-200 cursor-pointer">
-        <input type="checkbox" id="expenseReturnDue" onchange="updateReturnCalculation()" class="w-4 h-4">
-        <span class="text-xs md:text-sm font-semibold text-red-700">টাকা ফেরত পাব কিন্তু পাইনি (Due লিস্টে রাখুন)</span>
-      </label>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
+    <input type="text" id="expenseTreasurer" placeholder="কোষাধ্যক্ষের নাম" class="w-full p-2.5 border rounded-lg mb-4 text-sm">
 
-      <div id="expenseDuePreview" class="hidden p-3 rounded-lg bg-red-100 border border-red-300 text-xs md:text-sm text-red-800">
-        ⚠️ <strong id="duePersonPreview"></strong> এর কাছে বাকি: <strong id="dueAmountPreview">₹0</strong> (Due লিস্টে যোগ হবে)
-      </div>
-
-      <div>
-        <label class="block text-xs font-semibold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
-        <input type="text" id="expenseTreasurer" placeholder="কোষাধ্যক্ষের নাম" class="w-full p-2.5 border rounded-lg text-sm">
-      </div>
-
-      <button id="saveExpenseBtn" onclick="saveExpense()" class="w-full mt-2 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm">
-        সেভ করুন
-      </button>
+    <div class="flex justify-end gap-2">
+      <button onclick="closeExpenseModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
+      <button id="saveExpenseBtn" onclick="saveExpense()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold">সেভ করুন</button>
     </div>
   </div>
 </div>
@@ -215,8 +201,9 @@ let pujaTreasurerName="";
 
 window.currentUserRole="user";
 window.userPermissions=[];
+window.isMasterAdmin=false;
 
-function canManage(){return window.currentUserRole === "admin" || window.userPermissions.includes("expense");}
+function canManage(){return window.isMasterAdmin || window.currentUserRole === "admin" || window.userPermissions.includes("expense");}
 function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
 
@@ -245,20 +232,20 @@ function setupUIBasedOnRoleAndPermissions() {
   const menuBtnMembers = document.getElementById("menu-btn-members");
   const quickSettingsBtn = document.getElementById("quickSettingsBtn");
 
-  if (window.currentUserRole === "admin") {
+  if (window.isMasterAdmin || window.currentUserRole === "admin") {
     if (roleBadge) roleBadge.innerText = "রোল: Admin";
     if (menuBtnMembers) menuBtnMembers.style.display = "flex";
     if (quickSettingsBtn) quickSettingsBtn.style.display = "flex";
   } else {
     if (roleBadge) roleBadge.innerText = "রোল: User";
-    if (menuBtnMembers) menuBtnMembers.style.display = "none";
+    if (menuBtnMembers) menuBtnMembers.style.display = window.userPermissions.includes("members") ? "flex" : "none";
     if (quickSettingsBtn) quickSettingsBtn.style.display = "none";
   }
 
   const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
   allModules.forEach((mod) => {
     const menuBtn = document.getElementById(`menu-btn-${mod}`);
-    if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
+    if (window.isMasterAdmin || window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
       if (menuBtn) menuBtn.style.display = "flex";
     } else {
       if (menuBtn) menuBtn.style.display = "none";
@@ -498,21 +485,19 @@ async function loadPujaTreasurer(){
 onAuthStateChanged(auth,async user=>{
  if(!user){window.location.replace("index.html");return;}
  
- if (user.email === ADMIN_EMAIL) {
+ window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+ let userDocData = {};
+ try {
+   const snap = await getDoc(doc(db, "app_users", user.uid));
+   if (snap.exists()) userDocData = snap.data();
+ } catch(e) {}
+
+ if (window.isMasterAdmin) {
    window.currentUserRole = "admin";
-   window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+   window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer", "members"];
  } else {
-   window.currentUserRole = "user";
-   try {
-     const snap = await getDoc(doc(db, "app_users", user.uid));
-     if (snap.exists()) {
-       window.userPermissions = snap.data().permissions || [];
-     } else {
-       window.userPermissions = [];
-     }
-   } catch(e) {
-     window.userPermissions = [];
-   }
+   window.currentUserRole = userDocData.role || "member";
+   window.userPermissions = Array.isArray(userDocData.permissions) ? userDocData.permissions : [];
  }
 
  setupUIBasedOnRoleAndPermissions();
