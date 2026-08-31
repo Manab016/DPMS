@@ -74,11 +74,12 @@
     </style>
   
 <style id="auth-pending-style">
-  html.auth-pending body { visibility: hidden !important; }
-  html.auth-ready body { visibility: visible !important; }
+  /* Do not hide the whole application while Firebase restores the session.
+     Protected actions remain guarded by the auth/permission checks. */
+  html.auth-pending body { visibility: visible !important; }
 </style>
 <script>
-  document.documentElement.classList.add("auth-pending");
+  document.documentElement.classList.add("auth-ready");
   window.__finishAuthRender = function () {
     document.documentElement.classList.remove("auth-pending");
     document.documentElement.classList.add("auth-ready");
@@ -353,7 +354,7 @@
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
-                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">Manabendra Nath Sarkar</p>
+                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">লোড হচ্ছে...</p>
               </div>
             </div>
             <div class="flex items-start gap-4">
@@ -771,6 +772,12 @@ onAuthStateChanged(auth, async (user) => {
           }
 
           logUserLogin(user);
+          try {
+            const profileSnap = await getDoc(doc(db, "app_users", user.uid));
+            window.__pujaProfileName = profileSnap.exists() ? (profileSnap.data().name || "") : "";
+          } catch (_) {
+            window.__pujaProfileName = "";
+          }
           window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
 
@@ -786,7 +793,6 @@ onAuthStateChanged(auth, async (user) => {
           }
 
           window.__finishAuthRender();
-          loadSubscriptions();
           loadTotalMembersCount();
           loadCommitteeExecutives();
 
@@ -812,8 +818,8 @@ onAuthStateChanged(auth, async (user) => {
 
           // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
           membersList.forEach((m) => {
-            const post = m.designation || m.post || m.role || m.position || "";
-            if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
+            const post = m.designation || m.post || m.position || m.office || m.committeeRole || m.role || "";
+            if (post && post.trim() !== "" && !["সাধারণ সদস্য","সদস্য","member","general member"].includes(String(post).trim().toLowerCase())) {
               const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
               if (!exists) {
                 combined.push({
@@ -903,7 +909,8 @@ onAuthStateChanged(auth, async (user) => {
 
         if (profileEmail) profileEmail.innerText = user.email || "ইউজার";
         if (profileName && user.email) {
-          profileName.innerText = user.displayName || user.email.split("@")[0];
+          const cachedName = window.__pujaProfileName || "";
+          profileName.innerText = cachedName || user.displayName || user.email.split("@")[0];
         }
 
         const permContainer = document.getElementById("profilePermissionsContainer");
