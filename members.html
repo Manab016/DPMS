@@ -24,7 +24,7 @@
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
   <div class="max-w-4xl mx-auto">
     
-    <!-- 🏛️ কমিটি হেডিং -->
+    <!-- 🏛️ কমিটি হেডিং (subscription.html এর সেম হেডিং) -->
     <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
       <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
       <p class="text-xs md:text-sm text-gray-700 mt-1">
@@ -37,125 +37,54 @@
         📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
       </p>
     </div>
-    
-    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
-        <div
-          class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer"
-          onclick="toggleQuickMenu()"
-        >
-          <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
-          <div class="flex items-center gap-2">
-            <span
-              id="userRoleBadge"
-              class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner"
-            >
-              রোল: লোড হচ্ছে...
-            </span>
-            <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
-          </div>
-        </div>
 
-        <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-          <!-- ১. সদস্য বাটন -->
-          <button
-            id="menu-btn-members"
-            onclick="window.location.href='members.html'"
-            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
-          >
-            👥 সদস্য
+    <!-- Member Section -->
+    <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+      <div class="flex items-center justify-between mb-4 border-b pb-3">
+        <div class="flex items-center gap-2">
+          <!-- হোম বাটন (Fix: History Loop Prevented) -->
+          <button onclick="window.location.replace('dashboard.html')" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
+            ⬅️ হোম
           </button>
-          <!-- ২. চাঁদা বাটন -->
-          <button
-            id="menu-btn-subscription"
-            onclick="window.location.href='chada.html'"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            💰 চাঁদা
-          </button>
-          <button
-            id="menu-btn-expense"
-            onclick="switchTab('expense')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            💵 খরচ
-          </button>
-          <button
-            id="menu-btn-booking"
-            onclick="switchTab('booking')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            🎫 বুকিং
-          </button>
-          <button
-            id="menu-btn-sales"
-            onclick="switchTab('sales')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            🛒 বিক্রয়
-          </button>
-          <button
-            id="menu-btn-treasurer"
-            onclick="switchTab('treasurer')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            📊 কোষাধ্যক্ষ
-          </button>
-          <button
-            id="quickSettingsBtn"
-            onclick="switchTab('settings')"
-            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
-          >
-            ⚙️ সেটিংস
-          </button>
+          <h2 class="text-lg font-bold text-gray-800">সদস্য ব্যবস্থাপনা</h2>
         </div>
-    </div>
-    
-    <!-- ড্যাশবোর্ড ও সদস্য সেকশন -->
-    <div id="section-dashboard" class="space-y-3">
-      <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-        <div class="flex items-center justify-between mb-4 border-b pb-3">
-          <div class="flex items-center gap-2">
-            <button onclick="window.location.replace('dashboard.html')" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
-              ⬅️ হোম
-            </button>
-            <h2 class="text-lg font-bold text-gray-800">সদস্য ব্যবস্থাপনা</h2>
-          </div>
-          <span class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full" id="totalMembersCount">মোট সদস্য: ০</span>
-        </div>
+        <span class="text-sm font-bold text-gray-600 bg-gray-100 px-3 py-1 rounded-full" id="totalMembersCount">মোট সদস্য: ০</span>
+      </div>
 
-        <div id="adminMemberControls" class="flex flex-wrap gap-2 mb-4 hidden">
-          <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ যোগ করুন</button>
-          <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
-          <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
-        </div>
+      <div id="adminMemberControls" class="flex flex-wrap gap-2 mb-4 hidden">
+        <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ যোগ করুন</button>
+        <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
+        <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
+      </div>
 
-        <div class="flex flex-col md:flex-row gap-2 mb-4">
-          <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-          <select id="villageFilter" onchange="filterMembers()" class="w-full md:w-48 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
-            <option value="">সব গ্রাম (All)</option>
-          </select>
-        </div>
+      <div class="flex flex-col md:flex-row gap-2 mb-4">
+        <!-- সার্চ বক্স -->
+        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <!-- গ্রামের ড্রপডাউন -->
+        <select id="villageFilter" onchange="filterMembers()" class="w-full md:w-48 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
+          <option value="">সব গ্রাম (All)</option>
+        </select>
+      </div>
 
-        <div class="overflow-x-auto border rounded-lg">
-          <table class="w-full text-left border-collapse text-sm">
-            <thead>
-              <tr class="bg-gray-100 text-gray-700 border-b">
-                <th class="p-2.5 border-r text-center align-middle w-10 admin-only-col hidden">
-                  <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="cursor-pointer w-4 h-4" />
-                </th>
-                <th class="p-2.5 border-r text-center align-middle">ID</th>
-                <th class="p-2.5 border-r text-center align-middle">ছবি</th>
-                <th class="p-2.5 border-r text-center align-middle">নাম</th>
-                <th class="p-2.5 border-r text-center align-middle">গ্রাম</th>
-                <th class="p-2.5 border-r text-center align-middle">পদ</th>
-                <th class="p-2.5 border-r text-center align-middle">মোবাইল</th>
-                <th class="p-2.5 border-r text-center align-middle">স্বাক্ষর</th>
-                <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody id="memberTableBody"></tbody>
-          </table>
-        </div>
+      <div class="overflow-x-auto border rounded-lg">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="bg-gray-100 text-gray-700 border-b">
+              <th class="p-2.5 border-r text-center align-middle w-10 admin-only-col hidden">
+                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()" class="cursor-pointer w-4 h-4" />
+              </th>
+              <th class="p-2.5 border-r text-center align-middle">ID</th>
+              <th class="p-2.5 border-r text-center align-middle">ছবি</th>
+              <th class="p-2.5 border-r text-center align-middle">নাম</th>
+              <th class="p-2.5 border-r text-center align-middle">গ্রাম</th>
+              <th class="p-2.5 border-r text-center align-middle">পদ</th>
+              <th class="p-2.5 border-r text-center align-middle">মোবাইল</th>
+              <th class="p-2.5 border-r text-center align-middle">স্বাক্ষর</th>
+              <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="memberTableBody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -263,28 +192,9 @@
     let processedPhotoBase64 = "";
     let processedSigBase64 = "";
 
-    // 📊 ড্যাশবোর্ড মেনু টগল ফাংশন যুক্ত করা হয়েছে
-    window.toggleQuickMenu = function() {
-      const content = document.getElementById("quickMenuContent");
-      const arrow = document.getElementById("menuArrowIcon");
-      if (content) {
-        content.classList.toggle("hidden");
-        if (arrow) {
-          arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
-        }
-      }
-    };
-
     onAuthStateChanged(auth, (user) => {
       if (user) {
         window.currentUserRole = user.email === "bappasarkar1173@gmail.com" ? "admin" : "user";
-        
-        // রোল ব্যাজ আপডেট করার কোড (লোড হচ্ছে সমস্যা সমাধান)
-        const roleBadge = document.getElementById("userRoleBadge");
-        if (roleBadge) {
-          roleBadge.innerText = window.currentUserRole === "admin" ? "রোল: Admin" : "রোল: User";
-        }
-
         if(window.currentUserRole === "admin") {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
