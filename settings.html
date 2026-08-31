@@ -74,6 +74,19 @@
   border-color:#ea580c !important;
 }
 </style>
+
+<style id="auth-pending-style">
+  html.auth-pending body { visibility: hidden !important; }
+  html.auth-ready body { visibility: visible !important; }
+</style>
+<script>
+  document.documentElement.classList.add("auth-pending");
+  window.__finishAuthRender = function () {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
+  };
+</script>
+
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
 <div class="max-w-4xl mx-auto">
@@ -207,7 +220,7 @@
 <tr class="bg-gray-100 text-gray-700 border-b">
 <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
 <th class="p-2.5 border-r text-center align-middle">নাম</th>
-<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
+<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th><th class="p-2.5 border-r text-center align-middle">পাসওয়ার্ড</th>
 <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
 </tr>
 </thead>
@@ -431,27 +444,58 @@ onAuthStateChanged(auth, async (user) => {
 
   window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  if (!window.isMasterAdmin) {
-    // Settings is a master-admin function. No warning popup while auth is resolving.
-    window.location.replace("dashboard.html");
+  let userDocData = {};
+  try {
+    const snap = await getDoc(doc(db, "app_users", user.uid));
+    userDocData = snap.exists() ? snap.data() : {};
+  } catch (e) {
+    userDocData = {};
+  }
+
+  if (userDocData.disabled || userDocData.deleted) {
+    await signOut(auth);
+    window.location.replace("index.html");
     return;
   }
 
-  window.currentUserRole = "admin";
-  window.userPermissions = Object.keys(PERMISSION_NAMES);
-  window.__pujaAuthCache.set(user, "admin", window.userPermissions);
+  window.currentUserRole = window.isMasterAdmin ? "admin" : (userDocData.role || "member");
+  window.userPermissions = window.isMasterAdmin
+    ? Object.keys(PERMISSION_NAMES)
+    : (Array.isArray(userDocData.permissions) ? userDocData.permissions : []);
 
+  window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
+
+  // No hard-coded identity: use the stored app user name first, then Firebase,
+  // and show the email only as a safe fallback.
+  const displayName = (userDocData.name || user.displayName || "").trim();
   document.getElementById("profileEmailDisplay").innerText = user.email || "-";
-  document.getElementById("profileNameDisplay").innerText = (user.displayName && user.displayName.trim()) ? user.displayName : "Admin";
-  document.getElementById("profileRoleBadge").innerText = "Admin";
-  document.getElementById("profilePermissionsContainer").innerHTML = Object.values(PERMISSION_NAMES)
-    .map(x => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${x}</span>`).join("");
+  document.getElementById("profileNameDisplay").innerText = displayName || "নাম দেওয়া নেই";
+  document.getElementById("profileRoleBadge").innerText = ROLE_NAMES[window.currentUserRole] || "সাধারণ সদস্য";
 
-  loadAppUsers();
-  loadLoginHistory();
-  loadDevData();
-  loadClubLogo();
+  const shownPerms = window.userPermissions;
+  document.getElementById("profilePermissionsContainer").innerHTML = shownPerms.length
+    ? shownPerms.map(p => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${PERMISSION_NAMES[p] || p}</span>`).join("")
+    : `<span class="text-xs font-semibold text-red-600">কোনো Permission দেওয়া হয়নি</span>`;
+
+  // Non-admin users can use ONLY Profile, Password Change and Logout.
+  if (!window.isMasterAdmin) {
+    ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add("hidden");
+    });
+  } else {
+    loadAppUsers();
+    loadLoginHistory();
+    loadDevData();
+    loadClubLogo();
+  }
+
   switchSettingsSubTab("profile");
+  window.__finishAuthRender();
 });
 
 function roleName(role) { return ROLE_NAMES[role] || "সাধারণ সদস্য"; }
@@ -647,6 +691,14 @@ window.handlePasswordChange = async function(event) {
 
   try {
     await updatePassword(auth.currentUser, newPass);
+    try {
+      await updateDoc(doc(db, "app_users", auth.currentUser.uid), {
+        passwordChangedAt: Date.now(),
+        passwordChangedBy: auth.currentUser.uid
+      });
+    } catch (e) {
+      console.warn("Password changed in Auth, but profile timestamp update failed:", e);
+    }
     alert("পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!");
     closePasswordModal();
     document.getElementById("changePasswordForm").reset();
