@@ -148,18 +148,18 @@
 <div>
 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
 <p class="text-[17px] font-semibold text-gray-800" id="profileNameDisplay">লোড হচ্ছে...</p>
-<div class="mt-4" id="adminProfileNameEditor">
+<div class="mt-4" id="profileNameEditor">
   <label class="block text-xs font-bold text-gray-700 mb-1">প্রোফাইল নাম</label>
   <div class="flex gap-2">
-    <input id="adminProfileNameInput" type="text"
+    <input id="profileNameInput" type="text"
       class="flex-1 border border-gray-200 rounded-lg px-3 py-2 text-sm"
       placeholder="নাম লিখুন" autocomplete="name">
-    <button id="saveAdminProfileNameBtn" type="button"
+    <button id="saveProfileNameBtn" type="button"
       class="px-4 py-2 rounded-lg bg-gray-900 text-white text-xs font-bold">
       নাম সংরক্ষণ
     </button>
   </div>
-  <p class="text-[10px] text-gray-500 mt-1">নাম না দিলে Profile-এ “Admin” দেখাবে।</p>
+  <p class="text-[10px] text-gray-500 mt-1">নাম না দিলে Profile-এ ব্যবহারকারীর ID/ইমেইলের নাম দেখাবে।</p>
 </div>
 
 </div>
@@ -459,6 +459,10 @@ onAuthStateChanged(auth, async (user) => {
 
   window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
+  // Render a stable identity immediately; Firestore then replaces it with the saved profile name.
+  document.getElementById("profileEmailDisplay").innerText = user.email || "-";
+  document.getElementById("profileNameDisplay").innerText = (user.displayName || (user.email || "").split("@")[0] || "নাম দেওয়া নেই");
+
   let userDocData = {};
   try {
     const snap = await getDoc(doc(db, "app_users", user.uid));
@@ -479,6 +483,7 @@ onAuthStateChanged(auth, async (user) => {
     : (Array.isArray(userDocData.permissions) ? userDocData.permissions : []);
 
   window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
+  try { const cached = window.__pujaAuthCache.get?.() || {}; localStorage.setItem("pujaAuthSessionV2", JSON.stringify({...cached, name:(userDocData.name || user.displayName || "").trim(), savedAt:Date.now()})); } catch (_) {}
 
   // No hard-coded identity: use the stored app user name first, then Firebase,
   // and show the email only as a safe fallback.
@@ -849,6 +854,8 @@ function goMenu(tab) {
     window.location.replace("members.html");
   } else if (tab === "subscription") {
     window.location.replace("chada.html");
+  } else if (tab === "expense") {
+    window.location.replace("expense.html");
   } else if (allowed.includes(tab)) {
     window.location.replace("dashboard.html?tab=" + encodeURIComponent(tab));
   }
@@ -875,7 +882,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const routes = {
       members: "members.html",
       subscription: "chada.html",
-      expense: "dashboard.html?tab=expense",
+      expense: "expense.html",
       booking: "dashboard.html?tab=booking",
       sales: "dashboard.html?tab=sales",
       treasurer: "dashboard.html?tab=treasurer"
@@ -886,60 +893,37 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 
-<script id="admin-profile-name-fix">
+<script id="profile-name-fix">
 (function () {
-  const ADMIN_EMAIL = "admin@pujaapp.com";
-
-  function wireAdminNameEditor(user, data) {
-    const input = document.getElementById("adminProfileNameInput");
-    const btn = document.getElementById("saveAdminProfileNameBtn");
-    if (!input || !btn) return;
-
-    const isMaster = (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
-    if (!isMaster) {
-      input.parentElement.parentElement.style.display = "none";
-      return;
-    }
+  async function wireProfileNameEditor(user, data) {
+    const input = document.getElementById("profileNameInput");
+    const btn = document.getElementById("saveProfileNameBtn");
+    if (!input || !btn || !user) return;
 
     const current = ((data?.name || user?.displayName || "").trim());
     input.value = current;
 
     btn.onclick = async function () {
       const name = input.value.trim();
-      if (!name) {
-        alert("একটি নাম লিখুন।");
-        input.focus();
-        return;
-      }
-
+      if (!name) { alert("একটি নাম লিখুন।"); input.focus(); return; }
       btn.disabled = true;
       try {
-        await updateDoc(doc(db, "app_users", user.uid), {
-          name: name,
-          updatedAt: Date.now()
-        });
-
-        // Keep Firebase Auth displayName in sync when available.
-        try {
-          await updateProfile(user, { displayName: name });
-        } catch (e) {
-          console.warn("Auth displayName update skipped:", e);
-        }
-
+        await updateDoc(doc(db, "app_users", user.uid), { name, updatedAt: Date.now() });
         const profileName = document.getElementById("profileNameDisplay");
         if (profileName) profileName.innerText = name;
-
-        alert("Admin-এর নাম সফলভাবে সংরক্ষণ হয়েছে।");
+        // Keep local session cache in sync so the next page opens without a name flash.
+        try {
+          const cached = window.__pujaAuthCache?.get?.() || {};
+          localStorage.setItem("pujaAuthSessionV2", JSON.stringify({...cached, uid:user.uid, email:user.email||"", name, role:window.currentUserRole, permissions:window.userPermissions, savedAt:Date.now()}));
+        } catch (_) {}
+        alert("প্রোফাইল নাম সফলভাবে সংরক্ষণ হয়েছে।");
       } catch (e) {
         console.error(e);
         alert("নাম সংরক্ষণ করা যায়নি: " + (e?.message || e));
-      } finally {
-        btn.disabled = false;
-      }
+      } finally { btn.disabled = false; }
     };
   }
-
-  window.wireAdminNameEditor = wireAdminNameEditor;
+  window.wireAdminNameEditor = wireProfileNameEditor;
 })();
 </script>
 
