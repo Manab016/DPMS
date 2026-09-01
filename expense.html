@@ -208,8 +208,8 @@ function canManage(){return window.isMasterAdmin || window.currentUserRole === "
 function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
 
-window.goDashboard=()=>window.location.replace("dashboard.html");
-window.goPage=(p)=>window.location.replace(p);
+window.goDashboard=()=>{window.location.href="dashboard.html";};
+window.goPage=(p)=>{window.location.href=p;};
 
 window.toggleQuickMenu=()=>{
   const content = document.getElementById("quickMenuContent");
