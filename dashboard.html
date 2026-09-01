@@ -1,486 +1,343 @@
 <!DOCTYPE html>
 <html lang="bn">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
 
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
-
-  <style>
-    /* Flickering Fix: Body initially hidden until auth resolves */
-    body {
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-    }
-    body.ready {
-      visibility: visible;
-      opacity: 1;
-    }
-
-    #subTableBody td,
-    #subTableBody th {
-      text-align: center;
-      vertical-align: middle;
-      white-space: nowrap;
-      width: auto;
-    }
-
-    @keyframes autoScroll {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-50%); }
-    }
-
-    .animate-auto-slide {
-      display: flex;
-      width: max-content;
-      animation: autoScroll 20s linear infinite;
-    }
-    .animate-auto-slide:hover {
-      animation-play-state: paused;
-    }
-
-    .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-    @media print {
-      body { background: white !important; }
-      body > *:not(#idCardModal) { display: none !important; }
-      .no-print { display: none !important; }
-      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
-    }
-  </style>
-</head>
-
-<body class="bg-amber-50/40 p-3 font-sans pb-20">
-
-  <!-- =========================================================
-       FLOATING DEVELOPER BUTTON
-  ========================================================== -->
-
-  <button
-    onclick="toggleDevModal()"
-    class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
-  >
-    <span class="text-base">👨‍💻</span>
-    <span class="hidden md:inline">ডেভেলপার</span>
-  </button>
-
-  <!-- Developer Modal -->
-  <div
-    id="devModal"
-    class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50"
-  >
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+      #subTableBody td,
+      #subTableBody th {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: auto;
+      }
+      @keyframes autoScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .animate-auto-slide {
+        display: flex;
+        width: max-content;
+        animation: autoScroll 20s linear infinite;
+      }
+      .animate-auto-slide:hover { animation-play-state: paused; }
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      @media print {
+        body { background: white !important; }
+        body > *:not(#idCardModal) { display: none !important; }
+        .no-print { display: none !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    </style>
+  </head>
+  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
+    <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
+    <span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span></button>
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
     <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
-      <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold hover:text-red-500">
-        ✕
-      </button>
+    <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+    <div class="text-center mb-4"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div><h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3></div>
+    <div class="space-y-2.5 text-xs border-t pt-3">
+    <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div>
+    <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div>
+    <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
+    </div><button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+    </div></div>
+    <script>
+    window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
 
-      <div class="text-center mb-4">
-        <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
-          👨‍💻
-        </div>
-        <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+<div class="max-w-4xl mx-auto">
+      <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
+        <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
+        <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
       </div>
 
-      <div class="space-y-2.5 text-xs border-t pt-3">
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">নাম:</span>
-          <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
-        </div>
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">মোবাইল:</span>
-          <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
-        </div>
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">ইমেইল:</span>
-          <a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a>
-        </div>
-      </div>
-
-      <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold hover:bg-orange-700">
-        বন্ধ করুন
-      </button>
-    </div>
-  </div>
-
-  <!-- Developer JS -->
-  <script>
-    window.toggleDevModal = function () {
-      const modal = document.getElementById("devModal");
-      if (!modal) return;
-      const opening = modal.classList.contains("hidden");
-      modal.classList.toggle("hidden");
-      modal.classList.toggle("flex");
-
-      if (!opening) return;
-
-      let data = {};
-      try {
-        data = JSON.parse(localStorage.getItem("pujaDevData") || "{}");
-      } catch (e) {
-        data = {};
-      }
-
-      const name = data.name || localStorage.getItem("pujaDevName") || "Manabendra Nath Sarkar";
-      const mobile = data.mobile || localStorage.getItem("pujaDevMobile") || "9002652507";
-      const email = data.email || localStorage.getItem("pujaDevEmail") || "manabendranathsarkar112@gmail.com";
-
-      const nameEl = document.getElementById("popDevName");
-      const mobileEl = document.getElementById("popDevMobile");
-      const emailEl = document.getElementById("popDevEmail");
-
-      if (nameEl) nameEl.textContent = name;
-      if (mobileEl) {
-        mobileEl.textContent = mobile;
-        mobileEl.href = "tel:" + mobile;
-      }
-      if (emailEl) {
-        emailEl.textContent = email;
-        emailEl.href = "mailto:" + email;
-      }
-    };
-  </script>
-
-
-  <!-- =========================================================
-       MAIN DASHBOARD
-  ========================================================== -->
-
-  <div class="max-w-4xl mx-auto">
-    <!-- Committee Header -->
-    <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-      <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
-      <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
-      <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
-      <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
-    </div>
-
-    <!-- Dashboard Menu -->
-    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
-      <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
-        <span class="text-sm font-bold flex items-center gap-1">📈 ড্যাশবোর্ড মেনু</span>
-        <div class="flex items-center gap-2">
-          <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">
-            রোল: লোড হচ্ছে...
-          </span>
-          <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
-        </div>
-      </div>
-
-      <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-        <button id="menu-btn-members" onclick="window.location.href='members.html'" class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200">
-          👬 সদস্য
-        </button>
-        <button id="menu-btn-subscription" onclick="window.location.href='chada.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          💰 চাঁদা
-        </button>
-        <button id="menu-btn-expense" onclick="window.location.href='expense.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          💵 খরচ
-        </button>
-        <button id="menu-btn-booking" onclick="window.location.href='booking.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          🎫 বুকিং
-        </button>
-        <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          🎫 বিক্রয়
-        </button>
-        <button id="menu-btn-treasurer" onclick="window.location.href='treasurer.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          📊 কোষাধ্যক্ষ
-        </button>
-        <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">
-          ⚙️ সেটিংস
-        </button>
-      </div>
-    </div>
-
-    <!-- Dashboard Section -->
-    <div id="section-dashboard" class="space-y-3">
-      <!-- Committee Executives -->
-      <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
-        <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
-          <div class="flex items-center gap-2 font-bold text-sm md:text-base">
-            <span>👬</span>
-            <span>কমিটির প্রধান পদাধিকারী</span>
-          </div>
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+        <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
+          <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
           <div class="flex items-center gap-2">
-            <span id="commArrowIcon" class="text-xs transition-transform duration-300">▼</span>
+            <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
+            <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
           </div>
         </div>
-        <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/40 rounded-lg p-2 border border-orange-400/30">
-          <div id="committeeTickerContent" class="animate-auto-slide gap-3 items-center">
-            <span class="text-xs text-orange-100">পদাধিকারী তথ্য লোড হচ্ছে...</span>
+
+        <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+          <button id="menu-btn-members" onclick="window.location.href='members.html'" class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200">👬 সদস্য</button>
+          <button id="menu-btn-subscription" onclick="window.location.href='chada.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+          <button id="menu-btn-expense" onclick="window.location.assign('expense.html')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+          <button id="menu-btn-booking" onclick="window.location.href='booking.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+          <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
+          <button id="menu-btn-treasurer" onclick="window.location.href='treasurer.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
+          
+          <!-- সংশোধিত সেটিংস বাটন -->
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+        </div>
+      </div>
+
+      <!-- ড্যাশবোর্ড সেকশন -->
+      <div id="section-dashboard" class="space-y-3">
+        <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
+          <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
+            <div class="flex items-center gap-2 font-bold text-sm md:text-base">
+              <span>👥</span>
+              <span>কমিটির প্রধান পদাধিকারী</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="commArrowIcon" class="text-xs transition-transform duration-300">▼</span>
+            </div>
+          </div>
+          <div id="committeeTickerWrapper" class="overflow-hidden mt-2.5 bg-orange-700/40 rounded-lg p-2 border border-orange-400/30">
+            <div id="committeeTickerContent" class="animate-auto-slide gap-3 items-center">
+              <span class="text-xs text-orange-100">পদাধিকারী তথ্য লোড হচ্ছে...</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div id="dash-card-members" onclick="window.location.href='members.html'" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">👬</div>
+            <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
+            <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
+          </div>
+          <div id="dash-card-subscription" onclick="window.location.href='chada.html'" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">💰</div>
+            <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
+            <div class="text-2xl font-bold mt-1" id="dashTotalSubAmount">₹0</div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div id="dash-card-expense" onclick="window.location.assign('expense.html')" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">💵</div>
+            <div class="text-xs opacity-90">মোট খরচ</div>
+            <div class="text-xl font-bold mt-1" id="dashTotalExpenseAmount">₹0</div>
+          </div>
+          <div id="dash-card-booking" onclick="window.location.href='booking.html'" class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">🎫</div>
+            <div class="text-xs opacity-90">বুকিং</div>
+            <div class="text-xl font-bold mt-1">0</div>
+          </div>
+          <div id="dash-card-sales" onclick="window.location.href='sales.html'" class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">🎫</div>
+            <div class="text-xs opacity-90">বিক্রয়</div>
+            <div class="text-xl font-bold mt-1">0</div>
+          </div>
+           <div id="dash-card-treasurer" onclick="window.location.href='treasurer.html'" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">📊</div>
+            <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
         </div>
       </div>
-
-      <!-- Members / Subscription -->
-      <div class="grid grid-cols-2 gap-3">
-        <div id="dash-card-members" onclick="window.location.href='members.html'" class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">👬</div>
-          <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
-          <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
-        </div>
-        <div id="dash-card-subscription" onclick="window.location.href='chada.html'" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">💰</div>
-          <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
-          <div class="text-2xl font-bold mt-1" id="dashTotalSubAmount">₹0</div>
-        </div>
-      </div>
-
-      <!-- Other Cards -->
-      <div class="grid grid-cols-2 gap-3">
-        <div id="dash-card-expense" onclick="window.location.href='expense.html'" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">💵</div>
-          <div class="text-xs opacity-90">মোট খরচ</div>
-          <div class="text-xl font-bold mt-1" id="dashTotalExpenseAmount">₹0</div>
-        </div>
-        <div id="dash-card-booking" onclick="window.location.href='booking.html'" class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">🎫</div>
-          <div class="text-xs opacity-90">বুকিং</div>
-          <div class="text-xl font-bold mt-1">0</div>
-        </div>
-        <div id="dash-card-sales" onclick="window.location.href='sales.html'" class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">🎫</div>
-          <div class="text-xs opacity-90">বিক্রয়</div>
-          <div class="text-xl font-bold mt-1">0</div>
-        </div>
-        <div id="dash-card-treasurer" onclick="window.location.href='treasurer.html'" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
-          <div class="text-2xl mb-1">📊</div>
-          <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
-        </div>
-      </div>
-
     </div>
-  </div>
+<script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+      import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
+      const firebaseConfig = {
+        apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+        authDomain: "durgapuja-2026.firebaseapp.com",
+        projectId: "durgapuja-2026",
+        storageBucket: "durgapuja-2026.firebasestorage.app",
+        messagingSenderId: "625976130920",
+        appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+      };
 
-  <!-- =========================================================
-       FIREBASE
-  ========================================================== -->
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      setPersistence(auth, browserSessionPersistence).catch(() => {});
+      const db = getFirestore(app);
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-    import { getFirestore, collection, addDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+      let allSubscriptionsData = [];
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
-      authDomain: "durgapuja-2026.firebaseapp.com",
-      projectId: "durgapuja-2026",
-      storageBucket: "durgapuja-2026.firebasestorage.app",
-      messagingSenderId: "625976130920",
-      appId: "1:625976130920:web:60190b21f1c7563cdd2add"
-    };
+      const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+      window.currentUserRole = "user";
+      window.userPermissions = [];
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+      onAuthStateChanged(auth, (user) => {
+  if (!user) {
+    window.location.replace("index.html");
+    return;
+  }
 
-    setPersistence(auth, browserSessionPersistence).catch((error) => {
-      console.warn("Firebase persistence warning:", error);
-    });
+  const isAdmin =
+    (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-    let allSubscriptionsData = [];
-    const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
-    window.currentUserRole = "user";
-    window.userPermissions = [];
+  window.currentUserRole = isAdmin ? "admin" : "user";
+  window.userPermissions = isAdmin
+    ? ["subscription","expense","booking","sales","treasurer","members"]
+    : [];
 
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.replace("index.html");
-        return;
-      }
+  setupUIBasedOnRoleAndPermissions(user);
 
-      // User logged in - show body 
-      document.body.classList.add("ready");
+  if (!isAdmin) {
+    getDoc(doc(db, "app_users", user.uid))
+      .then(snap => {
+        if (!snap.exists()) return;
+        const data = snap.data();
 
-      if ((user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase()) {
-        window.currentUserRole = "admin";
-        window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
-        setupUIBasedOnRoleAndPermissions(user);
-      } else {
-        window.currentUserRole = "user";
-        window.userPermissions = [];
-        setupUIBasedOnRoleAndPermissions(user);
-
-        getDoc(doc(db, "app_users", user.uid)).then((userDoc) => {
-          if (!userDoc.exists()) return;
-          const data = userDoc.data();
-          if (data.disabled === true || data.deleted === true) {
-            window.location.replace("index.html");
-            return;
-          }
-          window.userPermissions = data.permissions || [];
-          setupUIBasedOnRoleAndPermissions(user);
-        }).catch((error) => console.warn("User permission load failed:", error));
-      }
-
-      logUserLogin(user);
-      loadSubscriptions();
-      loadTotalMembersCount();
-      loadTotalExpenseCount();
-      loadCommitteeExecutives();
-    });
-
-    window.toggleQuickMenu = function () {
-      const menu = document.getElementById("quickMenuContent");
-      const arrow = document.getElementById("menuArrowIcon");
-      if (!menu) return;
-      const opening = menu.classList.contains("hidden");
-      menu.classList.toggle("hidden");
-      if (arrow) arrow.style.transform = opening ? "rotate(180deg)" : "rotate(0deg)";
-    };
-
-    window.toggleCommitteeList = function () {
-      const box = document.getElementById("committeeTickerWrapper");
-      const arrow = document.getElementById("commArrowIcon");
-      if (!box) return;
-      const opening = box.classList.contains("hidden");
-      box.classList.toggle("hidden");
-      if (arrow) arrow.style.transform = opening ? "rotate(180deg)" : "rotate(0deg)";
-    };
-
-    function loadCommitteeExecutives() {
-      let committeeList = [];
-      let membersList = [];
-
-      function renderExecutiveTicker() {
-        const container = document.getElementById("committeeTickerContent");
-        if (!container) return;
-
-        const combined = [...committeeList];
-        membersList.forEach((member) => {
-          const post = member.designation || member.post || member.role || member.position || "";
-          if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
-            const exists = combined.some((item) => (item.name || "").trim() === (member.name || "").trim());
-            if (!exists) {
-              combined.push({
-                name: member.name,
-                designation: post,
-                mobile: member.mobile || member.phone || member.contact || ""
-              });
-            }
-          }
-        });
-
-        if (combined.length === 0) {
-          container.innerHTML = `<span class="text-xs text-orange-100 italic px-2">কোনো প্রধান পদাধিকারী যুক্ত নেই</span>`;
+        if (data.disabled === true || data.deleted === true) {
+          window.location.replace("index.html");
           return;
         }
 
-        let itemsHtml = "";
-        combined.forEach((data) => {
-          const designation = data.designation ? `${data.designation}: ` : (data.post ? `${data.post}: ` : "");
-          const name = data.name || "নামহীন";
-          const mobile = data.mobile || data.phone || data.contact || "";
+        window.userPermissions =
+          Array.isArray(data.permissions) ? data.permissions : [];
 
-          itemsHtml += `
-            <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
-              <span>👑 ${designation}${name}</span>
-              ${mobile ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>` : ""}
-            </div>
-          `;
-        });
-        container.innerHTML = itemsHtml + itemsHtml;
-      }
+        setupUIBasedOnRoleAndPermissions(user);
+      })
+      .catch(() => {});
+  }
 
-      onSnapshot(collection(db, "committee"), (snapshot) => {
-        committeeList = [];
-        snapshot.forEach((docSnap) => committeeList.push({ id: docSnap.id, ...docSnap.data() }));
-        renderExecutiveTicker();
-      });
+  logUserLogin(user);
+  loadSubscriptions();
+  loadTotalMembersCount();
+  loadTotalExpenseCount();
+  loadCommitteeExecutives();
+});
 
-      onSnapshot(collection(db, "members"), (snapshot) => {
-        membersList = [];
-        snapshot.forEach((docSnap) => membersList.push({ id: docSnap.id, ...docSnap.data() }));
-        renderExecutiveTicker();
-      });
-    }
+      function loadCommitteeExecutives() {
+        let committeeList = [];
+        let membersList = [];
 
-    function loadTotalMembersCount() {
-      onSnapshot(collection(db, "members"), (snapshot) => {
-        const count = snapshot.size;
-        const element = document.getElementById("dashTotalMembersCount");
-        if (element) element.innerText = count.toLocaleString("en-IN");
-      });
-    }
+        function renderExecutiveTicker() {
+          const container = document.getElementById("committeeTickerContent");
+          if (!container) return;
+          const combined = [...committeeList];
 
-    function loadTotalExpenseCount() {
-      onSnapshot(collection(db, "expenses"), (snapshot) => {
-        let total = 0;
-        snapshot.forEach((docSnap) => {
-          const data = docSnap.data();
-          total += Number(data.spent ?? data.amount ?? 0) || 0;
-        });
-        const element = document.getElementById("dashTotalExpenseAmount");
-        if (element) element.innerText = `₹${total.toLocaleString("en-IN")}`;
-      });
-    }
+          membersList.forEach((m) => {
+            const post = m.designation || m.post || m.role || m.position || "";
+            if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
+              const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
+              if (!exists) {
+                combined.push({ name: m.name, designation: post, mobile: m.mobile || m.phone || m.contact || "" });
+              }
+            }
+          });
 
-    function logUserLogin(user) {
-      addDoc(collection(db, "login_history"), {
-        userId: user.uid,
-        email: user.email,
-        name: user.displayName || (user.email ? user.email.split("@")[0] : "User"),
-        timestamp: Date.now(),
-        device: navigator.userAgent
-      }).catch(err => console.warn(err));
-    }
+          if (combined.length === 0) {
+            container.innerHTML = `<span class="text-xs text-orange-100 italic px-2">কোনো প্রধান পদাধিকারী যুক্ত নেই</span>`;
+            return;
+          }
 
-    function setupUIBasedOnRoleAndPermissions(user) {
-      const roleBadge = document.getElementById("userRoleBadge");
-      if (roleBadge) roleBadge.innerText = window.currentUserRole === "admin" ? "রোল: Admin" : "রোল: User";
+          let itemsHtml = "";
+          combined.forEach((data) => {
+            const designation = data.designation ? `${data.designation}: ` : (data.post ? `${data.post}: ` : "");
+            const name = data.name || "নামহীন";
+            const mobile = data.mobile || data.phone || data.contact || "";
 
-      const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
-      allModules.forEach((moduleName) => {
-        const menuButton = document.getElementById(`menu-btn-${moduleName}`);
-        const dashboardCard = document.getElementById(`dash-card-${moduleName}`);
-        const allowed = window.currentUserRole === "admin" || window.userPermissions.includes(moduleName);
-
-        if (allowed) {
-          if (menuButton) menuButton.style.display = "flex";
-          if (dashboardCard) dashboardCard.style.display = "flex";
-        } else {
-          if (menuButton) menuButton.style.display = "none";
-          if (dashboardCard) dashboardCard.style.display = "none";
+            itemsHtml += `
+              <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
+                <span>👑 ${designation}${name}</span>
+                ${mobile ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>` : ""}
+              </div>
+            `;
+          });
+          container.innerHTML = itemsHtml + itemsHtml;
         }
-      });
-    }
 
-    function loadSubscriptions() {
-      onSnapshot(collection(db, "subscriptions"), (snapshot) => {
-        allSubscriptionsData = [];
-        snapshot.forEach((docSnap) => allSubscriptionsData.push({ id: docSnap.id, ...docSnap.data() }));
-        calculateSubTotals(allSubscriptionsData);
-      });
-    }
+        onSnapshot(collection(db, "committee"), (snapshot) => {
+          committeeList = [];
+          snapshot.forEach((docSnap) => { committeeList.push({ id: docSnap.id, ...docSnap.data() }); });
+          renderExecutiveTicker();
+        });
 
-    function calculateSubTotals(data) {
-      let membersAmount = 0, othersAmount = 0;
-      data.forEach((item) => {
-        const amount = Number(item.amount) || 0;
-        if (item.donorType === "member") membersAmount += amount;
-        else othersAmount += amount;
-      });
-      const grandTotal = membersAmount + othersAmount;
-      const subscriptionCard = document.querySelector("#dash-card-subscription .text-2xl.font-bold");
-      if (subscriptionCard) subscriptionCard.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
-    }
-
-    window.checkAdminPermissionForTab = function (tabName) {
-      return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
-    };
-
-    /* Back Button Cache/Flickering Fix */
-    window.addEventListener("pageshow", function (event) {
-      if (event.persisted) {
-        window.location.reload(); // Reload cleanly when navigating back
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          membersList = [];
+          snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
+          renderExecutiveTicker();
+        });
       }
-    });
-  </script>
-</body>
+
+      function loadTotalMembersCount() {
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          const count = snapshot.size;
+          const el = document.getElementById("dashTotalMembersCount");
+          if (el) el.innerText = count.toLocaleString("en-IN");
+        });
+      }
+
+      function loadTotalExpenseCount() {
+        onSnapshot(collection(db, "expenses"), (snapshot) => {
+          let total = 0;
+          snapshot.forEach((docSnap) => {
+            const d = docSnap.data();
+            total += Number(d.spent ?? d.amount ?? 0) || 0;
+          });
+          const el = document.getElementById("dashTotalExpenseAmount");
+          if (el) el.innerText = `₹${total.toLocaleString("en-IN")}`;
+        });
+      }
+
+      function logUserLogin(user) {
+  addDoc(collection(db, "login_history"), {
+    userId: user.uid,
+    email: user.email,
+    name: user.displayName || (user.email ? user.email.split("@")[0] : "User"),
+    timestamp: Date.now(),
+    device: navigator.userAgent
+  }).catch(() => {});
+});
+        } catch (e) {}
+      }
+
+      function setupUIBasedOnRoleAndPermissions(user) {
+        const roleBadge = document.getElementById("userRoleBadge");
+        if (window.currentUserRole === "admin") {
+          if (roleBadge) roleBadge.innerText = "রোল: Admin";
+        } else {
+          if (roleBadge) roleBadge.innerText = "রোল: User";
+        }
+
+        const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
+        allModules.forEach((mod) => {
+          const menuBtn = document.getElementById(`menu-btn-${mod}`);
+          const dashCard = document.getElementById(`dash-card-${mod}`);
+          if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
+            if (menuBtn) menuBtn.style.display = "flex";
+            if (dashCard) dashCard.style.display = "flex";
+          } else {
+            if (menuBtn) menuBtn.style.display = "none";
+            if (dashCard) dashCard.style.display = "none";
+          }
+        });
+      }
+
+      function loadSubscriptions() {
+        onSnapshot(collection(db, "subscriptions"), (snapshot) => {
+          allSubscriptionsData = [];
+          snapshot.forEach((docSnap) => { allSubscriptionsData.push({ id: docSnap.id, ...docSnap.data() }); });
+          calculateSubTotals(allSubscriptionsData);
+        });
+      }
+
+      function calculateSubTotals(data) {
+        let membersAmt = 0;
+        let othersAmt = 0;
+        data.forEach((item) => {
+          const amt = Number(item.amount) || 0;
+          if (item.donorType === "member") membersAmt += amt;
+          else othersAmt += amt;
+        });
+        const grandTotal = membersAmt + othersAmt;
+        const dashCardSub = document.querySelector("#dash-card-subscription .text-2xl.font-bold");
+        if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+      }
+
+      window.checkAdminPermissionForTab = function (tabName) {
+         return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
+      };
+
+    </script>
+  </body>
 </html>
