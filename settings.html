@@ -101,7 +101,10 @@
   <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer"
        onclick="closeMenu()">
     <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
-    <span id="settingsMenuArrow" class="text-lg font-bold transition-transform duration-300">▼</span>
+    <div class="flex items-center gap-2">
+      <span id="settingsUserRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
+      <span id="settingsMenuArrow" class="text-lg font-bold transition-transform duration-300">▼</span>
+    </div>
   </div>
 
   <div id="settingsMenu" class="grid grid-cols-4 gap-2 mt-3">
@@ -111,7 +114,7 @@
     <button onclick="goMenu('booking')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
     <button onclick="goMenu('sales')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
     <button onclick="goMenu('treasurer')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
-    <button class="bg-orange-600 text-white p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 border border-orange-600">⚙️ সেটিংস</button>
+    <button id="settings-menu-settings" class="dashboard-menu-btn menu-active bg-orange-600 text-white p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 border border-orange-600">⚙️ সেটিংস</button>
   </div>
 </div>
 
@@ -399,6 +402,7 @@ import {
   onAuthStateChanged,
   signOut,
   updatePassword,
+  updateProfile,
   createUserWithEmailAndPassword
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import {
@@ -457,6 +461,18 @@ onAuthStateChanged(auth, async (user) => {
 
   window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
+  // Show the role immediately, then refine it from Firestore.
+  window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
+  window.userPermissions = window.isMasterAdmin
+    ? ["members","subscription","expense","booking","sales","treasurer"]
+    : [];
+
+  const settingsRoleBadge = document.getElementById("settingsUserRoleBadge");
+  if (settingsRoleBadge) {
+    settingsRoleBadge.innerText =
+      window.isMasterAdmin ? "রোল: Admin" : "রোল: সাধারণ সদস্য";
+  }
+
   document.getElementById("profileEmailDisplay").innerText = user.email || "-";
   document.getElementById("profileNameDisplay").innerText = (user.displayName || (user.email || "").split("@")[0] || "নাম দেওয়া নেই");
 
@@ -485,6 +501,13 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("profileEmailDisplay").innerText = user.email || "-";
   document.getElementById("profileNameDisplay").innerText = displayName || "নাম দেওয়া নেই";
   document.getElementById("profileRoleBadge").innerText = ROLE_NAMES[window.currentUserRole] || "সাধারণ সদস্য";
+
+  if (settingsRoleBadge) {
+    settingsRoleBadge.innerText =
+      window.currentUserRole === "admin"
+        ? "রোল: Admin"
+        : "রোল: সাধারণ সদস্য";
+  }
 
   const shownPerms = window.userPermissions;
 
@@ -537,6 +560,12 @@ function wireProfileNameEditor(user, data) {
         name: newName,
         updatedAt: Date.now()
       });
+
+      try {
+        await updateProfile(user, { displayName: newName });
+      } catch (authNameError) {
+        console.warn("Auth displayName update failed:", authNameError);
+      }
 
       const profileNameDisplay = document.getElementById("profileNameDisplay");
       if (profileNameDisplay) profileNameDisplay.innerText = newName;
@@ -884,7 +913,7 @@ function switchSettingsSubTab(subTabName) {
 }
 
 function goDashboard() {
-  window.location.replace("dashboard.html");
+  window.location.href = "dashboard.html";
 }
 
 function goMenu(tab) {
@@ -898,7 +927,7 @@ function goMenu(tab) {
     settings: "settings.html"
   };
   if (routes[tab]) {
-    window.location.replace(routes[tab]);
+    window.location.href = routes[tab];
   }
 }
 
