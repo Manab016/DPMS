@@ -463,9 +463,9 @@ window.deleteExpense=async(id)=>{
  try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}
 };
 
-async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
+async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, dueOnly = false) {
   if (!expenses.length) {
-    alert("কোনো ডেটা নেই!");
+    alert(dueOnly ? "কোনো Due পাওয়া যায়নি!" : "কোনো ডেটা নেই!");
     return;
   }
 
@@ -477,36 +477,27 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
   try {
     const wb = new ExcelJS.Workbook();
     wb.creator = "কমিটি ম্যানেজমেন্ট সিস্টেম";
-    wb.created = new Date();
 
     const ws = wb.addWorksheet(sheetName, {
-      views: [{ showGridLines: false }]
+      views: [{ showGridLines: false }],
+      pageSetup: {
+        paperSize: 9,
+        orientation: "landscape",
+        fitToPage: true,
+        fitToWidth: 1,
+        fitToHeight: 0,
+        horizontalDpi: 300,
+        verticalDpi: 300,
+        margins: {
+          left: 0.25,
+          right: 0.25,
+          top: 0.45,
+          bottom: 0.45,
+          header: 0.2,
+          footer: 0.2
+        }
+      }
     });
-
-    const lastCol = 8;
-    const headers = [
-      "তারিখ",
-      "প্রাপকের নাম",
-      "অগ্রিম (₹)",
-      "আসল খরচ (₹)",
-      "ফেরত (₹)",
-      "Due (₹)",
-      "বিবরণ",
-      "কোষাধ্যক্ষ"
-    ];
-
-    const totalAdvance = expenses.reduce(
-      (s, x) => s + Number(x.advance ?? x.amount ?? 0), 0
-    );
-    const totalExpense = expenses.reduce(
-      (s, x) => s + Number(x.spent ?? x.amount ?? 0), 0
-    );
-    const totalReturned = expenses.reduce(
-      (s, x) => s + Number(x.returned ?? 0), 0
-    );
-    const totalDue = expenses.reduce(
-      (s, x) => s + Number(x.dueAmount ?? 0), 0
-    );
 
     const border = {
       top: { style: "thin", color: { argb: "FF808080" } },
@@ -515,66 +506,54 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
       right: { style: "thin", color: { argb: "FF808080" } }
     };
 
-    const headerFill = {
-      type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFF97316" }
-    };
     const titleFill = {
       type: "pattern", pattern: "solid",
       fgColor: { argb: "FFFFEDD5" }
     };
-    const summaryFill = {
+    const headerFill = {
       type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFFFF3C4" }
+      fgColor: { argb: "FFF97316" }
     };
     const dataFill = {
       type: "pattern", pattern: "solid",
       fgColor: { argb: "FFFFFBEB" }
     };
+    const totalFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFFFF3C4" }
+    };
 
-    // Committee title
+    const fontBase = { name: "Noto Sans Bengali", size: 10 };
+    const fontBold = { name: "Noto Sans Bengali", size: 10, bold: true };
+    const fontTotal = { name: "Noto Sans Bengali", size: 11, bold: true };
+
+    // Title
     ws.mergeCells("A1:H1");
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-    ws.getCell("A1").font = {
-      name: "Noto Sans Bengali",
-      size: 18,
-      bold: true
-    };
-    ws.getCell("A1").alignment = {
-      horizontal: "center",
-      vertical: "middle"
-    };
+    ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
+    ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
     ws.getCell("A1").fill = titleFill;
     ws.getCell("A1").border = border;
     ws.getRow(1).height = 32;
 
-    // Report title
     ws.mergeCells("A2:H2");
     ws.getCell("A2").value = reportTitle;
-    ws.getCell("A2").font = {
-      name: "Noto Sans Bengali",
-      size: 16,
-      bold: true
-    };
-    ws.getCell("A2").alignment = {
-      horizontal: "center",
-      vertical: "middle"
-    };
+    ws.getCell("A2").font = { name: "Noto Sans Bengali", size: 16, bold: true };
+    ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
     ws.getCell("A2").fill = titleFill;
     ws.getCell("A2").border = border;
     ws.getRow(2).height = 28;
 
-    // Header
-    const headerRow = ws.getRow(4);
+    // Use fixed, sensible columns so label and amount stay together.
+    const headers = [
+      "তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)",
+      "ফেরত (₹)", "Due (₹)", "বিবরণ", "কোষাধ্যক্ষ"
+    ];
+
     headers.forEach((h, i) => {
-      const cell = headerRow.getCell(i + 1);
+      const cell = ws.getCell(4, i + 1);
       cell.value = h;
-      cell.font = {
-        name: "Noto Sans Bengali",
-        size: 10,
-        bold: true,
-        color: { argb: "FFFFFFFF" }
-      };
+      cell.font = { ...fontBold, color: { argb: "FFFFFFFF" } };
       cell.fill = headerFill;
       cell.border = border;
       cell.alignment = {
@@ -583,14 +562,23 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
         wrapText: true
       };
     });
-    headerRow.height = 28;
+    ws.getRow(4).height = 30;
 
-    // Data rows
+    let totalAdvance = 0;
+    let totalExpense = 0;
+    let totalReturned = 0;
+    let totalDue = 0;
+
     expenses.forEach(x => {
       const adv = Number(x.advance ?? x.amount ?? 0);
       const spent = Number(x.spent ?? x.amount ?? 0);
       const returned = Number(x.returned ?? 0);
       const due = Number(x.dueAmount ?? 0);
+
+      totalAdvance += adv;
+      totalExpense += spent;
+      totalReturned += returned;
+      totalDue += due;
 
       const row = ws.addRow([
         x.date || "",
@@ -600,14 +588,11 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
         returned,
         due,
         x.description || x.note || "",
-        x.treasurer || x.pujaTreasurer || ""
+        dueOnly ? "" : (x.treasurer || x.pujaTreasurer || "")
       ]);
 
       row.eachCell({ includeEmpty: true }, cell => {
-        cell.font = {
-          name: "Noto Sans Bengali",
-          size: 10
-        };
+        cell.font = fontBase;
         cell.fill = dataFill;
         cell.border = border;
         cell.alignment = {
@@ -622,106 +607,58 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
       });
     });
 
-    // Summary 1: total advance + total returned
-    const r1 = ws.addRow([]);
-    ws.mergeCells(`A${r1.number}:B${r1.number}`);
-    ws.mergeCells(`C${r1.number}:D${r1.number}`);
-    ws.mergeCells(`E${r1.number}:F${r1.number}`);
-    ws.mergeCells(`G${r1.number}:H${r1.number}`);
+    // Summary rows use a fixed label area and a fixed amount area,
+    // instead of merged cells that push the amount far away.
+    const addSummaryRow = (label, amount, amountCol = 6) => {
+      const row = ws.addRow([]);
+      const labelCell = row.getCell(1);
+      const amountCell = row.getCell(amountCol);
 
-    ws.getCell(`A${r1.number}`).value = "সর্বমোট অগ্রিম";
-    ws.getCell(`C${r1.number}`).value = totalAdvance;
-    ws.getCell(`E${r1.number}`).value = "সর্বমোট ফেরত";
-    ws.getCell(`G${r1.number}`).value = totalReturned;
+      labelCell.value = label;
+      amountCell.value = amount;
 
-    for (let col = 1; col <= lastCol; col++) {
-      const cell = r1.getCell(col);
-      cell.border = border;
-      cell.fill = summaryFill;
-      cell.font = {
-        name: "Noto Sans Bengali",
-        size: 10,
-        bold: true
-      };
-      cell.alignment = {
-        horizontal: "center",
-        vertical: "middle"
-      };
+      for (let c = 1; c <= 8; c++) {
+        const cell = row.getCell(c);
+        cell.fill = totalFill;
+        cell.border = border;
+        cell.font = fontTotal;
+        cell.alignment = { horizontal: "center", vertical: "middle" };
+      }
+
+      labelCell.alignment = { horizontal: "left", vertical: "middle" };
+      amountCell.numFmt = '₹#,##0.00';
+      row.height = 24;
+      return row;
+    };
+
+    if (dueOnly) {
+      // Due-only report: only the Due list + one bold total Due row.
+      addSummaryRow("সর্বমোট Due", totalDue, 6);
+    } else {
+      // Full report: all summaries remain available.
+      addSummaryRow("সর্বমোট অগ্রিম", totalAdvance, 3);
+      addSummaryRow("সর্বমোট ফেরত", totalReturned, 5);
+      addSummaryRow("সর্বমোট খরচ", totalExpense, 4);
+      addSummaryRow("সর্বমোট Due", totalDue, 6);
     }
 
-    ws.getCell(`C${r1.number}`).numFmt = '₹#,##0.00';
-    ws.getCell(`G${r1.number}`).numFmt = '₹#,##0.00';
+    // Stable widths: no huge gap between a summary label and its amount.
+    const widths = [14, 22, 16, 18, 15, 15, 30, 20];
+    widths.forEach((w, i) => {
+      ws.getColumn(i + 1).width = w;
+    });
 
-    // Summary 2: total expense
-    const r2 = ws.addRow([]);
-    ws.mergeCells(`A${r2.number}:F${r2.number}`);
-    ws.mergeCells(`G${r2.number}:H${r2.number}`);
-    ws.getCell(`A${r2.number}`).value = "সর্বমোট খরচ";
-    ws.getCell(`G${r2.number}`).value = totalExpense;
+    // Print setup: repeat the report header row on every printed A4 page.
+    ws.pageSetup.printTitlesRow = "4:4";
+    ws.pageSetup.printArea = `A1:H${ws.lastRow.number}`;
+    ws.pageSetup.fitToPage = true;
+    ws.pageSetup.fitToWidth = 1;
+    ws.pageSetup.fitToHeight = 0;
 
-    for (let col = 1; col <= lastCol; col++) {
-      const cell = r2.getCell(col);
-      cell.border = border;
-      cell.fill = summaryFill;
-      cell.font = {
-        name: "Noto Sans Bengali",
-        size: 11,
-        bold: true
-      };
-      cell.alignment = {
-        horizontal: "center",
-        vertical: "middle"
-      };
-    }
-    ws.getCell(`G${r2.number}`).numFmt = '₹#,##0.00';
-
-    // Summary 3: total due
-    const r3 = ws.addRow([]);
-    ws.mergeCells(`A${r3.number}:F${r3.number}`);
-    ws.mergeCells(`G${r3.number}:H${r3.number}`);
-    ws.getCell(`A${r3.number}`).value = "সর্বমোট Due";
-    ws.getCell(`G${r3.number}`).value = totalDue;
-
-    for (let col = 1; col <= lastCol; col++) {
-      const cell = r3.getCell(col);
-      cell.border = border;
-      cell.fill = summaryFill;
-      cell.font = {
-        name: "Noto Sans Bengali",
-        size: 11,
-        bold: true
-      };
-      cell.alignment = {
-        horizontal: "center",
-        vertical: "middle"
-      };
-    }
-    ws.getCell(`G${r3.number}`).numFmt = '₹#,##0.00';
-
-    // Auto-fit columns
-    const minWidths = [13, 20, 15, 16, 14, 13, 28, 20];
-
-    for (let col = 1; col <= lastCol; col++) {
-      let max = minWidths[col - 1];
-
-      ws.getColumn(col).eachCell({ includeEmpty: true }, cell => {
-        const v = cell.value;
-        if (v === null || v === undefined) return;
-
-        const len = String(v)
-          .replace(/\n/g, " ")
-          .length;
-
-        max = Math.max(max, Math.min(len + 3, 42));
-      });
-
-      ws.getColumn(col).width = max;
-    }
-
-    // Complete border on every used cell
-    for (let row = 1; row <= ws.lastRow.number; row++) {
-      for (let col = 1; col <= lastCol; col++) {
-        ws.getCell(row, col).border = border;
+    // Ensure every used cell has all-side borders.
+    for (let r = 1; r <= ws.lastRow.number; r++) {
+      for (let c = 1; c <= 8; c++) {
+        ws.getCell(r, c).border = border;
       }
     }
 
@@ -748,7 +685,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
   }
 }
 
-// 1) Full expense export — আগের মতো সব খরচ
+
 window.exportExpenses = async () => {
   await createExpenseExcel(
     allExpenses,
