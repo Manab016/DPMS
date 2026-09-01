@@ -62,7 +62,8 @@
 
     <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
       <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ খরচের এনট্রি যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 সব খরচ এক্সেল</button>
+      <button onclick="exportDueExpenses()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-amber-700 shadow-sm">📥 Due এক্সেল</button>
     </div>
 
     <div class="mb-4">
@@ -462,27 +463,27 @@ window.deleteExpense=async(id)=>{
  try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}
 };
 
-window.exportExpenses = async () => {
-  if (!allExpenses.length) {
+async function createExpenseExcel(expenses, reportTitle, fileName, sheetName) {
+  if (!expenses.length) {
     alert("কোনো ডেটা নেই!");
     return;
   }
 
-  try {
-    if (typeof ExcelJS === "undefined") {
-      alert("Excel Export চালু হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");
-      return;
-    }
+  if (typeof ExcelJS === "undefined") {
+    alert("Excel Export চালু হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");
+    return;
+  }
 
+  try {
     const wb = new ExcelJS.Workbook();
     wb.creator = "কমিটি ম্যানেজমেন্ট সিস্টেম";
     wb.created = new Date();
 
-    const ws = wb.addWorksheet("খরচ রিপোর্ট", {
+    const ws = wb.addWorksheet(sheetName, {
       views: [{ showGridLines: false }]
     });
 
-    const lastCol = 8; // A:H
+    const lastCol = 8;
     const headers = [
       "তারিখ",
       "প্রাপকের নাম",
@@ -494,16 +495,16 @@ window.exportExpenses = async () => {
       "কোষাধ্যক্ষ"
     ];
 
-    const totalAdvance = allExpenses.reduce(
+    const totalAdvance = expenses.reduce(
       (s, x) => s + Number(x.advance ?? x.amount ?? 0), 0
     );
-    const totalExpense = allExpenses.reduce(
+    const totalExpense = expenses.reduce(
       (s, x) => s + Number(x.spent ?? x.amount ?? 0), 0
     );
-    const totalReturned = allExpenses.reduce(
+    const totalReturned = expenses.reduce(
       (s, x) => s + Number(x.returned ?? 0), 0
     );
-    const totalDue = allExpenses.reduce(
+    const totalDue = expenses.reduce(
       (s, x) => s + Number(x.dueAmount ?? 0), 0
     );
 
@@ -514,24 +515,51 @@ window.exportExpenses = async () => {
       right: { style: "thin", color: { argb: "FF808080" } }
     };
 
-    const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF97316" } };
-    const titleFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFEDD5" } };
-    const summaryFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3C4" } };
-    const dataFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
+    const headerFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFF97316" }
+    };
+    const titleFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFFFEDD5" }
+    };
+    const summaryFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFFFF3C4" }
+    };
+    const dataFill = {
+      type: "pattern", pattern: "solid",
+      fgColor: { argb: "FFFFFBEB" }
+    };
 
-    // Title
+    // Committee title
     ws.mergeCells("A1:H1");
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-    ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
-    ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+    ws.getCell("A1").font = {
+      name: "Noto Sans Bengali",
+      size: 18,
+      bold: true
+    };
+    ws.getCell("A1").alignment = {
+      horizontal: "center",
+      vertical: "middle"
+    };
     ws.getCell("A1").fill = titleFill;
     ws.getCell("A1").border = border;
     ws.getRow(1).height = 32;
 
+    // Report title
     ws.mergeCells("A2:H2");
-    ws.getCell("A2").value = "খরচ রিপোর্ট";
-    ws.getCell("A2").font = { name: "Noto Sans Bengali", size: 16, bold: true };
-    ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
+    ws.getCell("A2").value = reportTitle;
+    ws.getCell("A2").font = {
+      name: "Noto Sans Bengali",
+      size: 16,
+      bold: true
+    };
+    ws.getCell("A2").alignment = {
+      horizontal: "center",
+      vertical: "middle"
+    };
     ws.getCell("A2").fill = titleFill;
     ws.getCell("A2").border = border;
     ws.getRow(2).height = 28;
@@ -539,17 +567,26 @@ window.exportExpenses = async () => {
     // Header
     const headerRow = ws.getRow(4);
     headers.forEach((h, i) => {
-      const c = headerRow.getCell(i + 1);
-      c.value = h;
-      c.font = { name: "Noto Sans Bengali", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
-      c.fill = headerFill;
-      c.border = border;
-      c.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      const cell = headerRow.getCell(i + 1);
+      cell.value = h;
+      cell.font = {
+        name: "Noto Sans Bengali",
+        size: 10,
+        bold: true,
+        color: { argb: "FFFFFFFF" }
+      };
+      cell.fill = headerFill;
+      cell.border = border;
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: true
+      };
     });
     headerRow.height = 28;
 
-    // Data
-    allExpenses.forEach((x) => {
+    // Data rows
+    expenses.forEach(x => {
       const adv = Number(x.advance ?? x.amount ?? 0);
       const spent = Number(x.spent ?? x.amount ?? 0);
       const returned = Number(x.returned ?? 0);
@@ -567,10 +604,17 @@ window.exportExpenses = async () => {
       ]);
 
       row.eachCell({ includeEmpty: true }, cell => {
-        cell.font = { name: "Noto Sans Bengali", size: 10 };
+        cell.font = {
+          name: "Noto Sans Bengali",
+          size: 10
+        };
         cell.fill = dataFill;
         cell.border = border;
-        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+        cell.alignment = {
+          horizontal: "center",
+          vertical: "middle",
+          wrapText: true
+        };
       });
 
       [3, 4, 5, 6].forEach(col => {
@@ -578,82 +622,103 @@ window.exportExpenses = async () => {
       });
     });
 
-    // Totals: advance + returned in one bordered row.
+    // Summary 1: total advance + total returned
     const r1 = ws.addRow([]);
     ws.mergeCells(`A${r1.number}:B${r1.number}`);
     ws.mergeCells(`C${r1.number}:D${r1.number}`);
     ws.mergeCells(`E${r1.number}:F${r1.number}`);
     ws.mergeCells(`G${r1.number}:H${r1.number}`);
 
-    const pairs = [
-      [`A${r1.number}`, "সর্বমোট অগ্রিম", "C" + r1.number, totalAdvance],
-      [`E${r1.number}`, "সর্বমোট ফেরত", "G" + r1.number, totalReturned]
-    ];
-
     ws.getCell(`A${r1.number}`).value = "সর্বমোট অগ্রিম";
     ws.getCell(`C${r1.number}`).value = totalAdvance;
     ws.getCell(`E${r1.number}`).value = "সর্বমোট ফেরত";
     ws.getCell(`G${r1.number}`).value = totalReturned;
 
-    ["A","C","E","G"].forEach(col => {
-      const cell = ws.getCell(`${col}${r1.number}`);
-      cell.font = { name: "Noto Sans Bengali", size: 10, bold: true };
-      cell.fill = summaryFill;
-      cell.border = border;
-      cell.alignment = { horizontal: "center", vertical: "middle" };
-      if (col === "C" || col === "G") cell.numFmt = '₹#,##0.00';
-    });
-
-    // Apply borders/fill to all cells in merged summary row.
     for (let col = 1; col <= lastCol; col++) {
       const cell = r1.getCell(col);
       cell.border = border;
       cell.fill = summaryFill;
+      cell.font = {
+        name: "Noto Sans Bengali",
+        size: 10,
+        bold: true
+      };
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle"
+      };
     }
 
-    // Separate, bold total expense and total due rows.
+    ws.getCell(`C${r1.number}`).numFmt = '₹#,##0.00';
+    ws.getCell(`G${r1.number}`).numFmt = '₹#,##0.00';
+
+    // Summary 2: total expense
     const r2 = ws.addRow([]);
     ws.mergeCells(`A${r2.number}:F${r2.number}`);
     ws.mergeCells(`G${r2.number}:H${r2.number}`);
     ws.getCell(`A${r2.number}`).value = "সর্বমোট খরচ";
     ws.getCell(`G${r2.number}`).value = totalExpense;
+
     for (let col = 1; col <= lastCol; col++) {
       const cell = r2.getCell(col);
       cell.border = border;
       cell.fill = summaryFill;
-      cell.font = { name: "Noto Sans Bengali", size: 11, bold: true };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.font = {
+        name: "Noto Sans Bengali",
+        size: 11,
+        bold: true
+      };
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle"
+      };
     }
     ws.getCell(`G${r2.number}`).numFmt = '₹#,##0.00';
 
+    // Summary 3: total due
     const r3 = ws.addRow([]);
     ws.mergeCells(`A${r3.number}:F${r3.number}`);
     ws.mergeCells(`G${r3.number}:H${r3.number}`);
     ws.getCell(`A${r3.number}`).value = "সর্বমোট Due";
     ws.getCell(`G${r3.number}`).value = totalDue;
+
     for (let col = 1; col <= lastCol; col++) {
       const cell = r3.getCell(col);
       cell.border = border;
       cell.fill = summaryFill;
-      cell.font = { name: "Noto Sans Bengali", size: 11, bold: true };
-      cell.alignment = { horizontal: "center", vertical: "middle" };
+      cell.font = {
+        name: "Noto Sans Bengali",
+        size: 11,
+        bold: true
+      };
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle"
+      };
     }
     ws.getCell(`G${r3.number}`).numFmt = '₹#,##0.00';
 
-    // Auto-fit columns using actual displayed content.
+    // Auto-fit columns
     const minWidths = [13, 20, 15, 16, 14, 13, 28, 20];
+
     for (let col = 1; col <= lastCol; col++) {
       let max = minWidths[col - 1];
+
       ws.getColumn(col).eachCell({ includeEmpty: true }, cell => {
         const v = cell.value;
         if (v === null || v === undefined) return;
-        const len = String(v).replace(/\n/g, " ").length;
+
+        const len = String(v)
+          .replace(/\n/g, " ")
+          .length;
+
         max = Math.max(max, Math.min(len + 3, 42));
       });
+
       ws.getColumn(col).width = max;
     }
 
-    // Ensure every used cell has a complete all-side border.
+    // Complete border on every used cell
     for (let row = 1; row <= ws.lastRow.number; row++) {
       for (let col = 1; col <= lastCol; col++) {
         ws.getCell(row, col).border = border;
@@ -665,14 +730,13 @@ window.exportExpenses = async () => {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     });
 
-    const filename = "খরচ-রিপোর্ট.xlsx";
     if (typeof saveAs === "function") {
-      saveAs(blob, filename);
+      saveAs(blob, fileName);
     } else {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = filename;
+      a.download = fileName;
       document.body.appendChild(a);
       a.click();
       a.remove();
@@ -682,7 +746,37 @@ window.exportExpenses = async () => {
     console.error("Excel export error:", e);
     alert("Excel রিপোর্ট তৈরি করতে সমস্যা হয়েছে।");
   }
+}
+
+// 1) Full expense export — আগের মতো সব খরচ
+window.exportExpenses = async () => {
+  await createExpenseExcel(
+    allExpenses,
+    "খরচ রিপোর্ট",
+    "খরচ-রিপোর্ট.xlsx",
+    "খরচ রিপোর্ট"
+  );
 };
+
+// 2) Due-only export — শুধু যাদের Due আছে
+window.exportDueExpenses = async () => {
+  const dueExpenses = allExpenses.filter(
+    x => Number(x.dueAmount ?? 0) > 0
+  );
+
+  if (!dueExpenses.length) {
+    alert("কোনো Due পাওয়া যায়নি!");
+    return;
+  }
+
+  await createExpenseExcel(
+    dueExpenses,
+    "Due রিপোর্ট",
+    "Due-রিপোর্ট.xlsx",
+    "Due রিপোর্ট"
+  );
+};
+
 
 async function loadPujaTreasurer(){
  try{
