@@ -7,6 +7,7 @@
 
 <!-- ফিক্সড লোডিং এবং ফ্লিকারিং -->
 <style>
+  html { background-color: #fffbf0; visibility: visible; opacity: 1; }
   #expenseTable td, #expenseTable th { vertical-align: middle; white-space: nowrap; text-align: center; }
   .hide-scrollbar::-webkit-scrollbar { display: none; }
   .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
@@ -67,7 +68,7 @@ window.toggleDevModal = function() {
     <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
     <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
     <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
-    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702">৯৯৩৩৩৭১৭০২</a></p>
+    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702">৯৯৩৩৩৩৭১৭০২</a></p>
   </div>
 
   <!-- ড্যাশবোর্ড মেনু -->
@@ -109,7 +110,7 @@ window.toggleDevModal = function() {
 
     <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
       <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ খরচের এনট্রি যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সপোর্ট CSV</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
     </div>
 
     <div class="mb-4">
@@ -501,7 +502,7 @@ onAuthStateChanged(auth,async user=>{
        document.getElementById("popDevMobile").href = "tel:" + data.phone;
      }
      if (data.email) {
-       document.getElementById("popDevEmail").innerText = data.email;
+       document.getElementById("popdevEmail").innerText = data.email;
        document.getElementById("popDevEmail").href = "mailto:" + data.email;
      }
    }
