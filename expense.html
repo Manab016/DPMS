@@ -62,7 +62,7 @@
 
     <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
       <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ খরচের এনট্রি যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সপোর্ট CSV</button>
+      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
     </div>
 
     <div class="mb-4">
@@ -185,30 +185,6 @@
   </div>
 </div>
 
-
-<!-- Navigation is intentionally outside the Firebase module so buttons work
-     even while Firebase/auth data is loading. -->
-<script>
-(function () {
-  function go(url) {
-    try {
-      const target = new URL(url, window.location.href);
-      window.location.href = target.href;
-    } catch (e) {
-      window.location.href = url;
-    }
-  }
-
-  window.goDashboard = function () {
-    go("dashboard.html");
-  };
-
-  window.goPage = function (page) {
-    go(page);
-  };
-})();
-</script>
-
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,setPersistence,browserSessionPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -217,7 +193,7 @@ import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-setPersistence(auth,browserSessionPersistence).catch(()=>{});
+setPersistence(auth,browserSessionPersistence);
 
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 let allExpenses=[];
@@ -230,6 +206,9 @@ window.isMasterAdmin=false;
 function canManage(){return window.isMasterAdmin || window.currentUserRole === "admin" || window.userPermissions.includes("expense");}
 function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
+
+window.goDashboard=()=>window.location.replace("dashboard.html");
+window.goPage=(p)=>window.location.replace(p);
 
 window.toggleQuickMenu=()=>{
   const content = document.getElementById("quickMenuContent");
@@ -483,152 +462,226 @@ window.deleteExpense=async(id)=>{
  try{await deleteDoc(doc(db,"expenses",id));}catch(e){alert("ত্রুটি: "+e.message);}
 };
 
-window.exportExpenses=async()=>{
- if(!allExpenses.length){alert("কোনো ডেটা নেই!");return;}
+window.exportExpenses = async () => {
+  if (!allExpenses.length) {
+    alert("কোনো ডেটা নেই!");
+    return;
+  }
 
- try{
-   const workbook=new ExcelJS.Workbook();
-   const ws=workbook.addWorksheet("খরচ রিপোর্ট");
+  try {
+    if (typeof ExcelJS === "undefined") {
+      alert("Excel Export চালু হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");
+      return;
+    }
 
-   // Column setup: wide enough for content, then auto-fit below.
-   const headers=["SR","প্রাপকের নাম","অগ্রিম (₹)","আসল খরচ (₹)","ফেরত (₹)","Due (₹)","বিবরণ","কোষাধ্যক্ষ"];
-   ws.mergeCells("A1:H1");
-   ws.mergeCells("A2:H2");
-   ws.getCell("A1").value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-   ws.getCell("A2").value="খরচ রিপোর্ট";
+    const wb = new ExcelJS.Workbook();
+    wb.creator = "কমিটি ম্যানেজমেন্ট সিস্টেম";
+    wb.created = new Date();
 
-   const titleStyle={
-     font:{name:"Noto Sans Bengali",size:14,bold:true,color:{argb:"FF000000"}},
-     alignment:{horizontal:"center",vertical:"middle",wrapText:true}
-   };
-   const reportStyle={
-     font:{name:"Noto Sans Bengali",size:12,bold:true,color:{argb:"FF000000"}},
-     alignment:{horizontal:"center",vertical:"middle",wrapText:true}
-   };
-   ws.getCell("A1").style=titleStyle;
-   ws.getCell("A2").style=reportStyle;
-   ws.getRow(1).height=25;
-   ws.getRow(2).height=22;
+    const ws = wb.addWorksheet("খরচ রিপোর্ট", {
+      views: [{ showGridLines: false }]
+    });
 
-   const headerRow=ws.getRow(3);
-   headers.forEach((h,i)=>headerRow.getCell(i+1).value=h);
+    const lastCol = 8; // A:H
+    const headers = [
+      "তারিখ",
+      "প্রাপকের নাম",
+      "অগ্রিম (₹)",
+      "আসল খরচ (₹)",
+      "ফেরত (₹)",
+      "Due (₹)",
+      "বিবরণ",
+      "কোষাধ্যক্ষ"
+    ];
 
-   const orange="FFF97316";
-   const lightGray="FFF9F9F9";
-   const lightYellow="FFFEF3C7";
-   const white="FFFFFFFF";
-   const black="FF000000";
+    const totalAdvance = allExpenses.reduce(
+      (s, x) => s + Number(x.advance ?? x.amount ?? 0), 0
+    );
+    const totalExpense = allExpenses.reduce(
+      (s, x) => s + Number(x.spent ?? x.amount ?? 0), 0
+    );
+    const totalReturned = allExpenses.reduce(
+      (s, x) => s + Number(x.returned ?? 0), 0
+    );
+    const totalDue = allExpenses.reduce(
+      (s, x) => s + Number(x.dueAmount ?? 0), 0
+    );
 
-   const thin={style:"thin",color:{argb:black}};
-   const medium={style:"medium",color:{argb:black}};
+    const border = {
+      top: { style: "thin", color: { argb: "FF808080" } },
+      left: { style: "thin", color: { argb: "FF808080" } },
+      bottom: { style: "thin", color: { argb: "FF808080" } },
+      right: { style: "thin", color: { argb: "FF808080" } }
+    };
 
-   // Header: orange fill, white bold text, complete border.
-   headerRow.eachCell((cell)=>{
-     cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};
-     cell.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:white}};
-     cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
-     cell.border={top:medium,left:thin,bottom:thin,right:thin};
-   });
-   headerRow.getCell(1).border={top:medium,left:medium,bottom:thin,right:thin};
-   headerRow.getCell(headers.length).border={top:medium,left:thin,bottom:thin,right:medium};
-   headerRow.height=28;
+    const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF97316" } };
+    const titleFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFEDD5" } };
+    const summaryFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3C4" } };
+    const dataFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
 
-   let totalSpent=0;
-   let totalDue=0;
+    // Title
+    ws.mergeCells("A1:H1");
+    ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+    ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
+    ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
+    ws.getCell("A1").fill = titleFill;
+    ws.getCell("A1").border = border;
+    ws.getRow(1).height = 32;
 
-   allExpenses.forEach((x,index)=>{
-     const advance=Number(x.advance ?? x.amount ?? 0);
-     const spent=Number(x.spent ?? x.amount ?? 0);
-     const returned=Number(x.returned ?? 0);
-     const due=Number(x.dueAmount ?? 0);
+    ws.mergeCells("A2:H2");
+    ws.getCell("A2").value = "খরচ রিপোর্ট";
+    ws.getCell("A2").font = { name: "Noto Sans Bengali", size: 16, bold: true };
+    ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
+    ws.getCell("A2").fill = titleFill;
+    ws.getCell("A2").border = border;
+    ws.getRow(2).height = 28;
 
-     totalSpent += spent;
-     totalDue += due;
+    // Header
+    const headerRow = ws.getRow(4);
+    headers.forEach((h, i) => {
+      const c = headerRow.getCell(i + 1);
+      c.value = h;
+      c.font = { name: "Noto Sans Bengali", size: 10, bold: true, color: { argb: "FFFFFFFF" } };
+      c.fill = headerFill;
+      c.border = border;
+      c.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+    });
+    headerRow.height = 28;
 
-     const row=ws.addRow([
-       index+1,
-       x.name || x.payerName || "",
-       advance,
-       spent,
-       returned,
-       due,
-       x.description || x.note || "",
-       x.treasurer || x.pujaTreasurer || ""
-     ]);
+    // Data
+    allExpenses.forEach((x) => {
+      const adv = Number(x.advance ?? x.amount ?? 0);
+      const spent = Number(x.spent ?? x.amount ?? 0);
+      const returned = Number(x.returned ?? 0);
+      const due = Number(x.dueAmount ?? 0);
 
-     row.eachCell((cell,col)=>{
-       cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:lightGray}};
-       cell.font={name:"Noto Sans Bengali",size:10,color:{argb:black}};
-       cell.alignment={horizontal:"center",vertical:"center",wrapText:true};
-       cell.border={top:thin,left:thin,bottom:thin,right:thin};
-     });
+      const row = ws.addRow([
+        x.date || "",
+        x.name || x.payerName || "",
+        adv,
+        spent,
+        returned,
+        due,
+        x.description || x.note || "",
+        x.treasurer || x.pujaTreasurer || ""
+      ]);
 
-     // Outer left/right borders stay slightly stronger like the reference report.
-     row.getCell(1).border={top:thin,left:medium,bottom:thin,right:thin};
-     row.getCell(headers.length).border={top:thin,left:thin,bottom:thin,right:medium};
+      row.eachCell({ includeEmpty: true }, cell => {
+        cell.font = { name: "Noto Sans Bengali", size: 10 };
+        cell.fill = dataFill;
+        cell.border = border;
+        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+      });
 
-     for(const col of [3,4,5,6]){
-       row.getCell(col).numFmt='₹#,##0.00';
-     }
-     row.height=22;
-   });
+      [3, 4, 5, 6].forEach(col => {
+        row.getCell(col).numFmt = '₹#,##0.00';
+      });
+    });
 
-   // Bold totals at the bottom, with the same yellow summary style.
-   const totalExpenseRow=ws.addRow(["","সর্বমোট খরচ",null,totalSpent,null,null,"",""]);
-   const totalDueRow=ws.addRow(["","সর্বমোট Due",null,null,null,totalDue,"",""]);
+    // Totals: advance + returned in one bordered row.
+    const r1 = ws.addRow([]);
+    ws.mergeCells(`A${r1.number}:B${r1.number}`);
+    ws.mergeCells(`C${r1.number}:D${r1.number}`);
+    ws.mergeCells(`E${r1.number}:F${r1.number}`);
+    ws.mergeCells(`G${r1.number}:H${r1.number}`);
 
-   [totalExpenseRow,totalDueRow].forEach((row)=>{
-     row.eachCell((cell,col)=>{
-       cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:lightYellow}};
-       cell.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:black}};
-       cell.alignment={horizontal:col===2?"right":"center",vertical:"center",wrapText:true};
-       cell.border={top:thin,left:thin,bottom:medium,right:thin};
-     });
-     row.getCell(1).border={top:thin,left:medium,bottom:medium,right:thin};
-     row.getCell(headers.length).border={top:thin,left:thin,bottom:medium,right:medium};
-     row.height=23;
-   });
-   totalExpenseRow.getCell(4).numFmt='₹#,##0.00';
-   totalDueRow.getCell(6).numFmt='₹#,##0.00';
+    const pairs = [
+      [`A${r1.number}`, "সর্বমোট অগ্রিম", "C" + r1.number, totalAdvance],
+      [`E${r1.number}`, "সর্বমোট ফেরত", "G" + r1.number, totalReturned]
+    ];
 
-   // Auto-fit all columns to their content, with sensible min/max widths.
-   const minWidths=[8,18,14,16,13,13,22,20];
-   const maxWidths=[8,32,18,20,18,18,42,30];
+    ws.getCell(`A${r1.number}`).value = "সর্বমোট অগ্রিম";
+    ws.getCell(`C${r1.number}`).value = totalAdvance;
+    ws.getCell(`E${r1.number}`).value = "সর্বমোট ফেরত";
+    ws.getCell(`G${r1.number}`).value = totalReturned;
 
-   for(let c=1;c<=headers.length;c++){
-     let maxLen=0;
-     ws.getColumn(c).eachCell({includeEmpty:true},cell=>{
-       const v=cell.value;
-       let len=0;
-       if(v!==null && v!==undefined){
-         const lines=String(v).split("\\n");
-         len=Math.max(...lines.map(s=>s.length));
-       }
-       maxLen=Math.max(maxLen,len);
-     });
-     ws.getColumn(c).width=Math.min(
-       maxWidths[c-1],
-       Math.max(minWidths[c-1],maxLen+2)
-     );
-   }
+    ["A","C","E","G"].forEach(col => {
+      const cell = ws.getCell(`${col}${r1.number}`);
+      cell.font = { name: "Noto Sans Bengali", size: 10, bold: true };
+      cell.fill = summaryFill;
+      cell.border = border;
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+      if (col === "C" || col === "G") cell.numFmt = '₹#,##0.00';
+    });
 
-   ws.views=[{state:"frozen",ySplit:3}];
-   ws.pageSetup.orientation="landscape";
-   ws.pageSetup.fitToPage=true;
-   ws.pageSetup.fitToWidth=1;
-   ws.pageSetup.fitToHeight=0;
-   ws.pageMargins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+    // Apply borders/fill to all cells in merged summary row.
+    for (let col = 1; col <= lastCol; col++) {
+      const cell = r1.getCell(col);
+      cell.border = border;
+      cell.fill = summaryFill;
+    }
 
-   const buffer=await workbook.xlsx.writeBuffer();
-   const blob=new Blob([buffer],{
-     type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-   });
+    // Separate, bold total expense and total due rows.
+    const r2 = ws.addRow([]);
+    ws.mergeCells(`A${r2.number}:F${r2.number}`);
+    ws.mergeCells(`G${r2.number}:H${r2.number}`);
+    ws.getCell(`A${r2.number}`).value = "সর্বমোট খরচ";
+    ws.getCell(`G${r2.number}`).value = totalExpense;
+    for (let col = 1; col <= lastCol; col++) {
+      const cell = r2.getCell(col);
+      cell.border = border;
+      cell.fill = summaryFill;
+      cell.font = { name: "Noto Sans Bengali", size: 11, bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    }
+    ws.getCell(`G${r2.number}`).numFmt = '₹#,##0.00';
 
-   saveAs(blob,"খরচ-রিপোর্ট.xlsx");
- }catch(e){
-   console.error("Export error:",e);
-   alert("রিপোর্ট এক্সপোর্ট করা যায়নি।");
- }
+    const r3 = ws.addRow([]);
+    ws.mergeCells(`A${r3.number}:F${r3.number}`);
+    ws.mergeCells(`G${r3.number}:H${r3.number}`);
+    ws.getCell(`A${r3.number}`).value = "সর্বমোট Due";
+    ws.getCell(`G${r3.number}`).value = totalDue;
+    for (let col = 1; col <= lastCol; col++) {
+      const cell = r3.getCell(col);
+      cell.border = border;
+      cell.fill = summaryFill;
+      cell.font = { name: "Noto Sans Bengali", size: 11, bold: true };
+      cell.alignment = { horizontal: "center", vertical: "middle" };
+    }
+    ws.getCell(`G${r3.number}`).numFmt = '₹#,##0.00';
+
+    // Auto-fit columns using actual displayed content.
+    const minWidths = [13, 20, 15, 16, 14, 13, 28, 20];
+    for (let col = 1; col <= lastCol; col++) {
+      let max = minWidths[col - 1];
+      ws.getColumn(col).eachCell({ includeEmpty: true }, cell => {
+        const v = cell.value;
+        if (v === null || v === undefined) return;
+        const len = String(v).replace(/\n/g, " ").length;
+        max = Math.max(max, Math.min(len + 3, 42));
+      });
+      ws.getColumn(col).width = max;
+    }
+
+    // Ensure every used cell has a complete all-side border.
+    for (let row = 1; row <= ws.lastRow.number; row++) {
+      for (let col = 1; col <= lastCol; col++) {
+        ws.getCell(row, col).border = border;
+      }
+    }
+
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    });
+
+    const filename = "খরচ-রিপোর্ট.xlsx";
+    if (typeof saveAs === "function") {
+      saveAs(blob, filename);
+    } else {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+  } catch (e) {
+    console.error("Excel export error:", e);
+    alert("Excel রিপোর্ট তৈরি করতে সমস্যা হয়েছে।");
+  }
 };
 
 async function loadPujaTreasurer(){
@@ -643,100 +696,52 @@ async function loadPujaTreasurer(){
  }catch(e){pujaTreasurerName="";}
 }
 
-onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("index.html");
-    return;
-  }
+onAuthStateChanged(auth,async user=>{
+ if(!user){window.location.replace("index.html");return;}
+ 
+ window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+ let userDocData = {};
+ try {
+   const snap = await getDoc(doc(db, "app_users", user.uid));
+   if (snap.exists()) userDocData = snap.data();
+ } catch(e) {}
 
-  // Make the page/navigation usable immediately.
-  window.isMasterAdmin =
-    (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+ if (window.isMasterAdmin) {
+   window.currentUserRole = "admin";
+   window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer", "members"];
+ } else {
+   window.currentUserRole = userDocData.role || "member";
+   window.userPermissions = Array.isArray(userDocData.permissions) ? userDocData.permissions : [];
+ }
 
-  if (window.isMasterAdmin) {
-    window.currentUserRole = "admin";
-    window.userPermissions = [
-      "subscription","expense","booking","sales","treasurer","members"
-    ];
-  } else {
-    window.currentUserRole = "member";
-    window.userPermissions = [];
-  }
+ setupUIBasedOnRoleAndPermissions();
+ document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
+ await loadPujaTreasurer();
 
-  setupUIBasedOnRoleAndPermissions();
-
-  const controls = document.getElementById("expenseControls");
-  if (controls) controls.classList.toggle("hidden", !canManage());
-
-  // Start the expense listener immediately; nothing here should block navigation.
-  onSnapshot(collection(db, "expenses"), snap => {
-    allExpenses = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-    renderExpenses();
-  }, err => {
-    console.error("Expenses listener:", err);
-    const body = document.getElementById("expenseTableBody");
-    if (body) {
-      body.innerHTML =
-        '<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
-    }
-  });
-
-  // Load user permissions in the background.
-  if (!window.isMasterAdmin) {
-    getDoc(doc(db, "app_users", user.uid))
-      .then(snap => {
-        if (!snap.exists()) return;
-
-        const data = snap.data();
-
-        if (data.disabled === true || data.deleted === true) {
-          window.location.replace("index.html");
-          return;
-        }
-
-        window.currentUserRole = data.role || "member";
-        window.userPermissions =
-          Array.isArray(data.permissions) ? data.permissions : [];
-
-        setupUIBasedOnRoleAndPermissions();
-
-        if (controls) {
-          controls.classList.toggle("hidden", !canManage());
-        }
-
-        renderExpenses();
-      })
-      .catch(err => console.error("Permission load:", err));
-  }
-
-  // Treasurer and developer information load independently in the background.
-  loadPujaTreasurer()
-    .then(() => {
-      const field = document.getElementById("expenseTreasurer");
-      if (field && !field.value) field.value = pujaTreasurerName || "";
-    })
-    .catch(() => {});
-
-  onSnapshot(doc(db, "settings", "developerInfo"), docSnap => {
-    if (!docSnap.exists()) return;
-
-    const data = docSnap.data();
-
-    const name = document.getElementById("devName");
-    const phone = document.getElementById("devPhone");
-    const email = document.getElementById("devEmail");
-
-    if (name && data.name) name.innerText = data.name;
-
-    if (phone && data.phone) {
-      phone.innerText = data.phone;
-      phone.href = "tel:" + data.phone;
-    }
-
-    if (email && data.email) {
-      email.innerText = data.email;
-      email.href = "mailto:" + data.email;
-    }
-  }, err => console.error("Developer info:", err));
+ // রিয়েল-টাইম ডেভেলপার ইনফো লোডার (সেটিংস থেকে)
+ onSnapshot(doc(db, "settings", "developerInfo"), (docSnap) => {
+   if (docSnap.exists()) {
+     const data = docSnap.data();
+     if (data.name) document.getElementById("devName").innerText = data.name;
+     if (data.phone) {
+       document.getElementById("devPhone").innerText = data.phone;
+       document.getElementById("devPhone").href = "tel:" + data.phone;
+     }
+     if (data.email) {
+       document.getElementById("devEmail").innerText = data.email;
+       document.getElementById("devEmail").href = "mailto:" + data.email;
+     }
+   }
+ });
+ 
+ onSnapshot(collection(db, "expenses"),snap=>{
+   allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+   renderExpenses();
+ },err=>{
+   console.error(err);
+   document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
+ });
 });
 </script>
+</body>
+</html>
