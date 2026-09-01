@@ -185,6 +185,30 @@
   </div>
 </div>
 
+
+<!-- Navigation is intentionally outside the Firebase module so buttons work
+     even while Firebase/auth data is loading. -->
+<script>
+(function () {
+  function go(url) {
+    try {
+      const target = new URL(url, window.location.href);
+      window.location.href = target.href;
+    } catch (e) {
+      window.location.href = url;
+    }
+  }
+
+  window.goDashboard = function () {
+    go("dashboard.html");
+  };
+
+  window.goPage = function (page) {
+    go(page);
+  };
+})();
+</script>
+
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,setPersistence,browserSessionPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -193,7 +217,7 @@ import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 
-setPersistence(auth,browserSessionPersistence).catch(() => {});
+setPersistence(auth,browserSessionPersistence).catch(()=>{});
 
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 let allExpenses=[];
@@ -206,9 +230,6 @@ window.isMasterAdmin=false;
 function canManage(){return window.isMasterAdmin || window.currentUserRole === "admin" || window.userPermissions.includes("expense");}
 function money(v){return "₹"+Number(v||0).toLocaleString("en-IN",{maximumFractionDigits:2});}
 function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]));}
-
-window.goDashboard=()=>window.location.assign("dashboard.html");
-window.goPage=(p)=>window.location.assign(p);
 
 window.toggleQuickMenu=()=>{
   const content = document.getElementById("quickMenuContent");
@@ -488,81 +509,44 @@ onAuthStateChanged(auth, (user) => {
     return;
   }
 
+  // Make the page/navigation usable immediately.
   window.isMasterAdmin =
     (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
-  // Give the page a usable permission state immediately.
-  window.currentUserRole =
-    window.isMasterAdmin ? "admin" : "member";
-
-  window.userPermissions =
-    window.isMasterAdmin
-      ? ["subscription","expense","booking","sales","treasurer","members"]
-      : [];
+  if (window.isMasterAdmin) {
+    window.currentUserRole = "admin";
+    window.userPermissions = [
+      "subscription","expense","booking","sales","treasurer","members"
+    ];
+  } else {
+    window.currentUserRole = "member";
+    window.userPermissions = [];
+  }
 
   setupUIBasedOnRoleAndPermissions();
 
   const controls = document.getElementById("expenseControls");
   if (controls) controls.classList.toggle("hidden", !canManage());
 
-  // IMPORTANT: start the expenses listener immediately.
-  onSnapshot(
-    collection(db, "expenses"),
-    snap => {
-      allExpenses = snap.docs.map(d => ({ id:d.id, ...d.data() }));
-      renderExpenses();
-    },
-    err => {
-      console.error("Expenses listener:", err);
-      const body = document.getElementById("expenseTableBody");
-      if (body) {
-        body.innerHTML =
-          '<tr><td colspan="8" class="p-8 text-center text-red-500">খরচের তথ্য লোড করা যায়নি</td></tr>';
-      }
+  // Start the expense listener immediately; nothing here should block navigation.
+  onSnapshot(collection(db, "expenses"), snap => {
+    allExpenses = snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    renderExpenses();
+  }, err => {
+    console.error("Expenses listener:", err);
+    const body = document.getElementById("expenseTableBody");
+    if (body) {
+      body.innerHTML =
+        '<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
     }
-  );
+  });
 
-  // Treasurer lookup is optional/background and cannot block the page.
-  loadPujaTreasurer()
-    .then(() => {
-      const field = document.getElementById("expenseTreasurer");
-      if (field && !field.value) {
-        field.value = pujaTreasurerName || "";
-      }
-    })
-    .catch(() => {});
-
-  // Developer information is also optional/background.
-  onSnapshot(
-    doc(db, "settings", "developerInfo"),
-    snap => {
-      if (!snap.exists()) return;
-      const data = snap.data();
-
-      const name = document.getElementById("devName");
-      const phone = document.getElementById("devPhone");
-      const email = document.getElementById("devEmail");
-
-      if (name && data.name) name.innerText = data.name;
-
-      if (phone && data.phone) {
-        phone.innerText = data.phone;
-        phone.href = "tel:" + data.phone;
-      }
-
-      if (email && data.email) {
-        email.innerText = data.email;
-        email.href = "mailto:" + data.email;
-      }
-    },
-    () => {}
-  );
-
-  // Normal-user permissions are loaded in the background.
+  // Load user permissions in the background.
   if (!window.isMasterAdmin) {
     getDoc(doc(db, "app_users", user.uid))
       .then(snap => {
         if (!snap.exists()) return;
+
         const data = snap.data();
 
         if (data.disabled === true || data.deleted === true) {
@@ -582,18 +566,37 @@ onAuthStateChanged(auth, (user) => {
 
         renderExpenses();
       })
-      .catch(() => {});
+      .catch(err => console.error("Permission load:", err));
   }
-});
- 
- onSnapshot(collection(db, "expenses"),snap=>{
-   allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));
-   renderExpenses();
- },err=>{
-   console.error(err);
-   document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
- });
+
+  // Treasurer and developer information load independently in the background.
+  loadPujaTreasurer()
+    .then(() => {
+      const field = document.getElementById("expenseTreasurer");
+      if (field && !field.value) field.value = pujaTreasurerName || "";
+    })
+    .catch(() => {});
+
+  onSnapshot(doc(db, "settings", "developerInfo"), docSnap => {
+    if (!docSnap.exists()) return;
+
+    const data = docSnap.data();
+
+    const name = document.getElementById("devName");
+    const phone = document.getElementById("devPhone");
+    const email = document.getElementById("devEmail");
+
+    if (name && data.name) name.innerText = data.name;
+
+    if (phone && data.phone) {
+      phone.innerText = data.phone;
+      phone.href = "tel:" + data.phone;
+    }
+
+    if (email && data.email) {
+      email.innerText = data.email;
+      email.href = "mailto:" + data.email;
+    }
+  }, err => console.error("Developer info:", err));
 });
 </script>
-</body>
-</html>
