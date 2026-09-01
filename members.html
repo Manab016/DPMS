@@ -86,7 +86,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <div class="flex items-center justify-between mb-4 border-b pb-3">
         <div class="flex items-center gap-2">
           <!-- হোম বাটন (Fix: History Loop Prevented) -->
-          <button onclick="window.location.replace('dashboard.html')" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
+          <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">
             ⬅️ হোম
           </button>
           <h2 class="text-lg font-bold text-gray-800">সদস্য ব্যবস্থাপনা</h2>
@@ -269,7 +269,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
     onAuthStateChanged(auth, async (user) => {
         if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-          try { const accessDoc = await getDoc(doc(db, "app_users", user.uid)); if (!accessDoc.exists() || accessDoc.data().disabled || !(accessDoc.data().permissions || []).includes("members")) { window.location.replace("dashboard.html"); return; } } catch(e) { window.location.replace("dashboard.html"); return; }
+          try { const accessDoc = await getDoc(doc(db, "app_users", user.uid)); if (!accessDoc.exists() || accessDoc.data().disabled || !(accessDoc.data().permissions || []).includes("members")) { window.location.href = "dashboard.html"; return; } } catch(e) { window.location.href = "dashboard.html"; return; }
         }
       if (user) {
         window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -319,15 +319,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.goMemberMenu = function(tabName) {
-      if (tabName === "members") { window.location.replace("members.html"); return; }
-      if (tabName === "subscription") { window.location.replace("chada.html"); return; }
-      if (tabName === "expense") { if (window.isMasterAdmin || window.userPermissions.includes("expense")) window.location.replace("expense.html"); return; }
+      if (tabName === "members") { window.location.href = "members.html"; return; }
+      if (tabName === "subscription") { window.location.href = "chada.html"; return; }
+      if (tabName === "expense") { if (window.isMasterAdmin || window.userPermissions.includes("expense")) window.location.href = "expense.html"; return; }
       if (["booking", "sales", "treasurer"].includes(tabName)) {
         if (window.currentUserRole !== "admin" && !window.userPermissions.includes(tabName)) return;
-        window.location.replace(`dashboard.html?tab=${encodeURIComponent(tabName)}`);
+        window.location.href = `dashboard.html?tab=${encodeURIComponent(tabName)}`;
         return;
       }
-      window.location.replace("dashboard.html");
+      window.location.href = "dashboard.html";
     };
 
     function loadMembers() {
