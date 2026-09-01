@@ -478,6 +478,9 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const wb = new ExcelJS.Workbook();
     wb.creator = "কমিটি ম্যানেজমেন্ট সিস্টেম";
 
+    // Due report uses exactly 4 columns:
+    // Date | Name | Due | Due purpose
+    // Full report keeps the complete expense information.
     const ws = wb.addWorksheet(sheetName, {
       views: [{ showGridLines: false }],
       pageSetup: {
@@ -489,12 +492,8 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
         horizontalDpi: 300,
         verticalDpi: 300,
         margins: {
-          left: 0.25,
-          right: 0.25,
-          top: 0.45,
-          bottom: 0.45,
-          header: 0.2,
-          footer: 0.2
+          left: 0.25, right: 0.25, top: 0.45, bottom: 0.45,
+          header: 0.2, footer: 0.2
         }
       }
     });
@@ -506,29 +505,19 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       right: { style: "thin", color: { argb: "FF808080" } }
     };
 
-    const titleFill = {
-      type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFFFEDD5" }
-    };
-    const headerFill = {
-      type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFF97316" }
-    };
-    const dataFill = {
-      type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFFFFBEB" }
-    };
-    const totalFill = {
-      type: "pattern", pattern: "solid",
-      fgColor: { argb: "FFFFF3C4" }
-    };
+    const titleFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFEDD5" } };
+    const headerFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF97316" } };
+    const dataFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFFBEB" } };
+    const totalFill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF3C4" } };
 
-    const fontBase = { name: "Noto Sans Bengali", size: 10 };
-    const fontBold = { name: "Noto Sans Bengali", size: 10, bold: true };
-    const fontTotal = { name: "Noto Sans Bengali", size: 11, bold: true };
+    const baseFont = { name: "Noto Sans Bengali", size: 10 };
+    const boldFont = { name: "Noto Sans Bengali", size: 10, bold: true };
+    const totalFont = { name: "Noto Sans Bengali", size: 11, bold: true };
 
-    // Title
-    ws.mergeCells("A1:H1");
+    const columnCount = dueOnly ? 4 : 8;
+    const lastCol = dueOnly ? "D" : "H";
+
+    ws.mergeCells(`A1:${lastCol}1`);
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
     ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
     ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
@@ -536,7 +525,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     ws.getCell("A1").border = border;
     ws.getRow(1).height = 32;
 
-    ws.mergeCells("A2:H2");
+    ws.mergeCells(`A2:${lastCol}2`);
     ws.getCell("A2").value = reportTitle;
     ws.getCell("A2").font = { name: "Noto Sans Bengali", size: 16, bold: true };
     ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
@@ -544,30 +533,21 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     ws.getCell("A2").border = border;
     ws.getRow(2).height = 28;
 
-    // Use fixed, sensible columns so label and amount stay together.
-    const headers = [
-      "তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)",
-      "ফেরত (₹)", "Due (₹)", "বিবরণ", "কোষাধ্যক্ষ"
-    ];
+    const headers = dueOnly
+      ? ["তারিখ", "নাম", "Due (₹)", "কী বাবদ Due"]
+      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "ফেরত (₹)", "Due (₹)", "বিবরণ", "কোষাধ্যক্ষ"];
 
     headers.forEach((h, i) => {
       const cell = ws.getCell(4, i + 1);
       cell.value = h;
-      cell.font = { ...fontBold, color: { argb: "FFFFFFFF" } };
+      cell.font = { ...boldFont, color: { argb: "FFFFFFFF" } };
       cell.fill = headerFill;
       cell.border = border;
-      cell.alignment = {
-        horizontal: "center",
-        vertical: "middle",
-        wrapText: true
-      };
+      cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
     });
     ws.getRow(4).height = 30;
 
-    let totalAdvance = 0;
-    let totalExpense = 0;
-    let totalReturned = 0;
-    let totalDue = 0;
+    let totalAdvance = 0, totalExpense = 0, totalReturned = 0, totalDue = 0;
 
     expenses.forEach(x => {
       const adv = Number(x.advance ?? x.amount ?? 0);
@@ -580,84 +560,86 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       totalReturned += returned;
       totalDue += due;
 
-      const row = ws.addRow([
-        x.date || "",
-        x.name || x.payerName || "",
-        adv,
-        spent,
-        returned,
-        due,
-        x.description || x.note || "",
-        dueOnly ? "" : (x.treasurer || x.pujaTreasurer || "")
-      ]);
+      // Due export contains NOTHING except the four requested fields.
+      const values = dueOnly
+        ? [
+            x.date || "",
+            x.name || x.payerName || "",
+            due,
+            x.description || x.note || ""
+          ]
+        : [
+            x.date || "",
+            x.name || x.payerName || "",
+            adv,
+            spent,
+            returned,
+            due,
+            x.description || x.note || "",
+            x.treasurer || x.pujaTreasurer || ""
+          ];
 
+      const row = ws.addRow(values);
       row.eachCell({ includeEmpty: true }, cell => {
-        cell.font = fontBase;
+        cell.font = baseFont;
         cell.fill = dataFill;
         cell.border = border;
-        cell.alignment = {
-          horizontal: "center",
-          vertical: "middle",
-          wrapText: true
-        };
+        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
       });
 
-      [3, 4, 5, 6].forEach(col => {
+      const moneyCols = dueOnly ? [3] : [3, 4, 5, 6];
+      moneyCols.forEach(col => {
         row.getCell(col).numFmt = '₹#,##0.00';
       });
     });
 
-    // Summary rows use a fixed label area and a fixed amount area,
-    // instead of merged cells that push the amount far away.
-    const addSummaryRow = (label, amount, amountCol = 6) => {
+    // Summary is ALWAYS two adjacent cells:
+    // label in the first cell, amount immediately in the next cell.
+    // Both are centered and bold. No "total due" text inside the Due column.
+    const addAdjacentTotal = (label, amount) => {
       const row = ws.addRow([]);
-      const labelCell = row.getCell(1);
-      const amountCell = row.getCell(amountCol);
+      row.getCell(1).value = label;
+      row.getCell(2).value = amount;
 
-      labelCell.value = label;
-      amountCell.value = amount;
-
-      for (let c = 1; c <= 8; c++) {
+      for (let c = 1; c <= columnCount; c++) {
         const cell = row.getCell(c);
         cell.fill = totalFill;
         cell.border = border;
-        cell.font = fontTotal;
+        cell.font = totalFont;
         cell.alignment = { horizontal: "center", vertical: "middle" };
       }
 
-      labelCell.alignment = { horizontal: "left", vertical: "middle" };
-      amountCell.numFmt = '₹#,##0.00';
-      row.height = 24;
-      return row;
+      row.getCell(2).numFmt = '₹#,##0.00';
+      row.height = 25;
     };
 
     if (dueOnly) {
-      // Due-only report: only the Due list + one bold total Due row.
-      addSummaryRow("সর্বমোট Due", totalDue, 6);
+      addAdjacentTotal("সর্বমোট Due", totalDue);
     } else {
-      // Full report: all summaries remain available.
-      addSummaryRow("সর্বমোট অগ্রিম", totalAdvance, 3);
-      addSummaryRow("সর্বমোট ফেরত", totalReturned, 5);
-      addSummaryRow("সর্বমোট খরচ", totalExpense, 4);
-      addSummaryRow("সর্বমোট Due", totalDue, 6);
+      addAdjacentTotal("সর্বমোট অগ্রিম", totalAdvance);
+      addAdjacentTotal("সর্বমোট খরচ", totalExpense);
+      addAdjacentTotal("সর্বমোট ফেরত", totalReturned);
+      addAdjacentTotal("সর্বমোট Due", totalDue);
     }
 
-    // Stable widths: no huge gap between a summary label and its amount.
-    const widths = [14, 22, 16, 18, 15, 15, 30, 20];
+    // Column widths are deliberately compact and balanced.
+    const widths = dueOnly
+      ? [15, 25, 17, 42]
+      : [14, 22, 16, 18, 15, 15, 30, 20];
+
     widths.forEach((w, i) => {
       ws.getColumn(i + 1).width = w;
     });
 
-    // Print setup: repeat the report header row on every printed A4 page.
     ws.pageSetup.printTitlesRow = "4:4";
-    ws.pageSetup.printArea = `A1:H${ws.lastRow.number}`;
+    ws.pageSetup.printArea = `A1:${lastCol}${ws.lastRow.number}`;
     ws.pageSetup.fitToPage = true;
     ws.pageSetup.fitToWidth = 1;
     ws.pageSetup.fitToHeight = 0;
 
-    // Ensure every used cell has all-side borders.
+    // All used cells: all-side border.
     for (let r = 1; r <= ws.lastRow.number; r++) {
-      for (let c = 1; c <= 8; c++) {
+      for (let c = 1; c <= columnCount; c++) {
         ws.getCell(r, c).border = border;
       }
     }
