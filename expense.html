@@ -485,10 +485,150 @@ window.deleteExpense=async(id)=>{
 
 window.exportExpenses=async()=>{
  if(!allExpenses.length){alert("কোনো ডেটা নেই!");return;}
- let csv="তারিখ,প্রাপকের নাম,অগ্রিম (₹),আসল খরচ (₹),ফেরত (₹),Due (₹),বিবরণ,কোষাধ্যক্ষ\n";
- allExpenses.forEach(x=>csv+=`"${x.date||""}","${x.name||""}","${x.advance||0}","${x.spent||0}","${x.returned||0}","${x.dueAmount||0}","${x.description||""}","${x.treasurer||""}"\n`);
- const blob=new Blob(["\uFEFF"+csv],{type:"text/csv;charset=utf-8;"}),url=URL.createObjectURL(blob),a=document.createElement("a");
- a.href=url;a.download="খরচ-রিপোর্ট.csv";a.click();URL.revokeObjectURL(url);
+
+ try{
+   const workbook=new ExcelJS.Workbook();
+   const ws=workbook.addWorksheet("খরচ রিপোর্ট");
+
+   // Column setup: wide enough for content, then auto-fit below.
+   const headers=["SR","প্রাপকের নাম","অগ্রিম (₹)","আসল খরচ (₹)","ফেরত (₹)","Due (₹)","বিবরণ","কোষাধ্যক্ষ"];
+   ws.mergeCells("A1:H1");
+   ws.mergeCells("A2:H2");
+   ws.getCell("A1").value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+   ws.getCell("A2").value="খরচ রিপোর্ট";
+
+   const titleStyle={
+     font:{name:"Noto Sans Bengali",size:14,bold:true,color:{argb:"FF000000"}},
+     alignment:{horizontal:"center",vertical:"middle",wrapText:true}
+   };
+   const reportStyle={
+     font:{name:"Noto Sans Bengali",size:12,bold:true,color:{argb:"FF000000"}},
+     alignment:{horizontal:"center",vertical:"middle",wrapText:true}
+   };
+   ws.getCell("A1").style=titleStyle;
+   ws.getCell("A2").style=reportStyle;
+   ws.getRow(1).height=25;
+   ws.getRow(2).height=22;
+
+   const headerRow=ws.getRow(3);
+   headers.forEach((h,i)=>headerRow.getCell(i+1).value=h);
+
+   const orange="FFF97316";
+   const lightGray="FFF9F9F9";
+   const lightYellow="FFFEF3C7";
+   const white="FFFFFFFF";
+   const black="FF000000";
+
+   const thin={style:"thin",color:{argb:black}};
+   const medium={style:"medium",color:{argb:black}};
+
+   // Header: orange fill, white bold text, complete border.
+   headerRow.eachCell((cell)=>{
+     cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};
+     cell.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:white}};
+     cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+     cell.border={top:medium,left:thin,bottom:thin,right:thin};
+   });
+   headerRow.getCell(1).border={top:medium,left:medium,bottom:thin,right:thin};
+   headerRow.getCell(headers.length).border={top:medium,left:thin,bottom:thin,right:medium};
+   headerRow.height=28;
+
+   let totalSpent=0;
+   let totalDue=0;
+
+   allExpenses.forEach((x,index)=>{
+     const advance=Number(x.advance ?? x.amount ?? 0);
+     const spent=Number(x.spent ?? x.amount ?? 0);
+     const returned=Number(x.returned ?? 0);
+     const due=Number(x.dueAmount ?? 0);
+
+     totalSpent += spent;
+     totalDue += due;
+
+     const row=ws.addRow([
+       index+1,
+       x.name || x.payerName || "",
+       advance,
+       spent,
+       returned,
+       due,
+       x.description || x.note || "",
+       x.treasurer || x.pujaTreasurer || ""
+     ]);
+
+     row.eachCell((cell,col)=>{
+       cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:lightGray}};
+       cell.font={name:"Noto Sans Bengali",size:10,color:{argb:black}};
+       cell.alignment={horizontal:"center",vertical:"center",wrapText:true};
+       cell.border={top:thin,left:thin,bottom:thin,right:thin};
+     });
+
+     // Outer left/right borders stay slightly stronger like the reference report.
+     row.getCell(1).border={top:thin,left:medium,bottom:thin,right:thin};
+     row.getCell(headers.length).border={top:thin,left:thin,bottom:thin,right:medium};
+
+     for(const col of [3,4,5,6]){
+       row.getCell(col).numFmt='₹#,##0.00';
+     }
+     row.height=22;
+   });
+
+   // Bold totals at the bottom, with the same yellow summary style.
+   const totalExpenseRow=ws.addRow(["","সর্বমোট খরচ",null,totalSpent,null,null,"",""]);
+   const totalDueRow=ws.addRow(["","সর্বমোট Due",null,null,null,totalDue,"",""]);
+
+   [totalExpenseRow,totalDueRow].forEach((row)=>{
+     row.eachCell((cell,col)=>{
+       cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:lightYellow}};
+       cell.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:black}};
+       cell.alignment={horizontal:col===2?"right":"center",vertical:"center",wrapText:true};
+       cell.border={top:thin,left:thin,bottom:medium,right:thin};
+     });
+     row.getCell(1).border={top:thin,left:medium,bottom:medium,right:thin};
+     row.getCell(headers.length).border={top:thin,left:thin,bottom:medium,right:medium};
+     row.height=23;
+   });
+   totalExpenseRow.getCell(4).numFmt='₹#,##0.00';
+   totalDueRow.getCell(6).numFmt='₹#,##0.00';
+
+   // Auto-fit all columns to their content, with sensible min/max widths.
+   const minWidths=[8,18,14,16,13,13,22,20];
+   const maxWidths=[8,32,18,20,18,18,42,30];
+
+   for(let c=1;c<=headers.length;c++){
+     let maxLen=0;
+     ws.getColumn(c).eachCell({includeEmpty:true},cell=>{
+       const v=cell.value;
+       let len=0;
+       if(v!==null && v!==undefined){
+         const lines=String(v).split("\\n");
+         len=Math.max(...lines.map(s=>s.length));
+       }
+       maxLen=Math.max(maxLen,len);
+     });
+     ws.getColumn(c).width=Math.min(
+       maxWidths[c-1],
+       Math.max(minWidths[c-1],maxLen+2)
+     );
+   }
+
+   ws.views=[{state:"frozen",ySplit:3}];
+   ws.pageSetup.orientation="landscape";
+   ws.pageSetup.fitToPage=true;
+   ws.pageSetup.fitToWidth=1;
+   ws.pageSetup.fitToHeight=0;
+   ws.pageMargins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+
+   const buffer=await workbook.xlsx.writeBuffer();
+   const blob=new Blob([buffer],{
+     type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+   });
+
+   saveAs(blob,"খরচ-রিপোর্ট.xlsx");
+ }catch(e){
+   console.error("Export error:",e);
+   alert("রিপোর্ট এক্সপোর্ট করা যায়নি।");
+ }
 };
 
 async function loadPujaTreasurer(){
