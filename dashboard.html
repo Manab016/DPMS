@@ -178,6 +178,8 @@
     ? ["subscription","expense","booking","sales","treasurer","members"]
     : [];
 
+  // Render the dashboard immediately; user-specific permissions are loaded
+  // in the background below.
   setupUIBasedOnRoleAndPermissions(user);
 
   if (!isAdmin) {
@@ -196,7 +198,9 @@
 
         setupUIBasedOnRoleAndPermissions(user);
       })
-      .catch(() => {});
+      .catch((err) => {
+        console.error("Role/permission load:", err);
+      });
   }
 
   logUserLogin(user);
@@ -287,11 +291,9 @@
     timestamp: Date.now(),
     device: navigator.userAgent
   }).catch(() => {});
-});
-        } catch (e) {}
-      }
+}
 
-      function setupUIBasedOnRoleAndPermissions(user) {
+function setupUIBasedOnRoleAndPermissions(user) {
         const roleBadge = document.getElementById("userRoleBadge");
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
