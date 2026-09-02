@@ -65,6 +65,11 @@
       #quickMenuContent .dashboard-menu-btn.menu-active { background-color:#ea580c !important; color:#fff !important; border-color:#ea580c !important; }
       #quickMenuContent .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
 
+
+      .sub-list-card{position:relative}
+      .sub-list-tab{display:inline-flex;align-items:center;gap:.4rem;background:#ea580c;color:#fff;padding:.45rem .8rem;border-radius:.65rem;font-size:.75rem;font-weight:800;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+      .sub-list-card table tbody tr{transition:background .15s}
+      .sub-list-card table tbody tr:hover{background:#fff7ed}
 </style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
@@ -396,7 +401,7 @@
         </div>
 
         <!-- সদস্যের দেওয়া চাঁদার তালিকা: চাঁদা না দিলে সদস্য দেখাবে না -->
-        <div class="border rounded-xl overflow-hidden mb-5">
+        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
           <div class="bg-orange-50 p-3 border-b">
             <div class="flex flex-col md:flex-row md:items-center gap-2">
               <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap">👤 সদস্যদের চাঁদা</h3>
@@ -412,7 +417,7 @@
           <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
               <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
-                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">Member ID</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">এডিট</th><th class="p-2 text-center">ডিলিট</th>
+                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">Member ID</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 text-center">অ্যাকশন</th>
               </tr></thead>
               <tbody id="memberContributionTableBody"></tbody>
             </table>
@@ -421,7 +426,7 @@
         </div>
 
         <!-- দাতার তালিকা -->
-        <div class="border rounded-xl overflow-hidden">
+        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden shadow-sm">
           <div class="bg-orange-50 p-3 border-b flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-bold text-gray-800">🤝 দাতাদের চাঁদা</h3>
             <button onclick="exportOtherDataReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 দাতা Excel</button>
@@ -429,7 +434,7 @@
           <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
               <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
-                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">গ্রহণকারী</th><th class="p-2 border-r text-center">এডিট</th><th class="p-2 text-center">ডিলিট</th>
+                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">গ্রহণকারী</th><th class="p-2 text-center">অ্যাকশন</th>
               </tr></thead>
               <tbody id="otherContributionTableBody"></tbody>
             </table>
@@ -1127,7 +1132,11 @@
 
       function getDefaultCollectorName() {
         const candidates = allMembersDataForSub.filter(m => {
-          const post = String(m.designation || m.post || m.position || m.role || "").toLowerCase();
+          const post = String(
+            m.designation || m.post || m.position || m.role ||
+            m.pod || m.podobi || m.podName || m.positionName ||
+            m.designationName || m.postName || m["পদ"] || m["পদবি"] || ""
+          ).toLowerCase();
           return post.includes("কোষাধ্যক্ষ") || post.includes("treasurer");
         });
         if (candidates.length) return memberFields(candidates[0]).name || "পূজা কোষাধ্যক্ষ";
@@ -1484,10 +1493,9 @@
             <td class="p-2 border-r text-center font-bold text-orange-700">${esc(x.memberId||"-")}</td>
             <td class="p-2 border-r text-center font-bold text-emerald-600">₹${Number(pay.amount||0).toLocaleString("en-IN")}</td>
             <td class="p-2 border-r text-center">${esc(pay.date||"-")}</td>
-            <td class="p-2 border-r text-center">${canEdit?`<button onclick="openEditSubModal('${pay.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>`:"-"}</td>
-            <td class="p-2 text-center">${canEdit?`<button onclick="deleteSubscription('${pay.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>`:"-"}</td>
+            <td class="p-2 text-center whitespace-nowrap">${canEdit?`<div class="flex items-center justify-center gap-1"><button onclick="openEditSubModal('${pay.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button><button onclick="deleteSubscription('${pay.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button></div>`:"-"}</td>
           </tr>`;
-        }).join("") : `<tr><td colspan="8" class="p-4 text-center text-gray-500">এখনও কোনো সদস্য চাঁদা দেয়নি</td></tr>`;
+        }).join("") : `<tr><td colspan="7" class="p-4 text-center text-gray-500">এখনও কোনো সদস্য চাঁদা দেয়নি</td></tr>`;
 
         const pg=document.getElementById("memberContributionPagination");
         pg.innerHTML=total>1 ? Array.from({length:total},(_,i)=>
@@ -1497,10 +1505,21 @@
 
       window.goMemberSubPage=function(n){memberSubPage=n;renderMemberContributionList();};
 
-      function renderOtherContributionList() {
+      function filterDonorContributionList() {
+        otherSubPage = 1;
+        renderOtherContributionList();
+      }
+
+function renderOtherContributionList() {
         const tbody=document.getElementById("otherContributionTableBody");
         if(!tbody)return;
-        const data=allSubscriptionsData.filter(s=>!isMemberSubscription(s));
+        const q=(document.getElementById("donorListSearch")?.value||"").trim().toLowerCase();
+        const data=allSubscriptionsData.filter(s=>{
+          if(isMemberSubscription(s)) return false;
+          if(!q) return true;
+          return [s.name,s.mobile,s.village,s.collector,s.note,s.comment]
+            .some(v=>String(v||"").toLowerCase().includes(q));
+        });
         const total=Math.max(1,Math.ceil(data.length/OTHER_SUB_PAGE_SIZE));
         if(otherSubPage>total)otherSubPage=total;
         const rows=data.slice((otherSubPage-1)*OTHER_SUB_PAGE_SIZE,otherSubPage*OTHER_SUB_PAGE_SIZE);
@@ -1512,9 +1531,8 @@
           <td class="p-2 border-r text-center font-bold text-emerald-600">₹${Number(item.amount||0).toLocaleString("en-IN")}</td>
           <td class="p-2 border-r text-center">${esc(item.date||"-")}</td>
           <td class="p-2 border-r text-center">${esc(item.collector||getDefaultCollectorName())}</td>
-          <td class="p-2 border-r text-center">${canEdit?`<button onclick="openEditSubModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>`:"-"}</td>
-          <td class="p-2 text-center">${canEdit?`<button onclick="deleteSubscription('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>`:"-"}</td>
-        </tr>`).join("") : `<tr><td colspan="8" class="p-4 text-center text-gray-500">এখনও কোনো দাতার চাঁদা নেই</td></tr>`;
+          <td class="p-2 text-center whitespace-nowrap">${canEdit?`<div class="flex items-center justify-center gap-1"><button onclick="openEditSubModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button><button onclick="deleteSubscription('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button></div>`:"-"}</td>
+        </tr>`).join("") : `<tr><td colspan="7" class="p-4 text-center text-gray-500">এখনও কোনো দাতার চাঁদা নেই</td></tr>`;
         const pg=document.getElementById("otherContributionPagination");
         if(pg) pg.innerHTML=total>1 ? Array.from({length:total},(_,i)=>`<button onclick="goOtherSubPage(${i+1})" class="px-2.5 py-1 rounded border text-xs ${i+1===otherSubPage?"bg-orange-600 text-white":"bg-white"}">${i+1}</button>`).join("") : "";
       }
