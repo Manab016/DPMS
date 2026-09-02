@@ -368,10 +368,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       data.forEach((member) => {
         const tr = document.createElement("tr");
         tr.className = "border-b hover:bg-gray-50";
-        let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">আইডি</button>`;
+        let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">🪪</button>`;
         if (window.isMasterAdmin) {
-          actionButtons += `<button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs ml-1">এডিট</button>
-                            <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">ডিলিট</button>`;
+          actionButtons += `<button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs ml-1">✏️</button>
+                            <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>`;
         }
         tr.innerHTML = `
           ${window.currentUserRole === "admin" ? `<td class="p-2.5 border-r text-center admin-only-col"><input type="checkbox" class="member-checkbox" value="${member.id}"></td>` : ""}
