@@ -402,12 +402,16 @@
               <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap">👤 সদস্যদের চাঁদা</h3>
               <div class="flex-1"></div>
               <input id="memberListSearch" oninput="filterMemberContributionList()" placeholder="নাম / মোবাইল / গ্রাম / ID দিয়ে খুঁজুন..." class="w-full md:w-72 p-2 border rounded-lg text-xs bg-white">
-              <button onclick="exportMemberStatusReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 সদস্য Excel</button>
+              <div class="flex flex-wrap justify-end gap-1.5">
+                <button onclick="exportMemberListReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 সব সদস্য</button>
+                <button onclick="exportMemberPaidReport()" class="bg-white border text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">✅ যারা দিয়েছে</button>
+                <button onclick="exportMemberUnpaidReport()" class="bg-white border text-red-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">⬜ যারা দেয়নি</button>
+              </div>
             </div>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
-              <thead><tr class="bg-gray-100 text-gray-700">
+              <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
                 <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">Member ID</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">এডিট</th><th class="p-2 text-center">ডিলিট</th>
               </tr></thead>
               <tbody id="memberContributionTableBody"></tbody>
@@ -422,14 +426,15 @@
             <h3 class="text-sm font-bold text-gray-800">🤝 দাতাদের চাঁদা</h3>
             <button onclick="exportOtherDataReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 দাতা Excel</button>
           </div>
-          <div class="overflow-x-auto">
+          <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
-              <thead><tr class="bg-gray-100 text-gray-700">
+              <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
                 <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">গ্রহণকারী</th><th class="p-2 border-r text-center">এডিট</th><th class="p-2 text-center">ডিলিট</th>
               </tr></thead>
               <tbody id="otherContributionTableBody"></tbody>
             </table>
           </div>
+          <div id="otherContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
         </div>
       </div>
 
@@ -1092,7 +1097,9 @@
       let allMembersDataForSub = [];
       let filteredMemberList = [];
       let memberSubPage = 1;
+      let otherSubPage = 1;
       const MEMBER_SUB_PAGE_SIZE = 5;
+      const OTHER_SUB_PAGE_SIZE = 5;
       let editingSubId = "";
       let activeSubEntryTab = "member";
 
@@ -1140,6 +1147,7 @@
           allSubscriptionsData = [];
           snap.forEach(d => allSubscriptionsData.push({ id:d.id, ...d.data() }));
           allSubscriptionsData.sort((a,b) => (b.timestamp || 0) - (a.timestamp || 0));
+          otherSubPage = 1;
           calculateSubTotals(allSubscriptionsData);
           renderMemberContributionList();
           renderOtherContributionList();
@@ -1310,8 +1318,11 @@
         const tbody=document.getElementById("otherContributionTableBody");
         if(!tbody)return;
         const data=allSubscriptionsData.filter(s=>!isMemberSubscription(s));
+        const total=Math.max(1,Math.ceil(data.length/OTHER_SUB_PAGE_SIZE));
+        if(otherSubPage>total)otherSubPage=total;
+        const rows=data.slice((otherSubPage-1)*OTHER_SUB_PAGE_SIZE,otherSubPage*OTHER_SUB_PAGE_SIZE);
         const canEdit=window.currentUserRole==="admin"||window.userPermissions.includes("subscription");
-        tbody.innerHTML=data.length ? data.map(item=>`<tr class="border-b hover:bg-gray-50">
+        tbody.innerHTML=rows.length ? rows.map(item=>`<tr class="border-b hover:bg-gray-50">
           <td class="p-2 border-r text-center">${esc(item.name||"-")}</td>
           <td class="p-2 border-r text-center">${esc(item.mobile||"-")}</td>
           <td class="p-2 border-r text-center">${esc(item.village||"-")}</td>
@@ -1320,298 +1331,11 @@
           <td class="p-2 border-r text-center">${esc(item.collector||getDefaultCollectorName())}</td>
           <td class="p-2 border-r text-center">${canEdit?`<button onclick="openEditSubModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>`:"-"}</td>
           <td class="p-2 text-center">${canEdit?`<button onclick="deleteSubscription('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>`:"-"}</td>
-        </tr>`).join("") : `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো দাতার চাঁদা নেই</td></tr>`;
+        </tr>`).join("") : `<tr><td colspan="8" class="p-4 text-center text-gray-500">এখনও কোনো দাতার চাঁদা নেই</td></tr>`;
+        const pg=document.getElementById("otherContributionPagination");
+        if(pg) pg.innerHTML=total>1 ? Array.from({length:total},(_,i)=>`<button onclick="goOtherSubPage(${i+1})" class="px-2.5 py-1 rounded border text-xs ${i+1===otherSubPage?"bg-orange-600 text-white":"bg-white"}">${i+1}</button>`).join("") : "";
       }
-
-      window.switchSubEntryTab=function(tab){
-        activeSubEntryTab=tab;
-        const m=document.getElementById("memberContributionForm");
-        const o=document.getElementById("otherContributionForm");
-        const mt=document.getElementById("subTabMember");
-        const ot=document.getElementById("subTabOther");
-        if(tab==="member"){
-          m.classList.remove("hidden");o.classList.add("hidden");
-          mt.className="sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm";
-          ot.className="sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
-        }else{
-          m.classList.add("hidden");o.classList.remove("hidden");
-          ot.className="sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm";
-          mt.className="sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
-        }
-      };
-
-      window.openAddSubModal=function(){
-        editingSubId="";
-        resetSubForms();
-        setDefaultSubDates();
-        switchSubEntryTab("member");
-        const modal=document.getElementById("subEntryModal");
-        modal.classList.remove("hidden");modal.classList.add("flex");
-      };
-
-      window.closeSubEntryModal=function(){
-        const modal=document.getElementById("subEntryModal");
-        modal.classList.add("hidden");modal.classList.remove("flex");
-      };
-
-      window.openEditSubModal=function(id){
-        const item=allSubscriptionsData.find(x=>x.id===id);
-        if(!item)return;
-        editingSubId=id;
-        const modal=document.getElementById("subEntryModal");
-        modal.classList.remove("hidden");modal.classList.add("flex");
-
-        if(isMemberSubscription(item)){
-          switchSubEntryTab("member");
-          const m=allMembersDataForSub.find(x=>x.id===item.memberId) ||
-            allMembersDataForSub.find(x=>String(memberFields(x).memberId)===String(item.memberAutoId||item.memberCode));
-          if(m)selectMemberForSub(m.id);
-          else{
-            document.getElementById("selectedMemberId").value=item.memberId||"";
-            document.getElementById("memberSearchInput").value=item.name||"";
-            document.getElementById("selectedMemberInfo").innerText=(item.memberAutoId||item.memberCode)?"Member ID: "+(item.memberAutoId||item.memberCode):"";
-          }
-          document.getElementById("subDateMember").value=item.date||"";
-          document.getElementById("subAmountMember").value=item.amount||"";
-          document.getElementById("subNoteMember").value=item.note||"";
-          document.getElementById("subCollectorMember").value=item.collector||getDefaultCollectorName();
-        }else{
-          switchSubEntryTab("other");
-          document.getElementById("otherDataName").value=item.name||"";
-          document.getElementById("otherDataMobile").value=item.mobile||"";
-          document.getElementById("otherDataVillage").value=item.village||"";
-          document.getElementById("subDateOther").value=item.date||"";
-          document.getElementById("subAmountOther").value=item.amount||"";
-          document.getElementById("subNoteOther").value=item.note||"";
-          document.getElementById("subCollectorOther").value=item.collector||getDefaultCollectorName();
-        }
-      };
-
-      window.saveSubFromNewForm=async function(type){
-        const btn=document.getElementById(type==="member"?"saveMemberSubBtn":"saveOtherSubBtn");
-        let data;
-
-        if(type==="member"){
-          const mid=document.getElementById("selectedMemberId").value;
-          const m=allMembersDataForSub.find(x=>x.id===mid);
-          if(!m){alert("সদস্য খুঁজে তালিকা থেকে একজন সদস্য নির্বাচন করুন।");return;}
-          const x=memberFields(m);
-          data={
-            date:document.getElementById("subDateMember").value,
-            donorType:"member",
-            name:x.name,
-            // memberId = hidden unique Firestore document ID; memberAutoId = visible M001/M002 ID
-            memberId:m.id,
-            memberAutoId:x.memberId,
-            memberCode:x.memberId,
-            mobile:x.mobile,
-            village:x.village,
-            amount:Number(document.getElementById("subAmountMember").value),
-            note:document.getElementById("subNoteMember").value.trim(),
-            collector:document.getElementById("subCollectorMember").value.trim()||getDefaultCollectorName()
-          };
-        }else{
-          const mobile=(document.getElementById("otherDataMobile").value||"").replace(/\D/g,"");
-          if(mobile&&mobile.length!==10){alert("মোবাইল নম্বর দিলে ১০টি সংখ্যা দিতে হবে।");return;}
-          data={
-            date:document.getElementById("subDateOther").value,
-            donorType:"other",
-            name:document.getElementById("otherDataName").value.trim(),
-            mobile,
-            village:document.getElementById("otherDataVillage").value.trim(),
-            amount:Number(document.getElementById("subAmountOther").value),
-            note:document.getElementById("subNoteOther").value.trim(),
-            collector:document.getElementById("subCollectorOther").value.trim()||getDefaultCollectorName()
-          };
-        }
-
-        if(!data.date||!data.name||!data.amount||data.amount<=0){alert("তারিখ, নাম ও সঠিক পরিমাণ দিন।");return;}
-
-        // একজন সদস্য একবার চাঁদা দিলে একই Member ID দিয়ে দ্বিতীয়বার entry হতে দেওয়া হবে না।
-        // একই নামের অন্য সদস্য হলে তার আলাদা Firestore ID/M001 ID থাকার কারণে সে entry করতে পারবে।
-        if(type==="member" && !editingSubId){
-          const alreadyPaid=findMemberPayment(m);
-          if(alreadyPaid){
-            alert(`এই সদস্যের চাঁদা আগে থেকেই সেভ করা আছে।\nMember ID: ${memberFields(m).memberId}`);
-            return;
-          }
-        }
-
-        btn.disabled=true;btn.innerText="সেভ হচ্ছে...";
-
-        try{
-          if(editingSubId) await updateDoc(doc(db,"subscriptions",editingSubId),data);
-          else await addDoc(collection(db,"subscriptions"),{...data,timestamp:Date.now()});
-          editingSubId="";
-          resetSubForms();
-          closeSubEntryModal();
-          alert("চাঁদার তথ্য সফলভাবে সেভ হয়েছে।");
-        }catch(e){alert("ত্রুটি: "+e.message);}
-        finally{
-          btn.disabled=false;
-          btn.innerText="সেভ";
-        }
-      };
-
-      function resetSubForms(){
-        ["selectedMemberId","memberSearchInput","selectedMemberInfo","subNoteMember","subNoteOther",
-         "otherDataName","otherDataMobile","otherDataVillage"].forEach(id=>{
-          const e=document.getElementById(id);if(e)e.value="";
-        });
-        document.getElementById("selectedMemberInfo").innerText="";
-        document.getElementById("subAmountMember").value="1500";
-        document.getElementById("subAmountOther").value="1500";
-        setDefaultSubDates();
-        const d=getDefaultCollectorName();
-        document.getElementById("subCollectorMember").value=d;
-        document.getElementById("subCollectorOther").value=d;
-      }
-
-      window.deleteSubscription=async function(id){
-        if(!confirm("এই চাঁদার রেকর্ডটি ডিলিট করবেন?"))return;
-        try{await deleteDoc(doc(db,"subscriptions",id));}
-        catch(e){alert("ত্রুটি: "+e.message);}
-      };
-      window.deleteSelectedSubscriptions=async function(){};
-
-      // রিপোর্ট Excel: Expense/Members export-এর মতো report layout, A4 landscape
-      async function makeReportExcel(data,headers,title,filePrefix,totalLabel,totalValue){
-        const wb=new ExcelJS.Workbook();
-        const ws=wb.addWorksheet("রিপোর্ট",{views:[{showGridLines:false}]});
-        const border={top:{style:"thin",color:{argb:"FF808080"}},left:{style:"thin",color:{argb:"FF808080"}},bottom:{style:"thin",color:{argb:"FF808080"}},right:{style:"thin",color:{argb:"FF808080"}}};
-        const titleFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFEDD5"}};
-        const headerFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF97316"}};
-        const dataFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFFBEB"}};
-        const summaryFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF3C4"}};
-        const n=headers.length;
-
-        ws.mergeCells(1,1,1,n);
-        ws.getCell(1,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-        ws.mergeCells(2,1,2,n);
-        ws.getCell(2,1).value=title;
-
-        // Title rows: separator line ছাড়া Expense-style
-        for(let r=1;r<=2;r++){
-          for(let c=1;c<=n;c++){
-            const cell=ws.getCell(r,c);
-            cell.fill=titleFill;
-            cell.alignment={horizontal:"center",vertical:"middle"};
-            cell.font={name:"Noto Sans Bengali",size:r===1?18:16,bold:true};
-            cell.border={left:border.left,right:border.right};
-            if(r===1) cell.border.top=border.top;
-            if(r===2) cell.border.bottom=border.bottom;
-          }
-        }
-        ws.getRow(1).height=32;
-        ws.getRow(2).height=28;
-
-        headers.forEach((h,i)=>{
-          const c=ws.getCell(4,i+1);
-          c.value=h;
-          c.font={name:"Noto Sans Bengali",size:10,bold:true,color:{argb:"FFFFFFFF"}};
-          c.fill=headerFill;c.border=border;
-          c.alignment={horizontal:"center",vertical:"middle",wrapText:true};
-        });
-
-        data.forEach(row=>{
-          const r=ws.addRow(row);
-          r.eachCell({includeEmpty:true},c=>{
-            c.font={name:"Noto Sans Bengali",size:10};
-            c.fill=dataFill;c.border=border;
-            // সব data cell মাঝখানে থাকবে এবং text cell-এর ভিতরেই fit হবে।
-            c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};
-          });
-        });
-
-        const tr=ws.addRow([]);
-        tr.getCell(1).value=totalLabel;
-        tr.getCell(2).value=totalValue;
-        [1,2].forEach(c=>{
-          const x=tr.getCell(c);
-          x.fill=summaryFill;x.border=border;
-          x.font={name:"Noto Sans Bengali",size:11,bold:true};
-          x.alignment={horizontal:"center",vertical:"middle"};
-        });
-
-        for(let i=1;i<=n;i++){
-          let w=10;
-          ws.getColumn(i).eachCell({includeEmpty:false},c=>{
-            const text=String(c.value??"").replace(/\n/g," ");
-            w=Math.max(w,Math.min(text.length+2,24));
-          });
-          ws.getColumn(i).width=w;
-        }
-
-        // A4 paper + landscape + এক page wide; Excel-এর ভিতরেই text fit/center থাকবে।
-        ws.properties.pageSetUpPr={fitToPage:true,autoPageBreaks:false};
-        ws.pageSetup={
-          paperSize:9,
-          orientation:"landscape",
-          fitToPage:true,
-          fitToWidth:1,
-          fitToHeight:0,
-          horizontalDpi:300,
-          verticalDpi:300,
-          margins:{left:.25,right:.25,top:.5,bottom:.5,header:.2,footer:.2},
-          horizontalCentered:true
-        };
-        ws.printTitlesRow="4:4";
-        ws.printArea=`A1:${String.fromCharCode(64+n)}${ws.lastRow.number}`;
-
-        const blob=new Blob([await wb.xlsx.writeBuffer()],{
-          type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        });
-        saveAs(blob,`${filePrefix}.xlsx`);
-      }
-
-      window.exportMemberStatusReport=async function(){
-        // সব সদস্য: চাঁদা দিলে ✓, না দিলে blank
-        const rows=allMembersDataForSub.map(m=>{
-          const x=memberFields(m),p=findMemberPayment(m);
-          return [
-            p?"✓":"",
-            x.name,
-            x.mobile||"",
-            x.village||"",
-            x.memberId||"",
-            p?Number(p.amount||0):"",
-            p?.date||"",
-            p?.collector||""
-          ];
-        });
-        const total=rows.reduce((a,r)=>a+Number(r[5]||0),0);
-        await makeReportExcel(
-          rows,
-          ["✓","নাম","মোবাইল","গ্রাম","Member ID","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী"],
-          "সদস্যদের চাঁদা রিপোর্ট",
-          "সদস্যদের_চাঁদা_রিপোর্ট",
-          "সর্বমোট চাঁদা",
-          total
-        );
-      };
-
-      window.exportOtherDataReport=async function(){
-        const rows=allSubscriptionsData.filter(s=>!isMemberSubscription(s)).map(x=>[
-          x.name||"",x.mobile||"",x.village||"",Number(x.amount||0),x.date||"",
-          x.collector||getDefaultCollectorName(),x.note||""
-        ]);
-        const total=rows.reduce((a,r)=>a+Number(r[3]||0),0);
-        await makeReportExcel(
-          rows,
-          ["নাম","মোবাইল","গ্রাম","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী","মন্তব্য"],
-          "দাতাদের চাঁদা রিপোর্ট",
-          "দাতাদের_চাঁদা_রিপোর্ট",
-          "সর্বমোট চাঁদা",
-          total
-        );
-      };
-
-      window.exportSubReport=async function(type){
-        if(type==="members")return exportMemberStatusReport();
-        if(type==="others")return exportOtherDataReport();
-        return exportOtherDataReport();
-      };
-      window.filterSubscriptions=function(){};
+      window.goOtherSubPage=function(n){otherSubPage=n;renderOtherContributionList();};
 
       // --- অন্যান্য সাধারণ ফাংশন ---
       function loadAppUsers() {
