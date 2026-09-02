@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="bn">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+    <style>
+      #subTableBody td,
+      #subTableBody th {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: auto;
+      }
+      @keyframes autoScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .animate-auto-slide {
+        display: flex;
+        width: max-content;
+        animation: autoScroll 20s linear infinite;
+      }
+      .animate-auto-slide:hover { animation-play-state: paused; }
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      @media print {
+        body { background: white !important; }
+        body > *:not(#idCardModal) { display: none !important; }
+        .no-print { display: none !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+    </style>
+  </head>
+  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+    <!-- Firebase Code and Rest of Dashboard -->
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
+        <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
+        <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০२</a></p>
+      </div>
+      <p class="text-center text-gray-600 mt-4">Cordova Android App - সব ফাইল সংযুক্ত করা হয়েছে ✅</p>
+    </div>
+  </body>
+</html>
