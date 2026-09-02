@@ -1347,19 +1347,127 @@
         if(typeof ExcelJS === "undefined") { alert("ExcelJS লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।"); return; }
         const wb=new ExcelJS.Workbook();
         const ws=wb.addWorksheet("Report");
-        ws.mergeCells(1,1,1,headers.length); ws.getCell(1,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-        ws.mergeCells(2,1,2,headers.length); ws.getCell(2,1).value=title;
+
+        ws.mergeCells(1,1,1,headers.length);
+        ws.getCell(1,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        ws.mergeCells(2,1,2,headers.length);
+        ws.getCell(2,1).value=title;
+
         const cream="FFF7E6", orange="F59E0B", yellow="FEF08A", border="D1D5DB";
-        [1,2].forEach(r=>{const c=ws.getCell(r,1); c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}}; c.font={bold:true,size:r===1?18:16}; c.alignment={horizontal:"center",vertical:"middle"};});
-        ws.getRow(1).height=28; ws.getRow(2).height=25;
-        const hr=ws.getRow(4); headers.forEach((h,i)=>{const c=hr.getCell(i+1);c.value=h;c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.font={bold:true};c.alignment={horizontal:"center",vertical:"middle",wrapText:true};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};});
-        rows.forEach((row,ri)=>{const rr=ws.getRow(5+ri);row.forEach((v,ci)=>{const c=rr.getCell(ci+1);c.value=v??"";c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}};c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};});});
-        const tr=ws.getRow(5+rows.length); tr.getCell(1).value=totalLabel; tr.getCell(2).value=totalValue; for(let i=1;i<=Math.min(2,headers.length);i++){const c=tr.getCell(i);c.fill={type:"pattern",pattern:"solid",fgColor:{argb:yellow}};c.font={bold:true};c.alignment={horizontal:"center",vertical:"middle"};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};}
-        ws.columns.forEach(col=>{let max=10; col.eachCell({includeEmpty:false},c=>{max=Math.max(max,String(c.value??"").length+2);});col.width=Math.min(24,max);});
-        ws.pageSetup={paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true};
-        ws.pageSetup.printTitlesRow="4:4"; ws.pageSetup.printArea=`A1:${String.fromCharCode(64+headers.length)}${5+rows.length}`;
-        ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
-        const buf=await wb.xlsx.writeBuffer(); saveAs(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),fileName);
+
+        [1,2].forEach(r=>{
+          const c=ws.getCell(r,1);
+          c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}};
+          c.font={bold:true,size:r===1?18:16};
+          c.alignment={horizontal:"center",vertical:"middle"};
+        });
+        ws.getRow(1).height=28;
+        ws.getRow(2).height=25;
+
+        // Header
+        const hr=ws.getRow(4);
+        headers.forEach((h,i)=>{
+          const c=hr.getCell(i+1);
+          c.value=h;
+          c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};
+          c.font={bold:true};
+          c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};
+          c.border={
+            top:{style:"thin",color:{argb:border}},
+            bottom:{style:"thin",color:{argb:border}},
+            left:{style:"thin",color:{argb:border}},
+            right:{style:"thin",color:{argb:border}}
+          };
+        });
+
+        // Data cells — content অনুযায়ী compact auto width-এর জন্য ব্যবহার হবে
+        rows.forEach((row,ri)=>{
+          const rr=ws.getRow(5+ri);
+          row.forEach((v,ci)=>{
+            const c=rr.getCell(ci+1);
+            c.value=v??"";
+            c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}};
+            c.alignment={
+              horizontal:"center",
+              vertical:"middle",
+              wrapText:true,
+              shrinkToFit:true
+            };
+            c.border={
+              top:{style:"thin",color:{argb:border}},
+              bottom:{style:"thin",color:{argb:border}},
+              left:{style:"thin",color:{argb:border}},
+              right:{style:"thin",color:{argb:border}}
+            };
+          });
+        });
+
+        // Total row
+        const tr=ws.getRow(5+rows.length);
+        tr.getCell(1).value=totalLabel;
+        tr.getCell(2).value=totalValue;
+        for(let i=1;i<=Math.min(2,headers.length);i++){
+          const c=tr.getCell(i);
+          c.fill={type:"pattern",pattern:"solid",fgColor:{argb:yellow}};
+          c.font={bold:true};
+          c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};
+          c.border={
+            top:{style:"thin",color:{argb:border}},
+            bottom:{style:"thin",color:{argb:border}},
+            left:{style:"thin",color:{argb:border}},
+            right:{style:"thin",color:{argb:border}}
+          };
+        }
+
+        // True compact content-based column sizing.
+        // Tick/✓ column will stay small instead of getting a large fixed width.
+        for(let ci=1; ci<=headers.length; ci++){
+          let maxLen=String(headers[ci-1] ?? "").length;
+
+          rows.forEach(row=>{
+            const value=String(row?.[ci-1] ?? "");
+            if(value.length>maxLen) maxLen=value.length;
+          });
+
+          // Total row can determine the first two columns only.
+          if(ci===1) maxLen=Math.max(maxLen,String(totalLabel ?? "").length);
+          if(ci===2) maxLen=Math.max(maxLen,String(totalValue ?? "").length);
+
+          // Compact padding; no unnecessary minimum 10-width cells.
+          let width=maxLen+1.5;
+          width=Math.max(3.2,width);
+
+          // Keep very long text readable while still fitting to A4 portrait.
+          width=Math.min(28,width);
+
+          ws.getColumn(ci).width=width;
+        }
+
+        // A4 Portrait + Fit to Paper Size
+        ws.pageSetup={
+          paperSize:9,
+          orientation:"portrait",
+          fitToPage:true,
+          fitToWidth:1,
+          fitToHeight:0,
+          horizontalCentered:true
+        };
+        ws.pageSetup.printTitlesRow="4:4";
+        ws.pageSetup.printArea=`A1:${String.fromCharCode(64+headers.length)}${5+rows.length}`;
+        ws.pageSetup.margins={
+          left:0.25,
+          right:0.25,
+          top:0.5,
+          bottom:0.5,
+          header:0.2,
+          footer:0.2
+        };
+
+        const buf=await wb.xlsx.writeBuffer();
+        saveAs(
+          new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),
+          fileName
+        );
       }
 
       window.exportMemberListReport = async function(){
