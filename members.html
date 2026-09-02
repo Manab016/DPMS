@@ -100,11 +100,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
       </div>
 
-      <div class="flex flex-col md:flex-row gap-2 mb-4 items-stretch">
+      <div class="flex flex-row gap-2 mb-4 items-stretch w-full">
         <!-- সার্চ বক্স -->
-        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
-        <!-- গ্রামের ড্রপডাউন -->
-        <select id="villageFilter" onchange="filterMembers()" class="w-full md:w-48 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
+        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 min-w-0 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <!-- গ্রামের ড্রপডাউন — সার্চের ডান পাশে -->
+        <select id="villageFilter" onchange="filterMembers()" class="w-40 md:w-48 shrink-0 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
           <option value="">সব গ্রাম (All)</option>
         </select>
       </div>
@@ -327,7 +327,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         window.location.href = `dashboard.html?tab=${encodeURIComponent(tabName)}`;
         return;
       }
-      if (tabName === "settings") { window.location.href = "settings.html"; return; }
       window.location.href = "dashboard.html";
     };
 
@@ -407,32 +406,63 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       if (!pagination) {
         pagination = document.createElement("div");
         pagination.id = "memberPagination";
-        pagination.className = "flex flex-wrap items-center justify-center gap-1 mt-4";
+        pagination.className = "flex flex-wrap items-center justify-center gap-1 mt-4 pt-3 border-t border-gray-100";
         document.getElementById("section-member").appendChild(pagination);
       }
+
       pagination.innerHTML = "";
-      if (totalItems <= MEMBERS_PER_PAGE) return;
+
+      // ১০ জন বা তার কম হলে কোনো pagination দেখাবে না।
+      if (totalItems <= MEMBERS_PER_PAGE) {
+        pagination.classList.add("hidden");
+        return;
+      }
+
+      pagination.classList.remove("hidden");
 
       const prev = document.createElement("button");
-      prev.type = "button"; prev.innerText = "‹";
-      prev.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100";
+      prev.type = "button";
+      prev.innerText = "‹";
+      prev.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100 disabled:opacity-40";
       prev.disabled = currentMemberPage === 1;
-      prev.onclick = () => { currentMemberPage--; renderTable(window.filteredMembersData || []); };
+      prev.onclick = () => {
+        if (currentMemberPage > 1) {
+          currentMemberPage--;
+          renderTable(window.filteredMembersData || []);
+          window.scrollTo({ top: document.getElementById("section-member").offsetTop, behavior: "smooth" });
+        }
+      };
       pagination.appendChild(prev);
 
       for (let i = 1; i <= totalPages; i++) {
         const btn = document.createElement("button");
-        btn.type = "button"; btn.innerText = i;
-        btn.className = `px-3 py-1.5 rounded-lg border text-sm font-bold ${i === currentMemberPage ? "bg-orange-600 text-white border-orange-600" : "bg-white text-gray-700 hover:bg-gray-100"}`;
-        btn.onclick = () => { currentMemberPage = i; renderTable(window.filteredMembersData || []); };
+        btn.type = "button";
+        btn.innerText = i;
+        btn.className = `px-3 py-1.5 rounded-lg border text-sm font-bold ${
+          i === currentMemberPage
+            ? "bg-orange-600 text-white border-orange-600"
+            : "bg-white text-gray-700 hover:bg-gray-100"
+        }`;
+        btn.onclick = () => {
+          currentMemberPage = i;
+          renderTable(window.filteredMembersData || []);
+          window.scrollTo({ top: document.getElementById("section-member").offsetTop, behavior: "smooth" });
+        };
         pagination.appendChild(btn);
       }
 
       const next = document.createElement("button");
-      next.type = "button"; next.innerText = "›";
-      next.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100";
+      next.type = "button";
+      next.innerText = "›";
+      next.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100 disabled:opacity-40";
       next.disabled = currentMemberPage === totalPages;
-      next.onclick = () => { currentMemberPage++; renderTable(window.filteredMembersData || []); };
+      next.onclick = () => {
+        if (currentMemberPage < totalPages) {
+          currentMemberPage++;
+          renderTable(window.filteredMembersData || []);
+          window.scrollTo({ top: document.getElementById("section-member").offsetTop, behavior: "smooth" });
+        }
+      };
       pagination.appendChild(next);
     }
 
@@ -491,6 +521,13 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       if (!name || !village) {
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
+        return;
+      }
+
+      // মোবাইল নম্বর optional; কিন্তু দিলে অবশ্যই ঠিক ১০টি সংখ্যা হতে হবে।
+      if (mobile && !/^\\d{10}$/.test(mobile)) {
+        alert("মোবাইল নম্বর দিলে অবশ্যই ঠিক ১০টি সংখ্যা দিতে হবে!");
+        document.getElementById("newMemberMobile").focus();
         return;
       }
 
@@ -592,19 +629,38 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.exportToExcel = async function() {
       const dataToExport = window.filteredMembersData || allMembersData;
       const selectedVillage = document.getElementById("villageFilter").value;
-      if (dataToExport.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
+
+      if (dataToExport.length === 0) {
+        alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
+        return;
+      }
 
       const workbook = new ExcelJS.Workbook();
       const worksheet = workbook.addWorksheet("সদস্য তালিকা", {
-        pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
+        pageSetup: {
+          paperSize: 9,
+          orientation: "landscape",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0
+        }
       });
-      worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+
+      worksheet.pageSetup.margins = {
+        left: 0.25, right: 0.25, top: 0.5, bottom: 0.5,
+        header: 0.2, footer: 0.2
+      };
 
       worksheet.columns = [
-        { width: 14 }, { width: 28 }, { width: 18 },
-        { width: 22 }, { width: 22 }, { width: 30 }
+        { width: 14 },
+        { width: 28 },
+        { width: 18 },
+        { width: 22 },
+        { width: 22 },
+        { width: 30 }
       ];
 
+      // ===== Title =====
       worksheet.mergeCells("A1:F1");
       const title = worksheet.getCell("A1");
       title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
@@ -616,70 +672,112 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       worksheet.mergeCells("A2:F2");
       const sub = worksheet.getCell("A2");
-      sub.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : "সদস্য তালিকা (সকল গ্রাম)";
+      sub.value = selectedVillage
+        ? `সদস্য তালিকা - ${selectedVillage}`
+        : "সদস্য তালিকা (সকল গ্রাম)";
       sub.font = { name: "Kalpurush", size: 16, bold: true };
       sub.alignment = { horizontal: "center", vertical: "middle" };
       sub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
       sub.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
       worksheet.getRow(2).height = 30;
 
+      // ===== Header =====
       const headers = ["সদস্য ID","নাম","মোবাইল","গ্রাম","পদ","স্বাক্ষর"];
       const headerRow = worksheet.getRow(4);
       headerRow.values = headers;
       headerRow.height = 30;
-      headerRow.eachCell(cell => {
+
+      headerRow.eachCell({ includeEmpty: false }, cell => {
         cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
         cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
         cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-        cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        cell.border = {
+          top:{style:"thin"}, left:{style:"thin"},
+          bottom:{style:"thin"}, right:{style:"thin"}
+        };
       });
 
+      // ===== Data =====
       let rowNo = 5;
       dataToExport.forEach(m => {
         const row = worksheet.getRow(rowNo);
-        row.values = [m.autoId || "", m.name || "", m.mobile !== "-" ? (m.mobile || "") : "", m.village || "", m.role || "", m.signature ? "" : "নেই"];
+        row.values = [
+          m.autoId || "",
+          m.name || "",
+          m.mobile !== "-" ? (m.mobile || "") : "",
+          m.village || "",
+          m.role || "",
+          m.signature ? "" : "নেই"
+        ];
         row.height = 65;
-        row.eachCell(cell => {
+
+        row.eachCell({ includeEmpty: false }, cell => {
           cell.font = { name:"Kalpurush", size:11 };
           cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
           cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+          cell.border = {
+            top:{style:"thin"}, left:{style:"thin"},
+            bottom:{style:"thin"}, right:{style:"thin"}
+          };
         });
 
         if (m.signature) {
           try {
             const parts = m.signature.split(",");
             const base64Data = parts[1];
-            const mime = parts[0].match(/:(.*?);/)[1];
+            const mimeMatch = parts[0].match(/:(.*?);/);
+            const mime = mimeMatch ? mimeMatch[1] : "image/png";
             const ext = (mime.includes("jpeg") || mime.includes("jpg")) ? "jpeg" : "png";
             const imageId = workbook.addImage({ base64:base64Data, extension:ext });
-            worksheet.addImage(imageId, { tl:{col:5.1,row:rowNo-0.9}, ext:{width:170,height:70}, editAs:"oneCell" });
-          } catch(e) { console.error("Error adding signature image:", e); }
+            worksheet.addImage(imageId, {
+              tl:{col:5.1,row:rowNo-0.9},
+              ext:{width:170,height:70},
+              editAs:"oneCell"
+            });
+          } catch(e) {
+            console.error("Error adding signature image:", e);
+          }
         }
+
         rowNo++;
       });
 
+      // ===== Total: label + value in adjacent cells only =====
       const totalLabel = worksheet.getCell(`A${rowNo}`);
       totalLabel.value = "মোট সদস্য";
       totalLabel.font = { name:"Kalpurush", size:13, bold:true };
       totalLabel.alignment = { horizontal:"center", vertical:"middle" };
       totalLabel.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
-      totalLabel.border = { top:{style:"medium"}, left:{style:"medium"}, bottom:{style:"medium"}, right:{style:"thin"} };
+      totalLabel.border = {
+        top:{style:"medium"}, left:{style:"medium"},
+        bottom:{style:"medium"}, right:{style:"thin"}
+      };
 
       const totalValue = worksheet.getCell(`B${rowNo}`);
       totalValue.value = dataToExport.length;
       totalValue.font = { name:"Kalpurush", size:13, bold:true };
       totalValue.alignment = { horizontal:"center", vertical:"middle" };
       totalValue.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
-      totalValue.border = { top:{style:"medium"}, left:{style:"thin"}, bottom:{style:"medium"}, right:{style:"medium"} };
+      totalValue.border = {
+        top:{style:"medium"}, left:{style:"thin"},
+        bottom:{style:"medium"}, right:{style:"medium"}
+      };
       worksheet.getRow(rowNo).height = 30;
 
       worksheet.pageSetup.printTitlesRow = "4:4";
       worksheet.pageSetup.printArea = `A1:F${rowNo}`;
 
-      const fileName = selectedVillage ? `Members_${selectedVillage}.xlsx` : "Members_All_Villages.xlsx";
+      const fileName = selectedVillage
+        ? `Members_${selectedVillage}.xlsx`
+        : "Members_All_Villages.xlsx";
+
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(new Blob([buffer], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}), fileName);
+      saveAs(
+        new Blob([buffer], {
+          type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        }),
+        fileName
+      );
     };
 
     window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
