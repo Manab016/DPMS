@@ -1190,7 +1190,12 @@
         const q=(document.getElementById("memberSearchInput").value||"").trim().toLowerCase();
         const box=document.getElementById("memberSearchResults");
         if(!q){box.classList.add("hidden");return;}
+
+        // যে সদস্যের চাঁদা ইতিমধ্যে সেভ হয়েছে তাকে আর নতুন করে selection-এ দেখানো হবে না।
+        // Match হবে শুধু hidden Firestore ID বা visible M001/M002 Member ID দিয়ে—নাম দিয়ে নয়।
         const arr=allMembersDataForSub.filter(m=>{
+          const paid=findMemberPayment(m);
+          if(paid) return false;
           const x=memberFields(m);
           return [x.name,x.mobile,x.village,x.memberId].some(v=>String(v).toLowerCase().includes(q));
         }).slice(0,20);
@@ -1359,8 +1364,7 @@
         if(isMemberSubscription(item)){
           switchSubEntryTab("member");
           const m=allMembersDataForSub.find(x=>x.id===item.memberId) ||
-            allMembersDataForSub.find(x=>String(memberFields(x).memberId)===String(item.memberAutoId||item.memberCode)) ||
-            allMembersDataForSub.find(x=>String(memberFields(x).name).trim()===String(item.name||"").trim());
+            allMembersDataForSub.find(x=>String(memberFields(x).memberId)===String(item.memberAutoId||item.memberCode));
           if(m)selectMemberForSub(m.id);
           else{
             document.getElementById("selectedMemberId").value=item.memberId||"";
@@ -1422,6 +1426,17 @@
         }
 
         if(!data.date||!data.name||!data.amount||data.amount<=0){alert("তারিখ, নাম ও সঠিক পরিমাণ দিন।");return;}
+
+        // একজন সদস্য একবার চাঁদা দিলে একই Member ID দিয়ে দ্বিতীয়বার entry হতে দেওয়া হবে না।
+        // একই নামের অন্য সদস্য হলে তার আলাদা Firestore ID/M001 ID থাকার কারণে সে entry করতে পারবে।
+        if(type==="member" && !editingSubId){
+          const alreadyPaid=findMemberPayment(m);
+          if(alreadyPaid){
+            alert(`এই সদস্যের চাঁদা আগে থেকেই সেভ করা আছে।\nMember ID: ${memberFields(m).memberId}`);
+            return;
+          }
+        }
+
         btn.disabled=true;btn.innerText="সেভ হচ্ছে...";
 
         try{
@@ -1503,7 +1518,8 @@
           r.eachCell({includeEmpty:true},c=>{
             c.font={name:"Noto Sans Bengali",size:10};
             c.fill=dataFill;c.border=border;
-            c.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+            // সব data cell মাঝখানে থাকবে এবং text cell-এর ভিতরেই fit হবে।
+            c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};
           });
         });
 
@@ -1518,16 +1534,26 @@
         });
 
         for(let i=1;i<=n;i++){
-          let w=12;
+          let w=10;
           ws.getColumn(i).eachCell({includeEmpty:false},c=>{
-            w=Math.max(w,Math.min(String(c.value??"").length+3,40));
+            const text=String(c.value??"").replace(/\n/g," ");
+            w=Math.max(w,Math.min(text.length+2,24));
           });
           ws.getColumn(i).width=w;
         }
 
+        // A4 paper + landscape + এক page wide; Excel-এর ভিতরেই text fit/center থাকবে।
+        ws.properties.pageSetUpPr={fitToPage:true,autoPageBreaks:false};
         ws.pageSetup={
-          paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,
-          margins:{left:.25,right:.25,top:.5,bottom:.5,header:.2,footer:.2}
+          paperSize:9,
+          orientation:"landscape",
+          fitToPage:true,
+          fitToWidth:1,
+          fitToHeight:0,
+          horizontalDpi:300,
+          verticalDpi:300,
+          margins:{left:.25,right:.25,top:.5,bottom:.5,header:.2,footer:.2},
+          horizontalCentered:true
         };
         ws.printTitlesRow="4:4";
         ws.printArea=`A1:${String.fromCharCode(64+n)}${ws.lastRow.number}`;
