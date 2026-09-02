@@ -327,6 +327,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         window.location.href = `dashboard.html?tab=${encodeURIComponent(tabName)}`;
         return;
       }
+      if (tabName === "settings") { window.location.href = "settings.html"; return; }
       window.location.href = "dashboard.html";
     };
 
