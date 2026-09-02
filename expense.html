@@ -26,7 +26,7 @@
   <!-- ড্যাশবোর্ড মেনু -->
   <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
     <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
-      <span class="text-sm font-bold flex items-center gap-1">📈 ড্যাশবোর্ড মেনু</span>
+      <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
       <div class="flex items-center gap-2">
         <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
         <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
@@ -517,12 +517,14 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const columnCount = dueOnly ? 4 : 8;
     const lastCol = dueOnly ? "D" : "H";
 
+    // Title rows: no separator line between committee name and report title.
+    // Keep the title area clean; borders are added only where actual content exists.
     ws.mergeCells(`A1:${lastCol}1`);
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
     ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
     ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
     ws.getCell("A1").fill = titleFill;
-    ws.getCell("A1").border = border;
+    ws.getCell("A1").border = { left: border.left, right: border.right, top: border.top };
     ws.getRow(1).height = 32;
 
     ws.mergeCells(`A2:${lastCol}2`);
@@ -530,7 +532,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     ws.getCell("A2").font = { name: "Noto Sans Bengali", size: 16, bold: true };
     ws.getCell("A2").alignment = { horizontal: "center", vertical: "middle" };
     ws.getCell("A2").fill = titleFill;
-    ws.getCell("A2").border = border;
+    ws.getCell("A2").border = { left: border.left, right: border.right, bottom: border.bottom };
     ws.getRow(2).height = 28;
 
     const headers = dueOnly
@@ -637,12 +639,31 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     ws.pageSetup.fitToWidth = 1;
     ws.pageSetup.fitToHeight = 0;
 
-    // All used cells: all-side border.
-    for (let r = 1; r <= ws.lastRow.number; r++) {
+    // Border rule: ONLY cells that actually contain data/text get all-side borders.
+    // Empty cells after the last filled cell in a row stay completely border-free.
+    // This keeps the totals compact (label + immediately adjacent amount) and removes
+    // the large blank bordered area visible to the right in the exported sheet.
+    for (let r = 3; r <= ws.lastRow.number; r++) {
       for (let c = 1; c <= columnCount; c++) {
-        ws.getCell(r, c).border = border;
+        const cell = ws.getCell(r, c);
+        const hasValue = cell.value !== null && cell.value !== undefined && String(cell.value).trim() !== "";
+        if (hasValue) {
+          cell.border = border;
+        } else {
+          cell.border = {};
+          cell.fill = undefined;
+        }
       }
     }
+
+    // Header row has a heading in every visible column, so every header cell is bordered.
+    for (let c = 1; c <= columnCount; c++) {
+      ws.getCell(4, c).border = border;
+    }
+
+    // Title rows intentionally have no border between row 1 and row 2.
+    ws.getCell("A1").border = { left: border.left, right: border.right, top: border.top };
+    ws.getCell("A2").border = { left: border.left, right: border.right, bottom: border.bottom };
 
     const buffer = await wb.xlsx.writeBuffer();
     const blob = new Blob([buffer], {
