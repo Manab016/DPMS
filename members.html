@@ -100,7 +100,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
       </div>
 
-      <div class="flex flex-col md:flex-row gap-2 mb-4">
+      <div class="flex flex-col md:flex-row gap-2 mb-4 items-stretch">
         <!-- সার্চ বক্স -->
         <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
         <!-- গ্রামের ড্রপডাউন -->
@@ -361,11 +361,22 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       }
     }
 
+    // Pagination: প্রতি পেজে সর্বোচ্চ ১০ জন সদস্য
+    let currentMemberPage = 1;
+    const MEMBERS_PER_PAGE = 10;
+
     window.renderTable = function(data) {
       const tbody = document.getElementById("memberTableBody");
       tbody.innerHTML = "";
       document.getElementById("totalMembersCount").innerText = `মোট সদস্য: ${data.length}`;
-      data.forEach((member) => {
+
+      const totalPages = Math.max(1, Math.ceil(data.length / MEMBERS_PER_PAGE));
+      if (currentMemberPage > totalPages) currentMemberPage = totalPages;
+
+      const startIndex = (currentMemberPage - 1) * MEMBERS_PER_PAGE;
+      const pageData = data.slice(startIndex, startIndex + MEMBERS_PER_PAGE);
+
+      pageData.forEach((member) => {
         const tr = document.createElement("tr");
         tr.className = "border-b hover:bg-gray-50";
         let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">🪪</button>`;
@@ -386,7 +397,50 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         `;
         tbody.appendChild(tr);
       });
+      renderMemberPagination(data.length, totalPages);
+      updateSelectAllState();
     };
+
+    function renderMemberPagination(totalItems, totalPages) {
+      let pagination = document.getElementById("memberPagination");
+      if (!pagination) {
+        pagination = document.createElement("div");
+        pagination.id = "memberPagination";
+        pagination.className = "flex flex-wrap items-center justify-center gap-1 mt-4";
+        document.getElementById("section-member").appendChild(pagination);
+      }
+      pagination.innerHTML = "";
+      if (totalItems <= MEMBERS_PER_PAGE) return;
+
+      const prev = document.createElement("button");
+      prev.type = "button"; prev.innerText = "‹";
+      prev.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100";
+      prev.disabled = currentMemberPage === 1;
+      prev.onclick = () => { currentMemberPage--; renderTable(window.filteredMembersData || []); };
+      pagination.appendChild(prev);
+
+      for (let i = 1; i <= totalPages; i++) {
+        const btn = document.createElement("button");
+        btn.type = "button"; btn.innerText = i;
+        btn.className = `px-3 py-1.5 rounded-lg border text-sm font-bold ${i === currentMemberPage ? "bg-orange-600 text-white border-orange-600" : "bg-white text-gray-700 hover:bg-gray-100"}`;
+        btn.onclick = () => { currentMemberPage = i; renderTable(window.filteredMembersData || []); };
+        pagination.appendChild(btn);
+      }
+
+      const next = document.createElement("button");
+      next.type = "button"; next.innerText = "›";
+      next.className = "px-3 py-1.5 rounded-lg border bg-white text-gray-700 text-sm font-bold hover:bg-gray-100";
+      next.disabled = currentMemberPage === totalPages;
+      next.onclick = () => { currentMemberPage++; renderTable(window.filteredMembersData || []); };
+      pagination.appendChild(next);
+    }
+
+    function updateSelectAllState() {
+      const selectAll = document.getElementById("selectAll");
+      if (!selectAll) return;
+      const boxes = document.querySelectorAll(".member-checkbox");
+      selectAll.checked = boxes.length > 0 && [...boxes].every(cb => cb.checked);
+    }
 
     window.processImage = function(input, previewId, maxWidth, maxHeight) {
       const file = input.files[0];
@@ -518,6 +572,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         return matchSearch && matchVillage;
       });
       
+      currentMemberPage = 1;
       renderTable(window.filteredMembersData);
     };
 
@@ -529,119 +584,94 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.exportToExcel = async function() {
       const dataToExport = window.filteredMembersData || allMembersData;
       const selectedVillage = document.getElementById("villageFilter").value;
+      if (dataToExport.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
 
-      if(dataToExport.length === 0) return alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
-      
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("সদস্য তালিকা");
-      
+      const worksheet = workbook.addWorksheet("সদস্য তালিকা", {
+        pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 }
+      });
+      worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+
       worksheet.columns = [
-        { width: 15 },
-        { width: 35 },
-        { width: 20 },
-        { width: 25 },
-        { width: 35 }
+        { width: 14 }, { width: 28 }, { width: 18 },
+        { width: 22 }, { width: 22 }, { width: 30 }
       ];
 
-      worksheet.mergeCells('A1:E1');
-      const titleCell = worksheet.getCell('A1');
-      titleCell.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
-      titleCell.font = { name: 'Kalpurush', size: 18, bold: true, color: { argb: 'FF000000' } };
-      titleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      titleCell.border = {
-        top: { style: 'medium' }, bottom: { style: 'thin' },
-        left: { style: 'medium' }, right: { style: 'medium' }
-      };
+      worksheet.mergeCells("A1:F1");
+      const title = worksheet.getCell("A1");
+      title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+      title.font = { name: "Kalpurush", size: 18, bold: true };
+      title.alignment = { horizontal: "center", vertical: "middle" };
+      title.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+      title.border = { top:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
       worksheet.getRow(1).height = 35;
 
-      worksheet.mergeCells('A2:E2');
-      const subTitleCell = worksheet.getCell('A2');
-      subTitleCell.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : 'সদস্য তালিকা (সকল গ্রাম)';
-      subTitleCell.font = { name: 'Kalpurush', size: 14, bold: true, color: { argb: 'FF000000' } };
-      subTitleCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      subTitleCell.border = {
-        bottom: { style: 'medium' }, left: { style: 'medium' }, right: { style: 'medium' }
-      };
-      worksheet.getRow(2).height = 25;
+      worksheet.mergeCells("A2:F2");
+      const sub = worksheet.getCell("A2");
+      sub.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : "সদস্য তালিকা (সকল গ্রাম)";
+      sub.font = { name: "Kalpurush", size: 16, bold: true };
+      sub.alignment = { horizontal: "center", vertical: "middle" };
+      sub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+      sub.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
+      worksheet.getRow(2).height = 30;
 
-      const headers = ['সদস্য ID', 'নাম', 'মোবাইল', 'গ্রাম', 'স্বাক্ষর'];
-      const headerRow = worksheet.getRow(3);
+      const headers = ["সদস্য ID","নাম","মোবাইল","গ্রাম","পদ","স্বাক্ষর"];
+      const headerRow = worksheet.getRow(4);
       headerRow.values = headers;
       headerRow.height = 30;
-
-      headerRow.eachCell((cell) => {
-        cell.font = { name: 'Kalpurush', size: 12, bold: true, color: { argb: 'FFFFFFFF' } };
-        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF26522' } };
-        cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-        cell.border = {
-          top: { style: 'thin' }, left: { style: 'thin' },
-          bottom: { style: 'thin' }, right: { style: 'thin' }
-        };
+      headerRow.eachCell(cell => {
+        cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
+        cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
+        cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+        cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
       });
 
-      let currentRow = 4;
-      dataToExport.forEach((m) => {
-        const row = worksheet.getRow(currentRow);
-        
-        row.values = [
-          m.autoId,
-          m.name,
-          m.mobile !== "-" ? m.mobile : "",
-          m.village,
-          m.signature ? "" : "নেই"
-        ];
-        
-        row.height = 65; 
-        
-        row.eachCell((cell) => {
-          cell.font = { size: 11, color: { argb: 'FF000000' } };
-          cell.alignment = { horizontal: 'center', vertical: 'middle', wrapText: true };
-          cell.border = {
-            top: { style: 'thin' }, left: { style: 'thin' },
-            bottom: { style: 'thin' }, right: { style: 'thin' }
-          };
+      let rowNo = 5;
+      dataToExport.forEach(m => {
+        const row = worksheet.getRow(rowNo);
+        row.values = [m.autoId || "", m.name || "", m.mobile !== "-" ? (m.mobile || "") : "", m.village || "", m.role || "", m.signature ? "" : "নেই"];
+        row.height = 65;
+        row.eachCell(cell => {
+          cell.font = { name:"Kalpurush", size:11 };
+          cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
+          cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
         });
 
         if (m.signature) {
           try {
-            const parts = m.signature.split(',');
+            const parts = m.signature.split(",");
             const base64Data = parts[1];
             const mime = parts[0].match(/:(.*?);/)[1];
-            let ext = 'png';
-            if(mime.includes('jpeg') || mime.includes('jpg')) ext = 'jpeg';
-
-            const imageId = workbook.addImage({
-              base64: base64Data,
-              extension: ext,
-            });
-
-            worksheet.addImage(imageId, {
-              tl: { col: 4.1, row: currentRow - 0.9 },
-              ext: { width: 170, height: 70 },
-              editAs: 'oneCell'
-            });
-          } catch(e) {
-            console.error("Error adding signature image:", e);
-          }
+            const ext = (mime.includes("jpeg") || mime.includes("jpg")) ? "jpeg" : "png";
+            const imageId = workbook.addImage({ base64:base64Data, extension:ext });
+            worksheet.addImage(imageId, { tl:{col:5.1,row:rowNo-0.9}, ext:{width:170,height:70}, editAs:"oneCell" });
+          } catch(e) { console.error("Error adding signature image:", e); }
         }
-        
-        currentRow++;
+        rowNo++;
       });
 
-      worksheet.mergeCells(`A${currentRow}:E${currentRow}`);
-      const totalCell = worksheet.getCell(`A${currentRow}`);
-      totalCell.value = `মোট সদস্য: ${dataToExport.length} জন`;
-      totalCell.font = { size: 14, bold: true, color: { argb: 'FF000000' } };
-      totalCell.alignment = { horizontal: 'center', vertical: 'middle' };
-      totalCell.border = {
-        top: { style: 'medium' }, left: { style: 'thin' },
-        bottom: { style: 'medium' }, right: { style: 'thin' }
-      };
-      worksheet.getRow(currentRow).height = 30;
+      const totalLabel = worksheet.getCell(`A${rowNo}`);
+      totalLabel.value = "মোট সদস্য";
+      totalLabel.font = { name:"Kalpurush", size:13, bold:true };
+      totalLabel.alignment = { horizontal:"center", vertical:"middle" };
+      totalLabel.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
+      totalLabel.border = { top:{style:"medium"}, left:{style:"medium"}, bottom:{style:"medium"}, right:{style:"thin"} };
+
+      const totalValue = worksheet.getCell(`B${rowNo}`);
+      totalValue.value = dataToExport.length;
+      totalValue.font = { name:"Kalpurush", size:13, bold:true };
+      totalValue.alignment = { horizontal:"center", vertical:"middle" };
+      totalValue.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
+      totalValue.border = { top:{style:"medium"}, left:{style:"thin"}, bottom:{style:"medium"}, right:{style:"medium"} };
+      worksheet.getRow(rowNo).height = 30;
+
+      worksheet.pageSetup.printTitlesRow = "4:4";
+      worksheet.pageSetup.printArea = `A1:F${rowNo}`;
 
       const fileName = selectedVillage ? `Members_${selectedVillage}.xlsx` : "Members_All_Villages.xlsx";
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(new Blob([buffer]), fileName);
+      saveAs(new Blob([buffer], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}), fileName);
     };
 
     window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
