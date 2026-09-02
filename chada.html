@@ -279,7 +279,6 @@
           <div class="bg-white w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5">
             <div class="flex items-center justify-between border-b pb-3 mb-4">
               <h3 id="subEntryModalTitle" class="text-lg font-bold text-orange-700">➕ চাঁদা যোগ করুন</h3>
-              <button type="button" onclick="closeSubEntryModal()" class="text-gray-500 hover:text-red-600 text-xl font-bold">✕</button>
             </div>
 
             <!-- দুইটি tab পাশাপাশি -->
@@ -333,10 +332,16 @@
                 <div><label class="block text-xs font-bold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
                   <input type="text" id="subNoteMember" placeholder="যেমন: বার্ষিক চাঁদা" class="w-full p-2.5 border rounded-lg text-sm bg-white">
                 </div>
-                <button onclick="saveSubFromNewForm('member')" id="saveMemberSubBtn"
-                  class="w-full bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold">
-                  💾 চাঁদা সেভ করুন
-                </button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-orange-200">
+                  <button type="button" onclick="closeSubEntryModal()"
+                    class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-300">
+                    বাতিল
+                  </button>
+                  <button type="button" onclick="saveSubFromNewForm('member')" id="saveMemberSubBtn"
+                    class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-700">
+                    সেভ
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -375,10 +380,16 @@
                 <div><label class="block text-xs font-bold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
                   <input type="text" id="subNoteOther" placeholder="যেমন: অনুদান / চাঁদা" class="w-full p-2.5 border rounded-lg text-sm bg-white">
                 </div>
-                <button onclick="saveSubFromNewForm('other')" id="saveOtherSubBtn"
-                  class="w-full bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold">
-                  💾 দাতার চাঁদা সেভ করুন
-                </button>
+                <div class="flex justify-end gap-2 pt-2 border-t border-orange-200">
+                  <button type="button" onclick="closeSubEntryModal()"
+                    class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-300">
+                    বাতিল
+                  </button>
+                  <button type="button" onclick="saveSubFromNewForm('other')" id="saveOtherSubBtn"
+                    class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-700">
+                    সেভ
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -1096,8 +1107,9 @@
           name: m.name || m.memberName || "",
           mobile: m.mobile || m.phone || m.contact || "",
           village: m.village || m.gram || m.address || "",
-          // M001/M002... বা members-এ রাখা memberId/autoId-ই দেখানো হবে
-          memberId: m.memberId || m.autoId || m.memberCode || ""
+          // members.html-এর মতো একই M001/M002... ID দেখানো হবে।
+          // Firestore document ID কখনও UI-তে দেখানো হবে না।
+          memberId: m.autoId || m.memberId || m.memberCode || ""
         };
       }
 
@@ -1136,6 +1148,11 @@
         onSnapshot(collection(db, "members"), snap => {
           allMembersDataForSub = [];
           snap.forEach(d => allMembersDataForSub.push({ id:d.id, ...d.data() }));
+          // members.html যেভাবে createdAt অনুযায়ী M001/M002... বানায়, এখানেও ঠিক সেটাই করা হবে।
+          allMembersDataForSub.sort((a,b) => (a.createdAt || 0) - (b.createdAt || 0));
+          allMembersDataForSub.forEach((m, idx) => {
+            m.autoId = "M" + String(idx + 1).padStart(3, "0");
+          });
           allMembersDataForSub.sort((a,b) =>
             String(memberFields(a).name).localeCompare(String(memberFields(b).name))
           );
@@ -1232,8 +1249,8 @@
           String(s.memberAutoId)===String(x.memberId));
         if(!a.length) a=allSubscriptionsData.filter(s=>isMemberSubscription(s) && s.memberCode && x.memberId &&
           String(s.memberCode)===String(x.memberId));
-        if(!a.length) a=allSubscriptionsData.filter(s=>isMemberSubscription(s) &&
-          String(s.name||s.memberName||"").trim()===String(x.name).trim());
+        // নাম দিয়ে আর payment match করা হবে না। একই নামে একাধিক সদস্য থাকলেও
+        // Firestore document ID + M001/M002 ID অনুযায়ী আলাদা রেকর্ড থাকবে।
         return a.sort((a,b)=>(b.timestamp||0)-(a.timestamp||0))[0]||null;
       }
 
@@ -1348,7 +1365,7 @@
           else{
             document.getElementById("selectedMemberId").value=item.memberId||"";
             document.getElementById("memberSearchInput").value=item.name||"";
-            document.getElementById("selectedMemberInfo").innerText=item.memberAutoId||item.memberCode||"";
+            document.getElementById("selectedMemberInfo").innerText=(item.memberAutoId||item.memberCode)?"Member ID: "+(item.memberAutoId||item.memberCode):"";
           }
           document.getElementById("subDateMember").value=item.date||"";
           document.getElementById("subAmountMember").value=item.amount||"";
@@ -1379,8 +1396,10 @@
             date:document.getElementById("subDateMember").value,
             donorType:"member",
             name:x.name,
+            // memberId = hidden unique Firestore document ID; memberAutoId = visible M001/M002 ID
             memberId:m.id,
             memberAutoId:x.memberId,
+            memberCode:x.memberId,
             mobile:x.mobile,
             village:x.village,
             amount:Number(document.getElementById("subAmountMember").value),
@@ -1415,7 +1434,7 @@
         }catch(e){alert("ত্রুটি: "+e.message);}
         finally{
           btn.disabled=false;
-          btn.innerText=type==="member"?"💾 চাঁদা সেভ করুন":"💾 দাতার চাঁদা সেভ করুন";
+          btn.innerText="সেভ";
         }
       };
 
