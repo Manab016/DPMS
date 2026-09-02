@@ -1194,6 +1194,189 @@
         if(card) card.innerText=`₹${(ma+oa).toLocaleString("en-IN")}`;
       }
 
+
+      // --- চাঁদা যোগ / এডিট / ডিলিট / ট্যাব ---
+      window.switchSubEntryTab = function(tab) {
+        activeSubEntryTab = tab === "other" ? "other" : "member";
+        const mf = document.getElementById("memberContributionForm");
+        const of = document.getElementById("otherContributionForm");
+        const mb = document.getElementById("subTabMember");
+        const ob = document.getElementById("subTabOther");
+        if (mf) mf.classList.toggle("hidden", activeSubEntryTab !== "member");
+        if (of) of.classList.toggle("hidden", activeSubEntryTab !== "other");
+        if (mb) mb.className = activeSubEntryTab === "member"
+          ? "sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm"
+          : "sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
+        if (ob) ob.className = activeSubEntryTab === "other"
+          ? "sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm"
+          : "sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
+      };
+
+      window.openAddSubModal = function() {
+        editingSubId = "";
+        document.getElementById("subEntryModalTitle").innerText = "➕ চাঁদা যোগ করুন";
+        ["memberSearchInput","selectedMemberId","selectedMemberInfo","subNoteMember",
+         "otherDataName","otherDataMobile","otherDataVillage","subNoteOther"].forEach(id => {
+          const e = document.getElementById(id); if (e) e.value = "";
+        });
+        const info = document.getElementById("selectedMemberInfo"); if (info) info.innerText = "";
+        setDefaultSubDates();
+        ["subAmountMember","subAmountOther"].forEach(id => {
+          const e=document.getElementById(id); if(e) e.value="1500";
+        });
+        setCollectorDefaults();
+        switchSubEntryTab("member");
+        const modal=document.getElementById("subEntryModal");
+        if(modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+      };
+
+      window.closeSubEntryModal = function() {
+        const modal=document.getElementById("subEntryModal");
+        if(modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        editingSubId = "";
+      };
+
+      window.openEditSubModal = function(id) {
+        const item = allSubscriptionsData.find(x => x.id === id);
+        if(!item) return alert("চাঁদার তথ্য পাওয়া যায়নি।");
+        editingSubId = id;
+        document.getElementById("subEntryModalTitle").innerText = "✏️ চাঁদা এডিট করুন";
+        const modal=document.getElementById("subEntryModal");
+        if(modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+        if(isMemberSubscription(item)) {
+          switchSubEntryTab("member");
+          let m = allMembersDataForSub.find(x => String(x.id)===String(item.memberId));
+          if(!m && item.memberAutoId) m = allMembersDataForSub.find(x => String(memberFields(x).memberId)===String(item.memberAutoId));
+          if(!m && item.memberCode) m = allMembersDataForSub.find(x => String(memberFields(x).memberId)===String(item.memberCode));
+          if(m) selectMemberForSub(m.id);
+          else {
+            document.getElementById("memberSearchInput").value = item.name || "";
+            document.getElementById("selectedMemberId").value = item.memberId || "";
+            document.getElementById("selectedMemberInfo").innerText = item.memberAutoId || item.memberCode || "";
+          }
+          document.getElementById("subCollectorMember").value = item.collector || getDefaultCollectorName();
+          document.getElementById("subDateMember").value = item.date || "";
+          document.getElementById("subAmountMember").value = item.amount || "";
+          document.getElementById("subNoteMember").value = item.note || item.comment || "";
+        } else {
+          switchSubEntryTab("other");
+          document.getElementById("otherDataName").value = item.name || "";
+          document.getElementById("otherDataMobile").value = item.mobile || "";
+          document.getElementById("otherDataVillage").value = item.village || "";
+          document.getElementById("subCollectorOther").value = item.collector || getDefaultCollectorName();
+          document.getElementById("subDateOther").value = item.date || "";
+          document.getElementById("subAmountOther").value = item.amount || "";
+          document.getElementById("subNoteOther").value = item.note || item.comment || "";
+        }
+      };
+
+      window.saveSubFromNewForm = async function(type) {
+        const isMember = type === "member";
+        const btn = document.getElementById(isMember ? "saveMemberSubBtn" : "saveOtherSubBtn");
+        if(btn) btn.disabled = true;
+        try {
+          let data;
+          if(isMember) {
+            const selectedId = document.getElementById("selectedMemberId").value.trim();
+            const m = allMembersDataForSub.find(x => String(x.id) === String(selectedId));
+            if(!m) { alert("আগে একজন সদস্য নির্বাচন করুন।"); return; }
+            const x = memberFields(m);
+            const date = document.getElementById("subDateMember").value;
+            const amount = Number(document.getElementById("subAmountMember").value);
+            if(!date || !amount || amount <= 0) { alert("তারিখ ও সঠিক পরিমাণ দিন।"); return; }
+            const existing = findMemberPayment(m);
+            if(!editingSubId && existing) { alert("এই সদস্যের চাঁদা ইতিমধ্যে সেভ করা আছে।"); return; }
+            data = {
+              donorType:"member", type:"member",
+              memberId:m.id, memberAutoId:x.memberId, memberCode:x.memberId,
+              name:x.name, mobile:x.mobile || "", village:x.village || "",
+              collector:document.getElementById("subCollectorMember").value.trim() || getDefaultCollectorName(),
+              date, amount, note:document.getElementById("subNoteMember").value.trim(), timestamp:Date.now()
+            };
+          } else {
+            const name = document.getElementById("otherDataName").value.trim();
+            const date = document.getElementById("subDateOther").value;
+            const amount = Number(document.getElementById("subAmountOther").value);
+            const mobile = document.getElementById("otherDataMobile").value.trim();
+            if(!name) { alert("দাতার নাম দিন।"); return; }
+            if(!date || !amount || amount <= 0) { alert("তারিখ ও সঠিক পরিমাণ দিন।"); return; }
+            if(mobile && !/^\d{10}$/.test(mobile)) { alert("মোবাইল নম্বর দিলে ১০ সংখ্যার হতে হবে।"); return; }
+            data = {
+              donorType:"other", type:"other",
+              name, mobile, village:document.getElementById("otherDataVillage").value.trim(),
+              collector:document.getElementById("subCollectorOther").value.trim() || getDefaultCollectorName(),
+              date, amount, note:document.getElementById("subNoteOther").value.trim(), timestamp:Date.now()
+            };
+          }
+          if(editingSubId) await updateDoc(doc(db,"subscriptions",editingSubId),data);
+          else await addDoc(collection(db,"subscriptions"),data);
+          closeSubEntryModal();
+        } catch(e) {
+          console.error(e);
+          alert("চাঁদা সেভ করতে সমস্যা হয়েছে: " + (e?.message || e));
+        } finally { if(btn) btn.disabled=false; }
+      };
+
+      window.deleteSubscription = async function(id) {
+        if(!id) return;
+        if(!confirm("এই চাঁদার তথ্যটি ডিলিট করতে চান?")) return;
+        try { await deleteDoc(doc(db,"subscriptions",id)); }
+        catch(e) { alert("ডিলিট করতে সমস্যা হয়েছে: " + (e?.message || e)); }
+      };
+
+      // --- সদস্য Excel: সব সদস্য / দিয়েছে / দেয়নি ---
+      function memberReportRows(filter="all") {
+        return allMembersDataForSub.map(m => {
+          const x=memberFields(m);
+          const pay=findMemberPayment(m);
+          const paid=!!pay;
+          return {m,x,pay,paid};
+        }).filter(r => filter === "paid" ? r.paid : filter === "unpaid" ? !r.paid : true);
+      }
+
+      async function makeReportExcel(title, headers, rows, totalLabel, totalValue, fileName) {
+        if(typeof ExcelJS === "undefined") { alert("ExcelJS লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।"); return; }
+        const wb=new ExcelJS.Workbook();
+        const ws=wb.addWorksheet("Report");
+        ws.mergeCells(1,1,1,headers.length); ws.getCell(1,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        ws.mergeCells(2,1,2,headers.length); ws.getCell(2,1).value=title;
+        const cream="FFF7E6", orange="F59E0B", yellow="FEF08A", border="D1D5DB";
+        [1,2].forEach(r=>{const c=ws.getCell(r,1); c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}}; c.font={bold:true,size:r===1?18:16}; c.alignment={horizontal:"center",vertical:"middle"};});
+        ws.getRow(1).height=28; ws.getRow(2).height=25;
+        const hr=ws.getRow(4); headers.forEach((h,i)=>{const c=hr.getCell(i+1);c.value=h;c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.font={bold:true};c.alignment={horizontal:"center",vertical:"middle",wrapText:true};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};});
+        rows.forEach((row,ri)=>{const rr=ws.getRow(5+ri);row.forEach((v,ci)=>{const c=rr.getCell(ci+1);c.value=v??"";c.fill={type:"pattern",pattern:"solid",fgColor:{argb:cream}};c.alignment={horizontal:"center",vertical:"middle",wrapText:true,shrinkToFit:true};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};});});
+        const tr=ws.getRow(5+rows.length); tr.getCell(1).value=totalLabel; tr.getCell(2).value=totalValue; for(let i=1;i<=Math.min(2,headers.length);i++){const c=tr.getCell(i);c.fill={type:"pattern",pattern:"solid",fgColor:{argb:yellow}};c.font={bold:true};c.alignment={horizontal:"center",vertical:"middle"};c.border={top:{style:"thin",color:{argb:border}},bottom:{style:"thin",color:{argb:border}},left:{style:"thin",color:{argb:border}},right:{style:"thin",color:{argb:border}}};}
+        ws.columns.forEach(col=>{let max=10; col.eachCell({includeEmpty:false},c=>{max=Math.max(max,String(c.value??"").length+2);});col.width=Math.min(24,max);});
+        ws.pageSetup={paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0,horizontalCentered:true};
+        ws.pageSetup.printTitlesRow="4:4"; ws.pageSetup.printArea=`A1:${String.fromCharCode(64+headers.length)}${5+rows.length}`;
+        ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+        const buf=await wb.xlsx.writeBuffer(); saveAs(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),fileName);
+      }
+
+      window.exportMemberListReport = async function(){
+        const rows=memberReportRows("all").map(({x,pay,paid})=>[paid?"✓":"",x.name,x.mobile||"",x.village||"",x.memberId||"",paid?Number(pay.amount||0):"",paid?(pay.date||""):"",paid?(pay.collector||""):""]);
+        const total=rows.reduce((s,r)=>s+(Number(r[5])||0),0);
+        await makeReportExcel("সদস্য চাঁদা রিপোর্ট - সকল সদস্য",["✓","নাম","মোবাইল","গ্রাম","Member ID","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী"],rows,"সর্বমোট চাঁদা",total,"সদস্য_সকল_রিপোর্ট.xlsx");
+      };
+      window.exportMemberPaidReport = async function(){
+        const rows=memberReportRows("paid").map(({x,pay})=>["✓",x.name,x.mobile||"",x.village||"",x.memberId||"",Number(pay.amount||0),pay.date||"",pay.collector||""]);
+        const total=rows.reduce((s,r)=>s+(Number(r[5])||0),0);
+        await makeReportExcel("সদস্য চাঁদা রিপোর্ট - যারা দিয়েছে",["✓","নাম","মোবাইল","গ্রাম","Member ID","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী"],rows,"সর্বমোট চাঁদা",total,"সদস্য_যারা_দিয়েছে_রিপোর্ট.xlsx");
+      };
+      window.exportMemberUnpaidReport = async function(){
+        const rows=memberReportRows("unpaid").map(({x})=>["",x.name,x.mobile||"",x.village||"",x.memberId||"","","",""]);
+        await makeReportExcel("সদস্য চাঁদা রিপোর্ট - যারা দেয়নি",["✓","নাম","মোবাইল","গ্রাম","Member ID","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী"],rows,"যারা দেয়নি",rows.length,"সদস্য_যারা_দেয়নি_রিপোর্ট.xlsx");
+      };
+
+      window.exportOtherDataReport = async function(){
+        const data=allSubscriptionsData.filter(s=>!isMemberSubscription(s));
+        const rows=data.map(item=>[item.name||"",item.mobile||"",item.village||"",Number(item.amount||0),item.date||"",item.collector||getDefaultCollectorName(),item.note||item.comment||""]);
+        const total=rows.reduce((s,r)=>s+(Number(r[3])||0),0);
+        await makeReportExcel("দাতা চাঁদা রিপোর্ট",["নাম","মোবাইল","গ্রাম","চাঁদা (₹)","তারিখ","চাঁদা গ্রহণকারী","মন্তব্য"],rows,"সর্বমোট চাঁদা",total,"দাতা_চাঁদা_রিপোর্ট.xlsx");
+      };
+
+      window.exportMemberStatusReport = window.exportMemberListReport;
+
       window.searchMemberForSub = function() {
         const q=(document.getElementById("memberSearchInput").value||"").trim().toLowerCase();
         const box=document.getElementById("memberSearchResults");
