@@ -400,6 +400,19 @@
           </div>
         </div>
 
+        <!-- সদস্য ও দাতার তালিকা: চাঁদা যোগ popup-এর মতো আলাদা tab -->
+        <div class="mb-4 bg-orange-50 p-1.5 rounded-xl border border-orange-200 grid grid-cols-2 gap-1.5">
+          <button type="button" id="contributionListTabMember" onclick="switchContributionListTab('member')"
+            class="contribution-list-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-sm">
+            👤 সদস্যদের চাঁদা
+          </button>
+          <button type="button" id="contributionListTabDonor" onclick="switchContributionListTab('donor')"
+            class="contribution-list-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold">
+            🤝 দাতাদের চাঁদা
+          </button>
+        </div>
+
+        <div id="memberContributionListPanel">
         <!-- সদস্যের দেওয়া চাঁদার তালিকা: চাঁদা না দিলে সদস্য দেখাবে না -->
         <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
           <div class="bg-orange-50 p-3 border-b">
@@ -425,7 +438,10 @@
           <div id="memberContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
         </div>
 
+        </div>
+
         <!-- দাতার তালিকা -->
+        <div id="donorContributionListPanel" class="hidden">
         <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden shadow-sm">
           <div class="bg-orange-50 p-3 border-b flex flex-wrap items-center justify-between gap-2">
             <h3 class="text-sm font-bold text-gray-800">🤝 দাতাদের চাঁদা</h3>
@@ -440,6 +456,7 @@
             </table>
           </div>
           <div id="otherContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
+        </div>
         </div>
       </div>
 
@@ -1107,6 +1124,26 @@
       const OTHER_SUB_PAGE_SIZE = 5;
       let editingSubId = "";
       let activeSubEntryTab = "member";
+      let activeContributionListTab = "member";
+
+      // সদস্য/দাতা তালিকা আলাদা tab — এক সময়ে শুধু একটি তালিকা দেখা যাবে
+      window.switchContributionListTab = function(tab) {
+        activeContributionListTab = tab === "donor" ? "donor" : "member";
+        const memberPanel = document.getElementById("memberContributionListPanel");
+        const donorPanel = document.getElementById("donorContributionListPanel");
+        const memberBtn = document.getElementById("contributionListTabMember");
+        const donorBtn = document.getElementById("contributionListTabDonor");
+        if (!memberPanel || !donorPanel || !memberBtn || !donorBtn) return;
+
+        const active = "bg-orange-600 text-white shadow-sm";
+        const inactive = "bg-white text-gray-700";
+        memberPanel.classList.toggle("hidden", activeContributionListTab !== "member");
+        donorPanel.classList.toggle("hidden", activeContributionListTab !== "donor");
+        memberBtn.className = "contribution-list-tab px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold " +
+          (activeContributionListTab === "member" ? active : inactive);
+        donorBtn.className = "contribution-list-tab px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold " +
+          (activeContributionListTab === "donor" ? active : inactive);
+      };
 
       function esc(v) {
         return String(v ?? "").replace(/[&<>"']/g, c => ({
