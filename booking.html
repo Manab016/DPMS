@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>টিকেট বুকিং ব্যবস্থাপনা - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+    <title>টিকিট বুকিং ব্যবস্থাপনা - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -58,20 +58,20 @@
         <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
       </div>
 
-      <!-- 🎫 টিকেট বুকিং ব্যবস্থাপনা সেকশন -->
+      <!-- 🎫 টিকিট বুকিং ব্যবস্থাপনা সেকশন -->
       <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5">
         <div class="flex items-center justify-between mb-4 border-b pb-3">
           <div class="flex items-center gap-2">
             <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
-            <h2 class="text-lg font-bold text-gray-800">টিকেট বুকিং ব্যবস্থাপনা</h2>
+            <h2 class="text-lg font-bold text-gray-800">টিকিট বুকিং ব্যবস্থাপনা</h2>
           </div>
         </div>
-
+  
         <!-- টপ স্ট্যাটাস কার্ড -->
         <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm flex flex-wrap justify-around text-center gap-2">
-          <div>মোট বরাদ্দ: <strong id="totalAllocatedTickets" class="text-orange-700">০ টিকেট</strong></div>
-          <div class="border-x px-4 border-amber-200">মোট বিক্রীত: <strong id="totalSoldTickets" class="text-emerald-700">০ টিকেট</strong></div>
-          <div>মোট বাকি: <strong id="totalRemainingTickets" class="text-blue-700">০ টিকেট</strong></div>
+          <div>মোট বরাদ্দ: <strong id="totalAllocatedTickets" class="text-orange-700">০ টিকিট</strong></div>
+          <div class="border-x px-4 border-amber-200">মোট বিক্রীত: <strong id="totalSoldTickets" class="text-emerald-700">০ টিকিট</strong></div>
+          <div>মোট বাকি: <strong id="totalRemainingTickets" class="text-blue-700">০ টিকিট</strong></div>
         </div>
 
         <!-- অ্যাকশন ও সার্চ বার -->
@@ -110,8 +110,8 @@
                   <th class="p-2 border-r text-center">নাম</th>
                   <th class="p-2 border-r text-center">তারিখ</th>
                   <th class="p-2 border-r text-center">বই নম্বর</th>
-                  <th class="p-2 border-r text-center">টিকেট থেকে</th>
-                  <th class="p-2 border-r text-center">টিকেট পর্যন্ত</th>
+                  <th class="p-2 border-r text-center">টিকিট থেকে</th>
+                  <th class="p-2 border-r text-center">টিকিট পর্যন্ত</th>
                   <th class="p-2 border-r text-center">বরাদ্দ</th>
                   <th class="p-2 border-r text-center">বিক্রীত</th>
                   <th class="p-2 text-center">অ্যাকশন</th>
@@ -139,8 +139,8 @@
                   <th class="p-2 border-r text-center">নাম</th>
                   <th class="p-2 border-r text-center">তারিখ</th>
                   <th class="p-2 border-r text-center">বই নম্বর</th>
-                  <th class="p-2 border-r text-center">টিকেট থেকে</th>
-                  <th class="p-2 border-r text-center">টিকেট পর্যন্ত</th>
+                  <th class="p-2 border-r text-center">টিকিট থেকে</th>
+                  <th class="p-2 border-r text-center">টিকিট পর্যন্ত</th>
                   <th class="p-2 border-r text-center">বরাদ্দ</th>
                   <th class="p-2 border-r text-center">বিক্রীত</th>
                   <th class="p-2 text-center">অ্যাকশন</th>
@@ -155,12 +155,12 @@
       </div>
     </div>
 
-    <!-- 🎫 নতুন টিকেট বুকিং পপআপ মোডাল -->
+    <!-- 🎫 নতুন টিকিট বুকিং পপআপ মোডাল -->
     <div id="bookingEntryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
       <div class="bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
         <button onclick="closeBookingEntryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
         
-        <h3 class="text-lg font-bold text-orange-700 text-center mb-4" id="bookingModalTitle">নতুন টিকেট বুকিং</h3>
+        <h3 class="text-lg font-bold text-orange-700 text-center mb-4" id="bookingModalTitle">নতুন টিকিট বুকিং</h3>
 
         <!-- মোডাল ট্যাব (সদস্য / অন্যান্য) -->
         <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl mb-4">
@@ -195,17 +195,17 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকেট নম্বর থেকে *</label>
-              <input id="bookingStartTicket" type="number" placeholder="শুরুর টিকেট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
+              <input id="bookingStartTicket" type="number" placeholder="শুরুর টিকিট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকেট নম্বর পর্যন্ত *</label>
-              <input id="bookingEndTicket" type="number" placeholder="শেষ টিকেট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
+              <input id="bookingEndTicket" type="number" placeholder="শেষ টিকিট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (মোট টিকেট)</label>
+            <label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (মোট টিকিট)</label>
             <input id="bookingQuantity" type="number" readonly placeholder="স্বয়ংক্রিয় গণিত" class="w-full p-2.5 border rounded-lg text-sm bg-gray-100 font-bold text-orange-700">
           </div>
 
@@ -457,7 +457,7 @@
       window.openAddBookingModal = function() {
         editingBookingId = "";
         selectedMemberObject = null;
-        document.getElementById("bookingModalTitle").innerText = "নতুন টিকেট বুকিং";
+        document.getElementById("bookingModalTitle").innerText = "নতুন টিকিট বুকিং";
         document.getElementById("bookingMemberSearch").value = "";
         document.getElementById("selectedMemberInfo").innerText = "সদস্য খুঁজতে উপরে টাইপ করুন";
         document.getElementById("bookingCustomerName").value = "";
@@ -482,7 +482,7 @@
         const item = allBookingsData.find(x => x.id === id);
         if (!item) return;
         editingBookingId = id;
-        document.getElementById("bookingModalTitle").innerText = "টিকেট বুকিং এডিট করুন";
+        document.getElementById("bookingModalTitle").innerText = "টিকিট বুকিং এডিট করুন";
         
         switchBookingType(item.type || "member");
         if (item.type === "member") {
@@ -643,9 +643,9 @@
         }).join("") : `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো বুকিং পাওয়া যায়নি</td></tr>`;
 
         // Update top stats
-        document.getElementById("totalAllocatedTickets").innerText = totalAlloc + " টিকেট";
-        document.getElementById("totalSoldTickets").innerText = totalSold + " টিকেট";
-        document.getElementById("totalRemainingTickets").innerText = Math.max(0, totalAlloc - totalSold) + " টিকেট";
+        document.getElementById("totalAllocatedTickets").innerText = totalAlloc + " টিকিট";
+        document.getElementById("totalSoldTickets").innerText = totalSold + " টিকিট";
+        document.getElementById("totalRemainingTickets").innerText = Math.max(0, totalAlloc - totalSold) + " টিকিট";
 
         // Update section stats
         const mAlloc = membersList.reduce((s, x) => s + (Number(x.quantity) || 0), 0);
@@ -676,7 +676,7 @@
         }
 
         const ws = wb.addWorksheet("Booking Report");
-        const headers = ["নাম", "তারিখ", "বই নম্বর", "টিকেট থেকে", "টিকেট পর্যন্ত", "বরাদ্দ টিকেট", "বিক্রীত টিকেট"];
+        const headers = ["নাম", "তারিখ", "বই নম্বর", "টিকিট থেকে", "টিকিট পর্যন্ত", "বরাদ্দ টিকিট", "বিক্রীত টিকিট"];
         const rows = targetData.map(item => [
           item.name || "",
           item.date || "",
@@ -773,7 +773,7 @@
     </script>
 
     <script>
-      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+      const defaultDevInfo = { name: "MANABENDRA NATH SARKAR", mobile: "9002652507", email: "manabendranathsarkar112@gmail.com" };
 
       function loadDevData() {
         const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
