@@ -40,6 +40,9 @@
           <h2 class="text-lg font-bold text-gray-800">🎟️ টিকিট বিক্রয় ও বুকিং রেজিস্টার</h2>
         </div>
         <div class="flex items-center gap-2 w-full md:w-auto">
+          <button onclick="openAddBookingModal()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1 transition">
+            ➕ নতুন বই
+          </button>
           <button onclick="openAddSalesModal()" class="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1 transition">
             ➕ নতুন বিক্রয়
           </button>
@@ -100,6 +103,29 @@
     </div>
   </div>
 
+  <!-- ➕ নতুন বই (বুকিং) এন্ট্রি পপআপ মডাল -->
+  <div id="bookingModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50 overflow-y-auto">
+    <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-blue-200 p-5 md:p-6 relative max-h-[85vh] overflow-y-auto my-auto">
+      <button onclick="closeBookingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
+      <h3 class="text-lg font-bold text-blue-700 text-center mb-4">নতুন বই (বুকিং) এন্ট্রি</h3>
+      
+      <div class="space-y-4 text-xs md:text-sm">
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">বই নম্বর *</label>
+          <input id="newBookNo" type="text" placeholder="যেমন: 201" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div>
+          <label class="block font-bold text-gray-700 mb-1">বরাদ্দ টিকিট (মোট টিকিট) *</label>
+          <input id="newBookQty" type="number" placeholder="যেমন: 300" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-blue-400">
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-3">
+          <button type="button" onclick="closeBookingModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl font-bold hover:bg-gray-100 transition">বাতিল</button>
+          <button type="button" onclick="saveBookingForm()" class="w-full bg-blue-600 text-white py-2.5 rounded-xl font-bold hover:bg-blue-700 transition">সেভ করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ➕ বিক্রয় এন্ট্রি পপআপ মডাল (বড় এবং স্ক্রোলিং সুবিধাযুক্ত) -->
   <div id="salesModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 sm:p-5 z-50 overflow-y-auto">
     <div class="bg-white w-full max-w-lg md:max-w-xl rounded-2xl shadow-2xl border border-amber-200 p-5 md:p-6 relative max-h-[88vh] overflow-y-auto my-auto">
@@ -122,12 +148,6 @@
         <div id="otherNameBox" class="hidden">
           <label class="block font-bold text-gray-700 mb-1">ক্রেতার নাম *</label>
           <input id="saleCustomerName" type="text" placeholder="নাম লিখুন" class="w-full p-2.5 border rounded-lg focus:ring-2 focus:ring-orange-400">
-        </div>
-
-        <!-- Ticket Booking List Display in Form -->
-        <div id="memberBookingListContainer" class="hidden bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2">
-          <h4 class="font-bold text-gray-800 text-xs uppercase tracking-wider border-b pb-1.5">টিকিট বুকিং তালিকা</h4>
-          <div id="memberBookingsContent" class="space-y-2"></div>
         </div>
 
         <!-- Date & Book No -->
@@ -288,7 +308,7 @@
     let currentSaleType = "member";
     let editSaleId = "";
     
-    // Pagination Variables (5 items per page)
+    // Pagination Variables
     let currentPage = 1;
     const itemsPerPage = 5;
 
@@ -383,7 +403,50 @@
       return treasurer ? treasurer.name : "";
     };
 
-    // ৩. বিক্রয় মডাল হ্যান্ডলার
+    // ৩. নতুন বই (বুকিং) মডাল হ্যান্ডলার
+    window.openAddBookingModal = function() {
+      document.getElementById("newBookNo").value = "";
+      document.getElementById("newBookQty").value = "";
+      const modal = document.getElementById("bookingModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    };
+
+    window.closeBookingModal = function() {
+      const modal = document.getElementById("bookingModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+    };
+
+    window.saveBookingForm = async function() {
+      const bookNo = document.getElementById("newBookNo").value.trim();
+      const quantity = parseInt(document.getElementById("newBookQty").value) || 0;
+
+      if (!bookNo || quantity <= 0) {
+        return alert("বই নম্বর এবং মোট টিকিট সঠিকভাবে লিখুন!");
+      }
+
+      // ডুপ্লিকেট বই নম্বর চেক
+      const exists = bookingsData.find(b => (b.bookNo || "").toLowerCase() === bookNo.toLowerCase());
+      if (exists) {
+        return alert("এই বইটি ইতিমধ্যে যোগ করা হয়েছে! একই নম্বর দুইবার যোগ করা যাবে না।");
+      }
+
+      try {
+        await addDoc(collection(db, "bookings"), {
+          bookNo: bookNo,
+          quantity: quantity,
+          sold: 0,
+          timestamp: Date.now()
+        });
+        alert("নতুন বই সফলভাবে যোগ করা হয়েছে!");
+        closeBookingModal();
+      } catch(e) {
+        alert("ত্রুটি: " + e.message);
+      }
+    };
+
+    // ৪. বিক্রয় মডাল হ্যান্ডলার
     window.openAddSalesModal = function() {
       editSaleId = "";
       window.currentSelectedBookingId = null;
@@ -393,8 +456,6 @@
       document.getElementById("saleCustomerName").value = "";
       document.getElementById("saleBookNo").value = "";
       document.getElementById("bookDetailsDisplay").classList.add("hidden");
-      document.getElementById("memberBookingListContainer").classList.add("hidden");
-      document.getElementById("memberBookingsContent").innerHTML = "";
       
       document.getElementById("useTicketNumbers").checked = true;
       toggleTicketNumbers(); 
@@ -431,38 +492,29 @@
       const oBtn = document.getElementById("saleTypeOtherBtn");
       const mBox = document.getElementById("memberSelectBox");
       const oBox = document.getElementById("otherNameBox");
-      const bookingListContainer = document.getElementById("memberBookingListContainer");
       
       if (type === "member") {
         mBtn.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
         oBtn.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition text-gray-600";
         mBox.classList.remove("hidden");
-        oBox.classList.add("hidden";)
+        oBox.classList.add("hidden");
       } else {
         oBtn.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
         mBtn.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition text-gray-600";
         oBox.classList.remove("hidden");
         mBox.classList.add("hidden");
-        bookingListContainer.classList.add("hidden");
       }
     };
 
-    // ৪. সদস্য নাম খোঁজা ও বুকিং তালিকা প্রদর্শন (Autosuggest & Booking List Display)
+    // ৫. সদস্য নাম খোঁজা ও অটোমেটিক বই নম্বর সিলেক্ট (Autosuggest & Book Auto-selection)
     window.searchMembers = function(query) {
       const resultsDiv = document.getElementById("memberSearchResults");
-      if(!query.trim()) { 
-        resultsDiv.classList.add("hidden"); 
-        document.getElementById("memberBookingListContainer").classList.add("hidden");
-        return; 
-      }
+      if(!query.trim()) { resultsDiv.classList.add("hidden"); return; }
       
       const filtered = membersData.filter(m => 
         (m.name || "").toLowerCase().includes(query.toLowerCase()) || 
         (m.phone || m.mobile || "").includes(query)
       );
-
-      // সদস্যের বুকিং চেক করা এবং ফর্মে দেখানো
-      checkAndShowMemberBookings(query);
 
       if(filtered.length === 0) {
         resultsDiv.classList.add("hidden");
@@ -482,8 +534,6 @@
       document.getElementById("saleMemberSearch").value = name;
       document.getElementById("memberSearchResults").classList.add("hidden");
 
-      checkAndShowMemberBookings(name);
-
       // ১. সদস্যের কোনো বই বুকিং-এ অ্যাসাইন করা আছে কিনা দেখা
       const memberBooking = bookingsData.find(b => 
         (b.memberName || b.assignedMember || "").toLowerCase() === name.toLowerCase()
@@ -501,35 +551,7 @@
       checkBookDetails();
     };
 
-    window.checkAndShowMemberBookings = function(nameQuery) {
-      const container = document.getElementById("memberBookingListContainer");
-      const content = document.getElementById("memberBookingsContent");
-      if (!nameQuery || !nameQuery.trim()) {
-        container.classList.add("hidden");
-        return;
-      }
-
-      // বুকিং লিস্ট থেকে উক্ত সদস্যের বুকিংগুলো খোঁজা
-      const matchedBookings = bookingsData.filter(b => 
-        (b.memberName || b.assignedMember || "").toLowerCase().includes(nameQuery.toLowerCase().trim())
-      );
-
-      if (matchedBookings.length > 0) {
-        content.innerHTML = matchedBookings.map(b => `
-          <div class="bg-white p-2.5 rounded-lg border border-gray-200 shadow-sm text-xs space-y-1">
-            <p class="font-bold text-gray-800">বই: <span class="text-orange-600">${b.bookNo || ''}</span></p>
-            <p class="text-gray-600">টিকিট: ${b.startTicket && b.endTicket ? `${b.startTicket} - ${b.endTicket} (${b.quantity || 0} টি)` : `${b.quantity || 0} টি`}</p>
-            <p class="text-[11px] text-gray-400">তারিখ: ${b.date ? new Date(b.date).toLocaleDateString('bn-IN') : 'প্রযোজ্য নয়'}</p>
-          </div>
-        `).join('') + `<p class="text-[11px] text-orange-700 font-bold mt-1">মোট ${matchedBookings.length} টি বুকিং</p>`;
-        container.classList.remove("hidden");
-      } else {
-        container.classList.add("hidden");
-        content.innerHTML = "";
-      }
-    };
-
-    // ৫. টিকিট নম্বর, বুকিং ও পরবর্তী টিকিট নম্বর চেক করার লজিক
+    // ৬. টিকিট নম্বর, বুকিং ও পরবর্তী টিকিট নম্বর চেক করার লজিক
     window.toggleTicketNumbers = function() {
       const isChecked = document.getElementById("useTicketNumbers").checked;
       const tFields = document.getElementById("ticketNumberFields");
@@ -588,7 +610,7 @@
       calcSaleQty();
     };
 
-    // ৬. গণনার হিসাব
+    // ৭. গণনার হিসাব
     window.calcSaleQty = function() {
       const price = parseInt(document.getElementById("salePricePerTicket").value) || 100;
       const isChecked = document.getElementById("useTicketNumbers").checked;
@@ -617,7 +639,7 @@
       document.getElementById("saleDueDisplay").value = Math.max(0, total - paid);
     };
 
-    // ৭. সেভ করা ও বুকিং টেবিল অটোমেটিক আপডেট
+    // ৮. সেভ করা ও বুকিং টেবিল অটোমেটিক আপডেট
     window.saveSalesForm = async function() {
       const btn = document.getElementById("saveSaleBtn");
       btn.disabled = true;
@@ -718,7 +740,7 @@
       }
     };
 
-    // ৮. তালিকা প্রদর্শন ও পেজিনেশন (Render & Pagination - 5 items per page)
+    // ৯. তালিকা প্রদর্শন ও পেজিনেশন (Render & Pagination)
     window.changePage = function(page) {
       currentPage = page;
       renderSales();
@@ -807,7 +829,7 @@
       renderPaginationControls(totalPages);
     }
 
-    // ৯. ফিল্টার ও মার্ক ডিলিট (ডিলেটে বুকিং অটো অ্যাডজাস্টমেন্ট)
+    // ১০. ফিল্টার ও মার্ক ডিলিট (ডিলেটে বুকিং অটো অ্যাডজাস্টমেন্ট)
     window.filterSalesTable = function() {
       currentPage = 1;
       renderSales();
