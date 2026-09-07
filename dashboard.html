@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
 
-<script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -55,7 +55,7 @@
     <script>
     window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
 
-<div class="max-w-4xl mx-auto">
+    <div class="max-w-4xl mx-auto">
       <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
         <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
@@ -80,8 +80,12 @@
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasurer" onclick="window.location.href='treasurer.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
           
-          <!-- সংশোধিত সেটিংস বাটন -->
-          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
+          <!-- আলাদা ব্যাকআপ ও রিস্টোর বাটন -->
+          <button id="menu-btn-backup" onclick="exportFullBackup()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📦 ব্যাকআপ</button>
+          <button id="menu-btn-restore" onclick="document.getElementById('menuRestoreInput').click()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🔄 রিস্টোর</button>
+          <input type="file" id="menuRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
+
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-4">⚙️ সেটিংস</button>
         </div>
       </div>
 
@@ -136,13 +140,27 @@
             <div class="text-2xl mb-1">📊</div>
             <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
+          
+          <!-- আলাদা ব্যাকআপ কার্ড -->
+          <div id="dash-card-backup" onclick="exportFullBackup()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">📦</div>
+            <div class="text-xs opacity-90 font-medium">ব্যাকআপ ডাউনলোড</div>
+          </div>
+
+          <!-- আলাদা রিস্টোর কার্ড -->
+          <div id="dash-card-restore" onclick="document.getElementById('dashRestoreInput').click()" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">🔄</div>
+            <div class="text-xs opacity-90 font-medium">ডাটা রিস্টোর</div>
+          </div>
+          <input type="file" id="dashRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
         </div>
       </div>
     </div>
-<script type="module">
+
+    <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -165,50 +183,48 @@
       window.userPermissions = [];
 
       onAuthStateChanged(auth, (user) => {
-  if (!user) {
-    window.location.replace("index.html");
-    return;
-  }
-
-  const isAdmin =
-    (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
-
-  window.currentUserRole = isAdmin ? "admin" : "user";
-  window.userPermissions = isAdmin
-    ? ["subscription","expense","booking","sales","treasurer","members"]
-    : [];
-
-  // Render the dashboard immediately; user-specific permissions are loaded
-  // in the background below.
-  setupUIBasedOnRoleAndPermissions(user);
-
-  if (!isAdmin) {
-    getDoc(doc(db, "app_users", user.uid))
-      .then(snap => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-
-        if (data.disabled === true || data.deleted === true) {
+        if (!user) {
           window.location.replace("index.html");
           return;
         }
 
-        window.userPermissions =
-          Array.isArray(data.permissions) ? data.permissions : [];
+        const isAdmin =
+          (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+        window.currentUserRole = isAdmin ? "admin" : "user";
+        window.userPermissions = isAdmin
+          ? ["subscription","expense","booking","sales","treasurer","members","backup"]
+          : [];
 
         setupUIBasedOnRoleAndPermissions(user);
-      })
-      .catch((err) => {
-        console.error("Role/permission load:", err);
-      });
-  }
 
-  logUserLogin(user);
-  loadSubscriptions();
-  loadTotalMembersCount();
-  loadTotalExpenseCount();
-  loadCommitteeExecutives();
-});
+        if (!isAdmin) {
+          getDoc(doc(db, "app_users", user.uid))
+            .then(snap => {
+              if (!snap.exists()) return;
+              const data = snap.data();
+
+              if (data.disabled === true || data.deleted === true) {
+                window.location.replace("index.html");
+                return;
+              }
+
+              window.userPermissions =
+                Array.isArray(data.permissions) ? data.permissions : [];
+
+              setupUIBasedOnRoleAndPermissions(user);
+            })
+            .catch((err) => {
+              console.error("Role/permission load:", err);
+            });
+        }
+
+        logUserLogin(user);
+        loadSubscriptions();
+        loadTotalMembersCount();
+        loadTotalExpenseCount();
+        loadCommitteeExecutives();
+      });
 
       function loadCommitteeExecutives() {
         let committeeList = [];
@@ -284,16 +300,16 @@
       }
 
       function logUserLogin(user) {
-  addDoc(collection(db, "login_history"), {
-    userId: user.uid,
-    email: user.email,
-    name: user.displayName || (user.email ? user.email.split("@")[0] : "User"),
-    timestamp: Date.now(),
-    device: navigator.userAgent
-  }).catch(() => {});
-}
+        addDoc(collection(db, "login_history"), {
+          userId: user.uid,
+          email: user.email,
+          name: user.displayName || (user.email ? user.email.split("@")[0] : "User"),
+          timestamp: Date.now(),
+          device: navigator.userAgent
+        }).catch(() => {});
+      }
 
-function setupUIBasedOnRoleAndPermissions(user) {
+      function setupUIBasedOnRoleAndPermissions(user) {
         const roleBadge = document.getElementById("userRoleBadge");
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
@@ -301,7 +317,7 @@ function setupUIBasedOnRoleAndPermissions(user) {
           if (roleBadge) roleBadge.innerText = "রোল: User";
         }
 
-        const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
+        const allModules = ["subscription", "expense", "booking", "sales", "treasurer", "backup"];
         allModules.forEach((mod) => {
           const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
@@ -340,6 +356,80 @@ function setupUIBasedOnRoleAndPermissions(user) {
          return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
       };
 
+      // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত
+      const COLLECTIONS = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users"];
+
+      window.exportFullBackup = async function() {
+        try {
+          const backupData = {
+            version: "1.0",
+            timestamp: new Date().toISOString(),
+            collections: {}
+          };
+
+          for (const colName of COLLECTIONS) {
+            const querySnapshot = await getDocs(collection(db, colName));
+            backupData.collections[colName] = [];
+            querySnapshot.forEach((docSnap) => {
+              backupData.collections[colName].push({
+                id: docSnap.id,
+                ...docSnap.data()
+              });
+            });
+          }
+
+          const dataStr = JSON.stringify(backupData, null, 2);
+          const blob = new Blob([dataStr], { type: "application/json;charset=utf-8" });
+          const dateStr = new Date().toISOString().split("T")[0];
+          saveAs(blob, `DurgaPuja_Backup_${dateStr}.json`);
+          alert("ব্যাকআপ ফাইল সফলভাবে ডাউনলোড হয়েছে!");
+        } catch (e) {
+          console.error(e);
+          alert("ব্যাকআপ তৈরি করতে সমস্যা হয়েছে: " + e.message);
+        }
+      };
+
+      window.importFullBackup = async function(input) {
+        const file = input.files[0];
+        if (!file) return;
+
+        if (!confirm("সতর্কতা! রিস্টোর করলে বর্তমান ডাটার সাথে নতুন ডাটা যুক্ত বা ওভাররাইট হতে পারে। আপনি কি নিশ্চিত?")) {
+          input.value = "";
+          return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = async function(e) {
+          try {
+            const parsed = JSON.parse(e.target.result);
+            if (!parsed.collections) {
+              alert("ব্যাকআপ ফাইল সঠিক নয়।");
+              input.value = "";
+              return;
+            }
+
+            for (const colName of Object.keys(parsed.collections)) {
+              const items = parsed.collections[colName];
+              if (Array.isArray(items)) {
+                for (const item of items) {
+                  const { id, ...itemData } = item;
+                  if (id) {
+                    await setDoc(doc(db, colName, id), itemData);
+                  }
+                }
+              }
+            }
+
+            alert("ডাটা সফলভাবে রিস্টোর করা হয়েছে!");
+            window.location.reload();
+          } catch (err) {
+            console.error(err);
+            alert("ফাইল পড়তে বা রিস্টোর করতে সমস্যা হয়েছে: " + err.message);
+          }
+          input.value = "";
+        };
+        reader.readAsText(file);
+      };
     </script>
   </body>
 </html>
