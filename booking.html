@@ -312,6 +312,7 @@
 
       let allBookingsData = [];
       let allMembersData = [];
+      let allSalesData = [];
       let currentBookingType = "member"; 
       let selectedMemberObject = null;
       let editingBookingId = "";
@@ -361,7 +362,7 @@
           window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
           setupUIBasedOnRoleAndPermissions(user);
           loadMembersData();
-          loadBookingsData();
+          loadSalesData();
         } else {
           window.location.replace("index.html");
         }
@@ -385,10 +386,29 @@
         });
       }
 
+      function loadSalesData() {
+        onSnapshot(collection(db, "ticket_sales"), snap => {
+          allSalesData = [];
+          snap.forEach(d => allSalesData.push({ id: d.id, ...d.data() }));
+          loadBookingsData();
+        });
+      }
+
       function loadBookingsData() {
         onSnapshot(collection(db, "bookings"), snap => {
           allBookingsData = [];
-          snap.forEach(d => allBookingsData.push({ id: d.id, ...d.data() }));
+          snap.forEach(d => {
+            const data = d.data();
+            const bNo = String(data.bookNo || "").trim();
+            const matchingSales = allSalesData.filter(s => String(s.bookNo || "").trim() === bNo);
+            let soldCount = 0;
+            if (matchingSales.length > 0) {
+              matchingSales.forEach(s => {
+                soldCount += Number(s.quantity || 0);
+              });
+            }
+            allBookingsData.push({ id: d.id, ...data, sold: soldCount });
+          });
           allBookingsData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
           renderBookingTables();
         });
@@ -574,7 +594,6 @@
           if (editingBookingId) {
             await updateDoc(doc(db, "bookings", editingBookingId), data);
           } else {
-            data.sold = 0; // Fix: Sold defaults to 0 for new ticket allocations
             await addDoc(collection(db, "bookings"), data);
           }
           closeBookingEntryModal();
