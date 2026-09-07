@@ -24,8 +24,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
   <style>
     th, td { text-align: center; vertical-align: middle; white-space: nowrap; }
-    .dashboard-menu-btn.menu-active { background-color:#ea580c !important; color:#fff !important; border-color:#ea580c !important; }
-    .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
     @media print {
       body { background: white !important; }
       body > *:not(#idCardModal) { display: none !important; }
@@ -49,25 +47,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">
         📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
       </p>
-    </div>
-
-    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
-      <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleMemberQuickMenu()">
-        <span class="text-sm font-bold flex items-center gap-1">📈 ড্যাশবোর্ড মেনু</span>
-        <div class="flex items-center gap-2">
-          <span id="memberUserRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
-          <span id="memberMenuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
-        </div>
-      </div>
-      <div id="memberQuickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-        <button id="menu-btn-members" onclick="goMemberMenu('members')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👬 সদস্য</button>
-        <button id="menu-btn-subscription" onclick="goMemberMenu('subscription')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-        <button id="menu-btn-expense" onclick="goMemberMenu('expense')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-        <button id="menu-btn-booking" onclick="goMemberMenu('booking')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-        <button id="menu-btn-sales" onclick="goMemberMenu('sales')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
-        <button id="menu-btn-treasurer" onclick="goMemberMenu('treasurer')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
-        <button id="quickSettingsBtn" onclick="goMemberMenu('settings')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
-      </div>
     </div>
 
     <div id="section-member" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
@@ -267,7 +246,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
             window.userPermissions = userDoc.exists() ? (userDoc.data().permissions || []) : [];
           } catch (e) { window.userPermissions = []; }
         }
-        setupMemberDashboardMenu();
         if(window.isMasterAdmin) {
           document.getElementById("adminMemberControls").classList.remove("hidden");
           document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
@@ -277,41 +255,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         window.location.replace("index.html");
       }
     });
-
-    function setupMemberDashboardMenu() {
-      const badge = document.getElementById("memberUserRoleBadge");
-      if (badge) badge.innerText = `রোল: ${({member:"সাধারণ সদস্য",admin:"Admin",treasurer:"কোষাধ্যক্ষ",puja_treasurer:"পূজা কোষাধ্যক্ষ"}[window.currentUserRole] || "সাধারণ সদস্য")}`;
-      const modules = ["subscription", "expense", "booking", "sales", "treasurer"];
-      const membersBtn = document.getElementById("menu-btn-members");
-      if (membersBtn) membersBtn.style.display = (window.currentUserRole === "admin" || window.userPermissions.includes("members")) ? "flex" : "none";
-      modules.forEach((mod) => {
-        const btn = document.getElementById(`menu-btn-${mod}`);
-        if (btn) btn.style.display = (window.isMasterAdmin || window.userPermissions.includes(mod)) ? "flex" : "none";
-      });
-      const settingsBtn = document.getElementById("quickSettingsBtn");
-      if (settingsBtn) settingsBtn.style.display = "flex";
-      document.querySelectorAll("#memberQuickMenuContent .dashboard-menu-btn").forEach(btn => btn.classList.remove("menu-active"));
-      if (membersBtn) membersBtn.classList.add("menu-active");
-    }
-
-    window.toggleMemberQuickMenu = function() {
-      const content = document.getElementById("memberQuickMenuContent");
-      const arrow = document.getElementById("memberMenuArrowIcon");
-      content.classList.toggle("hidden");
-      arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
-    };
-
-    window.goMemberMenu = function(tabName) {
-      if (tabName === "members") { window.location.href = "members.html"; return; }
-      if (tabName === "subscription") { window.location.href = "chada.html"; return; }
-      if (tabName === "expense") { if (window.isMasterAdmin || window.userPermissions.includes("expense")) window.location.href = "expense.html"; return; }
-      if (["booking", "sales", "treasurer"].includes(tabName)) {
-        if (window.currentUserRole !== "admin" && !window.userPermissions.includes(tabName)) return;
-        window.location.href = `dashboard.html?tab=${encodeURIComponent(tabName)}`;
-        return;
-      }
-      window.location.href = "dashboard.html";
-    };
 
     function loadMembers() {
       onSnapshot(collection(db, "members"), (snapshot) => {
@@ -395,7 +338,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       pagination.innerHTML = "";
 
-      // ১০ জন বা তার কম হলে কোনো pagination দেখাবে না।
       if (totalItems <= MEMBERS_PER_PAGE) {
         pagination.classList.add("hidden");
         return;
@@ -488,7 +430,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       reader.readAsDataURL(file);
     };
 
-    // নতুন সিগনেচার ক্রপ এবং ব্যাকগ্রাউন্ড রিমুভার ফাংশন
     window.processSignatureImage = function(input, previewId) {
       const file = input.files[0];
       if (!file) return;
@@ -506,20 +447,17 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const data = imageData.data;
           let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
 
-          // ব্যাকগ্রাউন্ড রিমুভ ও ক্রপ করার লজিক
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
             const brightness = (r * 299 + g * 587 + b * 114) / 1000;
 
             if (brightness > 180 || a === 0) {
-              data[i + 3] = 0; // হালকা/সাদা পিক্সেলগুলো স্বচ্ছ (Transparent) করে দেওয়া হলো
+              data[i + 3] = 0;
             } else {
-              // সিগনেচার আরও স্পষ্ট করতে কালো রঙ করে দেওয়া হলো
               data[i] = 0;
               data[i + 1] = 0;
               data[i + 2] = 0;
               
-              // ক্রপ করার জন্য সিগনেচারের বাউন্ডারি পরিমাপ
               const x = (i / 4) % canvas.width;
               const y = Math.floor((i / 4) / canvas.width);
               if (x < minX) minX = x;
@@ -606,7 +544,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const mobile = document.getElementById("newMemberMobile").value.trim();
       const docId = document.getElementById("editMemberDocId").value;
 
-      // মোবাইল নম্বর ঐচ্ছিক; কিন্তু দিলে অবশ্যই ঠিক ১০ সংখ্যার হতে হবে
       if (mobile && !/^\d{10}$/.test(mobile)) {
         alert("মোবাইল নম্বর দিলে অবশ্যই ১০ সংখ্যার দিতে হবে!");
         document.getElementById("newMemberMobile").focus();
@@ -617,7 +554,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
         return;
       }
-
 
       const memberData = { name, village, role, mobile: mobile || "-", updatedAt: Date.now() };
 
@@ -755,7 +691,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         { width: 30 }
       ];
 
-      // ===== Title =====
       worksheet.mergeCells("A1:F1");
       const title = worksheet.getCell("A1");
       title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
@@ -776,7 +711,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       sub.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
       worksheet.getRow(2).height = 30;
 
-      // ===== Header =====
       const headers = ["সদস্য ID","নাম","মোবাইল","গ্রাম","পদ","স্বাক্ষর"];
       const headerRow = worksheet.getRow(4);
       headerRow.values = headers;
@@ -792,7 +726,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         };
       });
 
-      // ===== Data =====
       let rowNo = 5;
       dataToExport.forEach(m => {
         const row = worksheet.getRow(rowNo);
@@ -837,7 +770,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         rowNo++;
       });
 
-      // ===== Total: label + value in adjacent cells only =====
       const totalLabel = worksheet.getCell(`A${rowNo}`);
       totalLabel.value = "মোট সদস্য";
       totalLabel.font = { name:"Kalpurush", size:13, bold:true };
@@ -972,10 +904,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.closeIdCardModal = function() {
       document.getElementById("idCardModal").classList.add("hidden");
     };
-  
-    window.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("menu-btn-members")?.classList.add("menu-active");
-    });
 </script>
 </body>
 </html>
