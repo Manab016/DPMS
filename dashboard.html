@@ -402,19 +402,38 @@
         reader.onload = async function(e) {
           try {
             const parsed = JSON.parse(e.target.result);
-            if (!parsed.collections) {
+            
+            // collections অথবা data থেকে ডাটা অবজেক্ট খুঁজে বের করা
+            const collectionsData = parsed.collections || parsed.data;
+
+            if (!collectionsData) {
               alert("ব্যাকআপ ফাইল সঠিক নয়।");
               input.value = "";
               return;
             }
 
-            for (const colName of Object.keys(parsed.collections)) {
-              const items = parsed.collections[colName];
+            // JSON এর কলেকশন নাম থেকে Firestore এর কলেকশন নামের ম্যাপিং
+            const collectionMapping = {
+              "users": "app_users",
+              "members": "members",
+              "subscriptions": "subscriptions",
+              "expenses": "expenses",
+              "bookings": "bookings",
+              "sales": "sales",
+              "treasurer": "treasurer",
+              "committee": "committee"
+            };
+
+            for (const rawColName of Object.keys(collectionsData)) {
+              const colName = collectionMapping[rawColName] || rawColName;
+              const items = collectionsData[rawColName];
+
               if (Array.isArray(items)) {
                 for (const item of items) {
                   const { id, ...itemData } = item;
-                  if (id) {
-                    await setDoc(doc(db, colName, id), itemData);
+                  if (id !== undefined && id !== null) {
+                    // Doc ID-কে String এ রূপান্তর করে Firestore-এ সেভ করা
+                    await setDoc(doc(db, colName, String(id)), itemData);
                   }
                 }
               }
