@@ -23,26 +23,6 @@
     <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702">৯৯৩৩৩৭১৭০২</a></p>
   </div>
 
-  <!-- ড্যাশবোর্ড মেনু -->
-  <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
-    <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleQuickMenu()">
-      <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
-      <div class="flex items-center gap-2">
-        <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
-        <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
-      </div>
-    </div>
-    <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
-      <button id="menu-btn-members" onclick="goPage('members.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👬 সদস্য</button>
-      <button id="menu-btn-subscription" onclick="goPage('chada.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-      <button id="menu-btn-expense" class="dashboard-menu-btn menu-active bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-      <button id="menu-btn-booking" onclick="goPage('booking.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-      <button id="menu-btn-sales" onclick="goPage('sales.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
-      <button id="menu-btn-treasurer" onclick="goPage('treasurer.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
-      <button id="quickSettingsBtn" onclick="goPage('settings.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
-    </div>
-  </div>
-
   <!-- খরচ ব্যবস্থাপনা -->
   <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
     <div class="flex items-center justify-between mb-4 border-b pb-3">
@@ -214,8 +194,8 @@ window.goPage=(p)=>{window.location.href=p;};
 window.toggleQuickMenu=()=>{
   const content = document.getElementById("quickMenuContent");
   const arrow = document.getElementById("menuArrowIcon");
-  content.classList.toggle("hidden");
-  if(arrow) arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+  if(content) content.classList.toggle("hidden");
+  if(arrow) arrow.style.transform = content?.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
 };
 
 // Developer Modal Handlers
@@ -478,9 +458,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const wb = new ExcelJS.Workbook();
     wb.creator = "কমিটি ম্যানেজমেন্ট সিস্টেম";
 
-    // Due report uses exactly 4 columns:
-    // Date | Name | Due | Due purpose
-    // Full report keeps the complete expense information.
     const ws = wb.addWorksheet(sheetName, {
       views: [{ showGridLines: false }],
       pageSetup: {
@@ -517,8 +494,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const columnCount = dueOnly ? 4 : 8;
     const lastCol = dueOnly ? "D" : "H";
 
-    // Title rows: no separator line between committee name and report title.
-    // Keep the title area clean; borders are added only where actual content exists.
     ws.mergeCells(`A1:${lastCol}1`);
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
     ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
@@ -562,7 +537,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       totalReturned += returned;
       totalDue += due;
 
-      // Due export contains NOTHING except the four requested fields.
       const values = dueOnly
         ? [
             x.date || "",
@@ -595,9 +569,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       });
     });
 
-    // Summary is ALWAYS two adjacent cells:
-    // label in the first cell, amount immediately in the next cell.
-    // Both are centered and bold. No "total due" text inside the Due column.
     const addAdjacentTotal = (label, amount) => {
       const row = ws.addRow([]);
       row.getCell(1).value = label;
@@ -624,7 +595,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       addAdjacentTotal("সর্বমোট Due", totalDue);
     }
 
-    // Column widths are deliberately compact and balanced.
     const widths = dueOnly
       ? [15, 25, 17, 42]
       : [14, 22, 16, 18, 15, 15, 30, 20];
@@ -639,10 +609,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     ws.pageSetup.fitToWidth = 1;
     ws.pageSetup.fitToHeight = 0;
 
-    // Border rule: ONLY cells that actually contain data/text get all-side borders.
-    // Empty cells after the last filled cell in a row stay completely border-free.
-    // This keeps the totals compact (label + immediately adjacent amount) and removes
-    // the large blank bordered area visible to the right in the exported sheet.
     for (let r = 3; r <= ws.lastRow.number; r++) {
       for (let c = 1; c <= columnCount; c++) {
         const cell = ws.getCell(r, c);
@@ -656,12 +622,10 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       }
     }
 
-    // Header row has a heading in every visible column, so every header cell is bordered.
     for (let c = 1; c <= columnCount; c++) {
       ws.getCell(4, c).border = border;
     }
 
-    // Title rows intentionally have no border between row 1 and row 2.
     ws.getCell("A1").border = { left: border.left, right: border.right, top: border.top };
     ws.getCell("A2").border = { left: border.left, right: border.right, bottom: border.bottom };
 
@@ -688,7 +652,6 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
   }
 }
 
-
 window.exportExpenses = async () => {
   await createExpenseExcel(
     allExpenses,
@@ -698,7 +661,6 @@ window.exportExpenses = async () => {
   );
 };
 
-// 2) Due-only export — শুধু যাদের Due আছে
 window.exportDueExpenses = async () => {
   const dueExpenses = allExpenses.filter(
     x => Number(x.dueAmount ?? 0) > 0
@@ -716,7 +678,6 @@ window.exportDueExpenses = async () => {
     "Due রিপোর্ট"
   );
 };
-
 
 async function loadPujaTreasurer(){
  try{
@@ -752,7 +713,6 @@ onAuthStateChanged(auth,async user=>{
  document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
  await loadPujaTreasurer();
 
- // রিয়েল-টাইম ডেভেলপার ইনফো লোডার (সেটিংস থেকে)
  onSnapshot(doc(db, "settings", "developerInfo"), (docSnap) => {
    if (docSnap.exists()) {
      const data = docSnap.data();
