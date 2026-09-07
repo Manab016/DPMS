@@ -50,9 +50,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
       </p>
     </div>
-    </style>
-  </head>
-  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+
     <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
       <div class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer" onclick="toggleMemberQuickMenu()">
         <span class="text-sm font-bold flex items-center gap-1">📈 ড্যাশবোর্ড মেনু</span>
@@ -373,10 +371,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           ${window.currentUserRole === "admin" ? `<td class="p-2.5 border-r text-center admin-only-col"><input type="checkbox" class="member-checkbox" value="${member.id}"></td>` : ""}
           <td class="p-2.5 border-r font-bold text-orange-600 text-center">${member.autoId}</td>
           <td class="p-2.5 border-r text-center"><img src="${member.photo || ''}" class="w-9 h-9 object-cover rounded-md mx-auto border" onerror="this.style.display='none'"></td>
-          <td class="p-2.5 border-r font-medium text-gray-800 text-center">${member.name}</td>
-          <td class="p-2.5 border-r text-gray-700 text-center">${member.village}</td>
-          <td class="p-2.5 border-r text-gray-700 text-center">${member.role}</td>
-          <td class="p-2.5 border-r text-gray-600 text-center">${member.mobile}</td>
+          <td class="p-2.5 border-r font-medium text-gray-800 text-center">${member.name || ''}</td>
+          <td class="p-2.5 border-r text-gray-700 text-center">${member.village || ''}</td>
+          <td class="p-2.5 border-r text-gray-700 text-center">${member.role || ''}</td>
+          <td class="p-2.5 border-r text-gray-600 text-center">${member.mobile || ''}</td>
           <td class="p-2.5 border-r text-center"><img src="${member.signature || ''}" class="h-6 object-contain mx-auto border px-1" onerror="this.style.display='none'"></td>
           <td class="p-2.5 text-center">${actionButtons}</td>
         `;
@@ -655,16 +653,21 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.filterMembers = function() {
-      const searchText = document.getElementById("searchInput").value.toLowerCase();
-      const selectedVillage = document.getElementById("villageFilter").value;
+      const searchText = (document.getElementById("searchInput")?.value || "").toLowerCase();
+      const selectedVillage = (document.getElementById("villageFilter")?.value || "");
 
       window.filteredMembersData = allMembersData.filter(m => {
-        const matchSearch = m.name.toLowerCase().includes(searchText) || 
-                            m.mobile.includes(searchText) || 
-                            m.role.toLowerCase().includes(searchText) ||
-                            m.autoId.toLowerCase().includes(searchText);
+        const name = (m.name || "").toLowerCase();
+        const mobile = (m.mobile || "").toString().toLowerCase();
+        const role = (m.role || "").toLowerCase();
+        const autoId = (m.autoId || "").toLowerCase();
+
+        const matchSearch = name.includes(searchText) || 
+                            mobile.includes(searchText) || 
+                            role.includes(searchText) ||
+                            autoId.includes(searchText);
                             
-        const matchVillage = selectedVillage === "" || m.village === selectedVillage;
+        const matchVillage = selectedVillage === "" || (m.village || "") === selectedVillage;
         
         return matchSearch && matchVillage;
       });
@@ -856,14 +859,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
 
-      document.getElementById("idCardName").innerText = member.name;
-      document.getElementById("idCardRole").innerText = member.role;
-      document.getElementById("idCardAutoId").innerText = member.autoId;
-      document.getElementById("idCardVillage").innerText = member.village;
-      document.getElementById("idCardMobile").innerText = member.mobile;
+      document.getElementById("idCardName").innerText = member.name || "";
+      document.getElementById("idCardRole").innerText = member.role || "";
+      document.getElementById("idCardAutoId").innerText = member.autoId || "";
+      document.getElementById("idCardVillage").innerText = member.village || "";
+      document.getElementById("idCardMobile").innerText = member.mobile || "";
       document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
 
-      const qrData = `ID: ${member.autoId}\nনাম: ${member.name}\nগ্রাম: ${member.village}\nপদ: ${member.role}\nমোবাইল: ${member.mobile}`;
+      const qrData = `ID: ${member.autoId || ""}\nনাম: ${member.name || ""}\nগ্রাম: ${member.village || ""}\nপদ: ${member.role || ""}\nমোবাইল: ${member.mobile || ""}`;
       new QRious({
         element: document.getElementById('idCardQrCode'),
         value: qrData,
