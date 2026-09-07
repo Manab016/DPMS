@@ -691,7 +691,7 @@ async function loadPujaTreasurer(){
  }catch(e){pujaTreasurerName="";}
 }
 
-onAuthStateChanged(auth,async user=>{
+onAuthStateChanged(auth, async user => {
  if(!user){window.location.replace("index.html");return;}
  
  window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -710,9 +710,12 @@ onAuthStateChanged(auth,async user=>{
  }
 
  setupUIBasedOnRoleAndPermissions();
- document.getElementById("expenseControls").classList.toggle("hidden",!canManage());
- await loadPujaTreasurer();
+ document.getElementById("expenseControls").classList.toggle("hidden", !canManage());
 
+ // কোষাধ্যক্ষের নাম ব্যাকগ্রাউন্ডে লোড হবে
+ loadPujaTreasurer();
+
+ // ডেভেলপার ইনফো লিসেনার
  onSnapshot(doc(db, "settings", "developerInfo"), (docSnap) => {
    if (docSnap.exists()) {
      const data = docSnap.data();
@@ -728,12 +731,13 @@ onAuthStateChanged(auth,async user=>{
    }
  });
  
- onSnapshot(collection(db, "expenses"),snap=>{
-   allExpenses=snap.docs.map(d=>({id:d.id,...d.data()}));
+ // মেইন খরচ ডেটা লিসেনার (তাৎক্ষণিক রান হবে)
+ onSnapshot(collection(db, "expenses"), snap => {
+   allExpenses = snap.docs.map(d => ({id: d.id, ...d.data()}));
    renderExpenses();
- },err=>{
+ }, err => {
    console.error(err);
-   document.getElementById("expenseTableBody").innerHTML='<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
+   document.getElementById("expenseTableBody").innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
  });
 });
 </script>
