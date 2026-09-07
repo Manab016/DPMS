@@ -1,859 +1,905 @@
 <!DOCTYPE html>
 <html lang="bn">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>টিকিট বিক্রয় ব্যবস্থাপনা - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    @media print {
-      body { background: white !important; }
-      .no-print { display: none !important; }
-    }
-  </style>
-</head>
-<body class="bg-amber-50/40 p-3 font-sans pb-20 text-gray-800">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>টিকেট বুকিং ব্যবস্থাপনা - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- ExcelJS for Advanced Excel Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+      #subTableBody td, #subTableBody th,
+      .booking-table td, .booking-table th {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+      }
+      @keyframes autoScroll {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+      }
+      .animate-auto-slide {
+        display: flex;
+        width: max-content;
+        animation: autoScroll 20s linear infinite;
+      }
+      .animate-auto-slide:hover { animation-play-state: paused; }
+      .hide-scrollbar::-webkit-scrollbar { display: none; }
+      .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      @media print {
+        body { background: white !important; }
+        body > *:not(#idCardModal) { display: none !important; }
+        .no-print { display: none !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+      .sub-list-card{position:relative}
+      .sub-list-card table tbody tr{transition:background .15s}
+      .sub-list-card table tbody tr:hover{background:#fff7ed}
+    </style>
+  </head>
+  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
+    <button
+      onclick="toggleDevModal()"
+      class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
+    >
+      <span class="text-base">👨‍💻</span>
+      <span class="hidden md:inline">ডেভেলপার</span>
+    </button>
 
-  <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
-  <button
-    onclick="toggleDevModal()"
-    class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
-  >
-    <span class="text-base">👨‍💻</span>
-    <span class="hidden md:inline">ডেভেলপার</span>
-  </button>
-
-  <div class="max-w-4xl mx-auto">
-    <!-- 🏛️ ক্লাবের মূল হেডিং সেকশন -->
-    <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-      <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
-      <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
-      <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
-      <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
-    </div>
-
-    <!-- Main Container -->
-    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5">
-      <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-4 border-b pb-3 gap-3">
-        <div class="flex items-center gap-2">
-          <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
-          <h2 class="text-lg font-bold text-gray-800">🎟️ টিকিট বিক্রয় ও বুকিং রেজিস্টার</h2>
-        </div>
-        <div class="flex items-center gap-2 w-full md:w-auto">
-          <button onclick="openAddBookingModal()" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1">
-            ➕ নতুন বই
-          </button>
-          <button onclick="openAddSalesModal()" class="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold shadow-sm flex items-center justify-center gap-1">
-            ➕ নতুন বিক্রয়
-          </button>
-        </div>
+    <div class="max-w-4xl mx-auto">
+      <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
+        <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
+        <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
       </div>
 
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-3 gap-2 mb-4 text-center">
-        <div class="bg-amber-50/60 p-3 rounded-2xl border border-amber-200 shadow-sm">
-          <p class="text-[11px] text-gray-600 font-semibold">মোট বিক্রীত টিকিট</p>
-          <p id="totalTicketsSoldDisplay" class="text-base font-bold text-orange-700">0 টি</p>
-        </div>
-        <div class="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200 shadow-sm">
-          <p class="text-[11px] text-gray-600 font-semibold">মোট বিক্রি (₹)</p>
-          <p id="totalSalesAmountDisplay" class="text-base font-bold text-emerald-700">₹0</p>
-        </div>
-        <div class="bg-red-50/60 p-3 rounded-2xl border border-red-200 shadow-sm">
-          <p class="text-[11px] text-gray-600 font-semibold">মোট বাকি (₹)</p>
-          <p id="totalDueAmountDisplay" class="text-base font-bold text-red-600">₹0</p>
-        </div>
-      </div>
-
-      <!-- Filter & Mark Delete -->
-      <div class="flex items-center justify-between gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 mb-4">
-        <input type="text" id="salesSearchInput" oninput="filterSalesTable()" placeholder="নাম বা বই নম্বর দিয়ে খুঁজুন..." class="w-full p-2 border rounded-lg text-xs bg-white">
-        <button onclick="deleteMarkedSales()" class="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center justify-center gap-1 whitespace-nowrap">
-          🗑️ মার্ক ডিলিট
-        </button>
-      </div>
-
-      <!-- Sales Table / List -->
-      <div class="bg-white rounded-xl shadow-sm border overflow-hidden">
-        <div class="overflow-x-auto">
-          <table class="w-full text-left text-xs border-collapse">
-            <thead class="bg-gray-100 text-gray-700 uppercase border-b">
-              <tr>
-                <th class="p-2.5 text-center w-10"><input type="checkbox" id="selectAllCb" onclick="toggleSelectAll()" class="w-4 h-4 text-orange-600 rounded cursor-pointer border-gray-300"></th>
-                <th class="p-2.5 text-center">তারিখ</th>
-                <th class="p-2.5">ক্রেতা/সদস্য</th>
-                <th class="p-2.5 text-center">বই নম্বর</th>
-                <th class="p-2.5 text-center">পরিমাণ</th>
-                <th class="p-2.5 text-right">মোট (₹)</th>
-                <th class="p-2.5 text-right">জমা (₹)</th>
-                <th class="p-2.5 text-center">অ্যাকশন</th>
-              </tr>
-            </thead>
-            <tbody id="salesTableBody" class="divide-y text-gray-700">
-              <tr>
-                <td colspan="8" class="text-center py-6 text-gray-400">ডাটা লোড হচ্ছে...</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <!-- Pagination Controls -->
-        <div id="paginationControls" class="flex flex-wrap justify-center gap-1.5 p-3 bg-white border-t rounded-b-xl">
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ➕ নতুন বই (বুকিং) এন্ট্রি পপআপ মডাল -->
-  <div id="bookingModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-blue-200 p-5 relative">
-      <button onclick="closeBookingModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold">✕</button>
-      <h3 class="text-base font-bold text-blue-700 text-center mb-4">নতুন বই (বুকিং) এন্ট্রি</h3>
-      
-      <div class="space-y-3 text-xs">
-        <div>
-          <label class="block font-bold text-gray-600 mb-1">বই নম্বর *</label>
-          <input id="newBookNo" type="text" placeholder="যেমন: 201" class="w-full p-2 border rounded-lg">
-        </div>
-        <div>
-          <label class="block font-bold text-gray-600 mb-1">বরাদ্দ টিকিট (মোট টিকিট) *</label>
-          <input id="newBookQty" type="number" placeholder="যেমন: 300" class="w-full p-2 border rounded-lg">
-        </div>
-        <div class="grid grid-cols-2 gap-2 pt-3">
-          <button type="button" onclick="closeBookingModal()" class="w-full bg-white border text-gray-700 py-2 rounded-xl font-bold hover:bg-gray-100">বাতিল</button>
-          <button type="button" onclick="saveBookingForm()" class="w-full bg-blue-600 text-white py-2 rounded-xl font-bold hover:bg-blue-700">সেভ করুন</button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ➕ বিক্রয় এন্ট্রি পপআপ মডাল -->
-  <div id="salesModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
-    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-amber-200 p-4 relative max-h-[90vh] overflow-y-auto">
-      <button onclick="closeSalesModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold">✕</button>
-      <h3 class="text-base font-bold text-orange-700 text-center mb-3" id="salesModalTitle">নতুন টিকিট বিক্রয়</h3>
-      
-      <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl mb-3">
-        <button type="button" id="saleTypeMemberBtn" onclick="setSaleType('member')" class="py-1.5 text-xs font-bold rounded-lg transition bg-white text-orange-600 shadow-sm">সদস্য</button>
-        <button type="button" id="saleTypeOtherBtn" onclick="setSaleType('other')" class="py-1.5 text-xs font-bold rounded-lg transition text-gray-600">অন্যান্য</button>
-      </div>
-
-      <div class="space-y-3 text-xs">
-        <!-- Member / Other Select -->
-        <div id="memberSelectBox" class="relative">
-          <label class="block font-bold text-gray-600 mb-1">নাম নির্বাচন করুন বা নতুন লিখুন *</label>
-          <input id="saleMemberSearch" type="text" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." oninput="searchMembers(this.value)" class="w-full p-2 border rounded-lg">
-          <div id="memberSearchResults" class="hidden absolute left-0 right-0 z-20 bg-white border rounded-lg shadow-lg max-h-36 overflow-y-auto mt-1"></div>
-        </div>
-
-        <div id="otherNameBox" class="hidden">
-          <label class="block font-bold text-gray-600 mb-1">ক্রেতার নাম *</label>
-          <input id="saleCustomerName" type="text" placeholder="নাম লিখুন" class="w-full p-2 border rounded-lg">
-        </div>
-
-        <!-- Date & Book No -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">তারিখ *</label>
-            <input type="date" id="saleDate" class="w-full p-2 border rounded-lg">
+      <!-- 🎫 টিকেট বুকিং ব্যবস্থাপনা সেকশন -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5">
+        <div class="flex items-center justify-between mb-4 border-b pb-3">
+          <div class="flex items-center gap-2">
+            <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
+            <h2 class="text-lg font-bold text-gray-800">টিকেট বুকিং ব্যবস্থাপনা</h2>
           </div>
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">বই নম্বর *</label>
-            <input id="saleBookNo" type="text" placeholder="যেমন: B001" oninput="checkBookDetails()" class="w-full p-2 border rounded-lg">
-          </div>
-        </div>
-        <!-- বুকিং থেকে বইয়ের বিস্তারিত দেখানোর জন্য -->
-        <div id="bookDetailsDisplay" class="text-[11px] text-blue-600 hidden -mt-1 font-semibold"></div>
-
-        <!-- Checkbox for Ticket Numbers -->
-        <div class="flex items-center gap-2 mb-1">
-          <input type="checkbox" id="useTicketNumbers" checked onchange="toggleTicketNumbers()" class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 cursor-pointer">
-          <label for="useTicketNumbers" class="font-bold text-gray-700 cursor-pointer">টিকিট নম্বর ব্যবহার করুন</label>
-        </div>
-
-        <!-- Ticket Number Inputs -->
-        <div id="ticketNumberFields" class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে</label>
-            <input id="saleStartTicket" type="number" oninput="calcSaleQty()" placeholder="শুরুর টিকিট নম্বর" class="w-full p-2 border rounded-lg">
-          </div>
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত</label>
-            <input id="saleEndTicket" type="number" oninput="calcSaleQty()" placeholder="শেষ টিকিট নম্বর" class="w-full p-2 border rounded-lg">
+          <div class="flex items-center gap-2">
+            <span id="userRoleBadge" class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner">রোল: লোড হচ্ছে...</span>
           </div>
         </div>
 
-        <!-- Quantity & Price -->
-        <div class="grid grid-cols-2 gap-2">
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">বিক্রীত পরিমাণ *</label>
-            <input id="saleQuantity" type="number" readonly oninput="calcSaleQty()" placeholder="0" class="w-full p-2 border rounded-lg bg-gray-100 font-bold text-orange-700">
+        <!-- টপ স্ট্যাটাস কার্ড -->
+        <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm flex flex-wrap justify-around text-center gap-2">
+          <div>মোট বরাদ্দ: <strong id="totalAllocatedTickets" class="text-orange-700">০ টিকেট</strong></div>
+          <div class="border-x px-4 border-amber-200">মোট বিক্রীত: <strong id="totalSoldTickets" class="text-emerald-700">০ টিকেট</strong></div>
+          <div>মোট বাকি: <strong id="totalRemainingTickets" class="text-blue-700">০ টিকেট</strong></div>
+        </div>
+
+        <!-- অ্যাকশন ও সার্চ বার -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <div class="flex items-center gap-2">
+            <button onclick="openAddBookingModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">➕ যোগ</button>
+            <button onclick="deleteMarkedBookings()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">☑️ নির্বাচিত মুছুন</button>
+            <button onclick="deleteAllBookings()" id="deleteAllBtn" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1 hidden">🗑️ সব মুছুন</button>
           </div>
-          <div>
-            <label class="block font-bold text-gray-600 mb-1">প্রতি টিকিটের মূল্য (₹) *</label>
-            <input id="salePricePerTicket" type="number" value="100" oninput="calcSaleQty()" class="w-full p-2 border rounded-lg">
+          <div class="flex-1 min-w-[200px] max-w-sm">
+            <input id="globalBookingSearch" oninput="filterAllBookings()" placeholder="নাম, বই নম্বর, তারিখ, টিকেট নম্বর দিয়ে খুঁজুন..." class="w-full p-2 border rounded-lg text-xs bg-white">
           </div>
         </div>
 
-        <div>
-          <label class="block font-bold text-gray-600 mb-1">মোট টাকা (₹)</label>
-          <input id="saleTotalAmount" type="number" readonly class="w-full p-2 border rounded-lg bg-gray-100 font-bold text-emerald-700">
+        <!-- এক্সপোর্ট অপশনস -->
+        <div class="bg-gray-50 p-3 rounded-xl border border-gray-200 mb-5">
+          <p class="text-xs font-bold text-gray-600 mb-2">এক্সপোর্ট অপশন</p>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="exportBookingReport('member')" class="bg-white border hover:bg-orange-50 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">📥 সদস্য বুকিং</button>
+            <button onclick="exportBookingReport('other')" class="bg-white border hover:bg-orange-50 text-gray-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">📥 অন্যান্য বুকিং</button>
+            <button onclick="exportBookingReport('all')" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded-lg text-xs font-bold shadow-sm flex items-center gap-1">📥 সম্পূর্ণ এক্সপোর্ট</button>
+          </div>
         </div>
 
-        <!-- Payment Info -->
-        <div class="mt-4 pt-3 border-t border-gray-200">
-           <h4 class="font-bold text-gray-800 mb-2">পেমেন্ট তথ্য</h4>
-           <div class="mb-2">
-              <label class="block font-bold text-gray-600 mb-1">কার কাছে জমা *</label>
-              <input id="saleCollector" type="text" placeholder="নাম লিখুন..." class="w-full p-2 border rounded-lg font-semibold bg-orange-50 border-orange-200 text-gray-800">
-              <p class="text-[10px] text-orange-700 mt-1" id="collectorHintText"></p>
-           </div>
-
-           <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block font-bold text-gray-600 mb-1">জমা টাকা (₹)</label>
-                <input id="salePaidAmount" type="number" oninput="calcDueAmount()" placeholder="জমা টাকার পরিমাণ" class="w-full p-2 border rounded-lg">
-              </div>
-              <div>
-                <label class="block font-bold text-gray-600 mb-1">বাকি টাকা (₹)</label>
-                <input id="saleDueDisplay" type="number" readonly class="w-full p-2 border rounded-lg bg-gray-100 text-red-600 font-bold">
-              </div>
-           </div>
+        <!-- ১. সদস্যদের বুকিং কার্ড -->
+        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden mb-6 shadow-sm bg-white">
+          <div class="bg-orange-50 p-3 border-b flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">👬 সদস্যদের বুকিং</h3>
+              <p class="text-[11px] text-gray-600 mt-0.5">বরাদ্দ: <span id="memberAllocCount">০</span> | বিক্রীত: <span id="memberSoldCell">০</span> | বাকি: <span id="memberRemCell">০</span> টিকেট</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-xs booking-table">
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="p-2 border-r text-center w-8"><input type="checkbox" onchange="toggleAllCheckboxes(this, 'member')"></th>
+                  <th class="p-2 border-r text-center">নাম</th>
+                  <th class="p-2 border-r text-center">তারিখ</th>
+                  <th class="p-2 border-r text-center">বই নম্বর</th>
+                  <th class="p-2 border-r text-center">টিকেট থেকে</th>
+                  <th class="p-2 border-r text-center">টিকেট পর্যন্ত</th>
+                  <th class="p-2 border-r text-center">বরাদ্দ</th>
+                  <th class="p-2 border-r text-center">বিক্রীত</th>
+                  <th class="p-2 text-center">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="memberBookingTableBody">
+                <tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো বুকিং পাওয়া যায়নি</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="memberPagination" class="flex flex-wrap justify-center items-center gap-1 p-3 bg-white border-t text-xs"></div>
         </div>
 
-        <div class="grid grid-cols-2 gap-2 pt-3">
-          <button type="button" onclick="closeSalesModal()" class="w-full bg-white border text-gray-700 py-2 rounded-xl font-bold">বাতিল</button>
-          <button type="button" onclick="saveSalesForm()" id="saveSaleBtn" class="w-full bg-black text-white py-2 rounded-xl font-bold hover:bg-gray-800">যোগ করুন</button>
+        <!-- ২. অন্যান্যদের বুকিং কার্ড -->
+        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden shadow-sm bg-white">
+          <div class="bg-orange-50 p-3 border-b flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-sm font-bold text-gray-800 flex items-center gap-1.5">👤 অন্যান্যদের বুকিং</h3>
+              <p class="text-[11px] text-gray-600 mt-0.5">বরাদ্দ: <span id="otherAllocCount">০</span> | বিক্রীত: <span id="otherSoldCell">০</span> | বাকি: <span id="otherRemCell">০</span> টিকেট</p>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full border-collapse text-xs booking-table">
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="p-2 border-r text-center w-8"><input type="checkbox" onchange="toggleAllCheckboxes(this, 'other')"></th>
+                  <th class="p-2 border-r text-center">নাম</th>
+                  <th class="p-2 border-r text-center">তারিখ</th>
+                  <th class="p-2 border-r text-center">বই নম্বর</th>
+                  <th class="p-2 border-r text-center">টিকেট থেকে</th>
+                  <th class="p-2 border-r text-center">টিকেট পর্যন্ত</th>
+                  <th class="p-2 border-r text-center">বরাদ্দ</th>
+                  <th class="p-2 border-r text-center">বিক্রীত</th>
+                  <th class="p-2 text-center">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="otherBookingTableBody">
+                <tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো বুকিং পাওয়া যায়নি</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div id="otherPagination" class="flex flex-wrap justify-center items-center gap-1 p-3 bg-white border-t text-xs"></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ডেভেলপার মোডাল -->
-  <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
-      <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-      <div class="text-center mb-4">
-        <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
-        <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+    <!-- 🎫 নতুন টিকেট বুকিং পপআপ মোডাল -->
+    <div id="bookingEntryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
+      <div class="bg-white w-full max-w-lg max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
+        <button onclick="closeBookingEntryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
+        
+        <h3 class="text-lg font-bold text-orange-700 text-center mb-4" id="bookingModalTitle">নতুন টিকেট বুকিং</h3>
+
+        <!-- মোডাল ট্যাব (সদস্য / অন্যান্য) -->
+        <div class="grid grid-cols-2 gap-2 bg-gray-100 p-1 rounded-xl mb-4">
+          <button type="button" id="tabBtnMember" onclick="switchBookingType('member')" class="py-2 text-xs md:text-sm font-bold rounded-lg transition bg-white text-orange-600 shadow-sm">সদস্য</button>
+          <button type="button" id="tabBtnOther" onclick="switchBookingType('other')" class="py-2 text-xs md:text-sm font-bold rounded-lg transition text-gray-600">অন্যান্য</button>
+        </div>
+
+        <div class="space-y-3">
+          <!-- সদস্য ফিল্ড (সদস্য ট্যাবের জন্য) -->
+          <div id="memberSelectContainer">
+            <label class="block text-xs font-bold text-gray-600 mb-1">সদস্য নির্বাচন করুন *</label>
+            <input id="bookingMemberSearch" type="text" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." oninput="searchMembersDropdown(this.value)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+            <div id="memberDropdownResults" class="hidden absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto w-[calc(100%-2.5rem)]"></div>
+            <p class="text-[11px] text-gray-500 mt-1" id="selectedMemberInfo">সদস্য খুঁজতে উপরে টাইপ করুন</p>
+          </div>
+
+          <!-- অন্যান্য ফিল্ড (অন্যান্য ট্যাবের জন্য) -->
+          <div id="otherNameContainer" class="hidden">
+            <label class="block text-xs font-bold text-gray-600 mb-1">নাম *</label>
+            <input id="bookingCustomerName" type="text" placeholder="নাম লিখুন" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">তারিখ *</label>
+            <input type="date" id="bookingDate" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">বই নম্বর *</label>
+            <input id="bookingBookNo" type="text" placeholder="বই নম্বর লিখুন (যেমন: 201)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকেট নম্বর থেকে *</label>
+              <input id="bookingStartTicket" type="number" placeholder="শুরুর টিকেট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকেট নম্বর পর্যন্ত *</label>
+              <input id="bookingEndTicket" type="number" placeholder="শেষ টিকেট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (মোট টিকেট)</label>
+            <input id="bookingQuantity" type="number" readonly placeholder="স্বয়ংক্রিয় গণিত" class="w-full p-2.5 border rounded-lg text-sm bg-gray-100 font-bold text-orange-700">
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 pt-3 border-t">
+            <button type="button" onclick="closeBookingEntryModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50">বাতিল</button>
+            <button type="button" onclick="saveBookingForm()" id="saveBookingBtn" class="w-full bg-black text-white py-2.5 rounded-xl text-sm font-bold hover:bg-gray-800 shadow-sm">যোগ করুন</button>
+          </div>
+        </div>
       </div>
-      <div class="space-y-2.5 text-xs border-t pt-3">
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">নাম:</span>
-          <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
-        </div>
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">মোবাইল:</span>
-          <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
-        </div>
-        <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
-          <span class="text-gray-500">ইমেইল:</span>
-          <a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a>
-        </div>
-      </div>
-      <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
     </div>
-  </div>
 
-  <!-- Firebase Auth Session Cache -->
-  <script>
-  (function () {
-    const KEY = "pujaAuthSessionV2";
-    window.__pujaAuthCache = {
-      get() {
-        try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
-      },
-      set(user, role, permissions) {
-        try {
-          localStorage.setItem(KEY, JSON.stringify({
-            uid: user.uid, email: user.email || "",
-            role: role || "user",
-            permissions: Array.isArray(permissions) ? permissions : [],
-            savedAt: Date.now()
-          }));
-        } catch (_) {}
-      },
-      clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
-    };
-    const cached = window.__pujaAuthCache.get();
-    window.currentUserRole = cached?.role || "user";
-    window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
-    window.__pujaAuthReady = !!cached;
-  })();
-  </script>
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
+          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+        </div>
+        <div class="space-y-2.5 text-xs border-t pt-3">
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">নাম:</span>
+            <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">মোবাইল:</span>
+            <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">ইমেইল:</span>
+            <a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a>
+          </div>
+        </div>
+        <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
 
-  <!-- Firebase Logic -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    <!-- Firebase ও মূল স্ক্রিপ্ট -->
+    <script>
+    (function () {
+      const KEY = "pujaAuthSessionV2";
+      window.__pujaAuthCache = {
+        get() {
+          try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
+        },
+        set(user, role, permissions) {
+          try {
+            localStorage.setItem(KEY, JSON.stringify({
+              uid: user.uid, email: user.email || "",
+              role: role || "user",
+              permissions: Array.isArray(permissions) ? permissions : [],
+              savedAt: Date.now()
+            }));
+          } catch (_) {}
+        },
+        clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
+      };
+      const cached = window.__pujaAuthCache.get();
+      window.currentUserRole = cached?.role || "user";
+      window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
+      window.__pujaAuthReady = !!cached;
+    })();
+    </script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
-      authDomain: "durgapuja-2026.firebaseapp.com",
-      projectId: "durgapuja-2026",
-      storageBucket: "durgapuja-2026.firebasestorage.app",
-      messagingSenderId: "625976130920",
-      appId: "1:625976130920:web:60190b21f1c7563cdd2add",
-    };
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+      import {
+        getAuth,
+        setPersistence,
+        browserLocalPersistence,
+        onAuthStateChanged,
+        signOut
+      } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        doc,
+        onSnapshot,
+        getDoc
+      } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const auth = getAuth(app);
-    setPersistence(auth, browserLocalPersistence);
+      const firebaseConfig = {
+        apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+        authDomain: "durgapuja-2026.firebaseapp.com",
+        projectId: "durgapuja-2026",
+        storageBucket: "durgapuja-2026.firebasestorage.app",
+        messagingSenderId: "625976130920",
+        appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+      };
 
-    let salesData = [];
-    let paymentsData = [];
-    let membersData = [];
-    let bookingsData = [];
-    let currentSaleType = "member";
-    let editSaleId = "";
-    
-    // Pagination Variables
-    let currentPage = 1;
-    const itemsPerPage = 5;
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      setPersistence(auth, browserLocalPersistence);
+      const db = getFirestore(app);
 
-    window.currentSelectedBookingId = null;
-    window.currentBookingSold = 0;
+      let allBookingsData = [];
+      let allMembersData = [];
+      let currentBookingType = "member"; 
+      let selectedMemberObject = null;
+      let editingBookingId = "";
 
-    const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+      // Pagination variables
+      let currentPageMember = 1;
+      let currentPageOther = 1;
+      const itemsPerPage = 5;
 
-    onAuthStateChanged(auth, async (user) => {
-      if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-        try { 
-          const userAccessDoc = await getDoc(doc(db, "app_users", user.uid)); 
-          if (!userAccessDoc.exists() || userAccessDoc.data().disabled || !(userAccessDoc.data().permissions || []).includes("sales")) { 
+      const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+      window.currentUserRole = "user";
+      window.userPermissions = [];
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+          try { 
+            const userAccessDoc = await getDoc(doc(db, "app_users", user.uid)); 
+            if (!userAccessDoc.exists() || userAccessDoc.data().disabled || !(userAccessDoc.data().permissions || []).includes("booking")) { 
+              window.location.replace("dashboard.html"); 
+              return; 
+            } 
+          } catch(e) { 
             window.location.replace("dashboard.html"); 
             return; 
-          } 
-        } catch(e) { 
-          window.location.replace("dashboard.html"); 
-          return; 
+          }
         }
-      }
-      if (user) {
-        if (user.email === ADMIN_EMAIL) {
-          window.currentUserRole = "admin";
-          window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
-        } else {
-          window.currentUserRole = "user";
-          try {
-            const userDoc = await getDoc(doc(db, "app_users", user.uid));
-            if (userDoc.exists()) {
-              window.currentUserRole = userDoc.data().role || "member";
-              window.userPermissions = userDoc.data().permissions || [];
-              if (userDoc.data().disabled === true || userDoc.data().deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
-            } else {
+        if (user) {
+          if (user.email === ADMIN_EMAIL) {
+            window.currentUserRole = "admin";
+            window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+          } else {
+            window.currentUserRole = "user";
+            try {
+              const userDoc = await getDoc(doc(db, "app_users", user.uid));
+              if (userDoc.exists()) {
+                window.currentUserRole = userDoc.data().role || "member";
+                window.userPermissions = userDoc.data().permissions || [];
+                if (userDoc.data().disabled === true || userDoc.data().deleted === true) { await signOut(auth); window.location.replace("index.html"); return; }
+              } else {
+                window.userPermissions = [];
+              }
+            } catch (e) {
               window.userPermissions = [];
             }
-          } catch (e) {
-            window.userPermissions = [];
           }
+
+          window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
+          setupUIBasedOnRoleAndPermissions(user);
+          loadMembersData();
+          loadBookingsData();
+        } else {
+          window.location.replace("index.html");
         }
-
-        window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
-        loadMembers();
-        loadBookings();
-        loadSales();
-        loadPayments();
-      } else {
-        window.location.replace("index.html");
-      }
-    });
-
-    // ১. ডাটা লোডিং
-    function loadMembers() {
-      onSnapshot(collection(db, "members"), snap => {
-        membersData = [];
-        snap.forEach(d => membersData.push({ id: d.id, ...d.data() }));
       });
-    }
 
-    function loadBookings() {
-      onSnapshot(collection(db, "bookings"), snap => {
-        bookingsData = [];
-        snap.forEach(d => bookingsData.push({ id: d.id, ...d.data() }));
-      });
-    }
-
-    function loadSales() {
-      onSnapshot(collection(db, "sales"), snap => {
-        salesData = [];
-        snap.forEach(d => salesData.push({ id: d.id, ...d.data() }));
-        salesData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-        renderSales();
-      });
-    }
-
-    function loadPayments() {
-      onSnapshot(collection(db, "payments"), snap => {
-        paymentsData = [];
-        snap.forEach(d => paymentsData.push({ id: d.id, ...d.data() }));
-        renderSales();
-      });
-    }
-
-    // ২. কোষাধ্যক্ষের নাম সদস্য তালিকা থেকে ডাইনামিক খোঁজা
-    window.getTreasurerName = function() {
-      if (!membersData || membersData.length === 0) return "";
-      const treasurer = membersData.find(m => 
-          (m.designation && m.designation.includes("পূজা কোষাধ্যক্ষ")) ||
-          (m.role && m.role.includes("পূজা কোষাধ্যক্ষ")) ||
-          (m.post && m.post.includes("পূজা কোষাধ্যক্ষ"))
-      );
-      return treasurer ? treasurer.name : "";
-    };
-
-    // ৩. নতুন বই (বুকিং) মডাল হ্যান্ডলার
-    window.openAddBookingModal = function() {
-      document.getElementById("newBookNo").value = "";
-      document.getElementById("newBookQty").value = "";
-      const modal = document.getElementById("bookingModal");
-      modal.classList.remove("hidden");
-      modal.classList.add("flex");
-    };
-
-    window.closeBookingModal = function() {
-      const modal = document.getElementById("bookingModal");
-      modal.classList.add("hidden");
-      modal.classList.remove("flex");
-    };
-
-    window.saveBookingForm = async function() {
-      const bookNo = document.getElementById("newBookNo").value.trim();
-      const quantity = parseInt(document.getElementById("newBookQty").value) || 0;
-
-      if (!bookNo || quantity <= 0) {
-        return alert("বই নম্বর এবং মোট টিকিট সঠিকভাবে লিখুন!");
+      function setupUIBasedOnRoleAndPermissions(user) {
+        const roleBadge = document.getElementById("userRoleBadge");
+        if (roleBadge) {
+          roleBadge.innerText = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase() ? "রোল: Admin" : "রোল: User";
+        }
+        const delBtn = document.getElementById("deleteAllBtn");
+        if (delBtn && (window.currentUserRole === "admin" || window.userPermissions.includes("admin"))) {
+          delBtn.classList.remove("hidden");
+        }
       }
 
-      // ডুপ্লিকেট বই নম্বর চেক
-      const exists = bookingsData.find(b => (b.bookNo || "").toLowerCase() === bookNo.toLowerCase());
-      if (exists) {
-        return alert("এই বইটি ইতিমধ্যে যোগ করা হয়েছে! একই নম্বর দুইবার যোগ করা যাবে না।");
-      }
-
-      try {
-        await addDoc(collection(db, "bookings"), {
-          bookNo: bookNo,
-          quantity: quantity,
-          sold: 0, // নতুন এন্ট্রিতে বিক্রি শূন্য থাকবে
-          timestamp: Date.now()
+      function loadMembersData() {
+        onSnapshot(collection(db, "members"), snap => {
+          allMembersData = [];
+          snap.forEach(d => allMembersData.push({ id: d.id, ...d.data() }));
         });
-        alert("নতুন বই সফলভাবে যোগ করা হয়েছে!");
-        closeBookingModal();
-      } catch(e) {
-        alert("ত্রুটি: " + e.message);
-      }
-    };
-
-    // ৪. বিক্রয় মডাল হ্যান্ডলার
-    window.openAddSalesModal = function() {
-      editSaleId = "";
-      window.currentSelectedBookingId = null;
-      document.getElementById("salesModalTitle").innerText = "নতুন টিকিট বিক্রয়";
-      
-      document.getElementById("saleMemberSearch").value = "";
-      document.getElementById("saleCustomerName").value = "";
-      document.getElementById("saleBookNo").value = "";
-      document.getElementById("bookDetailsDisplay").classList.add("hidden");
-      
-      document.getElementById("useTicketNumbers").checked = true;
-      toggleTicketNumbers(); 
-
-      document.getElementById("saleQuantity").value = "";
-      document.getElementById("saleTotalAmount").value = "";
-      document.getElementById("salePaidAmount").value = "";
-      document.getElementById("saleDueDisplay").value = "";
-      document.getElementById("saleDate").value = new Date().toISOString().split('T')[0];
-      
-      const defaultCollector = window.getTreasurerName();
-      document.getElementById("saleCollector").value = defaultCollector;
-      const hintText = document.getElementById("collectorHintText");
-      if(defaultCollector) {
-          hintText.innerText = "⭐️ (সদস্য তালিকা থেকে পূজা কোষাধ্যক্ষ নির্বাচিত, চাইলে পরিবর্তন করতে পারেন)";
-      } else {
-          hintText.innerText = "⭐️ (কার কাছে জমা দিয়েছেন তার নাম লিখুন)";
       }
 
-      setSaleType("member");
-
-      const m = document.getElementById("salesModal");
-      m.classList.remove("hidden"); m.classList.add("flex");
-    };
-
-    window.closeSalesModal = function() {
-      document.getElementById("salesModal").classList.add("hidden");
-      document.getElementById("salesModal").classList.remove("flex");
-    };
-
-    window.setSaleType = function(type) {
-      currentSaleType = type;
-      const mBtn = document.getElementById("saleTypeMemberBtn");
-      const oBtn = document.getElementById("saleTypeOtherBtn");
-      const mBox = document.getElementById("memberSelectBox");
-      const oBox = document.getElementById("otherNameBox");
-      
-      if (type === "member") {
-        mBtn.className = "py-1.5 text-xs font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
-        oBtn.className = "py-1.5 text-xs font-bold rounded-lg transition text-gray-600";
-        mBox.classList.remove("hidden");
-        oBox.classList.add("hidden");
-      } else {
-        oBtn.className = "py-1.5 text-xs font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
-        mBtn.className = "py-1.5 text-xs font-bold rounded-lg transition text-gray-600";
-        oBox.classList.remove("hidden");
-        mBox.classList.add("hidden");
-      }
-    };
-
-    // ৫. সদস্য নাম খোঁজা (Autosuggest)
-    window.searchMembers = function(query) {
-      const resultsDiv = document.getElementById("memberSearchResults");
-      if(!query.trim()) { resultsDiv.classList.add("hidden"); return; }
-      
-      const filtered = membersData.filter(m => 
-        (m.name || "").toLowerCase().includes(query.toLowerCase()) || 
-        (m.phone || m.mobile || "").includes(query)
-      );
-
-      if(filtered.length === 0) {
-        resultsDiv.classList.add("hidden");
-        return;
+      function loadBookingsData() {
+        onSnapshot(collection(db, "bookings"), snap => {
+          allBookingsData = [];
+          snap.forEach(d => allBookingsData.push({ id: d.id, ...d.data() }));
+          allBookingsData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          renderBookingTables();
+        });
+        setDefaultBookingDate();
       }
 
-      resultsDiv.innerHTML = filtered.map(m => `
-        <div onclick="selectMember('${m.name}')" class="p-2 hover:bg-orange-50 cursor-pointer border-b text-xs flex justify-between">
-          <span class="font-bold text-gray-800">${m.name}</span>
-          <span class="text-gray-500">${m.phone || m.mobile || ''}</span>
-        </div>
-      `).join('');
-      resultsDiv.classList.remove("hidden");
-    };
-
-    window.selectMember = function(name) {
-      document.getElementById("saleMemberSearch").value = name;
-      document.getElementById("memberSearchResults").classList.add("hidden");
-    };
-
-    // ৬. টিকিট নম্বর ও বুকিং লজিক
-    window.toggleTicketNumbers = function() {
-      const isChecked = document.getElementById("useTicketNumbers").checked;
-      const tFields = document.getElementById("ticketNumberFields");
-      const qtyField = document.getElementById("saleQuantity");
-
-      if(isChecked) {
-          tFields.classList.remove("hidden");
-          qtyField.readOnly = true;
-          qtyField.classList.add("bg-gray-100");
-      } else {
-          tFields.classList.add("hidden");
-          qtyField.readOnly = false;
-          qtyField.classList.remove("bg-gray-100");
-          document.getElementById("saleStartTicket").value = "";
-          document.getElementById("saleEndTicket").value = "";
+      function setDefaultBookingDate() {
+        const d = new Date().toISOString().split("T")[0];
+        const e = document.getElementById("bookingDate");
+        if (e && !e.value) e.value = d;
       }
-      calcSaleQty();
-    };
 
-    window.checkBookDetails = function() {
-      const bookNo = document.getElementById("saleBookNo").value.trim();
-      const display = document.getElementById("bookDetailsDisplay");
-      if(!bookNo) { display.classList.add("hidden"); window.currentSelectedBookingId = null; return; }
+      window.switchBookingType = function(type) {
+        currentBookingType = type;
+        const btnM = document.getElementById("tabBtnMember");
+        const btnO = document.getElementById("tabBtnOther");
+        const mCont = document.getElementById("memberSelectContainer");
+        const oCont = document.getElementById("otherNameContainer");
 
-      const book = bookingsData.find(b => (b.bookNo || "").toLowerCase() === bookNo.toLowerCase());
-      if(book) {
-          const total = Number(book.quantity || 0);
-          const sold = Number(book.sold || 0);
-          const remaining = Math.max(0, total - sold);
-          display.innerHTML = `বুকিং তথ্য: বরাদ্দ: ${total} | বিক্রীত: ${sold} | <b>বাকি: ${remaining}</b>`;
-          display.classList.remove("hidden");
-          window.currentSelectedBookingId = book.id;
-          window.currentBookingSold = sold;
-      } else {
-          display.innerHTML = `<span class="text-red-500">এই বইটি বুকিং লিস্টে পাওয়া যায়নি!</span>`;
-          display.classList.remove("hidden");
-          window.currentSelectedBookingId = null;
-      }
-    };
-
-    // ৭. গণনার হিসাব
-    window.calcSaleQty = function() {
-      const price = parseInt(document.getElementById("salePricePerTicket").value) || 100;
-      const isChecked = document.getElementById("useTicketNumbers").checked;
-      
-      if(isChecked) {
-          const start = parseInt(document.getElementById("saleStartTicket").value) || 0;
-          const end = parseInt(document.getElementById("saleEndTicket").value) || 0;
-          if (end >= start && start > 0) {
-            const qty = end - start + 1;
-            document.getElementById("saleQuantity").value = qty;
-            document.getElementById("saleTotalAmount").value = qty * price;
-          } else {
-            document.getElementById("saleQuantity").value = "";
-            document.getElementById("saleTotalAmount").value = "";
-          }
-      } else {
-          const qty = parseInt(document.getElementById("saleQuantity").value) || 0;
-          document.getElementById("saleTotalAmount").value = qty * price;
-      }
-      calcDueAmount();
-    };
-
-    window.calcDueAmount = function() {
-      const total = parseInt(document.getElementById("saleTotalAmount").value) || 0;
-      const paid = parseInt(document.getElementById("salePaidAmount").value) || 0;
-      document.getElementById("saleDueDisplay").value = Math.max(0, total - paid);
-    };
-
-    // ৮. সেভ করা
-    window.saveSalesForm = async function() {
-      const btn = document.getElementById("saveSaleBtn");
-      btn.disabled = true;
-      try {
-        let name = "";
-        if (currentSaleType === "member") {
-          name = document.getElementById("saleMemberSearch").value.trim();
-          if (!name) { alert("দয়া করে সদস্যের নাম লিখুন বা নির্বাচন করুন"); btn.disabled = false; return; }
+        if (type === "member") {
+          btnM.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
+          btnO.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition text-gray-600";
+          mCont.classList.remove("hidden");
+          oCont.classList.add("hidden");
         } else {
-          name = document.getElementById("saleCustomerName").value.trim();
-          if(!name) { alert("ক্রেতার নাম লিখুন"); btn.disabled = false; return; }
+          btnO.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition bg-white text-orange-600 shadow-sm";
+          btnM.className = "py-2 text-xs md:text-sm font-bold rounded-lg transition text-gray-600";
+          oCont.classList.remove("hidden");
+          mCont.classList.add("hidden");
         }
+      };
 
-        const date = document.getElementById("saleDate").value;
-        const bookNo = document.getElementById("saleBookNo").value.trim();
-        
-        const isChecked = document.getElementById("useTicketNumbers").checked;
-        const startTicket = isChecked ? (parseInt(document.getElementById("saleStartTicket").value) || 0) : "";
-        const endTicket = isChecked ? (parseInt(document.getElementById("saleEndTicket").value) || 0) : "";
-        
-        const quantity = parseInt(document.getElementById("saleQuantity").value) || 0;
-        const pricePerTicket = parseInt(document.getElementById("salePricePerTicket").value) || 100;
-        const totalAmount = parseInt(document.getElementById("saleTotalAmount").value) || 0;
-        const initialPaid = parseInt(document.getElementById("salePaidAmount").value) || 0;
-        const collector = document.getElementById("saleCollector").value.trim();
-
-        if(!date || !bookNo || quantity <= 0) {
-          alert("সব ঘর সঠিকভাবে পূরণ করুন (পরিমাণ 0 হতে পারে না)");
-          btn.disabled = false; return;
+      window.searchMembersDropdown = function(q) {
+        const resBox = document.getElementById("memberDropdownResults");
+        if (!q.trim()) {
+          resBox.classList.add("hidden");
+          return;
         }
-
-        if(initialPaid > 0 && !collector) {
-          alert("কার কাছে জমা দিয়েছেন তার নাম লিখুন!");
-          btn.disabled = false; return;
-        }
-
-        const payload = {
-          type: currentSaleType,
-          name, date, bookNo, startTicket, endTicket,
-          hasTicketNumbers: isChecked,
-          quantity, pricePerTicket, totalAmount, initialPaid,
-          timestamp: Date.now()
-        };
-
-        if (editSaleId) {
-          await updateDoc(doc(db, "sales", editSaleId), payload);
-        } else {
-          const docRef = await addDoc(collection(db, "sales"), payload);
-          
-          if (initialPaid > 0) {
-            await addDoc(collection(db, "payments"), {
-              saleId: docRef.id,
-              customerName: name,
-              amount: initialPaid,
-              date,
-              collector: collector,
-              note: "প্রাথমিক পেমেন্ট",
-              timestamp: Date.now()
-            });
-          }
-          
-          // বুকিং-এর বিক্রি হওয়া পরিমাণ আপডেট
-          if (window.currentSelectedBookingId) {
-               const newSold = window.currentBookingSold + quantity;
-               await updateDoc(doc(db, "bookings", window.currentSelectedBookingId), {
-                   sold: newSold
-               });
-          }
-        }
-        closeSalesModal();
-      } catch(e) {
-        alert("ত্রুটি: " + e.message);
-      } finally {
-        btn.disabled = false;
-      }
-    };
-
-    // ৯. তালিকা প্রদর্শন ও পেজিনেশন (Render & Pagination)
-    window.changePage = function(page) {
-      currentPage = page;
-      renderSales();
-    };
-
-    function renderPaginationControls(totalPages) {
-      const container = document.getElementById("paginationControls");
-      if(totalPages <= 1) { container.innerHTML = ''; return; }
-      let html = '';
-      for(let i=1; i<=totalPages; i++) {
-        if(i === currentPage) {
-          html += `<button class="px-3 py-1 bg-orange-600 text-white rounded-md font-bold text-xs shadow-sm">${i}</button>`;
-        } else {
-          html += `<button onclick="changePage(${i})" class="px-3 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md font-bold text-xs border">${i}</button>`;
-        }
-      }
-      container.innerHTML = html;
-    }
-
-    function renderSales() {
-      const q = document.getElementById("salesSearchInput").value.toLowerCase();
-      
-      let filteredData = salesData;
-      if (q) {
-        filteredData = salesData.filter(sale => 
-          (sale.name || "").toLowerCase().includes(q) || 
-          (sale.bookNo || "").toLowerCase().includes(q)
+        const filtered = allMembersData.filter(m => 
+          [m.name, m.mobile, m.phone, m.memberId].some(v => String(v || "").toLowerCase().includes(q.toLowerCase()))
         );
-      }
 
-      let totTickets = 0, totSales = 0, totPaid = 0;
+        if (filtered.length === 0) {
+          resBox.innerHTML = `<div class="p-2 text-xs text-gray-500">কোনো সদস্য পাওয়া যায়নি</div>`;
+          resBox.classList.remove("hidden");
+          return;
+        }
 
-      filteredData.forEach(sale => {
-        totTickets += Number(sale.quantity || 0);
-        totSales += Number(sale.totalAmount || 0);
+        resBox.innerHTML = filtered.map(m => `
+          <div onclick="selectMemberItem('${m.id}')" class="p-2 text-xs hover:bg-orange-50 cursor-pointer border-b last:border-b-0">
+            <strong>${esc(m.name)}</strong> (${esc(m.mobile || m.phone || 'নম্বর নেই')})
+          </div>
+        `).join("");
+        resBox.classList.remove("hidden");
+      };
 
-        const relatedPayments = paymentsData.filter(p => p.saleId === sale.id);
-        const paidSum = relatedPayments.reduce((acc, p) => acc + Number(p.amount || 0), Number(sale.initialPaid || 0));
-        totPaid += paidSum;
-      });
+      window.selectMemberItem = function(id) {
+        const m = allMembersData.find(x => x.id === id);
+        if (!m) return;
+        selectedMemberObject = m;
+        document.getElementById("bookingMemberSearch").value = m.name + (m.mobile ? ` (${m.mobile})` : "");
+        document.getElementById("selectedMemberInfo").innerText = `নির্বাচিত সদস্য: ${m.name}`;
+        document.getElementById("memberDropdownResults").classList.add("hidden");
+      };
 
-      document.getElementById("totalTicketsSoldDisplay").innerText = totTickets + " টি";
-      document.getElementById("totalSalesAmountDisplay").innerText = `₹${totSales}`;
-      document.getElementById("totalDueAmountDisplay").innerText = `₹${Math.max(0, totSales - totPaid)}`;
+      window.calculateTicketQuantity = function() {
+        const start = parseInt(document.getElementById("bookingStartTicket").value) || 0;
+        const end = parseInt(document.getElementById("bookingEndTicket").value) || 0;
+        const qtyField = document.getElementById("bookingQuantity");
+        if (end >= start && start > 0) {
+          qtyField.value = (end - start + 1);
+        } else {
+          qtyField.value = "";
+        }
+      };
 
-      const tbody = document.getElementById("salesTableBody");
-      
-      if(!filteredData || filteredData.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="8" class="text-center py-6 text-gray-400">কোনো বিক্রয় রেকর্ড পাওয়া যায়নি</td></tr>`;
-        document.getElementById("paginationControls").innerHTML = '';
-        return;
-      }
+      window.openAddBookingModal = function() {
+        editingBookingId = "";
+        selectedMemberObject = null;
+        document.getElementById("bookingModalTitle").innerText = "নতুন টিকেট বুকিং";
+        document.getElementById("bookingMemberSearch").value = "";
+        document.getElementById("selectedMemberInfo").innerText = "সদস্য খুঁজতে উপরে টাইপ করুন";
+        document.getElementById("bookingCustomerName").value = "";
+        document.getElementById("bookingBookNo").value = "";
+        document.getElementById("bookingStartTicket").value = "";
+        document.getElementById("bookingEndTicket").value = "";
+        document.getElementById("bookingQuantity").value = "";
+        setDefaultBookingDate();
+        switchBookingType("member");
 
-      const totalPages = Math.ceil(filteredData.length / itemsPerPage);
-      if(currentPage > totalPages) currentPage = totalPages;
-      if(currentPage < 1) currentPage = 1;
+        const modal = document.getElementById("bookingEntryModal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+      };
 
-      const start = (currentPage - 1) * itemsPerPage;
-      const paginatedData = filteredData.slice(start, start + itemsPerPage);
+      window.closeBookingEntryModal = function() {
+        const modal = document.getElementById("bookingEntryModal");
+        if (modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
+        editingBookingId = "";
+      };
 
-      tbody.innerHTML = paginatedData.map(sale => {
-        const relatedPayments = paymentsData.filter(p => p.saleId === sale.id);
-        const paidSum = relatedPayments.reduce((acc, p) => acc + Number(p.amount || 0), Number(sale.initialPaid || 0));
-        return `
-          <tr class="hover:bg-orange-50/50 transition border-b">
-            <td class="p-2.5 text-center"><input type="checkbox" class="row-cb w-4 h-4 text-orange-600 rounded cursor-pointer border-gray-300" value="${sale.id}"></td>
-            <td class="p-2.5 text-center font-medium">${sale.date || ''}</td>
-            <td class="p-2.5">
-              <span class="font-bold text-gray-800">${sale.name || ''}</span>
-              <span class="text-[10px] block text-gray-400">${sale.type === 'member' ? 'সদস্য' : 'অন্যান্য'}</span>
-            </td>
-            <td class="p-2.5 text-center font-bold text-orange-600">${sale.bookNo || ''}</td>
-            <td class="p-2.5 text-center font-bold text-gray-700">${sale.quantity || 0} টি</td>
-            <td class="p-2.5 text-right font-bold text-gray-800">₹${sale.totalAmount || 0}</td>
-            <td class="p-2.5 text-right font-bold text-emerald-600">₹${paidSum}</td>
-            <td class="p-2.5 text-center">
-              <button onclick="deleteSale('${sale.id}', ${sale.quantity || 0}, '${sale.bookNo || ''}')" class="text-red-500 hover:text-red-700 font-bold px-2 py-1 bg-red-50 rounded-lg" title="ডিলিট">🗑️</button>
-            </td>
-          </tr>
-        `;
-      }).join('');
+      window.openEditBookingModal = function(id) {
+        const item = allBookingsData.find(x => x.id === id);
+        if (!item) return;
+        editingBookingId = id;
+        document.getElementById("bookingModalTitle").innerText = "টিকেট বুকিং এডিট করুন";
+        
+        switchBookingType(item.type || "member");
+        if (item.type === "member") {
+          selectedMemberObject = allMembersData.find(m => m.name === item.name) || { name: item.name };
+          document.getElementById("bookingMemberSearch").value = item.name + (item.mobile ? ` (${item.mobile})` : "");
+          document.getElementById("selectedMemberInfo").innerText = `নির্বাচিত সদস্য: ${item.name}`;
+        } else {
+          document.getElementById("bookingCustomerName").value = item.name || "";
+        }
 
-      // Checkbox state reset
-      const selectAllCb = document.getElementById("selectAllCb");
-      if(selectAllCb) selectAllCb.checked = false;
+        document.getElementById("bookingDate").value = item.date || "";
+        document.getElementById("bookingBookNo").value = item.bookNo || "";
+        document.getElementById("bookingStartTicket").value = item.startTicket || "";
+        document.getElementById("bookingEndTicket").value = item.endTicket || "";
+        document.getElementById("bookingQuantity").value = item.quantity || "";
 
-      renderPaginationControls(totalPages);
-    }
+        const modal = document.getElementById("bookingEntryModal");
+        if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
+      };
 
-    // ১০. ফিল্টার ও মার্ক ডিলিট
-    window.filterSalesTable = function() {
-      currentPage = 1;
-      renderSales();
-    };
-
-    window.toggleSelectAll = function() {
-      const isChecked = document.getElementById('selectAllCb').checked;
-      document.querySelectorAll('.row-cb').forEach(cb => cb.checked = isChecked);
-    };
-
-    window.deleteSale = async function(id, qty, bookNo) {
-      if(confirm("আপনি কি সত্যিই এই বিক্রি রেকর্ডটি মুছে ফেলতে চান?")) {
+      window.saveBookingForm = async function() {
+        const btn = document.getElementById("saveBookingBtn");
+        if (btn) btn.disabled = true;
         try {
-          await deleteDoc(doc(db, "sales", id));
-          
-          // বুকিং এর বিক্রিত পরিমাণ ঠিক করা
-          if(bookNo && qty) {
-              const book = bookingsData.find(b => (b.bookNo||'').toLowerCase() === bookNo.toLowerCase());
-              if(book) {
-                  const newSold = Math.max(0, (book.sold || 0) - Number(qty));
-                  await updateDoc(doc(db, "bookings", book.id), { sold: newSold });
+          let name = "";
+          let mobile = "";
+          if (currentBookingType === "member") {
+            if (!selectedMemberObject) { alert("দয়া করে একজন সদস্য নির্বাচন করুন।"); return; }
+            name = selectedMemberObject.name || "";
+            mobile = selectedMemberObject.mobile || selectedMemberObject.phone || "";
+          } else {
+            name = document.getElementById("bookingCustomerName").value.trim();
+            if (!name) { alert("গ্রাহকের নাম লিখুন।"); return; }
+          }
+
+          const date = document.getElementById("bookingDate").value;
+          const bookNo = document.getElementById("bookingBookNo").value.trim();
+          const startTicket = parseInt(document.getElementById("bookingStartTicket").value) || 0;
+          const endTicket = parseInt(document.getElementById("bookingEndTicket").value) || 0;
+          const quantity = parseInt(document.getElementById("bookingQuantity").value) || 0;
+
+          if (!date || !bookNo || !startTicket || !endTicket || quantity <= 0) {
+            alert("সব প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।");
+            return;
+          }
+
+          // Duplicate Ticket Number Check Logic
+          const isDuplicate = allBookingsData.some(item => {
+              if (editingBookingId && item.id === editingBookingId) return false;
+              if (String(item.bookNo).trim().toLowerCase() === String(bookNo).trim().toLowerCase()) {
+                  const eStart = Number(item.startTicket);
+                  const eEnd = Number(item.endTicket);
+                  const nStart = Number(startTicket);
+                  const nEnd = Number(endTicket);
+                  return Math.max(nStart, eStart) <= Math.min(nEnd, eEnd);
+              }
+              return false;
+          });
+
+          if (isDuplicate) {
+              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকেট নম্বরগুলো ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকেট পুনরায় যোগ করা যাবে না।`);
+              if (btn) btn.disabled = false;
+              return;
+          }
+
+          const data = {
+            type: currentBookingType,
+            name,
+            mobile,
+            date,
+            bookNo,
+            startTicket,
+            endTicket,
+            quantity,
+            timestamp: Date.now()
+          };
+
+          if (editingBookingId) {
+            await updateDoc(doc(db, "bookings", editingBookingId), data);
+          } else {
+            data.sold = 0; // Fix: Sold defaults to 0 for new ticket allocations
+            await addDoc(collection(db, "bookings"), data);
+          }
+          closeBookingEntryModal();
+        } catch (e) {
+          console.error(e);
+          alert("সেভ করতে সমস্যা হয়েছে: " + (e?.message || e));
+        } finally {
+          if (btn) btn.disabled = false;
+        }
+      };
+
+      // Checkbox Logic
+      window.toggleAllCheckboxes = function(source, type) {
+          const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+          checkboxes.forEach(cb => cb.checked = source.checked);
+      };
+
+      window.deleteMarkedBookings = async function() {
+          const checked = document.querySelectorAll('.booking-checkbox:checked');
+          if (checked.length === 0) {
+              alert("ডিলিট করার জন্য কোনো বুকিং নির্বাচন করা হয়নি।");
+              return;
+          }
+          if (!confirm(`আপনি কি নির্বাচিত ${checked.length} টি বুকিং মুছে ফেলতে চান?`)) return;
+
+          try {
+              for (let cb of checked) {
+                  await deleteDoc(doc(db, "bookings", cb.value));
+              }
+              alert("চিহ্নিত বুকিংগুলো মুছে ফেলা হয়েছে।");
+          } catch (e) {
+              alert("মুছে ফেলতে সমস্যা হয়েছে: " + e.message);
+          }
+      };
+
+      window.deleteBooking = async function(id) {
+        if (!confirm("এই বুকিংটি ডিলিট করতে চান?")) return;
+        try {
+          await deleteDoc(doc(db, "bookings", id));
+        } catch (e) {
+          alert("ডিলিট করতে সমস্যা হয়েছে: " + e.message);
+        }
+      };
+
+      window.deleteAllBookings = async function() {
+        if (!confirm("সতর্কতা! সমস্ত বুকিং রেকর্ড মুছে ফেলা হবে। আপনি কি নিশ্চিত?")) return;
+        try {
+          for (const item of allBookingsData) {
+            await deleteDoc(doc(db, "bookings", item.id));
+          }
+          alert("সকল বুকিং মুছে ফেলা হয়েছে।");
+        } catch (e) {
+          alert("মুছে ফেলতে সমস্যা হয়েছে: " + e.message);
+        }
+      };
+
+      window.filterAllBookings = function() {
+        currentPageMember = 1;
+        currentPageOther = 1;
+        renderBookingTables();
+      };
+
+      // Pagination render logic
+      function renderPagination(totalItems, currentPage, containerId, type) {
+          const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
+          const container = document.getElementById(containerId);
+          if (!container) return;
+
+          if (totalPages <= 1) {
+              container.innerHTML = '';
+              return;
+          }
+
+          let html = '';
+          html += `<button onclick="changePage('${type}', ${currentPage > 1 ? currentPage - 1 : 1})" class="px-2 py-1 border rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold">&laquo;</button>`;
+
+          for (let i = 1; i <= totalPages; i++) {
+              if (i === currentPage) {
+                  html += `<button class="px-3 py-1 border rounded bg-orange-600 text-white font-bold">${i}</button>`;
+              } else {
+                  html += `<button onclick="changePage('${type}', ${i})" class="px-3 py-1 border rounded bg-gray-100 hover:bg-gray-200 text-gray-700">${i}</button>`;
               }
           }
-        } catch(e) { alert("মুছে ফেলা সম্ভব হয়নি: " + e.message); }
+          
+          html += `<button onclick="changePage('${type}', ${currentPage < totalPages ? currentPage + 1 : totalPages})" class="px-2 py-1 border rounded bg-gray-100 hover:bg-gray-200 text-gray-700 font-bold">&raquo;</button>`;
+          
+          container.innerHTML = html;
       }
-    };
-
-    window.deleteMarkedSales = async function() {
-      const cbs = document.querySelectorAll('.row-cb:checked');
-      if(cbs.length === 0) return alert('ডিলিট করার জন্য অন্তত একটি রেকর্ড নির্বাচন করুন!');
-      if(!confirm(`আপনি কি সত্যিই ${cbs.length} টি রেকর্ড মুছে ফেলতে চান?`)) return;
       
-      const bookDecrements = {};
+      window.changePage = function(type, page) {
+          if (type === 'member') currentPageMember = page;
+          else currentPageOther = page;
+          renderBookingTables();
+      };
 
-      try {
-        for(let cb of cbs) {
-          const sale = salesData.find(s => s.id === cb.value);
-          if (sale) {
-            await deleteDoc(doc(db, "sales", cb.value));
-            // হিসাবের জন্য ডাটা ম্যাপে রাখা
-            if(sale.bookNo && sale.quantity) {
-               const bNo = sale.bookNo.toLowerCase();
-               if(!bookDecrements[bNo]) bookDecrements[bNo] = 0;
-               bookDecrements[bNo] += Number(sale.quantity || 0);
-            }
-          }
-        }
+      function renderBookingTables() {
+        const memberTableBody = document.getElementById("memberBookingTableBody");
+        const otherTableBody = document.getElementById("otherBookingTableBody");
+        if (!memberTableBody || !otherTableBody) return;
 
-        // মূল বইয়ের (Booking) বিক্রি আপডেট করা
-        for(let bNo in bookDecrements) {
-           const book = bookingsData.find(b => (b.bookNo||'').toLowerCase() === bNo);
-           if(book) {
-              const newSold = Math.max(0, (book.sold || 0) - bookDecrements[bNo]);
-              await updateDoc(doc(db, "bookings", book.id), { sold: newSold });
-           }
-        }
-        document.getElementById('selectAllCb').checked = false;
-      } catch(e) {
-        alert("মুছে ফেলার সময় ত্রুটি হয়েছে: " + e.message);
+        const q = (document.getElementById("globalBookingSearch")?.value || "").trim().toLowerCase();
+        const filteredData = allBookingsData.filter(item => {
+          if (!q) return true;
+          return [item.name, item.bookNo, item.date, item.startTicket, item.endTicket].some(v => String(v || "").toLowerCase().includes(q));
+        });
+
+        const membersList = filteredData.filter(i => (i.type || "member") === "member");
+        const othersList = filteredData.filter(i => i.type === "other");
+
+        let totalAlloc = 0, totalSold = 0;
+        let mAlloc = 0, mSold = 0;
+        let oAlloc = 0, oSold = 0;
+
+        membersList.forEach(x => {
+            mAlloc += (Number(x.quantity) || 0);
+            mSold += (x.sold !== undefined ? Number(x.sold) : 0);
+        });
+        othersList.forEach(x => {
+            oAlloc += (Number(x.quantity) || 0);
+            oSold += (x.sold !== undefined ? Number(x.sold) : 0);
+        });
+
+        totalAlloc = mAlloc + oAlloc;
+        totalSold = mSold + oSold;
+
+        // Apply Pagination Data Splice
+        const totalMemberPages = Math.ceil(membersList.length / itemsPerPage) || 1;
+        if (currentPageMember > totalMemberPages) currentPageMember = totalMemberPages;
+        const pagedMembers = membersList.slice((currentPageMember - 1) * itemsPerPage, currentPageMember * itemsPerPage);
+
+        const totalOtherPages = Math.ceil(othersList.length / itemsPerPage) || 1;
+        if (currentPageOther > totalOtherPages) currentPageOther = totalOtherPages;
+        const pagedOthers = othersList.slice((currentPageOther - 1) * itemsPerPage, currentPageOther * itemsPerPage);
+
+        // Render Members Bookings
+        memberTableBody.innerHTML = pagedMembers.length ? pagedMembers.map(item => {
+          return `
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-2 border-r text-center"><input type="checkbox" class="booking-checkbox member-checkbox" value="${item.id}"></td>
+              <td class="p-2 border-r font-semibold text-center">${esc(item.name || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.date || "-")}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-600">${esc(item.bookNo || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.startTicket || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.endTicket || "-")}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-700">${item.quantity || 0}</td>
+              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold !== undefined ? item.sold : 0}</td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
+                  <button onclick="deleteBooking('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("") : `<tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো বুকিং পাওয়া যায়নি</td></tr>`;
+
+        // Render Others Bookings
+        otherTableBody.innerHTML = pagedOthers.length ? pagedOthers.map(item => {
+          return `
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-2 border-r text-center"><input type="checkbox" class="booking-checkbox other-checkbox" value="${item.id}"></td>
+              <td class="p-2 border-r font-semibold text-center">${esc(item.name || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.date || "-")}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-600">${esc(item.bookNo || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.startTicket || "-")}</td>
+              <td class="p-2 border-r text-center">${esc(item.endTicket || "-")}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-700">${item.quantity || 0}</td>
+              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold !== undefined ? item.sold : 0}</td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
+                  <button onclick="deleteBooking('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("") : `<tr><td colspan="9" class="p-4 text-center text-gray-500">কোনো বুকিং পাওয়া যায়নি</td></tr>`;
+
+        // Update Top Stats
+        document.getElementById("totalAllocatedTickets").innerText = totalAlloc + " টিকেট";
+        document.getElementById("totalSoldTickets").innerText = totalSold + " টিকেট";
+        document.getElementById("totalRemainingTickets").innerText = Math.max(0, totalAlloc - totalSold) + " টিকেট";
+
+        // Update Section Stats
+        document.getElementById("memberAllocCount").innerText = mAlloc;
+        document.getElementById("memberSoldCell").innerText = mSold;
+        document.getElementById("memberRemCell").innerText = Math.max(0, mAlloc - mSold);
+
+        document.getElementById("otherAllocCount").innerText = oAlloc;
+        document.getElementById("otherSoldCell").innerText = oSold;
+        document.getElementById("otherRemCell").innerText = Math.max(0, oAlloc - oSold);
+
+        // Render Pagination UI
+        renderPagination(membersList.length, currentPageMember, 'memberPagination', 'member');
+        renderPagination(othersList.length, currentPageOther, 'otherPagination', 'other');
       }
-    };
-  </script>
 
-  <script>
-    const defaultDevInfo = { name: "MANABENDRA NATH SARKAR", mobile: "9002652507", email: "manabendranathsarkar112@gmail.com" };
+      window.exportBookingReport = async function(type) {
+        if (typeof ExcelJS === "undefined") { alert("ExcelJS লোড হয়নি।"); return; }
+        const wb = new ExcelJS.Workbook();
+        
+        let targetData = allBookingsData;
+        let titleName = "সম্পূর্ণ বুকিং রিপোর্ট";
+        if (type === "member") {
+          targetData = allBookingsData.filter(i => (i.type || "member") === "member");
+          titleName = "সদস্য বুকিং রিপোর্ট";
+        } else if (type === "other") {
+          targetData = allBookingsData.filter(i => i.type === "other");
+          titleName = "অন্যান্য বুকিং রিপোর্ট";
+        }
 
-    function loadDevData() {
-      const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
-      document.getElementById("popDevName").textContent = saved.name;
-      document.getElementById("popDevMobile").textContent = saved.mobile;
-      document.getElementById("popDevMobile").href = `tel:${saved.mobile}`;
-      document.getElementById("popDevEmail").textContent = saved.email;
-      document.getElementById("popDevEmail").href = `mailto:${saved.email}`;
-    }
+        const ws = wb.addWorksheet("Booking Report");
+        const headers = ["নাম", "তারিখ", "বই নম্বর", "টিকেট থেকে", "টিকেট পর্যন্ত", "বরাদ্দ টিকেট", "বিক্রীত টিকেট"];
+        const rows = targetData.map(item => [
+          item.name || "",
+          item.date || "",
+          item.bookNo || "",
+          item.startTicket || "",
+          item.endTicket || "",
+          Number(item.quantity || 0),
+          Number(item.sold !== undefined ? item.sold : 0)
+        ]);
 
-    function toggleDevModal() {
-      const modal = document.getElementById("devModal");
-      modal.classList.toggle("hidden");
-      if (!modal.classList.contains("hidden")) loadDevData();
-    }
-  </script>
-</body>
+        const totalAlloc = rows.reduce((s, r) => s + (Number(r[5]) || 0), 0);
+        const totalSold = rows.reduce((s, r) => s + (Number(r[6]) || 0), 0);
+
+        ws.mergeCells(1, 1, 1, headers.length);
+        ws.getCell(1, 1).value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        ws.mergeCells(2, 1, 2, headers.length);
+        ws.getCell(2, 1).value = titleName;
+
+        const cream = "FFF7E6", orange = "F59E0B", yellow = "FEF08A", border = "D1D5DB";
+
+        [1, 2].forEach(r => {
+          const c = ws.getCell(r, 1);
+          c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: cream } };
+          c.font = { bold: true, size: r === 1 ? 18 : 16 };
+          c.alignment = { horizontal: "center", vertical: "middle" };
+        });
+        ws.getRow(1).height = 28;
+        ws.getRow(2).height = 25;
+
+        const hr = ws.getRow(4);
+        headers.forEach((h, i) => {
+          const c = hr.getCell(i + 1);
+          c.value = h;
+          c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: orange } };
+          c.font = { bold: true };
+          c.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
+          c.border = { top: { style: "thin", color: { argb: border } }, bottom: { style: "thin", color: { argb: border } }, left: { style: "thin", color: { argb: border } }, right: { style: "thin", color: { argb: border } } };
+        });
+
+        rows.forEach((row, ri) => {
+          const rr = ws.getRow(5 + ri);
+          row.forEach((v, ci) => {
+            const c = rr.getCell(ci + 1);
+            c.value = v ?? "";
+            c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: cream } };
+            c.alignment = { horizontal: "center", vertical: "middle" };
+            c.border = { top: { style: "thin", color: { argb: border } }, bottom: { style: "thin", color: { argb: border } }, left: { style: "thin", color: { argb: border } }, right: { style: "thin", color: { argb: border } } };
+          });
+        });
+
+        const tr = ws.getRow(5 + rows.length);
+        tr.getCell(1).value = "সর্বমোট";
+        tr.getCell(6).value = totalAlloc;
+        tr.getCell(7).value = totalSold;
+
+        for (let i = 1; i <= headers.length; i++) {
+          const c = tr.getCell(i);
+          c.fill = { type: "pattern", pattern: "solid", fgColor: { argb: yellow } };
+          c.font = { bold: true };
+          c.alignment = { horizontal: "center", vertical: "middle" };
+          c.border = { top: { style: "thin", color: { argb: border } }, bottom: { style: "thin", color: { argb: border } }, left: { style: "thin", color: { argb: border } }, right: { style: "thin", color: { argb: border } } };
+        }
+
+        for (let ci = 1; ci <= headers.length; ci++) {
+          let maxLen = String(headers[ci - 1] ?? "").length;
+          rows.forEach(row => {
+            const value = String(row?.[ci - 1] ?? "");
+            if (value.length > maxLen) maxLen = value.length;
+          });
+          ws.getColumn(ci).width = Math.max(14, maxLen + 3);
+        }
+
+        ws.pageSetup = {
+          paperSize: 9,
+          orientation: "portrait",
+          fitToPage: true,
+          fitToWidth: 1,
+          fitToHeight: 0,
+          horizontalCentered: true
+        };
+
+        const buf = await wb.xlsx.writeBuffer();
+        saveAs(
+          new Blob([buf], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }),
+          `${titleName}.xlsx`
+        );
+      };
+
+      function esc(v) {
+        return String(v ?? "").replace(/[&<>"']/g, c => ({
+          '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+        }[c]));
+      }
+    </script>
+
+    <script>
+      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+
+      function loadDevData() {
+        const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
+        document.getElementById("popDevName").textContent = saved.name;
+        document.getElementById("popDevMobile").textContent = saved.mobile;
+        document.getElementById("popDevMobile").href = `tel:${saved.mobile}`;
+        document.getElementById("popDevEmail").textContent = saved.email;
+        document.getElementById("popDevEmail").href = `mailto:${saved.email}`;
+      }
+
+      function toggleDevModal() {
+        const modal = document.getElementById("devModal");
+        modal.classList.toggle("hidden");
+        if (!modal.classList.contains("hidden")) loadDevData();
+      }
+    </script>
+  </body>
 </html>
