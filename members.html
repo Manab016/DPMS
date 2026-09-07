@@ -561,6 +561,44 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       reader.readAsDataURL(file);
     };
 
+    function updateRoleOptions(currentDocId = "") {
+      const roleSelect = document.getElementById("newMemberRole");
+      if (!roleSelect) return;
+
+      const ALL_ROLES = [
+        "সাধারণ সদস্য",
+        "সভাপতি",
+        "সহ সভাপতি",
+        "সম্পাদক",
+        "সহ সম্পাদক",
+        "কোষাধ্যক্ষ",
+        "সহ কোষাধ্যক্ষ",
+        "পূজা কোষাধ্যক্ষ"
+      ];
+
+      const takenRoles = allMembersData
+        .filter(m => m.id !== currentDocId && m.role && m.role !== "সাধারণ সদস্য")
+        .map(m => m.role);
+
+      const currentValue = roleSelect.value;
+      roleSelect.innerHTML = "";
+
+      ALL_ROLES.forEach(role => {
+        if (role === "সাধারণ সদস্য" || !takenRoles.includes(role)) {
+          const opt = document.createElement("option");
+          opt.value = role;
+          opt.textContent = role;
+          roleSelect.appendChild(opt);
+        }
+      });
+
+      if ([...roleSelect.options].some(o => o.value === currentValue)) {
+        roleSelect.value = currentValue;
+      } else {
+        roleSelect.value = "সাধারণ সদস্য";
+      }
+    }
+
     window.saveOrUpdateMember = async function() {
       const name = document.getElementById("newMemberName").value.trim();
       const village = document.getElementById("newMemberVillage").value.trim();
@@ -610,6 +648,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("editMemberDocId").value = member.id;
       document.getElementById("newMemberName").value = member.name;
       document.getElementById("newMemberVillage").value = member.village;
+      
+      updateRoleOptions(member.id);
       document.getElementById("newMemberRole").value = member.role;
       document.getElementById("newMemberMobile").value = member.mobile !== "-" ? member.mobile : "";
       
@@ -624,7 +664,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       if(member.signature) { sigPreview.src = member.signature; sigPreview.classList.remove("hidden"); }
       else { sigPreview.classList.add("hidden"); }
       
-      openAddModal();
+      document.getElementById("addMemberModal").classList.remove("hidden");
     };
 
     window.deleteMember = async function(id) {
@@ -835,12 +875,18 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       );
     };
 
-    window.openAddModal = function() { document.getElementById("addMemberModal").classList.remove("hidden"); };
+    window.openAddModal = function() {
+      const currentDocId = document.getElementById("editMemberDocId")?.value || "";
+      updateRoleOptions(currentDocId);
+      document.getElementById("addMemberModal").classList.remove("hidden");
+    };
+
     window.closeAddModal = function() {
       document.getElementById("addMemberModal").classList.add("hidden");
       document.getElementById("editMemberDocId").value = "";
       document.getElementById("newMemberName").value = "";
       document.getElementById("newMemberVillage").value = "";
+      updateRoleOptions("");
       document.getElementById("newMemberRole").value = "সাধারণ সদস্য";
       document.getElementById("newMemberMobile").value = "";
       document.getElementById("photoInput").value = "";
