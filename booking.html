@@ -306,7 +306,7 @@
 
       let allBookingsData = [];
       let allMembersData = [];
-      let currentBookingType = "member"; // 'member' or 'other'
+      let currentBookingType = "member"; 
       let selectedMemberObject = null;
       let editingBookingId = "";
 
@@ -510,12 +510,12 @@
           let name = "";
           let mobile = "";
           if (currentBookingType === "member") {
-            if (!selectedMemberObject) { alert("দয়া করে একজন সদস্য নির্বাচন করুন।"); return; }
+            if (!selectedMemberObject) { alert("দয়া করে একজন সদস্য নির্বাচন করুন।"); btn.disabled = false; return; }
             name = selectedMemberObject.name || "";
             mobile = selectedMemberObject.mobile || selectedMemberObject.phone || "";
           } else {
             name = document.getElementById("bookingCustomerName").value.trim();
-            if (!name) { alert("গ্রাহকের নাম লিখুন।"); return; }
+            if (!name) { alert("গ্রাহকের নাম লিখুন।"); btn.disabled = false; return; }
           }
 
           const date = document.getElementById("bookingDate").value;
@@ -526,7 +526,36 @@
 
           if (!date || !bookNo || !startTicket || !endTicket || quantity <= 0) {
             alert("সব প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।");
+            btn.disabled = false;
             return;
+          }
+
+          // ⚠️ নতুন লজিক: রেঞ্জ ওভারল্যাপ চেকিং (একই বইয়ের টিকিট নম্বর অন্য কাউকে দেওয়া যাবে না)
+          const isOverlapping = allBookingsData.some(b => {
+             // এডিট করার সময় নিজের আগের ডেটা চেক থেকে বাদ দেওয়া
+             if (b.id === editingBookingId) return false;
+             // বই নম্বর না মিললে চেক করার দরকার নেই
+             if (b.bookNo.toLowerCase() !== bookNo.toLowerCase()) return false;
+             
+             const existingStart = parseInt(b.startTicket) || 0;
+             const existingEnd = parseInt(b.endTicket) || 0;
+             
+             // ওভারল্যাপ হওয়ার সূত্র: (NewStart <= ExistingEnd) && (ExistingStart <= NewEnd)
+             return (startTicket <= existingEnd) && (existingStart <= endTicket);
+          });
+
+          if (isOverlapping) {
+             alert(`এই '${bookNo}' বইয়ের উক্ত টিকিট নম্বরগুলো ইতিমধ্যে অন্য কাউকে বরাদ্দ করা হয়েছে! দয়া করে খালি থাকা টিকিট নম্বর দিন।`);
+             btn.disabled = false;
+             return;
+          }
+
+          let currentSold = 0;
+          if (editingBookingId) {
+            const existingBook = allBookingsData.find(x => x.id === editingBookingId);
+            if (existingBook) {
+              currentSold = existingBook.sold || 0;
+            }
           }
 
           const data = {
@@ -538,7 +567,7 @@
             startTicket,
             endTicket,
             quantity,
-            sold: quantity, // Default sold count equals allocated or customizable
+            sold: currentSold, 
             timestamp: Date.now()
           };
 
@@ -599,7 +628,7 @@
         // Render Members Bookings
         memberTableBody.innerHTML = membersList.length ? membersList.map(item => {
           totalAlloc += Number(item.quantity || 0);
-          totalSold += Number(item.sold || item.quantity || 0);
+          totalSold += Number(item.sold || 0);
           return `
             <tr class="border-b hover:bg-gray-50">
               <td class="p-2 border-r font-semibold text-center">${esc(item.name || "-")}</td>
@@ -608,7 +637,7 @@
               <td class="p-2 border-r text-center">${esc(item.startTicket || "-")}</td>
               <td class="p-2 border-r text-center">${esc(item.endTicket || "-")}</td>
               <td class="p-2 border-r text-center font-bold text-orange-700">${item.quantity || 0}</td>
-              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold || item.quantity || 0}</td>
+              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold || 0}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
                   <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
@@ -622,7 +651,7 @@
         // Render Others Bookings
         otherTableBody.innerHTML = othersList.length ? othersList.map(item => {
           totalAlloc += Number(item.quantity || 0);
-          totalSold += Number(item.sold || item.quantity || 0);
+          totalSold += Number(item.sold || 0);
           return `
             <tr class="border-b hover:bg-gray-50">
               <td class="p-2 border-r font-semibold text-center">${esc(item.name || "-")}</td>
@@ -631,7 +660,7 @@
               <td class="p-2 border-r text-center">${esc(item.startTicket || "-")}</td>
               <td class="p-2 border-r text-center">${esc(item.endTicket || "-")}</td>
               <td class="p-2 border-r text-center font-bold text-orange-700">${item.quantity || 0}</td>
-              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold || item.quantity || 0}</td>
+              <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold || 0}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
                   <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
@@ -649,13 +678,13 @@
 
         // Update section stats
         const mAlloc = membersList.reduce((s, x) => s + (Number(x.quantity) || 0), 0);
-        const mSold = membersList.reduce((s, x) => s + (Number(x.sold || x.quantity) || 0), 0);
+        const mSold = membersList.reduce((s, x) => s + (Number(x.sold) || 0), 0);
         document.getElementById("memberAllocCount").innerText = mAlloc;
         document.getElementById("memberSoldCell").innerText = mSold;
         document.getElementById("memberRemCell").innerText = Math.max(0, mAlloc - mSold);
 
         const oAlloc = othersList.reduce((s, x) => s + (Number(x.quantity) || 0), 0);
-        const oSold = othersList.reduce((s, x) => s + (Number(x.sold || x.quantity) || 0), 0);
+        const oSold = othersList.reduce((s, x) => s + (Number(x.sold) || 0), 0);
         document.getElementById("otherAllocCount").innerText = oAlloc;
         document.getElementById("otherSoldCell").innerText = oSold;
         document.getElementById("otherRemCell").innerText = Math.max(0, oAlloc - oSold);
@@ -684,7 +713,7 @@
           item.startTicket || "",
           item.endTicket || "",
           Number(item.quantity || 0),
-          Number(item.sold || item.quantity || 0)
+          Number(item.sold || 0)
         ]);
 
         const totalAlloc = rows.reduce((s, r) => s + (Number(r[5]) || 0), 0);
