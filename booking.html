@@ -198,12 +198,12 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে (১ - ৫০) *</label>
-              <input id="bookingStartTicket" type="number" min="1" max="50" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
+              <input id="bookingStartTicket" type="number" min="1" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত (১ - ৫০) *</label>
-              <input id="bookingEndTicket" type="number" min="1" max="50" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
+              <input id="bookingEndTicket" type="number" min="1" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
           </div>
 
@@ -575,8 +575,8 @@
             return;
           }
 
-          if (startTicket < 1 || endTicket > 50 || startTicket > endTicket) {
-            alert("টিকিট নম্বর ১ থেকে ৫০ এর মধ্যে হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
+          if (startTicket < 1 || startTicket > endTicket) {
+            alert("টিকিট নম্বর সঠিক হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
             return;
           }
 
@@ -923,7 +923,7 @@
     </script>
 
     <script>
-      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+      const defaultDevInfo = { name: "MANABENDRA NATH SARKAR", mobile: "9002652507", email: "manabendranathsarkar@gmail.com" };
 
       function loadDevData() {
         const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
