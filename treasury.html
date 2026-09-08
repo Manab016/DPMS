@@ -565,9 +565,7 @@
         <!-- রসিদ কন্টেন্ট -->
         <div id="receiptContent" class="space-y-3 text-xs border-2 border-emerald-600 p-4 rounded-xl bg-white">
           <div class="text-center border-b pb-2">
-            <div id="receiptLogoContainer" class="mb-1">
-              <div class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-1 font-bold text-lg">🏛️</div>
-            </div>
+            <div class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-1 font-bold text-lg">🏛️</div>
             <h2 class="font-bold text-orange-700 text-sm">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h2>
             <div class="font-bold text-emerald-800 text-base mt-1">ঋণ পরিশোধ রসিদ</div>
             <div class="text-[11px] text-gray-600 mt-0.5"><span id="receiptNo">রসিদ নম্বর: #১৫</span> | তারিখ: <span id="receiptDate">০৮/০৯/২০২৬</span></div>
@@ -578,7 +576,7 @@
             <div class="flex justify-between"><span>মোবাইল:</span> <strong id="receiptMobile">9932887412</strong></div>
             <div class="flex justify-between"><span>ঠিকানা:</span> <strong id="receiptAddress">Barkol, Malda, 732128</strong></div>
             <div class="flex justify-between"><span>মূল ঋণ:</span> <strong id="receiptOriginalLoan">₹২৫০০০.০০</strong></div>
-            <div class="flex justify-between"><span>সুদের হার:</span> <strong id="receiptRate">৩৬% বার্ষিক</strong></div>
+            <div class="flex justify-between"><span>সুদের হার:</span> <strong id="receiptRate">৩৬%(বার্ষিক)</strong></div>
           </div>
 
           <div class="border border-orange-300 rounded-lg p-2.5 bg-amber-50/50 space-y-1">
@@ -596,7 +594,6 @@
           </div>
 
           <div class="text-center pt-2 border-t text-[11px] space-y-1 text-gray-700">
-            <div id="receiptTreasurerName" class="font-bold text-gray-800 pt-1">প্রধান কোষাধ্যক্ষ</div>
             <div>কোষাধ্যক্ষের স্বাক্ষর</div>
             <div class="font-bold text-orange-700 pt-2">ধন্যবাদান্তে!<br>নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
           </div>
@@ -690,15 +687,15 @@
         <div class="space-y-2.5 text-xs border-t pt-3">
           <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
             <span class="text-gray-500">নাম:</span>
-            <span id="popDevName" class="font-bold text-gray-800">Manabendra Nath Sarkar</span>
+            <span id="popDevName" class="font-bold text-gray-800">MANABENDRA NATH SARKAR</span>
           </div>
           <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
             <span class="text-gray-500">মোবাইল:</span>
-            <a id="popDevMobile" href="tel:9933371702" class="font-bold text-orange-700">৯৯৩৩৩৭১৭০২</a>
+            <a id="popDevMobile" href="tel:9002652507" class="font-bold text-orange-700">৯০০২৬৫২৫০৭</a>
           </div>
           <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
             <span class="text-gray-500">ইমেইল:</span>
-            <a id="popDevEmail" href="mailto:manabendra@gmail.com" class="font-bold text-gray-800">manabendra@gmail.com</a>
+            <a id="popDevEmail" href="mailto:manabendranathsarkar112@gmail.com" class="font-bold text-gray-800">manabendranathsarkar112@gmail.com</a>
           </div>
         </div>
         <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
@@ -1352,25 +1349,7 @@
         document.getElementById("receiptMobile").innerText = loan.mobile || 'N/A';
         document.getElementById("receiptAddress").innerText = loan.address || 'Adina Station, Malda, 732128';
         document.getElementById("receiptOriginalLoan").innerText = '₹' + origAmt.toLocaleString('en-IN') + '.00';
-        document.getElementById("receiptRate").innerText = rate + '% বার্ষিক';
-
-        // Committee Logo from settings/localStorage
-        const savedLogo = localStorage.getItem("committeeLogo") || (JSON.parse(localStorage.getItem("settingsData")) || {}).logo;
-        const logoContainer = document.getElementById("receiptLogoContainer");
-        if (savedLogo) {
-          logoContainer.innerHTML = `<img src="${savedLogo}" alt="Logo" class="w-12 h-12 object-contain mx-auto rounded-full mb-1">`;
-        } else {
-          logoContainer.innerHTML = `<div class="w-10 h-10 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-1 font-bold text-lg">🏛️</div>`;
-        }
-
-        // Treasurer Name from members page / localStorage
-        let treasurerName = localStorage.getItem("treasurerName") || localStorage.getItem("selectedTreasurerName");
-        if (!treasurerName) {
-          const storedMembers = JSON.parse(localStorage.getItem("membersData")) || membersData;
-          // Fallback or find designated member if available
-          treasurerName = "প্রধান কোষাধ্যক্ষ";
-        }
-        document.getElementById("receiptTreasurerName").innerText = treasurerName;
+        document.getElementById("receiptRate").innerText = rate + '%';
 
         document.getElementById("receiptPaidPrincipal").innerText = '₹' + payment.principalPaid.toLocaleString('en-IN') + '.00';
         document.getElementById("receiptPaidInterest").innerText = '₹' + payment.interestPaid.toLocaleString('en-IN') + '.00';
@@ -1580,7 +1559,7 @@
               <td class="p-2 border-r text-center">${i.mobile}</td>
               <td class="p-2 border-r text-center text-gray-600">${i.address || 'Adina Station, Malda, 732128'}</td>
               <td class="p-2 border-r text-center font-bold text-orange-700">₹${amt}</td>
-              <td class="p-2 border-r text-center">${rate}% বার্ষিক</td>
+              <td class="p-2 border-r text-center">${rate}%</td>
               <td class="p-2 border-r text-center">₹${curDuePrin}</td>
               <td class="p-2 border-r text-center">₹${curDueInt}</td>
               <td class="p-2 border-r text-center font-bold">₹${totalDue}</td>
