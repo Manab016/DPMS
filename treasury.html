@@ -691,7 +691,7 @@
           </div>
           <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
             <span class="text-gray-500">মোবাইল:</span>
-            <a id="popDevMobile" href="tel:9002652507" class="font-bold text-orange-700">৯০০২৬৫২৫০৭</a>
+            <a id="popDevMobile" href="tel:9002652507" class="font-bold text-orange-700">9002652507</a>
           </div>
           <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
             <span class="text-gray-500">ইমেইল:</span>
@@ -704,9 +704,9 @@
 
     <!-- JavaScript Data Logic -->
     <script>
-      let txData = [];
-      let cashData = [];
-      let loanData = [];
+      let txData = JSON.parse(localStorage.getItem("treasuryTxData")) || [];
+      let cashData = JSON.parse(localStorage.getItem("treasuryCashData")) || [];
+      let loanData = JSON.parse(localStorage.getItem("treasuryLoanData")) || [];
 
       let membersData = JSON.parse(localStorage.getItem("membersData")) || [];
 
@@ -717,6 +717,12 @@
 
       // Active receipt temporary object for sharing/downloading
       let activeReceipt = null;
+
+      function saveData() {
+        localStorage.setItem("treasuryTxData", JSON.stringify(txData));
+        localStorage.setItem("treasuryCashData", JSON.stringify(cashData));
+        localStorage.setItem("treasuryLoanData", JSON.stringify(loanData));
+      }
 
       function setDefaultDates() {
         const today = new Date().toISOString().split("T")[0];
@@ -1006,6 +1012,7 @@
         } else {
           txData.unshift({ id: Date.now(), date, type, amount, desc });
         }
+        saveData();
         closeTxModal();
         renderTxTable();
         updateBalances();
@@ -1027,6 +1034,7 @@
         } else {
           cashData.unshift({ id: Date.now(), date, recipient, payMode, amount, purpose, desc });
         }
+        saveData();
         closeCashModal();
         renderCashTable();
         updateBalances();
@@ -1053,6 +1061,7 @@
         } else {
           loanData.unshift({ id: Date.now(), name, mobile, address, amount, rate, payments: [] });
         }
+        saveData();
         closeLoanModal();
         renderLoanTable();
         updateBalances();
@@ -1313,6 +1322,7 @@
         if (!activeRepayLoan.payments) activeRepayLoan.payments = [];
         activeRepayLoan.payments.push(paymentRecord);
 
+        saveData();
         closeLoanRepayModal();
         renderLoanTable();
         updateBalances();
@@ -1442,6 +1452,7 @@
         const loan = loanData.find(x => x.id === loanId);
         if (!loan || !loan.payments) return;
         loan.payments = loan.payments.filter(p => p.id !== paymentId);
+        saveData();
         renderLoanTable();
         updateBalances();
         openLoanHistory(loanId);
@@ -1493,6 +1504,7 @@
         payment.totalPaid = principalPaid + interestPaid;
         payment.remarks = remarks;
 
+        saveData();
         document.getElementById("editPaymentModal").classList.add("hidden");
         document.getElementById("editPaymentModal").classList.remove("flex");
 
@@ -1575,6 +1587,7 @@
         const tbody = document.getElementById("txTableBody");
         if (!txData.length) {
           tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>`;
+          document.getElementById("txPagination").innerHTML = "";
           return;
         }
         
@@ -1589,7 +1602,11 @@
           return { ...i, currentCash: c, currentBank: b };
         }).reverse(); 
 
-        tbody.innerHTML = calculatedTx.map(i => `
+        const totalPages = Math.ceil(calculatedTx.length / itemsPerPage);
+        if (txPage > totalPages) txPage = totalPages;
+        const paged = calculatedTx.slice((txPage - 1) * itemsPerPage, txPage * itemsPerPage);
+
+        tbody.innerHTML = paged.map(i => `
           <tr class="border-b hover:bg-gray-50">
             <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
             <td class="p-2 border-r text-center">${i.date}</td>
@@ -1612,14 +1629,20 @@
         const tbody = document.getElementById("cashTableBody");
         if (!cashData.length) {
           tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো পেমেন্ট পাওয়া যায়নি</td></tr>`;
+          document.getElementById("cashPagination").innerHTML = "";
           return;
         }
-        tbody.innerHTML = cashData.map(i => `
+
+        const totalPages = Math.ceil(cashData.length / itemsPerPage);
+        if (cashPage > totalPages) cashPage = totalPages;
+        const paged = cashData.slice((cashPage - 1) * itemsPerPage, cashPage * itemsPerPage);
+
+        tbody.innerHTML = paged.map(i => `
           <tr class="border-b hover:bg-gray-50">
             <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
             <td class="p-2 border-r text-center">${i.date}</td>
             <td class="p-2 border-r text-center font-bold text-gray-800">${i.recipient}</td>
-            <td class="p-2 border-r text-center">${i.payMode === 'cash' ? 'নগদ' : 'অনলাইন'}</td>
+            <td class="p-2 border-r text-center">${i.payMode === 'online' ? 'অনলাইন' : 'নগদ'}</td>
             <td class="p-2 border-r text-center">${i.purpose}</td>
             <td class="p-2 border-r text-center font-bold text-red-600">₹${i.amount}</td>
             <td class="p-2 border-r text-center">${i.desc || '-'}</td>
@@ -1634,81 +1657,123 @@
       }
 
       function deleteTx(id) {
-        if(!confirm("আপনি কি এই লেনদেনটি মুছতে চান?")) return;
+        if (!confirm("এই লেনদেনটি ডিলিট করতে চান?")) return;
         txData = txData.filter(x => x.id !== id);
-        renderTxTable(); updateBalances();
+        saveData();
+        renderTxTable();
+        updateBalances();
       }
-      function deleteCash(id) {
-        if(!confirm("আপনি কি এই পেমেন্টটি মুছতে চান?")) return;
-        cashData = cashData.filter(x => x.id !== id);
-        renderCashTable(); updateBalances();
-      }
-      function deleteLoan(id) {
-        if(!confirm("আপনি কি এই ঋণ রেকর্ডটি মুছতে চান?")) return;
-        loanData = loanData.filter(x => x.id !== id);
-        renderLoanTable(); updateBalances();
-      }
-      function toggleAllRows(cb, type) {
-        const tbody = document.getElementById(type + "TableBody");
-        const boxes = tbody.querySelectorAll(".row-checkbox");
-        boxes.forEach(b => b.checked = cb.checked);
-      }
-      function deleteMarkedTx() {
-        const boxes = document.querySelectorAll("#txTableBody .row-checkbox:checked");
-        if(!boxes.length) return alert("কোনো লেনদেন নির্বাচন করা হয়নি।");
-        if(!confirm("নির্বাচিত লেনদেনগুলো মুছতে চান?")) return;
-        const ids = Array.from(boxes).map(b => Number(b.value));
-        txData = txData.filter(x => !ids.includes(x.id));
-        renderTxTable(); updateBalances();
-      }
+
       function deleteAllTx() {
-        if(!confirm("সব লেনদেন মুছতে চান?")) return;
-        txData = []; renderTxTable(); updateBalances();
+        if (!confirm("সব লেনদেন ডিলিট করতে চান?")) return;
+        txData = [];
+        saveData();
+        renderTxTable();
+        updateBalances();
       }
-      function deleteMarkedCash() {
-        const boxes = document.querySelectorAll("#cashTableBody .row-checkbox:checked");
-        if(!boxes.length) return alert("কোনো পেমেন্ট নির্বাচন করা হয়নি।");
-        if(!confirm("নির্বাচিত পেমেন্টগুলো মুছতে চান?")) return;
-        const ids = Array.from(boxes).map(b => Number(b.value));
-        cashData = cashData.filter(x => !ids.includes(x.id));
-        renderCashTable(); updateBalances();
+
+      function deleteMarkedTx() {
+        const checkboxes = document.querySelectorAll('#subViewTx .row-checkbox:checked');
+        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
+        if (!confirm("নির্বাচিত লেনদেনগুলো ডিলিট করতে চান?")) return;
+        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
+        txData = txData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderTxTable();
+        updateBalances();
       }
+
+      function deleteCash(id) {
+        if (!confirm("এই পেমেন্টটি ডিলিট করতে চান?")) return;
+        cashData = cashData.filter(x => x.id !== id);
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
       function deleteAllCash() {
-        if(!confirm("সব পেমেন্ট মুছতে চান?")) return;
-        cashData = []; renderCashTable(); updateBalances();
+        if (!confirm("সব পেমেন্ট ডিলিট করতে চান?")) return;
+        cashData = [];
+        saveData();
+        renderCashTable();
+        updateBalances();
       }
-      function deleteMarkedLoan() {
-        const boxes = document.querySelectorAll("#loanTableBody .row-checkbox:checked");
-        if(!boxes.length) return alert("কোনো ঋণ নির্বাচন করা হয়নি।");
-        if(!confirm("নির্বাচিত ঋণগুলো মুছতে চান?")) return;
-        const ids = Array.from(boxes).map(b => Number(b.value));
-        loanData = loanData.filter(x => !ids.includes(x.id));
-        renderLoanTable(); updateBalances();
+
+      function deleteMarkedCash() {
+        const checkboxes = document.querySelectorAll('#subViewCash .row-checkbox:checked');
+        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
+        if (!confirm("নির্বাচিত পেমেন্টগুলো ডিলিট করতে চান?")) return;
+        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
+        cashData = cashData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderCashTable();
+        updateBalances();
       }
+
+      function deleteLoan(id) {
+        if (!confirm("এই ঋণ রেকর্ডটি ডিলিট করতে চান?")) return;
+        loanData = loanData.filter(x => x.id !== id);
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
       function deleteAllLoan() {
-        if(!confirm("সব ঋণ মুছতে চান?")) return;
-        loanData = []; renderLoanTable(); updateBalances();
+        if (!confirm("সব ঋণ রেকর্ড ডিলিট করতে চান?")) return;
+        loanData = [];
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
+      function deleteMarkedLoan() {
+        const checkboxes = document.querySelectorAll('#loanSection .row-checkbox:checked');
+        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
+        if (!confirm("নির্বাচিত ঋণ রেকর্ডগুলো ডিলিট করতে চান?")) return;
+        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
+        loanData = loanData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
+      function toggleAllRows(master, type) {
+        let checkboxes;
+        if (type === 'tx') {
+          checkboxes = document.querySelectorAll('#subViewTx .row-checkbox');
+        } else if (type === 'cash') {
+          checkboxes = document.querySelectorAll('#subViewCash .row-checkbox');
+        } else if (type === 'loan') {
+          checkboxes = document.querySelectorAll('#loanSection .row-checkbox');
+        }
+        if (checkboxes) {
+          checkboxes.forEach(cb => cb.checked = master.checked);
+        }
       }
 
       function filterLoans() {
         const query = document.getElementById("loanSearchInput").value.toLowerCase();
-        const tbody = document.getElementById("loanTableBody");
-        const rows = tbody.getElementsByTagName("tr");
-        for(let r of rows) {
-          if(r.innerText.toLowerCase().includes(query)) r.style.display = "";
-          else r.style.display = "none";
-        }
+        const rows = document.querySelectorAll("#loanTableBody tr");
+        rows.forEach(row => {
+          const text = row.innerText.toLowerCase();
+          if (text.includes(query) || query === "") {
+            row.style.display = "";
+          } else {
+            row.style.display = "none";
+          }
+        });
       }
 
       function exportReport(type) {
-        alert(type + " এক্সপোর্ট তৈরি হচ্ছে...");
+        alert(`${type} এক্সপোর্ট প্রক্রিয়া শুরু হচ্ছে...`);
       }
 
-      window.onload = () => {
-        updateBalances();
+      window.onload = function() {
+        setDefaultDates();
         renderTxTable();
         renderCashTable();
         renderLoanTable();
+        updateBalances();
       };
     </script>
   </body>
