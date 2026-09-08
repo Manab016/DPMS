@@ -147,6 +147,16 @@
         arrow.style.transform = content.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
       }
     };
+
+    window.toggleCommitteeList = function() {
+      const wrapper = document.getElementById("committeeTickerWrapper");
+      const arrow = document.getElementById("commArrowIcon");
+      if (!wrapper) return;
+      wrapper.classList.toggle("hidden");
+      if (arrow) {
+        arrow.style.transform = wrapper.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+      }
+    };
     </script>
 
     <div class="max-w-4xl mx-auto">
@@ -325,14 +335,26 @@
         function renderExecutiveTicker() {
           const container = document.getElementById("committeeTickerContent");
           if (!container) return;
-          const combined = [...committeeList];
+          const combined = [];
+
+          committeeList.forEach((c) => {
+            combined.push({
+              name: c.name || c.memberName || "নামহীন",
+              designation: c.designation || c.post || c.role || c.position || "",
+              mobile: c.mobile || c.phone || c.contact || ""
+            });
+          });
 
           membersList.forEach((m) => {
             const post = m.designation || m.post || m.role || m.position || "";
             if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
               const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
               if (!exists) {
-                combined.push({ name: m.name, designation: post, mobile: m.mobile || m.phone || m.contact || "" });
+                combined.push({
+                  name: m.name || "নামহীন",
+                  designation: post,
+                  mobile: m.mobile || m.phone || m.contact || ""
+                });
               }
             }
           });
@@ -344,9 +366,9 @@
 
           let itemsHtml = "";
           combined.forEach((data) => {
-            const designation = data.designation ? `${data.designation}: ` : (data.post ? `${data.post}: ` : "");
+            const designation = data.designation ? `${data.designation}: ` : "";
             const name = data.name || "নামহীন";
-            const mobile = data.mobile || data.phone || data.contact || "";
+            const mobile = data.mobile || "";
 
             itemsHtml += `
               <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
@@ -415,11 +437,21 @@
         });
       }
 
-      function logUserLogin(user) {
+      async function logUserLogin(user) {
+        let userName = user.displayName || (user.email ? user.email.split("@")[0] : "User");
+        try {
+          const userDocSnap = await getDoc(doc(db, "app_users", user.uid));
+          if (userDocSnap.exists() && userDocSnap.data().name) {
+            userName = userDocSnap.data().name;
+          }
+        } catch (e) {
+          console.error("Error fetching user name for login history:", e);
+        }
+
         addDoc(collection(db, "login_history"), {
           userId: user.uid,
           email: user.email,
-          name: user.displayName || (user.email ? user.email.split("@")[0] : "User"),
+          name: userName,
           timestamp: Date.now(),
           device: navigator.userAgent
         }).catch(() => {});
