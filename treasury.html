@@ -587,7 +587,7 @@
           </div>
 
           <div class="border border-blue-300 rounded-lg p-2.5 bg-blue-50/50 space-y-1">
-            <div class="font-bold text-blue-800 text-center border-b pb-1 mb-1">পরিশোধিত পরিমাণ</div>
+            <div class="font-bold text-blue-800 text-center border-b pb-1 mb-1">অবশিষ্ট পরিমাণ</div>
             <div class="flex justify-between"><span>বাকি আসল:</span> <strong id="receiptDuePrincipal">₹২৫০০০.০০</strong></div>
             <div class="flex justify-between"><span>বাকি সুদ:</span> <strong id="receiptDueInterest">₹৯০০০.০০</strong></div>
             <div class="flex justify-between border-t pt-1 font-bold text-blue-900 text-sm"><span>মোট বাকি:</span> <strong id="receiptTotalDue">₹৩৪০০০.০০</strong></div>
@@ -1129,6 +1129,98 @@
         document.getElementById("loanModal").classList.add("flex");
       }
 
+      // ================= SELECTION & DELETE HELPERS =================
+      function toggleAllRows(master, type) {
+        const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
+        checkboxes.forEach(cb => cb.checked = master.checked);
+      }
+
+      function deleteMarkedTx() {
+        const checked = document.querySelectorAll('.tx-checkbox:checked');
+        if (!checked.length) { alert("কোনো লেনদেন নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত লেনদেনগুলি মুছে ফেলতে চান?")) return;
+        const ids = Array.from(checked).map(cb => Number(cb.value));
+        txData = txData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderTxTable();
+        updateBalances();
+      }
+
+      function deleteAllTx() {
+        if (!confirm("সব লেনদেন মুছে ফেলতে চান?")) return;
+        txData = [];
+        saveData();
+        renderTxTable();
+        updateBalances();
+      }
+
+      function deleteTx(id) {
+        if (!confirm("এই লেনদেনটি মুছে ফেলতে চান?")) return;
+        txData = txData.filter(x => x.id !== id);
+        saveData();
+        renderTxTable();
+        updateBalances();
+      }
+
+      function deleteMarkedCash() {
+        const checked = document.querySelectorAll('.cash-checkbox:checked');
+        if (!checked.length) { alert("কোনো পেমেন্ট নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত পেমেন্টগুলি মুছে ফেলতে চান?")) return;
+        const ids = Array.from(checked).map(cb => Number(cb.value));
+        cashData = cashData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
+      function deleteAllCash() {
+        if (!confirm("সব নগদ পেমেন্ট মুছে ফেলতে চান?")) return;
+        cashData = [];
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
+      function deleteCash(id) {
+        if (!confirm("এই পেমেন্টটি মুছে ফেলতে চান?")) return;
+        cashData = cashData.filter(x => x.id !== id);
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
+      function deleteMarkedLoan() {
+        const checked = document.querySelectorAll('.loan-checkbox:checked');
+        if (!checked.length) { alert("কোনো ঋণ রেকর্ড নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত ঋণগুলি মুছে ফেলতে চান?")) return;
+        const ids = Array.from(checked).map(cb => Number(cb.value));
+        loanData = loanData.filter(x => !ids.includes(x.id));
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
+      function deleteAllLoan() {
+        if (!confirm("সব ঋণ রেকর্ড মুছে ফেলতে চান?")) return;
+        loanData = [];
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
+      function deleteLoan(id) {
+        if (!confirm("এই ঋণ রেকর্ডটি মুছে ফেলতে চান?")) return;
+        loanData = loanData.filter(x => x.id !== id);
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
+      function exportReport(type) {
+        alert(type + " এক্সপোর্ট প্রক্রিয়া শুরু হচ্ছে...");
+        window.print();
+      }
+
       // ================= LOAN REPAYMENT & RECEIPT LOGIC =================
       let activeRepayLoan = null;
 
@@ -1140,7 +1232,6 @@
         document.getElementById("repayLoanId").value = loan.id;
         document.getElementById("repayModalTitle").innerText = `ঋণ পরিশোধ - ${loan.name}`;
 
-        // Calculate due principal and interest
         const origAmt = Number(loan.amount) || 0;
         const rate = Number(loan.rate) || 36;
         const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
@@ -1161,7 +1252,6 @@
         document.getElementById("repayDueInterest").innerText = '₹' + dueInt.toLocaleString('en-IN');
         document.getElementById("repayTotalDue").innerText = '₹' + totalDue.toLocaleString('en-IN');
 
-        // Reset to Complete tab by default
         switchRepayTab('complete');
         setDefaultDates();
         document.getElementById("repayRemarks").value = "";
@@ -1345,7 +1435,6 @@
         renderLoanTable();
         updateBalances();
 
-        // Open Receipt Modal
         showReceiptModal(activeRepayLoan, paymentRecord);
       }
 
@@ -1412,7 +1501,7 @@
         if (!loan) return;
         activeHistoryLoanId = loanId;
 
-        document.getElementById("historyModalTitle").innerText = `পরিশোধ ইতিহাস - ${loan.name}`;
+        document.getElementById("historyModalTitle").innerText = `লেনদেন বিবরণী - ${loan.name}`;
         const origAmt = Number(loan.amount) || 0;
         const rate = Number(loan.rate) || 36;
         const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
@@ -1489,7 +1578,6 @@
         document.getElementById("editPayInterest").value = payment.interestPaid;
         document.getElementById("editPayRemarks").value = payment.remarks || "";
 
-        closeLoanHistoryModal();
         document.getElementById("editPaymentModal").classList.remove("hidden");
         document.getElementById("editPaymentModal").classList.add("flex");
       }
@@ -1497,9 +1585,6 @@
       function closeEditPaymentModal() {
         document.getElementById("editPaymentModal").classList.add("hidden");
         document.getElementById("editPaymentModal").classList.remove("flex");
-        if (activeHistoryLoanId) {
-          openLoanHistory(activeHistoryLoanId);
-        }
       }
 
       function saveEditedPayment(e) {
@@ -1523,9 +1608,7 @@
         payment.remarks = remarks;
 
         saveData();
-        document.getElementById("editPaymentModal").classList.add("hidden");
-        document.getElementById("editPaymentModal").classList.remove("flex");
-
+        closeEditPaymentModal();
         renderLoanTable();
         updateBalances();
         openLoanHistory(loanId);
@@ -1533,73 +1616,32 @@
 
       function showReceiptModalFromHistory(loanId, paymentId) {
         const loan = loanData.find(x => x.id === loanId);
-        if (!loan) return;
+        if (!loan || !loan.payments) return;
         const payment = loan.payments.find(p => p.id === paymentId);
         if (!payment) return;
-        closeLoanHistoryModal();
         showReceiptModal(loan, payment);
       }
 
-      // Render Loan Table 
-      function renderLoanTable() {
-        const tbody = document.getElementById("loanTableBody");
-        if (!loanData.length) {
-          tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-gray-500">কোনো ঋণ রেকর্ড পাওয়া যায়নি</td></tr>`;
-          document.getElementById("loanPagination").innerHTML = "";
-          updateBalances();
+      // ================= RENDER & PAGINATION FUNCTIONS =================
+      function renderPagination(totalItems, currentPage, itemsPerPage, containerId, changePageCallbackName) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (totalPages <= 1) {
+          container.innerHTML = "";
           return;
         }
-
-        const totalPages = Math.ceil(loanData.length / itemsPerPage);
-        if (loanPage > totalPages) loanPage = totalPages;
-        const paged = loanData.slice((loanPage - 1) * itemsPerPage, loanPage * itemsPerPage);
-
-        tbody.innerHTML = paged.map(i => {
-          const amt = Number(i.amount) || 0;
-          const rate = Number(i.rate) || 36;
-          const interest = Math.round((amt * rate * 365) / (365 * 100));
-          
-          let paidPrin = 0, paidInt = 0;
-          if (i.payments) {
-            i.payments.forEach(p => {
-              paidPrin += Number(p.principalPaid) || 0;
-              paidInt += Number(p.interestPaid) || 0;
-            });
-          }
-
-          const curDuePrin = Math.max(0, amt - paidPrin);
-          const curDueInt = Math.max(0, interest - paidInt);
-          const totalDue = curDuePrin + curDueInt;
-
-          const isFullyPaid = (curDuePrin === 0 && curDueInt === 0 && amt > 0);
-          const statusHtml = isFullyPaid 
-            ? `<span class="bg-green-100 text-green-700 px-2 py-0.5 rounded font-bold text-[10px]">পরিশোধিত</span>`
-            : `<span class="bg-red-100 text-red-700 px-2 py-0.5 rounded font-bold text-[10px]">বাকি</span>`;
-
-          return `
-            <tr class="border-b hover:bg-gray-50">
-              <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
-              <td class="p-2 border-r text-center font-bold text-gray-800">${i.name}</td>
-              <td class="p-2 border-r text-center">${i.mobile}</td>
-              <td class="p-2 border-r text-center">${i.address}</td>
-              <td class="p-2 border-r text-center font-bold">₹${amt}</td>
-              <td class="p-2 border-r text-center">${rate}%</td>
-              <td class="p-2 border-r text-center font-bold text-orange-700">₹${curDuePrin}</td>
-              <td class="p-2 border-r text-center font-bold text-orange-700">₹${curDueInt}</td>
-              <td class="p-2 border-r text-center font-bold text-red-600">₹${totalDue}</td>
-              <td class="p-2 border-r text-center">${statusHtml}</td>
-              <td class="p-2 text-center whitespace-nowrap">
-                <div class="flex items-center justify-center gap-1">
-                  <button onclick="openLoanRepayModal(${i.id})" class="text-green-600 bg-green-100 px-2 py-1 rounded text-[11px] font-bold" title="পরিশোধ">পরিশোধ</button>
-                  <button onclick="openLoanHistory(${i.id})" class="text-blue-600 bg-blue-100 px-2 py-1 rounded text-[11px] font-bold" title="ইতিহাস">ইতিহাস</button>
-                  <button onclick="editLoan(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                  <button onclick="deleteLoan(${i.id})" class="text-red-600 bg-red-100 px-2 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
-                </div>
-              </td>
-            </tr>
-          `;
-        }).join("");
+        let html = "";
+        for (let i = 1; i <= totalPages; i++) {
+          const active = i === currentPage ? "bg-orange-600 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200";
+          html += `<button onclick="${changePageCallbackName}(${i})" class="px-2.5 py-1 rounded text-xs font-bold ${active}">${i}</button>`;
+        }
+        container.innerHTML = html;
       }
+
+      function changeTxPage(p) { txPage = p; renderTxTable(); }
+      function changeCashPage(p) { cashPage = p; renderCashTable(); }
+      function changeLoanPage(p) { loanPage = p; renderLoanTable(); }
 
       function renderTxTable() {
         const tbody = document.getElementById("txTableBody");
@@ -1608,44 +1650,148 @@
           document.getElementById("txPagination").innerHTML = "";
           return;
         }
+        const start = (txPage - 1) * itemsPerPage;
+        const slice = txData.slice(start, start + itemsPerPage);
         
-        let sortedTx = [...txData].sort((a,b) => new Date(a.date) - new Date(b.date));
-        let c = 0, b = 0;
-        let calculatedTx = sortedTx.map(i => {
-          let amt = Number(i.amount) || 0;
-          if (i.type === 'cash_addition') c += amt;
-          else if (i.type === 'cash_to_bank') { c -= amt; b += amt; }
-          else if (i.type === 'deposit') b += amt;
-          else if (i.type === 'withdrawal') { b += amt; c -= amt; }
-          return { ...i, cashBal: c, bankBal: b };
-        });
+        tbody.innerHTML = slice.map(item => {
+          return `
+            <tr class="border-b hover:bg-orange-50/50">
+              <td class="p-2 border-r text-center"><input type="checkbox" class="tx-checkbox" value="${item.id}"></td>
+              <td class="p-2 border-r text-center">${item.date}</td>
+              <td class="p-2 border-r text-center font-semibold text-gray-800">${getTxTypeName(item.type)}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-700">₹${Number(item.amount).toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center text-gray-600">${item.desc || '-'}</td>
+              <td class="p-2 border-r text-center">-</td>
+              <td class="p-2 border-r text-center">-</td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="editTx(${item.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteTx(${item.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
 
-        const totalPages = Math.ceil(calculatedTx.length / itemsPerPage);
-        if (txPage > totalPages) txPage = totalPages;
-        const paged = calculatedTx.slice((txPage - 1) * itemsPerPage, txPage * itemsPerPage);
-
-        tbody.innerHTML = paged.map(i => `
-          <tr class="border-b hover:bg-gray-50">
-            <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
-            <td class="p-2 border-r text-center">${i.date}</td>
-            <td class="p-2 border-r text-center font-bold">${getTxTypeName(i.type)}</td>
-            <td class="p-2 border-r text-center font-bold">₹${i.amount}</td>
-            <td class="p-2 border-r text-center">${i.desc || '-'}</td>
-            <td class="p-2 border-r text-center font-bold text-[#1B8A46]">₹${i.cashBal}</td>
-            <td class="p-2 border-r text-center font-bold text-[#1D68B7]">₹${i.bankBal}</td>
-            <td class="p-2 text-center whitespace-nowrap">
-              <button onclick="editTx(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px] mr-1">✏️</button>
-              <button onclick="deleteTx(${i.id})" class="text-red-600 bg-red-100 px-2 py-1 rounded text-[11px]">🗑️</button>
-            </td>
-          </tr>
-        `).join("");
+        renderPagination(txData.length, txPage, itemsPerPage, "txPagination", "changeTxPage");
       }
 
-      // Initial execution
-      setDefaultDates();
-      updateBalances();
-      renderLoanTable();
-      renderTxTable();
+      function renderCashTable() {
+        const tbody = document.getElementById("cashTableBody");
+        if (!cashData.length) {
+          tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো পেমেন্ট পাওয়া যায়নি</td></tr>`;
+          document.getElementById("cashPagination").innerHTML = "";
+          return;
+        }
+        const start = (cashPage - 1) * itemsPerPage;
+        const slice = cashData.slice(start, start + itemsPerPage);
+
+        tbody.innerHTML = slice.map(item => {
+          return `
+            <tr class="border-b hover:bg-orange-50/50">
+              <td class="p-2 border-r text-center"><input type="checkbox" class="cash-checkbox" value="${item.id}"></td>
+              <td class="p-2 border-r text-center">${item.date}</td>
+              <td class="p-2 border-r text-center font-bold text-gray-800">${item.recipient}</td>
+              <td class="p-2 border-r text-center">${item.payMode === 'online' ? 'অনলাইন' : 'নগদ'}</td>
+              <td class="p-2 border-r text-center">${item.purpose}</td>
+              <td class="p-2 border-r text-center font-bold text-red-600">₹${Number(item.amount).toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center text-gray-600">${item.desc || '-'}</td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="editCash(${item.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteCash(${item.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        renderPagination(cashData.length, cashPage, itemsPerPage, "cashPagination", "changeCashPage");
+      }
+
+      function renderLoanTable() {
+        const tbody = document.getElementById("loanTableBody");
+        const searchInputEl = document.getElementById("loanSearchInput");
+        const searchVal = searchInputEl ? searchInputEl.value.toLowerCase() : "";
+
+        const filtered = loanData.filter(l => {
+          const name = (l.name || "").toLowerCase();
+          const mobile = (l.mobile || "").toLowerCase();
+          const address = (l.address || "").toLowerCase();
+          const amt = (l.amount || "").toString();
+          return name.includes(searchVal) || mobile.includes(searchVal) || address.includes(searchVal) || amt.includes(searchVal);
+        });
+
+        if (!filtered.length) {
+          tbody.innerHTML = `<tr><td colspan="11" class="p-4 text-center text-gray-500">কোনো ঋণ রেকর্ড পাওয়া যায়নি</td></tr>`;
+          document.getElementById("loanPagination").innerHTML = "";
+          return;
+        }
+
+        const start = (loanPage - 1) * itemsPerPage;
+        const slice = filtered.slice(start, start + itemsPerPage);
+
+        tbody.innerHTML = slice.map(l => {
+          const origAmt = Number(l.amount) || 0;
+          const rate = Number(l.rate) || 36;
+          const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
+
+          let paidPrin = 0, paidInt = 0;
+          if (l.payments) {
+            l.payments.forEach(p => {
+              paidPrin += Number(p.principalPaid) || 0;
+              paidInt += Number(p.interestPaid) || 0;
+            });
+          }
+
+          const duePrin = Math.max(0, origAmt - paidPrin);
+          const dueInt = Math.max(0, totalInterest - paidInt);
+          const totalDue = duePrin + dueInt;
+          const isCompleted = totalDue === 0;
+
+          return `
+            <tr class="border-b hover:bg-orange-50/50">
+              <td class="p-2 border-r text-center"><input type="checkbox" class="loan-checkbox" value="${l.id}"></td>
+              <td class="p-2 border-r text-center font-bold text-gray-800">${l.name}</td>
+              <td class="p-2 border-r text-center">${l.mobile}</td>
+              <td class="p-2 border-r text-center text-gray-600">${l.address || '-'}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-700">₹${origAmt.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center">${rate}%</td>
+              <td class="p-2 border-r text-center font-semibold text-red-600">₹${duePrin.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-semibold text-red-600">₹${dueInt.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-bold text-red-700">₹${totalDue.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center">
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
+                  ${isCompleted ? 'পরিশোধিত' : 'চলমান'}
+                </span>
+              </td>
+              <td class="p-2 text-center whitespace-nowrap">
+                <div class="flex items-center justify-center gap-1.5">
+                  <button onclick="openLoanRepayModal(${l.id})" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-200" title="কিস্তি আদায়">💸 কিস্তি আদায়</button>
+                  <button onclick="openLoanHistory(${l.id})" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 hover:bg-blue-200" title="লেনদেন বিবরণী">📖 বিবরণী</button>
+                  <button onclick="editLoan(${l.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteLoan(${l.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="মুছুন">🗑️</button>
+                </div>
+              </td>
+            </tr>
+          `;
+        }).join("");
+
+        renderPagination(filtered.length, loanPage, itemsPerPage, "loanPagination", "changeLoanPage");
+      }
+
+      function filterLoans() {
+        loanPage = 1;
+        renderLoanTable();
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        setDefaultDates();
+        renderTxTable();
+        renderCashTable();
+        renderLoanTable();
+        updateBalances();
+      });
     </script>
   </body>
 </html>
