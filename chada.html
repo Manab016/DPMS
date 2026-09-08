@@ -517,14 +517,51 @@
     </div>
 
     <script>
-      // ⚠️ এখানে সমস্ত মিসিং UI ফাংশন যুক্ত করা হয়েছে
+      // ⚠️ এখানে সমস্ত মিসিং UI ফাংশন ও ফিক্স যুক্ত করা হয়েছে
       
+      // -- কোষাধ্যক্ষ নাম খোঁজার ফাংশন --
+      function getPujaKosadhokkoName() {
+        try {
+          const keys = ['committeeMembers', 'committee_members', 'committee', 'committeeList'];
+          for (let key of keys) {
+            const data = localStorage.getItem(key);
+            if (data) {
+              const list = JSON.parse(data);
+              const found = list.find(item => 
+                (item.post && (item.post.includes('কোষাধ্যক্ষ') || item.post.toLowerCase().includes('treasurer'))) ||
+                (item.role && (item.role.includes('কোষাধ্যক্ষ') || item.role.toLowerCase().includes('treasurer')))
+              );
+              if (found && (found.name || found.memberName)) {
+                return found.name || found.memberName;
+              }
+            }
+          }
+        } catch(e) {
+          console.error(e);
+        }
+        return "";
+      }
+
       // -- চাঁদা ফর্ম খোলা ও বন্ধ করার ফাংশন --
       function openAddSubModal() {
         const modal = document.getElementById("subEntryModal");
         if(modal) {
           modal.classList.remove("hidden");
           modal.classList.add("flex");
+
+          // Default Date Fix
+          const today = new Date().toISOString().split('T')[0];
+          const dateMember = document.getElementById("subDateMember");
+          const dateOther = document.getElementById("subDateOther");
+          if(dateMember && !dateMember.value) dateMember.value = today;
+          if(dateOther && !dateOther.value) dateOther.value = today;
+
+          // Default Collector Name (Puja Kosadhokko) Fix
+          const kosadhokkoName = getPujaKosadhokkoName();
+          const colMember = document.getElementById("subCollectorMember");
+          const colOther = document.getElementById("subCollectorOther");
+          if(colMember && !colMember.value && kosadhokkoName) colMember.value = kosadhokkoName;
+          if(colOther && !colOther.value && kosadhokkoName) colOther.value = kosadhokkoName;
         }
       }
 
@@ -534,6 +571,99 @@
           modal.classList.add("hidden");
           modal.classList.remove("flex");
         }
+      }
+
+      // -- সদস্য সার্চ ও লিস্ট ফিক্স --
+      function searchMemberForSub() {
+        const query = document.getElementById('memberSearchInput').value.toLowerCase().trim();
+        const resultsDiv = document.getElementById('memberSearchResults');
+        if (!query) {
+            resultsDiv.classList.add('hidden');
+            resultsDiv.innerHTML = '';
+            return;
+        }
+        
+        let members = [];
+        try {
+            members = JSON.parse(localStorage.getItem('members') || '[]');
+        } catch(e) {
+            members = [];
+        }
+        
+        const filtered = members.filter(m => 
+            (m.name && m.name.toLowerCase().includes(query)) ||
+            (m.mobile && m.mobile.toLowerCase().includes(query)) ||
+            (m.village && m.village.toLowerCase().includes(query)) ||
+            (m.memberId && m.memberId.toLowerCase().includes(query))
+        );
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
+            resultsDiv.classList.remove('hidden');
+            return;
+        }
+        
+        let html = '';
+        filtered.forEach(m => {
+            html += `<div onclick="selectMemberForSub('${m.id || m.memberId || ''}', '${m.name || ''}', '${m.mobile || ''}', '${m.village || ''}', '${m.memberId || ''}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs">
+                <div class="font-bold text-gray-800">${m.name}</div>
+                <div class="text-gray-500 text-[11px]">মোবাইল: ${m.mobile || 'নেই'} | গ্রাম: ${m.village || 'নেই'} | ID: ${m.memberId || 'নেই'}</div>
+            </div>`;
+        });
+        resultsDiv.innerHTML = html;
+        resultsDiv.classList.remove('hidden');
+      }
+
+      function selectMemberForSub(id, name, mobile, village, memberId) {
+        document.getElementById('selectedMemberId').value = id;
+        document.getElementById('memberSearchInput').value = name;
+        const infoDiv = document.getElementById('selectedMemberInfo');
+        if (infoDiv) {
+            infoDiv.innerText = `নির্বাচিত: ${name} (${memberId || id}) - ${village || ''}`;
+        }
+        document.getElementById('memberSearchResults').classList.add('hidden');
+      }
+
+      // -- গ্রহণকারী সার্চ ফাংশন --
+      function searchCollector(inputId) {
+        const query = document.getElementById(inputId).value.toLowerCase().trim();
+        const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
+        const resultsDiv = document.getElementById(resultsId);
+        if (!query) {
+            resultsDiv.classList.add('hidden');
+            resultsDiv.innerHTML = '';
+            return;
+        }
+        
+        let members = [];
+        try {
+            members = JSON.parse(localStorage.getItem('members') || '[]');
+        } catch(e) {
+            members = [];
+        }
+        
+        const filtered = members.filter(m => m.name && m.name.toLowerCase().includes(query));
+        
+        if (filtered.length === 0) {
+            resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো নাম পাওয়া যায়নি</div>';
+            resultsDiv.classList.remove('hidden');
+            return;
+        }
+        
+        let html = '';
+        filtered.forEach(m => {
+            html += `<div onclick="selectCollector('${inputId}', '${m.name}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs font-semibold text-gray-800">
+                ${m.name}
+            </div>`;
+        });
+        resultsDiv.innerHTML = html;
+        resultsDiv.classList.remove('hidden');
+      }
+
+      function selectCollector(inputId, name) {
+        document.getElementById(inputId).value = name;
+        const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
+        document.getElementById(resultsId).classList.add('hidden');
       }
 
       // -- চাঁদা এন্ট্রি ট্যাব (সদস্য/দাতা) পরিবর্তন --
