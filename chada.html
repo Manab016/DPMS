@@ -653,10 +653,16 @@
           if (!membersList || membersList.length === 0) {
             membersList = JSON.parse(localStorage.getItem("membersData") || "[]");
           }
-          const found = membersList.find(item => {
+          let found = membersList.find(item => {
             const role = (item.role || item.designation || item.position || "").toLowerCase();
-            return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
+            return role.includes('পুজো কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
           });
+          if (!found) {
+            found = membersList.find(item => {
+              const role = (item.role || item.designation || item.position || "").toLowerCase();
+              return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
+            });
+          }
           if (found && found.name) return found.name;
         } catch(e) {}
         return "";
@@ -807,7 +813,7 @@
         if (type === 'member') {
           const memberId = document.getElementById('selectedMemberId').value;
           const memberName = document.getElementById('memberSearchInput').value.trim();
-          const collector = document.getElementById('subCollectorMember').value.trim();
+          const collector = document.getElementById('subCollectorMember').value.trim() || getPujaKosadhokkoName() || '-';
           const date = document.getElementById('subDateMember').value;
           const amount = parseFloat(document.getElementById('subAmountMember').value) || 0;
           const note = document.getElementById('subNoteMember').value.trim();
@@ -829,7 +835,7 @@
             mobile: memberObj.mobile || '-',
             village: memberObj.village || '-',
             displayMemberId: memberObj.autoId || '',
-            collector: collector || '-',
+            collector: collector,
             date,
             amount,
             note: note || '-',
@@ -854,7 +860,7 @@
           const name = document.getElementById('otherDataName').value.trim();
           const mobile = document.getElementById('otherDataMobile').value.trim();
           const village = document.getElementById('otherDataVillage').value.trim();
-          const collector = document.getElementById('subCollectorOther').value.trim();
+          const collector = document.getElementById('subCollectorOther').value.trim() || getPujaKosadhokkoName() || '-';
           const date = document.getElementById('subDateOther').value;
           const amount = parseFloat(document.getElementById('subAmountOther').value) || 0;
           const note = document.getElementById('subNoteOther').value.trim();
@@ -873,7 +879,7 @@
             name,
             mobile: mobile || '-',
             village: village || '-',
-            collector: collector || '-',
+            collector: collector,
             date,
             amount,
             note: note || '-',
@@ -908,7 +914,7 @@
           switchSubEntryTab('member');
           document.getElementById('selectedMemberId').value = sub.memberId || '';
           document.getElementById('memberSearchInput').value = sub.name || '';
-          document.getElementById('subCollectorMember').value = sub.collector || '';
+          document.getElementById('subCollectorMember').value = sub.collector || getPujaKosadhokkoName() || '';
           document.getElementById('subDateMember').value = sub.date || '';
           document.getElementById('subAmountMember').value = sub.amount || 1500;
           document.getElementById('subNoteMember').value = sub.note || '';
@@ -919,7 +925,7 @@
           document.getElementById('otherDataName').value = sub.name || '';
           document.getElementById('otherDataMobile').value = sub.mobile !== '-' ? sub.mobile : '';
           document.getElementById('otherDataVillage').value = sub.village !== '-' ? sub.village : '';
-          document.getElementById('subCollectorOther').value = sub.collector || '';
+          document.getElementById('subCollectorOther').value = sub.collector || getPujaKosadhokkoName() || '';
           document.getElementById('subDateOther').value = sub.date || '';
           document.getElementById('subAmountOther').value = sub.amount || 1500;
           document.getElementById('subNoteOther').value = sub.note || '';
@@ -1000,7 +1006,7 @@
         document.querySelectorAll(".donor-checkbox").forEach(cb => cb.checked = isChecked);
       };
 
-      // Rendering Member Subscription Table with Paid/Unpaid status and action/mark system for all rows
+      // Rendering Member Subscription Table with Paid/Unpaid status and action buttons (✏️ and 🗑️)
       window.renderMemberSubscriptionTable = function() {
         const tbody = document.getElementById("memberContributionTableBody");
         if (!tbody) return;
@@ -1034,7 +1040,8 @@
             `;
           } else {
             actionHtml = `
-              <button onclick="openAddSubForMember('${m.id}', '${encodeURIComponent(m.name || '')}')" class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded text-xs font-bold" title="চাঁদা যোগ করুন">➕ চাঁদা নিন</button>
+              <button onclick="openAddSubForMember('${m.id}', '${encodeURIComponent(m.name || '')}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট / চাঁদা যোগ">✏️</button>
+              <button onclick="alert('এই সদস্যের কোনো চাঁদার রেকর্ড নেই!')" class="bg-red-50 text-red-400 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
             `;
           }
 
@@ -1046,7 +1053,7 @@
             <td class="p-2 border-r font-bold text-orange-600 text-center">${m.autoId || ''}</td>
             <td class="p-2 border-r text-center font-bold ${sub ? 'text-emerald-700' : 'text-red-600'}">${sub ? '₹' + sub.amount : '₹0 (বাকি)'}</td>
             <td class="p-2 border-r text-center text-gray-600">${sub ? sub.date : '-'}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub ? sub.collector : '-'}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub ? (sub.collector || getPujaKosadhokkoName() || '-') : '-'}</td>
             <td class="p-2 text-center">${actionHtml}</td>
           `;
           tbody.appendChild(tr);
@@ -1073,7 +1080,7 @@
             <td class="p-2 border-r text-gray-700 text-center">${sub.village || ''}</td>
             <td class="p-2 border-r font-bold text-emerald-700 text-center">₹${sub.amount || 0}</td>
             <td class="p-2 border-r text-center text-gray-600">${sub.date || ''}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub.collector || ''}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub.collector || getPujaKosadhokkoName() || '-'}</td>
             <td class="p-2 text-center">
               <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট">✏️</button>
               <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
@@ -1181,7 +1188,7 @@
             m.village || "",
             sub ? sub.amount : 0,
             sub ? sub.date : "-",
-            sub ? sub.collector : "-",
+            sub ? (sub.collector || getPujaKosadhokkoName() || "-") : "-",
             sub ? "পরিশোধিত" : "বাকি"
           ];
           row.height = 25;
@@ -1194,7 +1201,7 @@
           rowNo++;
         });
 
-        // Summary Rows at the bottom (sobar niche)
+        // Summary Rows at the bottom
         const summaryRows = [
           { label: "মোট চাঁদা আদায় (Total Amount)", val: `₹${totalAmountCollected}` },
           { label: "চাঁদা দিয়েছে (Paid Count)", val: `${paidCount} জন` },
@@ -1283,7 +1290,7 @@
             sub.village || "",
             sub.amount || 0,
             sub.date || "",
-            sub.collector || "",
+            sub.collector || getPujaKosadhokkoName() || "-",
             sub.note || ""
           ];
           row.height = 25;
