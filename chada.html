@@ -809,7 +809,7 @@
       };
 
       window.saveSubFromNewForm = async function(type) {
-        const docId = document.getElementById("editSubDocId").value;
+        let docId = document.getElementById("editSubDocId").value;
         if (type === 'member') {
           const memberId = document.getElementById('selectedMemberId').value;
           const memberName = document.getElementById('memberSearchInput').value.trim();
@@ -828,6 +828,12 @@
           }
 
           const memberObj = allMembers.find(m => m.id === memberId) || {};
+          
+          const existingSubs = allSubscriptions.filter(s => s.type === 'member' && s.memberId === memberId);
+          if (!docId && existingSubs.length > 0) {
+            docId = existingSubs[0].id;
+          }
+
           const subData = {
             type: 'member',
             memberId: memberId || memberObj.id || '',
@@ -845,6 +851,11 @@
           try {
             if (docId) {
               await updateDoc(doc(db, "subscriptions", docId), subData);
+              for (let i = 1; i < existingSubs.length; i++) {
+                if (existingSubs[i].id !== docId) {
+                  await deleteDoc(doc(db, "subscriptions", existingSubs[i].id));
+                }
+              }
               alert("চাঁদার তথ্য সফলভাবে আপডেট হয়েছে!");
             } else {
               subData.createdAt = Date.now();
@@ -943,12 +954,30 @@
           document.getElementById('selectedMemberId').value = memberId;
           document.getElementById('memberSearchInput').value = name;
         }
+
+        const existingSub = allSubscriptions.find(s => s.type === 'member' && s.memberId === memberId);
+        if (existingSub) {
+          document.getElementById("editSubDocId").value = existingSub.id;
+          document.getElementById("subEntryModalTitle").innerText = "✏️ চাঁদার তথ্য আপডেট করুন";
+          document.getElementById('subCollectorMember').value = existingSub.collector || getPujaKosadhokkoName() || '';
+          document.getElementById('subDateMember').value = existingSub.date || '';
+          document.getElementById('subAmountMember').value = existingSub.amount || 1500;
+          document.getElementById('subNoteMember').value = existingSub.note || '';
+        }
       };
 
       window.deleteSubscription = async function(id) {
         if (confirm("আপনি কি নিশ্চিত যে এই চাঁদার এন্ট্রি মুছে ফেলতে চান?")) {
           try {
-            await deleteDoc(doc(db, "subscriptions", id));
+            const subToDelete = allSubscriptions.find(s => s.id === id);
+            if (subToDelete && subToDelete.type === 'member' && subToDelete.memberId) {
+              const duplicates = allSubscriptions.filter(s => s.type === 'member' && s.memberId === subToDelete.memberId);
+              for (let dup of duplicates) {
+                await deleteDoc(doc(db, "subscriptions", dup.id));
+              }
+            } else {
+              await deleteDoc(doc(db, "subscriptions", id));
+            }
             alert("সফলভাবে মুছে ফেলা হয়েছে।");
           } catch(e) {
             alert("মুছে ফেলতে সমস্যা হয়েছে!");
@@ -974,7 +1003,15 @@
         if (confirm(`আপনি কি নিশ্চিত যে নির্বাচিত ${validSubIds.length}টি এন্ট্রি মুছে ফেলতে চান?`)) {
           try {
             for (let id of validSubIds) {
-              await deleteDoc(doc(db, "subscriptions", id));
+              const subToDelete = allSubscriptions.find(s => s.id === id);
+              if (subToDelete && subToDelete.type === 'member' && subToDelete.memberId) {
+                const duplicates = allSubscriptions.filter(s => s.type === 'member' && s.memberId === subToDelete.memberId);
+                for (let dup of duplicates) {
+                  await deleteDoc(doc(db, "subscriptions", dup.id));
+                }
+              } else {
+                await deleteDoc(doc(db, "subscriptions", id));
+              }
             }
             alert("নির্বাচিত এন্ট্রিগুলি সফলভাবে মুছে ফেলা হয়েছে।");
           } catch(e) {
@@ -1016,7 +1053,7 @@
         
         const memberSubsMap = {};
         allSubscriptions.filter(s => s.type === 'member').forEach(s => {
-          if (s.memberId) memberSubsMap[s.memberId] = s;
+          if (s.memberId && !memberSubsMap[s.memberId]) memberSubsMap[s.memberId] = s;
         });
 
         const displayList = allMembers.filter(m => {
@@ -1106,7 +1143,7 @@
       async function generateMemberReportExcel(filterType) {
         const memberSubsMap = {};
         allSubscriptions.filter(s => s.type === 'member').forEach(s => {
-          if (s.memberId) memberSubsMap[s.memberId] = s;
+          if (s.memberId && !memberSubsMap[s.memberId]) memberSubsMap[s.memberId] = s;
         });
 
         let data = allMembers.map(m => ({
