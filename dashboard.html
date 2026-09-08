@@ -273,7 +273,7 @@
       const auth = getAuth(app);
       setPersistence(auth, browserSessionPersistence).catch(() => {});
       const db = getFirestore(app);
-      const storage = getStorage(app, "gs://durgapuja-2026.firebasestorage.app");
+      const storage = getStorage(app);
 
       let allSubscriptionsData = [];
 
@@ -614,19 +614,22 @@
             processedFile = await compressImage(file);
           }
 
+          const fileExt = file.name.split('.').pop() || 'bin';
+          const safeFileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
+
+          const storageRef = ref(storage, `past_documents/${safeFileName}`);
           const metadata = {
             contentType: processedFile.type || 'application/octet-stream'
           };
 
-          const storageRef = ref(storage, `past_documents/${Date.now()}_${processedFile.name}`);
           const snapshot = await uploadBytes(storageRef, processedFile, metadata);
           const downloadURL = await getDownloadURL(snapshot.ref);
 
           await addDoc(collection(db, "past_documents"), {
             title: title,
-            fileName: processedFile.name,
+            fileName: file.name,
             fileUrl: downloadURL,
-            fileType: processedFile.type || processedFile.name.split('.').pop(),
+            fileType: processedFile.type || fileExt,
             uploadedAt: Date.now(),
             uploadedBy: auth.currentUser ? auth.currentUser.email : "Unknown"
           });
