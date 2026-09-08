@@ -651,21 +651,29 @@
         try {
           let membersList = allMembers;
           if (!membersList || membersList.length === 0) {
-            membersList = JSON.parse(localStorage.getItem("membersData") || "[]");
+            try {
+              membersList = JSON.parse(localStorage.getItem("membersData") || "[]");
+            } catch(e) {}
           }
-          let found = membersList.find(item => {
-            const role = (item.role || item.designation || item.position || "").toLowerCase();
-            return role.includes('পুজো কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
-          });
-          if (!found) {
-            found = membersList.find(item => {
+          
+          if (membersList && membersList.length > 0) {
+            // ১. নির্দিষ্ট পদবী খুঁজবে (যেমন: পুজো কোষাধ্যক্ষ বা কোষাধ্যক্ষ)
+            let found = membersList.find(item => {
               const role = (item.role || item.designation || item.position || "").toLowerCase();
-              return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
+              return role.includes('পুজো কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
             });
+            if (!found) {
+              found = membersList.find(item => {
+                const role = (item.role || item.designation || item.position || "").toLowerCase();
+                return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
+              });
+            }
+            if (found && found.name) return found.name;
           }
-          if (found && found.name) return found.name;
         } catch(e) {}
-        return "";
+        
+        // ২. যদি মেম্বার লিস্টে না পাওয়া যায় তবে লোকাল স্টোরেজ বা ডিফল্ট চেক করবে
+        return localStorage.getItem("pujaKosadhokkoName") || "";
       }
 
       window.openAddSubModal = function() {
@@ -685,8 +693,8 @@
           const kosadhokkoName = getPujaKosadhokkoName();
           const colMember = document.getElementById("subCollectorMember");
           const colOther = document.getElementById("subCollectorOther");
-          if(colMember && kosadhokkoName) colMember.value = kosadhokkoName;
-          if(colOther && kosadhokkoName) colOther.value = kosadhokkoName;
+          if(colMember) colMember.value = kosadhokkoName;
+          if(colOther) colOther.value = kosadhokkoName;
         }
       };
 
