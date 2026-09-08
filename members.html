@@ -174,33 +174,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <script>
-(function () {
-  const KEY = "pujaAuthSessionV2";
-  window.__pujaAuthCache = {
-    get() {
-      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
-    },
-    set(user, role, permissions) {
-      try {
-        localStorage.setItem(KEY, JSON.stringify({
-          uid: user.uid, email: user.email || "",
-          role: role || "user",
-          permissions: Array.isArray(permissions) ? permissions : [],
-          savedAt: Date.now()
-        }));
-      } catch (_) {}
-    },
-    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
-  };
-  const cached = window.__pujaAuthCache.get();
-  window.currentUserRole = cached?.role || "user";
-  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
-  window.__pujaAuthReady = !!cached;
-})();
-</script>
-
-<script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -264,6 +238,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
         
+        // সিঙ্ক করার জন্য localStorage-এ সেভ করা হলো
+        try {
+          localStorage.setItem("membersData", JSON.stringify(allMembersData));
+        } catch (e) {}
+        
         populateVillageDropdown(allMembersData);
         window.filterMembers();
       });
@@ -272,22 +251,17 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     function populateVillageDropdown(data) {
       const villageFilter = document.getElementById("villageFilter");
       const currentSelection = villageFilter.value;
-      
       const uniqueVillages = [...new Set(data.map(m => m.village))].filter(v => v).sort();
-      
       let optionsHtml = '<option value="">সব গ্রাম (All)</option>';
       uniqueVillages.forEach(village => {
         optionsHtml += `<option value="${village}">${village}</option>`;
       });
-      
       villageFilter.innerHTML = optionsHtml;
-      
       if(uniqueVillages.includes(currentSelection)) {
         villageFilter.value = currentSelection;
       }
     }
 
-    // Pagination: প্রতি পেজে সর্বোচ্চ ১০ জন সদস্য
     let currentMemberPage = 1;
     const MEMBERS_PER_PAGE = 10;
 
@@ -335,16 +309,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         pagination.className = "flex flex-wrap items-center justify-center gap-1 mt-4 pt-3 border-t border-gray-100";
         document.getElementById("section-member").appendChild(pagination);
       }
-
       pagination.innerHTML = "";
-
       if (totalItems <= MEMBERS_PER_PAGE) {
         pagination.classList.add("hidden");
         return;
       }
-
       pagination.classList.remove("hidden");
-
       const prev = document.createElement("button");
       prev.type = "button";
       prev.innerText = "‹";
@@ -363,11 +333,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         const btn = document.createElement("button");
         btn.type = "button";
         btn.innerText = i;
-        btn.className = `px-3 py-1.5 rounded-lg border text-sm font-bold ${
-          i === currentMemberPage
-            ? "bg-orange-600 text-white border-orange-600"
-            : "bg-white text-gray-700 hover:bg-gray-100"
-        }`;
+        btn.className = `px-3 py-1.5 rounded-lg border text-sm font-bold ${i === currentMemberPage ? "bg-orange-600 text-white border-orange-600" : "bg-white text-gray-700 hover:bg-gray-100"}`;
         btn.onclick = () => {
           currentMemberPage = i;
           renderTable(window.filteredMembersData || []);
@@ -418,10 +384,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-          
           document.getElementById(previewId).src = dataUrl;
           document.getElementById(previewId).classList.remove("hidden");
-          
           if (previewId === "photoPreview") processedPhotoBase64 = dataUrl;
           else if (previewId === "sigPreview") processedSigBase64 = dataUrl;
         };
@@ -442,22 +406,16 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           canvas.width = img.width;
           canvas.height = img.height;
           ctx.drawImage(img, 0, 0);
-
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = imageData.data;
           let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
             const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
             if (brightness > 180 || a === 0) {
               data[i + 3] = 0;
             } else {
-              data[i] = 0;
-              data[i + 1] = 0;
-              data[i + 2] = 0;
-              
+              data[i] = 0; data[i + 1] = 0; data[i + 2] = 0;
               const x = (i / 4) % canvas.width;
               const y = Math.floor((i / 4) / canvas.width);
               if (x < minX) minX = x;
@@ -466,19 +424,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
               if (y > maxY) maxY = y;
             }
           }
-
-          if (minX > maxX || minY > maxY) {
-             minX = 0; minY = 0; maxX = canvas.width; maxY = canvas.height;
-          } else {
+          if (minX > maxX || minY > maxY) { minX = 0; minY = 0; maxX = canvas.width; maxY = canvas.height; }
+          else {
              const padding = 10;
              minX = Math.max(0, minX - padding);
              minY = Math.max(0, minY - padding);
              maxX = Math.min(canvas.width, maxX + padding);
              maxY = Math.min(canvas.height, maxY + padding);
           }
-
           ctx.putImageData(imageData, 0, 0);
-
           const cropWidth = maxX - minX;
           const cropHeight = maxY - minY;
           const cropCanvas = document.createElement("canvas");
@@ -486,9 +440,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           cropCanvas.height = cropHeight;
           const cropCtx = cropCanvas.getContext("2d");
           cropCtx.drawImage(canvas, minX, minY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
-
           const dataUrl = cropCanvas.toDataURL("image/png");
-          
           const previewElement = document.getElementById(previewId);
           previewElement.src = dataUrl;
           previewElement.classList.remove("hidden");
@@ -502,25 +454,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     function updateRoleOptions(currentDocId = "") {
       const roleSelect = document.getElementById("newMemberRole");
       if (!roleSelect) return;
-
-      const ALL_ROLES = [
-        "সাধারণ সদস্য",
-        "সভাপতি",
-        "সহ সভাপতি",
-        "সম্পাদক",
-        "সহ সম্পাদক",
-        "কোষাধ্যক্ষ",
-        "সহ কোষাধ্যক্ষ",
-        "পূজা কোষাধ্যক্ষ"
-      ];
-
-      const takenRoles = allMembersData
-        .filter(m => m.id !== currentDocId && m.role && m.role !== "সাধারণ সদস্য")
-        .map(m => m.role);
-
+      const ALL_ROLES = ["সাধারণ সদস্য", "সভাপতি", "সহ সভাপতি", "সম্পাদক", "সহ সম্পাদক", "কোষাধ্যক্ষ", "সহ কোষাধ্যক্ষ", "পূজা কোষাধ্যক্ষ"];
+      const takenRoles = allMembersData.filter(m => m.id !== currentDocId && m.role && m.role !== "সাধারণ সদস্য").map(m => m.role);
       const currentValue = roleSelect.value;
       roleSelect.innerHTML = "";
-
       ALL_ROLES.forEach(role => {
         if (role === "সাধারণ সদস্য" || !takenRoles.includes(role)) {
           const opt = document.createElement("option");
@@ -529,7 +466,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           roleSelect.appendChild(opt);
         }
       });
-
       if ([...roleSelect.options].some(o => o.value === currentValue)) {
         roleSelect.value = currentValue;
       } else {
@@ -549,14 +485,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         document.getElementById("newMemberMobile").focus();
         return;
       }
-
       if (!name || !village) {
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
         return;
       }
-
       const memberData = { name, village, role, mobile: mobile || "-", updatedAt: Date.now() };
-
       if (processedPhotoBase64) memberData.photo = processedPhotoBase64;
       if (processedSigBase64) memberData.signature = processedSigBase64;
 
@@ -579,27 +512,21 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.openEditModal = function(id) {
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
-      
       document.getElementById("modalTitle").innerText = "সদস্যের তথ্য আপডেট করুন";
       document.getElementById("editMemberDocId").value = member.id;
       document.getElementById("newMemberName").value = member.name;
       document.getElementById("newMemberVillage").value = member.village;
-      
       updateRoleOptions(member.id);
       document.getElementById("newMemberRole").value = member.role;
       document.getElementById("newMemberMobile").value = member.mobile !== "-" ? member.mobile : "";
-      
       processedPhotoBase64 = member.photo || "";
       processedSigBase64 = member.signature || "";
-      
       const photoPreview = document.getElementById("photoPreview");
       if(member.photo) { photoPreview.src = member.photo; photoPreview.classList.remove("hidden"); }
       else { photoPreview.classList.add("hidden"); }
-      
       const sigPreview = document.getElementById("sigPreview");
       if(member.signature) { sigPreview.src = member.signature; sigPreview.classList.remove("hidden"); }
       else { sigPreview.classList.add("hidden"); }
-      
       document.getElementById("addMemberModal").classList.remove("hidden");
     };
 
@@ -631,23 +558,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.filterMembers = function() {
       const searchText = (document.getElementById("searchInput")?.value || "").toLowerCase();
       const selectedVillage = (document.getElementById("villageFilter")?.value || "");
-
       window.filteredMembersData = allMembersData.filter(m => {
         const name = (m.name || "").toLowerCase();
         const mobile = (m.mobile || "").toString().toLowerCase();
         const role = (m.role || "").toLowerCase();
         const autoId = (m.autoId || "").toLowerCase();
-
-        const matchSearch = name.includes(searchText) || 
-                            mobile.includes(searchText) || 
-                            role.includes(searchText) ||
-                            autoId.includes(searchText);
-                            
+        const matchSearch = name.includes(searchText) || mobile.includes(searchText) || role.includes(searchText) || autoId.includes(searchText);
         const matchVillage = selectedVillage === "" || (m.village || "") === selectedVillage;
-        
         return matchSearch && matchVillage;
       });
-      
       currentMemberPage = 1;
       renderTable(window.filteredMembersData);
     };
@@ -660,37 +579,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.exportToExcel = async function() {
       const dataToExport = window.filteredMembersData || allMembersData;
       const selectedVillage = document.getElementById("villageFilter").value;
-
-      if (dataToExport.length === 0) {
-        alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
-        return;
-      }
-
+      if (dataToExport.length === 0) { alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!"); return; }
       const workbook = new ExcelJS.Workbook();
-      const worksheet = workbook.addWorksheet("সদস্য তালিকা", {
-        pageSetup: {
-          paperSize: 9,
-          orientation: "landscape",
-          fitToPage: true,
-          fitToWidth: 1,
-          fitToHeight: 0
-        }
-      });
-
-      worksheet.pageSetup.margins = {
-        left: 0.25, right: 0.25, top: 0.5, bottom: 0.5,
-        header: 0.2, footer: 0.2
-      };
-
-      worksheet.columns = [
-        { width: 14 },
-        { width: 28 },
-        { width: 18 },
-        { width: 22 },
-        { width: 22 },
-        { width: 30 }
-      ];
-
+      const worksheet = workbook.addWorksheet("সদস্য তালিকা", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+      worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+      worksheet.columns = [{ width: 14 }, { width: 28 }, { width: 18 }, { width: 22 }, { width: 22 }, { width: 30 }];
       worksheet.mergeCells("A1:F1");
       const title = worksheet.getCell("A1");
       title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
@@ -702,9 +595,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       worksheet.mergeCells("A2:F2");
       const sub = worksheet.getCell("A2");
-      sub.value = selectedVillage
-        ? `সদস্য তালিকা - ${selectedVillage}`
-        : "সদস্য তালিকা (সকল গ্রাম)";
+      sub.value = selectedVillage ? `সদস্য তালিকা - ${selectedVillage}` : "সদস্য তালিকা (সকল গ্রাম)";
       sub.font = { name: "Kalpurush", size: 16, bold: true };
       sub.alignment = { horizontal: "center", vertical: "middle" };
       sub.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
@@ -715,40 +606,24 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const headerRow = worksheet.getRow(4);
       headerRow.values = headers;
       headerRow.height = 30;
-
       headerRow.eachCell({ includeEmpty: false }, cell => {
         cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
         cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
         cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-        cell.border = {
-          top:{style:"thin"}, left:{style:"thin"},
-          bottom:{style:"thin"}, right:{style:"thin"}
-        };
+        cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
       });
 
       let rowNo = 5;
       dataToExport.forEach(m => {
         const row = worksheet.getRow(rowNo);
-        row.values = [
-          m.autoId || "",
-          m.name || "",
-          m.mobile !== "-" ? (m.mobile || "") : "",
-          m.village || "",
-          m.role || "",
-          m.signature ? "" : "নেই"
-        ];
+        row.values = [m.autoId || "", m.name || "", m.mobile !== "-" ? (m.mobile || "") : "", m.village || "", m.role || "", m.signature ? "" : "নেই"];
         row.height = 65;
-
         row.eachCell({ includeEmpty: false }, cell => {
           cell.font = { name:"Kalpurush", size:11 };
           cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
           cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-          cell.border = {
-            top:{style:"thin"}, left:{style:"thin"},
-            bottom:{style:"thin"}, right:{style:"thin"}
-          };
+          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
         });
-
         if (m.signature) {
           try {
             const parts = m.signature.split(",");
@@ -757,54 +632,30 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
             const mime = mimeMatch ? mimeMatch[1] : "image/png";
             const ext = (mime.includes("jpeg") || mime.includes("jpg")) ? "jpeg" : "png";
             const imageId = workbook.addImage({ base64:base64Data, extension:ext });
-            worksheet.addImage(imageId, {
-              tl:{col:5.1,row:rowNo-0.9},
-              ext:{width:170,height:70},
-              editAs:"oneCell"
-            });
-          } catch(e) {
-            console.error("Error adding signature image:", e);
-          }
+            worksheet.addImage(imageId, { tl:{col:5.1,row:rowNo-0.9}, ext:{width:170,height:70}, editAs:"oneCell" });
+          } catch(e) {}
         }
-
         rowNo++;
       });
-
       const totalLabel = worksheet.getCell(`A${rowNo}`);
       totalLabel.value = "মোট সদস্য";
       totalLabel.font = { name:"Kalpurush", size:13, bold:true };
       totalLabel.alignment = { horizontal:"center", vertical:"middle" };
       totalLabel.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
-      totalLabel.border = {
-        top:{style:"medium"}, left:{style:"medium"},
-        bottom:{style:"medium"}, right:{style:"thin"}
-      };
+      totalLabel.border = { top:{style:"medium"}, left:{style:"medium"}, bottom:{style:"medium"}, right:{style:"thin"} };
 
       const totalValue = worksheet.getCell(`B${rowNo}`);
       totalValue.value = dataToExport.length;
       totalValue.font = { name:"Kalpurush", size:13, bold:true };
       totalValue.alignment = { horizontal:"center", vertical:"middle" };
       totalValue.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFD966"} };
-      totalValue.border = {
-        top:{style:"medium"}, left:{style:"thin"},
-        bottom:{style:"medium"}, right:{style:"medium"}
-      };
+      totalValue.border = { top:{style:"medium"}, left:{style:"thin"}, bottom:{style:"medium"}, right:{style:"medium"} };
       worksheet.getRow(rowNo).height = 30;
-
       worksheet.pageSetup.printTitlesRow = "4:4";
       worksheet.pageSetup.printArea = `A1:F${rowNo}`;
-
-      const fileName = selectedVillage
-        ? `Members_${selectedVillage}.xlsx`
-        : "Members_All_Villages.xlsx";
-
+      const fileName = selectedVillage ? `Members_${selectedVillage}.xlsx` : "Members_All_Villages.xlsx";
       const buffer = await workbook.xlsx.writeBuffer();
-      saveAs(
-        new Blob([buffer], {
-          type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        }),
-        fileName
-      );
+      saveAs(new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), fileName);
     };
 
     window.openAddModal = function() {
@@ -833,7 +684,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.openIdCard = function(id) {
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
-
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
 
@@ -845,12 +695,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
 
       const qrData = `ID: ${member.autoId || ""}\nনাম: ${member.name || ""}\nগ্রাম: ${member.village || ""}\nপদ: ${member.role || ""}\nমোবাইল: ${member.mobile || ""}`;
-      new QRious({
-        element: document.getElementById('idCardQrCode'),
-        value: qrData,
-        size: 100, 
-        level: 'M'
-      });
+      new QRious({ element: document.getElementById('idCardQrCode'), value: qrData, size: 100, level: 'M' });
 
       const cardBox = document.getElementById("idCardBox");
       const cardHeader = document.getElementById("idCardHeader");
@@ -858,7 +703,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const photoImg = document.getElementById("idCardPhoto");
       const roleBadge = document.getElementById("idCardRole");
       const vipBadge = document.getElementById("vipBadge");
-      
       const memberSigContainer = document.getElementById("memberSigContainer");
       const presSigContainer = document.getElementById("presSigContainer");
       const memberSigImg = document.getElementById("idCardMemberSig");
@@ -875,11 +719,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-gradient-to-br from-yellow-50 to-amber-100";
         photoImg.className = "w-[75px] h-[75px] object-cover rounded-md border-4 border-yellow-500 shadow-md";
         roleBadge.className = "text-[11px] font-extrabold text-gray-900 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow border border-yellow-400 inline-block px-3 py-0.5 rounded-full mt-0.5";
-        
         memberSigContainer.classList.add("hidden"); 
         presSigContainer.classList.remove("hidden");
         presSigContainer.className = "text-center w-[45%] flex flex-col items-center justify-end ml-auto"; 
-        
         presSigImg.src = member.signature || "";
         presSigLabel.innerText = "নিজস্ব স্বাক্ষর"; 
       } else {
@@ -889,11 +731,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-amber-50/30";
         photoImg.className = "w-[70px] h-[70px] object-cover rounded-md border-2 border-orange-500";
         roleBadge.className = "text-[10px] font-semibold text-white bg-orange-500 inline-block px-2 py-0.5 rounded-full mt-0.5 shadow-sm";
-        
         memberSigContainer.classList.remove("hidden");
         presSigContainer.classList.remove("hidden");
         presSigContainer.className = "text-center w-[45%] flex flex-col items-center justify-end ml-auto"; 
-        
         memberSigImg.src = member.signature || ""; 
         presSigImg.src = presSignature || ""; 
         presSigLabel.innerText = "সভাপতির স্বাক্ষর";
@@ -904,6 +744,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.closeIdCardModal = function() {
       document.getElementById("idCardModal").classList.add("hidden");
     };
-</script>
+  </script>
 </body>
 </html>
