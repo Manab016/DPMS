@@ -649,9 +649,14 @@
 
       function getPujaKosadhokkoName() {
         try {
-          const found = allMembers.find(item => 
-            item.role && (item.role.includes('কোষাধ্যক্ষ') || item.role.toLowerCase().includes('treasurer'))
-          );
+          let membersList = allMembers;
+          if (!membersList || membersList.length === 0) {
+            membersList = JSON.parse(localStorage.getItem("membersData") || "[]");
+          }
+          const found = membersList.find(item => {
+            const role = (item.role || item.designation || item.position || "").toLowerCase();
+            return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
+          });
           if (found && found.name) return found.name;
         } catch(e) {}
         return "";
@@ -674,8 +679,8 @@
           const kosadhokkoName = getPujaKosadhokkoName();
           const colMember = document.getElementById("subCollectorMember");
           const colOther = document.getElementById("subCollectorOther");
-          if(colMember && !colMember.value && kosadhokkoName) colMember.value = kosadhokkoName;
-          if(colOther && !colOther.value && kosadhokkoName) colOther.value = kosadhokkoName;
+          if(colMember && kosadhokkoName) colMember.value = kosadhokkoName;
+          if(colOther && kosadhokkoName) colOther.value = kosadhokkoName;
         }
       };
 
@@ -921,6 +926,19 @@
         }
       };
 
+      window.openAddSubForMember = function(memberId, encodedName) {
+        const name = decodeURIComponent(encodedName);
+        openAddSubModal();
+        switchSubEntryTab('member');
+        const m = allMembers.find(item => item.id === memberId);
+        if (m) {
+          selectMemberForSub(m.id, m.name || '', m.mobile || '', m.village || '', m.autoId || '');
+        } else {
+          document.getElementById('selectedMemberId').value = memberId;
+          document.getElementById('memberSearchInput').value = name;
+        }
+      };
+
       window.deleteSubscription = async function(id) {
         if (confirm("আপনি কি নিশ্চিত যে এই চাঁদার এন্ট্রি মুছে ফেলতে চান?")) {
           try {
@@ -938,10 +956,19 @@
           alert("কোনো এন্ট্রি নির্বাচন করা হয়নি!");
           return;
         }
-        if (confirm(`আপনি কি নিশ্চিত যে নির্বাচিত ${boxes.length}টি এন্ট্রি মুছে ফেলতে চান?`)) {
+        const validSubIds = Array.from(boxes)
+          .map(cb => cb.value)
+          .filter(val => val && !val.startsWith('member_'));
+
+        if (validSubIds.length === 0) {
+          alert("নির্বাচিত এন্ট্রিগুলির মধ্যে কোনো চাঁদার রেকর্ড নেই (সবগুলো বাকি সদস্য)!");
+          return;
+        }
+
+        if (confirm(`আপনি কি নিশ্চিত যে নির্বাচিত ${validSubIds.length}টি এন্ট্রি মুছে ফেলতে চান?`)) {
           try {
-            for (let cb of boxes) {
-              await deleteDoc(doc(db, "subscriptions", cb.value));
+            for (let id of validSubIds) {
+              await deleteDoc(doc(db, "subscriptions", id));
             }
             alert("নির্বাচিত এন্ট্রিগুলি সফলভাবে মুছে ফেলা হয়েছে।");
           } catch(e) {
@@ -973,7 +1000,7 @@
         document.querySelectorAll(".donor-checkbox").forEach(cb => cb.checked = isChecked);
       };
 
-      // Rendering Member Subscription Table with Paid/Unpaid status based on members list
+      // Rendering Member Subscription Table with Paid/Unpaid status and action/mark system for all rows
       window.renderMemberSubscriptionTable = function() {
         const tbody = document.getElementById("memberContributionTableBody");
         if (!tbody) return;
@@ -981,7 +1008,6 @@
 
         const searchText = (document.getElementById("memberListSearch")?.value || "").toLowerCase();
         
-        // Map members and check if they paid
         const memberSubsMap = {};
         allSubscriptions.filter(s => s.type === 'member').forEach(s => {
           if (s.memberId) memberSubsMap[s.memberId] = s;
@@ -1003,15 +1029,17 @@
           let actionHtml = '';
           if (sub) {
             actionHtml = `
-              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">✏️</button>
-              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>
+              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট">✏️</button>
+              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
             `;
           } else {
-            actionHtml = `<span class="text-gray-400 text-[11px]">বাকি</span>`;
+            actionHtml = `
+              <button onclick="openAddSubForMember('${m.id}', '${encodeURIComponent(m.name || '')}')" class="bg-orange-100 text-orange-700 px-2.5 py-1 rounded text-xs font-bold" title="চাঁদা যোগ করুন">➕ চাঁদা নিন</button>
+            `;
           }
 
           tr.innerHTML = `
-            <td class="p-2 border-r text-center">${sub ? `<input type="checkbox" class="sub-checkbox" value="${sub.id}">` : ''}</td>
+            <td class="p-2 border-r text-center"><input type="checkbox" class="sub-checkbox" value="${sub ? sub.id : 'member_' + m.id}"></td>
             <td class="p-2 border-r font-bold text-gray-800 text-center">${m.name || ''}</td>
             <td class="p-2 border-r text-gray-700 text-center">${m.mobile || ''}</td>
             <td class="p-2 border-r text-gray-700 text-center">${m.village || ''}</td>
@@ -1047,8 +1075,8 @@
             <td class="p-2 border-r text-center text-gray-600">${sub.date || ''}</td>
             <td class="p-2 border-r text-center text-gray-600">${sub.collector || ''}</td>
             <td class="p-2 text-center">
-              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">✏️</button>
-              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>
+              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট">✏️</button>
+              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
             </td>
           `;
           tbody.appendChild(tr);
