@@ -313,8 +313,8 @@
 <select id="uRoleInput" class="w-full p-2.5 border rounded-lg text-sm bg-white">
   <option value="member">সাধারণ সদস্য</option>
   <option value="admin">Admin</option>
-  <option value="treasurer">কোষাধ্যক্ষ</option>
-  <option value="puja_treasurer">পূজা কোষাধ্যক্ষ</option>
+  <option value="treasury">কোষাধ্যক্ষ</option>
+  <option value="puja_treasury">পূজা কোষাধ্যক্ষ</option>
 </select>
 <p class="text-[10px] text-gray-500 mt-1">রোল পরিচয় নির্ধারণ করে; কোন মডিউল দেখা যাবে তা নিচের Permission দিয়ে নির্ধারিত হবে।</p>
 </div>
@@ -323,11 +323,11 @@
 <p class="text-[10px] text-red-600 font-semibold mb-2">কোনো Permission না দিলে এই ব্যবহারকারী কোনো module দেখতে বা খুলতে পারবেবিধা পাবে না।</p>
 <div class="grid grid-cols-2 gap-2 text-xs">
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_members" type="checkbox"/> সদস্য</label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_subscription" type="checkbox"/> চাঁদা</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_chada" type="checkbox"/> চাঁদা</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_expense" type="checkbox"/> খরচ</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_booking" type="checkbox"/> বুকিং</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_sales" type="checkbox"/> বিক্রয়</label>
-<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasurer" type="checkbox"/> কোষাধ্যক্ষ</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasury" type="checkbox"/> কোষাধ্যক্ষ</label>
 </div>
 </div>
 <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
@@ -410,16 +410,16 @@ const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
 const ROLE_NAMES = {
   member: "সাধারণ সদস্য",
   admin: "Admin",
-  treasurer: "কোষাধ্যক্ষ",
-  puja_treasurer: "পূজা কোষাধ্যক্ষ"
+  treasury: "কোষাধ্যক্ষ",
+  puja_treasury: "পূজা কোষাধ্যক্ষ"
 };
 const PERMISSION_NAMES = {
   members: "সদস্য",
-  subscription: "চাঁদা",
+  chada: "চাঁদা",
   expense: "খরচ",
   booking: "বুকিং",
   sales: "বিক্রয়",
-  treasurer: "কোষাধ্যক্ষ"
+  treasury: "কোষাধ্যক্ষ"
 };
 let allUsersData = [];
 let allLoginHistory = [];
@@ -440,7 +440,7 @@ onAuthStateChanged(auth, async (user) => {
   // Show the role immediately, then refine it from Firestore.
   window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
   window.userPermissions = window.isMasterAdmin
-    ? ["members","subscription","expense","booking","sales","treasurer"]
+    ? ["members","chada","expense","booking","sales","treasury"]
     : [];
 
   const settingsRoleBadge = document.getElementById("settingsUserRoleBadge");
@@ -617,7 +617,7 @@ window.handleSaveUser = async function(event) {
   const name = document.getElementById("uNameInput").value.trim();
   const email = document.getElementById("uEmailInput").value.trim().toLowerCase();
   const role = document.getElementById("uRoleInput").value;
-  const selectedPerms = ["members","subscription","expense","booking","sales","treasurer"]
+  const selectedPerms = ["members","chada","expense","booking","sales","treasury"]
     .filter(p => document.getElementById("perm_" + p)?.checked);
 
   try {
@@ -659,7 +659,7 @@ window.openCreateUserModal = function() {
   document.getElementById("uPassInput").value = "";
   document.getElementById("uRoleInput").value = "member";
   document.getElementById("passInputContainer").style.display = "block";
-  ["members","subscription","expense","booking","sales","treasurer"].forEach(p => document.getElementById("perm_" + p).checked = false);
+  ["members","chada","expense","booking","sales","treasury"].forEach(p => document.getElementById("perm_" + p).checked = false);
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
@@ -675,7 +675,7 @@ window.editUserPermissions = function(uId) {
   document.getElementById("uRoleInput").value = user.role || "member";
   document.getElementById("passInputContainer").style.display = "none";
   const perms = user.permissions || [];
-  ["members","subscription","expense","booking","sales","treasurer"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
+  ["members","chada","expense","booking","sales","treasury"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
@@ -841,9 +841,9 @@ window.handleLogout = function() {
 <script>
 
 const defaultDevInfo = {
-  name: "Manabendra Nath Sarkar",
-  mobile: "9933371702",
-  email: "manabendra@gmail.com"
+  name: "MANABENDRA NATH SARKAR ",
+  mobile: "9002652507",
+  email: "manabendranathsarkar112@gmail.com"
 };
 
 let tempLogoBase64 = "";
@@ -954,11 +954,11 @@ function goDashboard() {
 function goMenu(tab) {
   const routes = {
     members: "members.html",
-    subscription: "chada.html",
+    chada: "chada.html",
     expense: "expense.html",
     booking: "dashboard.html?tab=booking",
     sales: "dashboard.html?tab=sales",
-    treasurer: "dashboard.html?tab=treasurer",
+    treasury: "dashboard.html?tab=treasury",
     settings: "settings.html"
   };
   if (routes[tab]) {
