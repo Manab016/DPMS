@@ -273,7 +273,7 @@
       const auth = getAuth(app);
       setPersistence(auth, browserSessionPersistence).catch(() => {});
       const db = getFirestore(app);
-      const storage = getStorage(app);
+      const storage = getStorage(app, "gs://durgapuja-2026.firebasestorage.app");
 
       let allSubscriptionsData = [];
 
@@ -636,8 +636,8 @@
           fileInput.value = "";
           loadPastDocuments();
         } catch (err) {
-          console.error("Upload error:", err);
-          alert("আপলোড করতে সমস্যা হয়েছে: " + err.message);
+          console.error("Upload error details:", err);
+          alert("আপলোড করতে সমস্যা হয়েছে: " + (err.message || err));
         } finally {
           uploadBtn.disabled = false;
           uploadBtn.innerText = "আপলোড করুন";
