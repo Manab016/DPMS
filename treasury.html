@@ -869,15 +869,18 @@
         suggBox.innerHTML = matches.map(m => {
           const mName = m.name || m.memberName || m.fullName || "সদস্য";
           const mMobile = m.mobile || m.phone || m.contact || "N/A";
-          const mId = m.id || m.memberId || "0";
+          let mId = m.memberId || m.id || "1";
+          if (mId && !mId.toString().startsWith('M')) {
+            mId = 'M' + String(mId).padStart(3, '0');
+          }
           const mAddress = m.address || m.vill || m.village || "";
           return `
-            <div onclick="selectMember(${mId}, '${mName.replace(/'/g, "\\'")}', '${mMobile}', '${mAddress.replace(/'/g, "\\'")}')" class="p-2.5 hover:bg-amber-50 cursor-pointer border-b text-xs flex justify-between items-center">
+            <div onclick="selectMember('${mId}', '${mName.replace(/'/g, "\\'")}', '${mMobile}', '${mAddress.replace(/'/g, "\\'")}')" class="p-2.5 hover:bg-amber-50 cursor-pointer border-b text-xs flex justify-between items-center">
               <div>
                 <div class="font-bold text-gray-800">${mName}</div>
                 <div class="text-[11px] text-gray-500">মোবাইল: ${mMobile}</div>
               </div>
-              <div class="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">আইডি: ${mId}</div>
+              <div class="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">${mId}</div>
             </div>
           `;
         }).join("");
@@ -1614,8 +1617,8 @@
           else if (i.type === 'cash_to_bank') { c -= amt; b += amt; }
           else if (i.type === 'deposit') b += amt;
           else if (i.type === 'withdrawal') { b += amt; c -= amt; }
-          return { ...i, currentCash: c, currentBank: b };
-        }).reverse(); 
+          return { ...i, cashBal: c, bankBal: b };
+        });
 
         const totalPages = Math.ceil(calculatedTx.length / itemsPerPage);
         if (txPage > totalPages) txPage = totalPages;
@@ -1625,164 +1628,24 @@
           <tr class="border-b hover:bg-gray-50">
             <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
             <td class="p-2 border-r text-center">${i.date}</td>
-            <td class="p-2 border-r text-center font-bold text-gray-700">${getTxTypeName(i.type)}</td>
-            <td class="p-2 border-r text-center font-bold text-orange-700">₹${i.amount}</td>
+            <td class="p-2 border-r text-center font-bold">${getTxTypeName(i.type)}</td>
+            <td class="p-2 border-r text-center font-bold">₹${i.amount}</td>
             <td class="p-2 border-r text-center">${i.desc || '-'}</td>
-            <td class="p-2 border-r text-center font-bold text-green-700">₹${i.currentCash}</td>
-            <td class="p-2 border-r text-center font-bold text-blue-700">₹${i.currentBank}</td>
+            <td class="p-2 border-r text-center font-bold text-[#1B8A46]">₹${i.cashBal}</td>
+            <td class="p-2 border-r text-center font-bold text-[#1D68B7]">₹${i.bankBal}</td>
             <td class="p-2 text-center whitespace-nowrap">
-              <div class="flex items-center justify-center gap-1">
-                <button onclick="editTx(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                <button onclick="deleteTx(${i.id})" class="text-red-600 bg-red-100 px-2 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
-              </div>
-            </td>
-          </tr>
-        `).join("");
-
-        let pagHtml = "";
-        if (totalPages > 1) {
-          for (let p = 1; p <= totalPages; p++) {
-            pagHtml += `<button onclick="txPage=${p}; renderTxTable();" class="px-2.5 py-1 rounded border text-xs font-bold ${p === txPage ? 'bg-orange-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}">${p}</button>`;
-          }
-        }
-        document.getElementById("txPagination").innerHTML = pagHtml;
-      }
-
-      function renderCashTable() {
-        const tbody = document.getElementById("cashTableBody");
-        if (!cashData.length) {
-          tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো পেমেন্ট পাওয়া যায়নি</td></tr>`;
-          document.getElementById("cashPagination").innerHTML = "";
-          return;
-        }
-
-        const totalPages = Math.ceil(cashData.length / itemsPerPage);
-        if (cashPage > totalPages) cashPage = totalPages;
-        const paged = cashData.slice((cashPage - 1) * itemsPerPage, cashPage * itemsPerPage);
-
-        tbody.innerHTML = paged.map(i => `
-          <tr class="border-b hover:bg-gray-50">
-            <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
-            <td class="p-2 border-r text-center">${i.date}</td>
-            <td class="p-2 border-r text-center font-bold">${i.recipient}</td>
-            <td class="p-2 border-r text-center">${i.payMode === 'online' ? 'অনলাইন' : 'নগদ'}</td>
-            <td class="p-2 border-r text-center">${i.purpose}</td>
-            <td class="p-2 border-r text-center font-bold text-red-600">₹${i.amount}</td>
-            <td class="p-2 border-r text-center">${i.desc || '-'}</td>
-            <td class="p-2 text-center whitespace-nowrap">
-              <div class="flex items-center justify-center gap-1">
-                <button onclick="editCash(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                <button onclick="deleteCash(${i.id})" class="text-red-600 bg-red-100 px-2 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
-              </div>
+              <button onclick="editTx(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px] mr-1">✏️</button>
+              <button onclick="deleteTx(${i.id})" class="text-red-600 bg-red-100 px-2 py-1 rounded text-[11px]">🗑️</button>
             </td>
           </tr>
         `).join("");
       }
 
-      function deleteTx(id) {
-        if (!confirm("এই লেনদেনটি মুছতে চান?")) return;
-        txData = txData.filter(x => x.id !== id);
-        saveData();
-        renderTxTable();
-        updateBalances();
-      }
-
-      function deleteCash(id) {
-        if (!confirm("এই পেমেন্টটি মুছতে চান?")) return;
-        cashData = cashData.filter(x => x.id !== id);
-        saveData();
-        renderCashTable();
-        updateBalances();
-      }
-
-      function deleteLoan(id) {
-        if (!confirm("এই ঋণ রেকর্ডটি মুছতে চান?")) return;
-        loanData = loanData.filter(x => x.id !== id);
-        saveData();
-        renderLoanTable();
-        updateBalances();
-      }
-
-      function deleteMarkedTx() {
-        const checked = Array.from(document.querySelectorAll("#txTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
-        if (!checked.length) { alert("কোনো লেনদেন নির্বাচিত করা হয়নি।"); return; }
-        if (!confirm("নির্বাচিত লেনদেনগুলো মুছতে চান?")) return;
-        txData = txData.filter(x => !checked.includes(x.id));
-        saveData();
-        renderTxTable();
-        updateBalances();
-      }
-
-      function deleteAllTx() {
-        if (!confirm("সব লেনদেন মুছে ফেলতে চান?")) return;
-        txData = [];
-        saveData();
-        renderTxTable();
-        updateBalances();
-      }
-
-      function deleteMarkedCash() {
-        const checked = Array.from(document.querySelectorAll("#cashTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
-        if (!checked.length) { alert("কোনো পেমেন্ট নির্বাচিত করা হয়নি।"); return; }
-        if (!confirm("নির্বাচিত পেমেন্টগুলো মুছতে চান?")) return;
-        cashData = cashData.filter(x => !checked.includes(x.id));
-        saveData();
-        renderCashTable();
-        updateBalances();
-      }
-
-      function deleteAllCash() {
-        if (!confirm("সব পেমেন্ট মুছে ফেলতে চান?")) return;
-        cashData = [];
-        saveData();
-        renderCashTable();
-        updateBalances();
-      }
-
-      function deleteMarkedLoan() {
-        const checked = Array.from(document.querySelectorAll("#loanTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
-        if (!checked.length) { alert("কোনো ঋণ রেকর্ড নির্বাচিত করা হয়নি।"); return; }
-        if (!confirm("নির্বাচিত ঋণ রেকর্ডগুলো মুছতে চান?")) return;
-        loanData = loanData.filter(x => !checked.includes(x.id));
-        saveData();
-        renderLoanTable();
-        updateBalances();
-      }
-
-      function deleteAllLoan() {
-        if (!confirm("সব ঋণ রেকর্ড মুছে ফেলতে চান?")) return;
-        loanData = [];
-        saveData();
-        renderLoanTable();
-        updateBalances();
-      }
-
-      function toggleAllRows(master, type) {
-        const checkboxes = document.querySelectorAll(type === 'tx' ? "#txTableBody .row-checkbox" : type === 'cash' ? "#cashTableBody .row-checkbox" : "#loanTableBody .row-checkbox");
-        checkboxes.forEach(cb => cb.checked = master.checked);
-      }
-
-      function filterLoans() {
-        const q = document.getElementById("loanSearchInput").value.toLowerCase();
-        const rows = document.querySelectorAll("#loanTableBody tr");
-        rows.forEach(row => {
-          const text = row.innerText.toLowerCase();
-          row.style.display = text.includes(q) ? "" : "none";
-        });
-      }
-
-      function exportReport(type) {
-        alert(type + " এক্সপোর্ট ফিচার শীঘ্রই যুক্ত করা হচ্ছে।");
-      }
-
-      // Initial Load
-      window.onload = function() {
-        setDefaultDates();
-        renderTxTable();
-        renderCashTable();
-        renderLoanTable();
-        updateBalances();
-      };
+      // Initial execution
+      setDefaultDates();
+      updateBalances();
+      renderLoanTable();
+      renderTxTable();
     </script>
   </body>
 </html>
