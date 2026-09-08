@@ -1216,9 +1216,194 @@
         updateBalances();
       }
 
-      function exportReport(type) {
-        alert(type + " এক্সপোর্ট প্রক্রিয়া শুরু হচ্ছে...");
-        window.print();
+      // ================= EXPORT REPORT (EXCELJS) =================
+      async function exportReport(type) {
+        const workbook = new ExcelJS.Workbook();
+        workbook.creator = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        workbook.created = new Date();
+
+        const sheetName = type === 'transactions' ? 'লেনদেন তালিকা' : type === 'cash' ? 'নগদ পেমেন্ট' : 'ঋণ ব্যবস্থাপনা';
+        const sheet = workbook.addWorksheet(sheetName);
+
+        const orangeHeaderFill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'EA580C' } };
+        const whiteFont = { name: 'Kalpurush', family: 4, size: 11, bold: true, color: { argb: 'FFFFFF' } };
+        const titleFont = { name: 'Kalpurush', family: 4, size: 14, bold: true, color: { argb: '9A3412' } };
+        const subtitleFont = { name: 'Kalpurush', family: 4, size: 10, italic: true, color: { argb: '4B5563' } };
+        const thinBorder = {
+          top: { style: 'thin', color: { argb: 'D1D5DB' } },
+          left: { style: 'thin', color: { argb: 'D1D5DB' } },
+          bottom: { style: 'thin', color: { argb: 'D1D5DB' } },
+          right: { style: 'thin', color: { argb: 'D1D5DB' } }
+        };
+
+        sheet.addRow([]);
+        const titleRow = sheet.addRow(['নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি']);
+        titleRow.getCell(1).font = titleFont;
+        titleRow.getCell(1).alignment = { horizontal: 'center' };
+
+        let reportTitleText = type === 'transactions' ? 'লেনদেন তালিকা রিপোর্ট' : type === 'cash' ? 'নগদ পেমেন্ট তালিকা রিপোর্ট' : 'ঋণ ব্যবস্থাপনা রিপোর্ট';
+        const subRow = sheet.addRow([reportTitleText]);
+        subRow.getCell(1).font = { name: 'Kalpurush', size: 12, bold: true, color: { argb: '1F2937' } };
+        subRow.getCell(1).alignment = { horizontal: 'center' };
+
+        const dateRow = sheet.addRow([`তারিখ: ${new Date().toLocaleDateString('bn-IN')}`]);
+        dateRow.getCell(1).font = subtitleFont;
+        dateRow.getCell(1).alignment = { horizontal: 'center' };
+
+        sheet.addRow([]);
+
+        if (type === 'transactions') {
+          sheet.mergeCells('A2:G2');
+          sheet.mergeCells('A3:G3');
+          sheet.mergeCells('A4:G4');
+
+          const headers = ['ক্রমিক', 'তারিখ', 'লেনদেনের ধরন', 'পরিমাণ (₹)', 'বিবরণ', 'কোষাধ্যক্ষের নগদ (₹)', 'ব্যাংকে জমা (₹)'];
+          const headerRow = sheet.addRow(headers);
+          headerRow.eachCell(cell => {
+            cell.fill = orangeHeaderFill;
+            cell.font = whiteFont;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = thinBorder;
+          });
+
+          let cashBal = 0, bankBal = 0;
+          txData.forEach((item, index) => {
+            const amt = Number(item.amount) || 0;
+            if (item.type === 'cash_addition') cashBal += amt;
+            else if (item.type === 'cash_to_bank') { cashBal -= amt; bankBal += amt; }
+            else if (item.type === 'deposit') bankBal += amt;
+            else if (item.type === 'withdrawal') { bankBal += amt; cashBal -= amt; }
+
+            const row = sheet.addRow([
+              index + 1,
+              item.date,
+              getTxTypeName(item.type),
+              amt,
+              item.desc || '-',
+              cashBal,
+              bankBal
+            ]);
+            row.eachCell((cell, colNumber) => {
+              cell.border = thinBorder;
+              cell.font = { name: 'Kalpurush', size: 10 };
+              if (colNumber === 4 || colNumber >= 6) {
+                cell.numFmt = '#,##0';
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              } else {
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              }
+            });
+          });
+
+          sheet.columns = [
+            { width: 8 }, { width: 14 }, { width: 22 }, { width: 16 }, { width: 25 }, { width: 22 }, { width: 20 }
+          ];
+
+        } else if (type === 'cash') {
+          sheet.mergeCells('A2:G2');
+          sheet.mergeCells('A3:G3');
+          sheet.mergeCells('A4:G4');
+
+          const headers = ['ক্রমিক', 'তারিখ', 'প্রাপকের নাম', 'পেমেন্টের ধরন', 'উদ্দেশ্য/খাত', 'পরিমাণ (₹)', 'বিবরণ'];
+          const headerRow = sheet.addRow(headers);
+          headerRow.eachCell(cell => {
+            cell.fill = orangeHeaderFill;
+            cell.font = whiteFont;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = thinBorder;
+          });
+
+          cashData.forEach((item, index) => {
+            const row = sheet.addRow([
+              index + 1,
+              item.date,
+              item.recipient,
+              item.payMode === 'online' ? 'অনলাইন' : 'নগদ',
+              item.purpose,
+              Number(item.amount) || 0,
+              item.desc || '-'
+            ]);
+            row.eachCell((cell, colNumber) => {
+              cell.border = thinBorder;
+              cell.font = { name: 'Kalpurush', size: 10 };
+              if (colNumber === 6) {
+                cell.numFmt = '#,##0';
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              } else {
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              }
+            });
+          });
+
+          sheet.columns = [
+            { width: 8 }, { width: 14 }, { width: 22 }, { width: 16 }, { width: 22 }, { width: 16 }, { width: 25 }
+          ];
+
+        } else if (type === 'loans') {
+          sheet.mergeCells('A2:J2');
+          sheet.mergeCells('A3:J3');
+          sheet.mergeCells('A4:J4');
+
+          const headers = ['ক্রমিক', 'ঋণগ্রহীতা', 'মোবাইল', 'ঠিকানা', 'ঋণের পরিমাণ (₹)', 'সুদের হার', 'বাকি আসল (₹)', 'বাকি সুদ (₹)', 'মোট বাকি (₹)', 'অবস্থা'];
+          const headerRow = sheet.addRow(headers);
+          headerRow.eachCell(cell => {
+            cell.fill = orangeHeaderFill;
+            cell.font = whiteFont;
+            cell.alignment = { horizontal: 'center', vertical: 'middle' };
+            cell.border = thinBorder;
+          });
+
+          loanData.forEach((item, index) => {
+            const origAmt = Number(item.amount) || 0;
+            const rate = Number(item.rate) || 36;
+            const interest = Math.round((origAmt * rate * 365) / (365 * 100));
+
+            let pPaid = 0, iPaid = 0;
+            if (item.payments) {
+              item.payments.forEach(p => {
+                pPaid += Number(p.principalPaid) || 0;
+                iPaid += Number(p.interestPaid) || 0;
+              });
+            }
+
+            const duePrin = Math.max(0, origAmt - pPaid);
+            const dueInt = Math.max(0, interest - iPaid);
+            const totalDue = duePrin + dueInt;
+            const status = totalDue === 0 ? 'সম্পূর্ণ পরিশোধিত' : pPaid > 0 ? 'আংশিক পরিশোধিত' : 'চলমান';
+
+            const row = sheet.addRow([
+              index + 1,
+              item.name,
+              item.mobile || 'N/A',
+              item.address || '-',
+              origAmt,
+              rate + '%',
+              duePrin,
+              dueInt,
+              totalDue,
+              status
+            ]);
+            row.eachCell((cell, colNumber) => {
+              cell.border = thinBorder;
+              cell.font = { name: 'Kalpurush', size: 10 };
+              if (colNumber >= 5 && colNumber <= 9) {
+                cell.numFmt = '#,##0';
+                cell.alignment = { horizontal: 'right', vertical: 'middle' };
+              } else {
+                cell.alignment = { horizontal: 'center', vertical: 'middle' };
+              }
+            });
+          });
+
+          sheet.columns = [
+            { width: 8 }, { width: 20 }, { width: 15 }, { width: 22 }, { width: 16 }, { width: 12 }, { width: 16 }, { width: 16 }, { width: 16 }, { width: 18 }
+          ];
+        }
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const fileName = `Treasury_${type}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        saveAs(blob, fileName);
       }
 
       // ================= LOAN REPAYMENT & RECEIPT LOGIC =================
@@ -1653,20 +1838,36 @@
         const start = (txPage - 1) * itemsPerPage;
         const slice = txData.slice(start, start + itemsPerPage);
         
-        tbody.innerHTML = slice.map(item => {
+        let cashBal = 0, bankBal = 0;
+        // Calculate running balances up to start index
+        for(let i=0; i<start; i++) {
+          const amt = Number(txData[i].amount) || 0;
+          if (txData[i].type === 'cash_addition') cashBal += amt;
+          else if (txData[i].type === 'cash_to_bank') { cashBal -= amt; bankBal += amt; }
+          else if (txData[i].type === 'deposit') bankBal += amt;
+          else if (txData[i].type === 'withdrawal') { bankBal += amt; cashBal -= amt; }
+        }
+
+        tbody.innerHTML = slice.map((item, idx) => {
+          const amt = Number(item.amount) || 0;
+          if (item.type === 'cash_addition') cashBal += amt;
+          else if (item.type === 'cash_to_bank') { cashBal -= amt; bankBal += amt; }
+          else if (item.type === 'deposit') bankBal += amt;
+          else if (item.type === 'withdrawal') { bankBal += amt; cashBal -= amt; }
+
           return `
             <tr class="border-b hover:bg-orange-50/50">
               <td class="p-2 border-r text-center"><input type="checkbox" class="tx-checkbox" value="${item.id}"></td>
               <td class="p-2 border-r text-center">${item.date}</td>
               <td class="p-2 border-r text-center font-semibold text-gray-800">${getTxTypeName(item.type)}</td>
-              <td class="p-2 border-r text-center font-bold text-orange-700">₹${Number(item.amount).toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-bold text-orange-700">₹${amt.toLocaleString('en-IN')}</td>
               <td class="p-2 border-r text-center text-gray-600">${item.desc || '-'}</td>
-              <td class="p-2 border-r text-center">-</td>
-              <td class="p-2 border-r text-center">-</td>
+              <td class="p-2 border-r text-center font-semibold text-green-700">₹${cashBal.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-semibold text-blue-700">₹${bankBal.toLocaleString('en-IN')}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
-                  <button onclick="editTx(${item.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                  <button onclick="deleteTx(${item.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
+                  <button onclick="editTx(${item.id})" class="text-amber-700 bg-amber-100 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteTx(${item.id})" class="text-red-600 bg-red-100 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -1686,7 +1887,8 @@
         const start = (cashPage - 1) * itemsPerPage;
         const slice = cashData.slice(start, start + itemsPerPage);
 
-        tbody.innerHTML = slice.map(item => {
+        tbody.innerHTML = slice.map((item, idx) => {
+          const amt = Number(item.amount) || 0;
           return `
             <tr class="border-b hover:bg-orange-50/50">
               <td class="p-2 border-r text-center"><input type="checkbox" class="cash-checkbox" value="${item.id}"></td>
@@ -1694,12 +1896,12 @@
               <td class="p-2 border-r text-center font-bold text-gray-800">${item.recipient}</td>
               <td class="p-2 border-r text-center">${item.payMode === 'online' ? 'অনলাইন' : 'নগদ'}</td>
               <td class="p-2 border-r text-center">${item.purpose}</td>
-              <td class="p-2 border-r text-center font-bold text-red-600">₹${Number(item.amount).toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-bold text-red-600">₹${amt.toLocaleString('en-IN')}</td>
               <td class="p-2 border-r text-center text-gray-600">${item.desc || '-'}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
-                  <button onclick="editCash(${item.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                  <button onclick="deleteCash(${item.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
+                  <button onclick="editCash(${item.id})" class="text-amber-700 bg-amber-100 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteCash(${item.id})" class="text-red-600 bg-red-100 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -1711,15 +1913,14 @@
 
       function renderLoanTable() {
         const tbody = document.getElementById("loanTableBody");
-        const searchInputEl = document.getElementById("loanSearchInput");
-        const searchVal = searchInputEl ? searchInputEl.value.toLowerCase() : "";
+        const query = (document.getElementById("loanSearchInput").value || "").toLowerCase();
 
-        const filtered = loanData.filter(l => {
-          const name = (l.name || "").toLowerCase();
-          const mobile = (l.mobile || "").toLowerCase();
-          const address = (l.address || "").toLowerCase();
-          const amt = (l.amount || "").toString();
-          return name.includes(searchVal) || mobile.includes(searchVal) || address.includes(searchVal) || amt.includes(searchVal);
+        let filtered = loanData.filter(item => {
+          const name = (item.name || "").toLowerCase();
+          const mobile = (item.mobile || "").toLowerCase();
+          const address = (item.address || "").toLowerCase();
+          const amt = (item.amount || "").toString();
+          return name.includes(query) || mobile.includes(query) || address.includes(query) || amt.includes(query);
         });
 
         if (!filtered.length) {
@@ -1731,46 +1932,48 @@
         const start = (loanPage - 1) * itemsPerPage;
         const slice = filtered.slice(start, start + itemsPerPage);
 
-        tbody.innerHTML = slice.map(l => {
-          const origAmt = Number(l.amount) || 0;
-          const rate = Number(l.rate) || 36;
+        tbody.innerHTML = slice.map((item, idx) => {
+          const origAmt = Number(item.amount) || 0;
+          const rate = Number(item.rate) || 36;
           const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
 
-          let paidPrin = 0, paidInt = 0;
-          if (l.payments) {
-            l.payments.forEach(p => {
-              paidPrin += Number(p.principalPaid) || 0;
-              paidInt += Number(p.interestPaid) || 0;
+          let pPaid = 0, iPaid = 0;
+          if (item.payments) {
+            item.payments.forEach(p => {
+              pPaid += Number(p.principalPaid) || 0;
+              iPaid += Number(p.interestPaid) || 0;
             });
           }
 
-          const duePrin = Math.max(0, origAmt - paidPrin);
-          const dueInt = Math.max(0, totalInterest - paidInt);
+          const duePrin = Math.max(0, origAmt - pPaid);
+          const dueInt = Math.max(0, totalInterest - iPaid);
           const totalDue = duePrin + dueInt;
-          const isCompleted = totalDue === 0;
+
+          let statusBadge = `<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded text-[11px] font-bold">চলমান</span>`;
+          if (totalDue === 0) {
+            statusBadge = `<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded text-[11px] font-bold">পরিশোধিত</span>`;
+          } else if (pPaid > 0 || iPaid > 0) {
+            statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-[11px] font-bold">আংশিক</span>`;
+          }
 
           return `
             <tr class="border-b hover:bg-orange-50/50">
-              <td class="p-2 border-r text-center"><input type="checkbox" class="loan-checkbox" value="${l.id}"></td>
-              <td class="p-2 border-r text-center font-bold text-gray-800">${l.name}</td>
-              <td class="p-2 border-r text-center">${l.mobile}</td>
-              <td class="p-2 border-r text-center text-gray-600">${l.address || '-'}</td>
+              <td class="p-2 border-r text-center"><input type="checkbox" class="loan-checkbox" value="${item.id}"></td>
+              <td class="p-2 border-r text-center font-bold text-gray-800">${item.name}</td>
+              <td class="p-2 border-r text-center">${item.mobile || 'N/A'}</td>
+              <td class="p-2 border-r text-center text-gray-600">${item.address || '-'}</td>
               <td class="p-2 border-r text-center font-bold text-orange-700">₹${origAmt.toLocaleString('en-IN')}</td>
               <td class="p-2 border-r text-center">${rate}%</td>
-              <td class="p-2 border-r text-center font-semibold text-red-600">₹${duePrin.toLocaleString('en-IN')}</td>
-              <td class="p-2 border-r text-center font-semibold text-red-600">₹${dueInt.toLocaleString('en-IN')}</td>
-              <td class="p-2 border-r text-center font-bold text-red-700">₹${totalDue.toLocaleString('en-IN')}</td>
-              <td class="p-2 border-r text-center">
-                <span class="px-2 py-0.5 rounded text-[10px] font-bold ${isCompleted ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-800'}">
-                  ${isCompleted ? 'পরিশোধিত' : 'চলমান'}
-                </span>
-              </td>
+              <td class="p-2 border-r text-center font-semibold text-gray-800">₹${duePrin.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-semibold text-gray-800">₹${dueInt.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center font-bold text-red-600">₹${totalDue.toLocaleString('en-IN')}</td>
+              <td class="p-2 border-r text-center">${statusBadge}</td>
               <td class="p-2 text-center whitespace-nowrap">
-                <div class="flex items-center justify-center gap-1.5">
-                  <button onclick="openLoanRepayModal(${l.id})" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 hover:bg-emerald-200" title="কিস্তি আদায়">💸 কিস্তি আদায়</button>
-                  <button onclick="openLoanHistory(${l.id})" class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-[11px] font-bold flex items-center gap-1 hover:bg-blue-200" title="লেনদেন বিবরণী">📖 বিবরণী</button>
-                  <button onclick="editLoan(${l.id})" class="bg-amber-100 text-amber-800 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
-                  <button onclick="deleteLoan(${l.id})" class="bg-red-100 text-red-800 px-1.5 py-1 rounded text-[11px]" title="মুছুন">🗑️</button>
+                <div class="flex items-center justify-center gap-1">
+                  <button onclick="openLoanRepayModal(${item.id})" class="text-green-700 bg-green-100 px-2 py-1 rounded text-[11px] font-bold" title="পরিশোধ">💰</button>
+                  <button onclick="openLoanHistory(${item.id})" class="text-blue-700 bg-blue-100 px-2 py-1 rounded text-[11px] font-bold" title="ইতিহাস">📜</button>
+                  <button onclick="editLoan(${item.id})" class="text-amber-700 bg-amber-100 px-1.5 py-1 rounded text-[11px]" title="এডিট">✏️</button>
+                  <button onclick="deleteLoan(${item.id})" class="text-red-600 bg-red-100 px-1.5 py-1 rounded text-[11px]" title="ডিলিট">🗑️</button>
                 </div>
               </td>
             </tr>
@@ -1785,13 +1988,14 @@
         renderLoanTable();
       }
 
-      window.addEventListener("DOMContentLoaded", () => {
+      // Initial load
+      window.onload = function() {
         setDefaultDates();
         renderTxTable();
         renderCashTable();
         renderLoanTable();
         updateBalances();
-      });
+      };
     </script>
   </body>
 </html>
