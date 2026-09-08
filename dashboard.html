@@ -174,13 +174,7 @@
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasurer" onclick="window.location.href='treasury.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
           
-          <!-- বিগত বছরের ডকুমেন্ট মেনু ট্যাব -->
-          <button id="menu-btn-documents" onclick="openDocumentsModal()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📁 বিগত ডকুমেন্ট</button>
-
-          <!-- ব্যাকআপ ও রিস্টোর মেনু ট্যাব -->
-          <button id="menu-btn-backup" onclick="openBackupRestoreModal()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📦 ব্যাকআপ ও রিস্টোর</button>
-
-          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-4">⚙️ সেটিংস</button>
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
         </div>
       </div>
 
@@ -416,13 +410,10 @@
 
         const allModules = ["subscription", "expense", "booking", "sales", "treasurer", "backup", "documents"];
         allModules.forEach((mod) => {
-          const menuBtn = document.getElementById(`menu-btn-${mod}`);
           const dashCard = document.getElementById(`dash-card-${mod}`);
           if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
-            if (menuBtn) menuBtn.style.display = "flex";
             if (dashCard) dashCard.style.display = "flex";
           } else {
-            if (menuBtn) menuBtn.style.display = "none";
             if (dashCard) dashCard.style.display = "none";
           }
         });
@@ -453,7 +444,46 @@
          return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
       };
 
-      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ
+      // ইমেজ ফাইল দ্রুত আপলোডের জন্য কম্প্রেস করার ফাংশন
+      async function compressImage(file, maxWidth = 1200, quality = 0.7) {
+        if (!file.type.startsWith('image/')) return file;
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.readAsDataURL(file);
+          reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              let width = img.width;
+              let height = img.height;
+              if (width > maxWidth) {
+                height = Math.round((height * maxWidth) / width);
+                width = maxWidth;
+              }
+              canvas.width = width;
+              canvas.height = height;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, width, height);
+              canvas.toBlob((blob) => {
+                if (!blob) {
+                  resolve(file);
+                  return;
+                }
+                const compressedFile = new File([blob], file.name, {
+                  type: 'image/jpeg',
+                  lastModified: Date.now(),
+                });
+                resolve(compressedFile);
+              }, 'image/jpeg', quality);
+            };
+            img.onerror = () => resolve(file);
+          };
+          reader.onerror = () => resolve(file);
+        });
+      }
+
+      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (অপ্টিমাইজড)
       window.uploadPastDocument = async function() {
         const titleInput = document.getElementById("docTitleInput");
         const fileInput = document.getElementById("docFileInput");
@@ -472,18 +502,23 @@
         }
 
         uploadBtn.disabled = true;
-        uploadBtn.innerText = "আপলোড হচ্ছে...";
+        uploadBtn.innerText = "কম্প্রেস ও আপলোড হচ্ছে...";
 
         try {
-          const storageRef = ref(storage, `past_documents/${Date.now()}_${file.name}`);
-          const snapshot = await uploadBytes(storageRef, file);
+          let processedFile = file;
+          if (file.type.startsWith('image/')) {
+            processedFile = await compressImage(file);
+          }
+
+          const storageRef = ref(storage, `past_documents/${Date.now()}_${processedFile.name}`);
+          const snapshot = await uploadBytes(storageRef, processedFile);
           const downloadURL = await getDownloadURL(snapshot.ref);
 
           await addDoc(collection(db, "past_documents"), {
             title: title,
-            fileName: file.name,
+            fileName: processedFile.name,
             fileUrl: downloadURL,
-            fileType: file.type || file.name.split('.').pop(),
+            fileType: processedFile.type || processedFile.name.split('.').pop(),
             uploadedAt: Date.now(),
             uploadedBy: auth.currentUser ? auth.currentUser.email : "Unknown"
           });
