@@ -577,7 +577,7 @@
       let cashData = [];
       let loanData = [];
 
-      // ফিক্স: আগের ডামি সদস্যদের সরানো হয়েছে, এখন শুধুমাত্র লোকাল স্টোরেজ থেকে সিঙ্ক করবে
+      // ফিক্স: আগের ডামি মেম্বার অ্যারে সরিয়ে ফেলা হয়েছে, এখন এটি members.html এর localStorage থেকে সরাসরি ডেটা সিঙ্ক করবে
       let membersData = JSON.parse(localStorage.getItem("membersData")) || [];
 
       // Dummy UI functions to prevent errors 
@@ -607,6 +607,7 @@
           : "flex-1 py-1.5 text-xs font-bold rounded-md text-gray-600 hover:text-gray-800";
       }
 
+      // নতুন ঋণ যোগ করার সময় মেম্বার সার্চ (members.html পেজের localStorage থেকে রিয়েল-টাইম সিঙ্ক)
       function handleMemberSearch(query) {
         const suggBox = document.getElementById("memberSuggestions");
         if (!query.trim()) {
@@ -615,36 +616,38 @@
           return;
         }
 
-        // ফিক্স: শুধুমাত্র স্টোরেজ থেকে ডেটা নেবে
+        // রিয়েল-টাইম লোকালস্টোরেজ থেকে মেম্বার ফেচ করা
         let storedMembers = JSON.parse(localStorage.getItem("membersData")) || [];
         const q = query.toLowerCase();
         
         const matches = storedMembers.filter(m => 
           (m.name && m.name.toLowerCase().includes(q)) || 
           (m.mobile && m.mobile.includes(q)) || 
-          (m.id && m.id.toString().includes(q))
+          (m.autoId && m.autoId.toLowerCase().includes(q))
         );
 
         if (matches.length > 0) {
           suggBox.innerHTML = matches.map(m => `
-            <div class="p-2 border-b cursor-pointer hover:bg-orange-50 text-xs" onclick="selectMember('${m.id}', '${m.name}', '${m.mobile}', '${m.address}')">
-              <strong>${m.name}</strong> - ${m.mobile}<br>
-              <span class="text-[10px] text-gray-500">${m.address}</span>
+            <div class="p-2.5 border-b cursor-pointer hover:bg-orange-50 text-xs flex justify-between items-center" onclick="selectMember('${m.id || m.autoId}', '${m.name}', '${m.mobile || '-'}', '${m.village || ''}')">
+              <div>
+                <strong>${m.name}</strong> (${m.autoId || 'ID'})<br>
+                <span class="text-[10px] text-gray-500">গ্রাম: ${m.village || 'N/A'} | মোবাইল: ${m.mobile || 'N/A'}</span>
+              </div>
             </div>
           `).join('');
           suggBox.classList.remove("hidden");
         } else {
-          suggBox.innerHTML = `<div class="p-2 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>`;
+          suggBox.innerHTML = `<div class="p-2.5 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>`;
           suggBox.classList.remove("hidden");
         }
       }
 
       function selectMember(id, name, mobile, address) {
-        document.getElementById("loanMemberSearch").value = name;
+        document.getElementById("loanMemberSearch").value = name + (mobile && mobile !== '-' ? ` (${mobile})` : '');
         document.getElementById("loanMemberId").value = id;
-        document.getElementById("loanMemberName").value = name;
-        document.getElementById("loanMemberMobile").value = mobile;
-        document.getElementById("loanMemberAddress").value = address;
+        document.getElementById("loanName").value = name;
+        document.getElementById("loanMobile").value = mobile;
+        document.getElementById("loanAddress").value = address;
         document.getElementById("memberSuggestions").classList.add("hidden");
       }
 
@@ -653,7 +656,6 @@
         if(!loan) return;
         const tbody = document.getElementById('loanHistoryTableBody');
 
-        // অসম্পূর্ণ থাকা স্ক্রিপ্ট লজিক সম্পূর্ণ করা হলো
         if (!loan.payments || loan.payments.length === 0) {
           tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো পরিশোধ রেকর্ড পাওয়া যায়নি</td></tr>`;
         } else {
@@ -696,7 +698,6 @@
       function openAddLoanModal() { document.getElementById("loanModal").classList.replace("hidden", "flex"); }
       function closeLoanRepayModal() { document.getElementById("loanRepayModal").classList.replace("flex", "hidden"); }
       function closeReceiptModal() { document.getElementById("receiptModal").classList.replace("flex", "hidden"); }
-
     </script>
   </body>
 </html>
