@@ -198,12 +198,12 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
-              <input id="bookingStartTicket" type="number" placeholder="শুরুর টিকিট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে (১ - ৫০) *</label>
+              <input id="bookingStartTicket" type="number" min="1" max="50" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
-              <input id="bookingEndTicket" type="number" placeholder="শেষ টিকিট নম্বর" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত (১ - ৫০) *</label>
+              <input id="bookingEndTicket" type="number" min="1" max="50" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
           </div>
 
@@ -321,8 +321,6 @@
       const itemsPerPage = 5;
 
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
-      // Role/permissions are resolved from Firebase on auth state change.
-      // The UI no longer displays the role badge.
 
       onAuthStateChanged(auth, async (user) => {
         if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
@@ -385,7 +383,6 @@
         onSnapshot(collection(db, "ticket_sales"), snap => {
           allSalesData = [];
           snap.forEach(d => allSalesData.push({ id: d.id, ...d.data() }));
-          // Sales changed: refresh the sold counts on existing bookings.
           renderBookingsFromCurrentData();
         });
       }
@@ -578,10 +575,15 @@
             return;
           }
 
+          if (startTicket < 1 || endTicket > 50 || startTicket > endTicket) {
+            alert("টিকিট নম্বর ১ থেকে ৫০ এর মধ্যে হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
+            return;
+          }
+
           // Duplicate Ticket Number Check Logic
           const isDuplicate = allBookingsData.some(item => {
               if (editingBookingId && item.id === editingBookingId) return false;
-              if (String(item.bookNo).trim().toLowerCase() === String(bookNo).trim().toLowerCase()) {
+              if (String(item.bookNo || "").trim().toLowerCase() === String(bookNo).trim().toLowerCase()) {
                   const eStart = Number(item.startTicket);
                   const eEnd = Number(item.endTicket);
                   const nStart = Number(startTicket);
@@ -592,8 +594,7 @@
           });
 
           if (isDuplicate) {
-              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকিট নম্বরগুলো ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকিট পুনরায় যোগ করা যাবে না।`);
-              if (btn) btn.disabled = false;
+              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকিট নম্বরগুলো (${startTicket} - ${endTicket}) ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকিট পুনরায় যোগ করা যাবে না।`);
               return;
           }
 
@@ -612,12 +613,9 @@
           if (editingBookingId) {
             await updateDoc(doc(db, "bookings", editingBookingId), data);
           } else {
-            const createdRef = await addDoc(collection(db, "bookings"), data);
-            allBookingsData.unshift({ id: createdRef.id, ...data, sold: 0 });
+            await addDoc(collection(db, "bookings"), data);
           }
 
-          allBookingsData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-          renderBookingTables();
           closeBookingEntryModal();
         } catch (e) {
           console.error(e);
