@@ -64,6 +64,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ যোগ করুন</button>
         <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
         <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
+        <button onclick="deleteAllMembers()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button>
       </div>
 
       <div class="flex flex-row gap-2 mb-4 items-stretch w-full">
@@ -551,6 +552,25 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           alert("নির্বাচিত সদস্যদের মুছে ফেলা হয়েছে।");
         } catch (error) {
           alert("ডিলিট করতে সমস্যা হয়েছে!");
+        }
+      }
+    };
+
+    window.deleteAllMembers = async function() {
+      if (allMembersData.length === 0) {
+        alert("মুছে ফেলার মতো কোনো সদস্য নেই!");
+        return;
+      }
+      if (confirm("⚠️ সতর্কবার্তা: আপনি কি নিশ্চিত যে সমস্ত সদস্যকে একসাথে চিরতরে মুছে ফেলতে চান?")) {
+        try {
+          for (let m of allMembersData) {
+            await deleteDoc(doc(db, "members", m.id));
+          }
+          const selectAll = document.getElementById("selectAll");
+          if (selectAll) selectAll.checked = false;
+          alert("সমস্ত সদস্য সফলভাবে মুছে ফেলা হয়েছে।");
+        } catch (error) {
+          alert("সব সদস্য ডিলিট করতে সমস্যা হয়েছে!");
         }
       }
     };
