@@ -198,12 +198,12 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
-              <input id="bookingStartTicket" type="number" min="1" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে (১ - ৫০) *</label>
+              <input id="bookingStartTicket" type="number" min="1" max="50" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
-              <input id="bookingEndTicket" type="number" min="1" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত (১ - ৫০) *</label>
+              <input id="bookingEndTicket" type="number" min="1" max="50" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
           </div>
 
@@ -380,7 +380,8 @@
 
       function loadSalesData() {
         if (!bookingsListenerStarted) loadBookingsData();
-        onSnapshot(collection(db, "ticket_sales"), snap => {
+        // FIXED: ticket_sales এর পরিবর্তে sales কালেকশন ব্যবহার করা হয়েছে
+        onSnapshot(collection(db, "sales"), snap => {
           allSalesData = [];
           snap.forEach(d => allSalesData.push({ id: d.id, ...d.data() }));
           renderBookingsFromCurrentData();
@@ -394,8 +395,9 @@
           allBookingsData = [];
           snap.forEach(d => {
             const data = d.data();
-            const bNo = String(data.bookNo || "").trim();
-            const matchingSales = allSalesData.filter(s => String(s.bookNo || "").trim() === bNo);
+            // FIXED: .toLowerCase() ব্যবহার করে বুক নম্বর ঠিকমতো মেলানো হয়েছে
+            const bNo = String(data.bookNo || "").trim().toLowerCase();
+            const matchingSales = allSalesData.filter(s => String(s.bookNo || "").trim().toLowerCase() === bNo);
             let soldCount = 0;
             if (matchingSales.length > 0) {
               matchingSales.forEach(s => {
@@ -417,9 +419,10 @@
         }
 
         allBookingsData = allBookingsData.map(item => {
-          const bNo = String(item.bookNo || "").trim();
+          // FIXED: .toLowerCase() ব্যবহার করা হয়েছে
+          const bNo = String(item.bookNo || "").trim().toLowerCase();
           const matchingSales = allSalesData.filter(
-            s => String(s.bookNo || "").trim() === bNo
+            s => String(s.bookNo || "").trim().toLowerCase() === bNo
           );
           const soldCount = matchingSales.reduce(
             (sum, s) => sum + (Number(s.quantity) || 0), 0
@@ -575,8 +578,8 @@
             return;
           }
 
-          if (startTicket < 1 || startTicket > endTicket) {
-            alert("টিকিট নম্বর সঠিক হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
+          if (startTicket < 1 || endTicket > 50 || startTicket > endTicket) {
+            alert("টিকিট নম্বর ১ থেকে ৫০ এর মধ্যে হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
             return;
           }
 
@@ -594,7 +597,7 @@
           });
 
           if (isDuplicate) {
-              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকিট নম্বরগুলো (${startTicket} - ${endTicket}) ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকিট পুনরায় যোগ করা যাবে না।`);
+              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকিট নম্বরগুলো (${startTicket} - ${endTicket}) ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকিট পুনরায় যোগ করা যাবে নিয়োগ করা যাবে না।`);
               return;
           }
 
@@ -923,7 +926,7 @@
     </script>
 
     <script>
-      const defaultDevInfo = { name: "MANABENDRA NATH SARKAR", mobile: "9002652507", email: "manabendranathsarkar112@gmail.com" };
+      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
 
       function loadDevData() {
         const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
