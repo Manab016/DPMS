@@ -174,7 +174,13 @@
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasurer" onclick="window.location.href='treasury.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
           
-          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
+          <!-- বিগত বছরের ডকুমেন্ট মেনু ট্যাব -->
+          <button id="menu-btn-documents" onclick="openDocumentsModal()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📁 বিগত ডকুমেন্ট</button>
+
+          <!-- ব্যাকআপ ও রিস্টোর মেনু ট্যাব -->
+          <button id="menu-btn-backup" onclick="openBackupRestoreModal()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📦 ব্যাকআপ ও রিস্টোর</button>
+
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-4">⚙️ সেটিংস</button>
         </div>
       </div>
 
@@ -228,6 +234,18 @@
            <div id="dash-card-treasurer" onclick="window.location.href='treasury.html'" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">📊</div>
             <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
+          </div>
+          
+          <!-- বিগত বছরের ডকুমেন্ট ড্যাশবোর্ড কার্ড -->
+          <div id="dash-card-documents" onclick="openDocumentsModal()" class="bg-teal-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-teal-700 transition flex flex-col items-center justify-center text-center col-span-2">
+            <div class="text-2xl mb-1">📁</div>
+            <div class="text-xs opacity-90 font-medium">বিগত বছরের ডকুমেন্ট (PDF / Excel)</div>
+          </div>
+
+          <!-- ব্যাকআপ ও রিস্টোর ড্যাশবোর্ড কার্ড -->
+          <div id="dash-card-backup" onclick="openBackupRestoreModal()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2">
+            <div class="text-2xl mb-1">📦</div>
+            <div class="text-xs opacity-90 font-medium">ডাটা ব্যাকআপ ও রিস্টোর</div>
           </div>
         </div>
       </div>
@@ -435,46 +453,7 @@
          return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
       };
 
-      // ইমেজ ফাইল দ্রুত আপলোডের জন্য কম্প্রেস করার ফাংশন
-      async function compressImage(file, maxWidth = 1200, quality = 0.7) {
-        if (!file.type.startsWith('image/')) return file;
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = (event) => {
-            const img = new Image();
-            img.src = event.target.result;
-            img.onload = () => {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
-              if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-              }
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-              canvas.toBlob((blob) => {
-                if (!blob) {
-                  resolve(file);
-                  return;
-                }
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
-              }, 'image/jpeg', quality);
-            };
-            img.onerror = () => resolve(file);
-          };
-          reader.onerror = () => resolve(file);
-        });
-      }
-
-      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (অপ্টিমাইজড)
+      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ
       window.uploadPastDocument = async function() {
         const titleInput = document.getElementById("docTitleInput");
         const fileInput = document.getElementById("docFileInput");
@@ -493,23 +472,18 @@
         }
 
         uploadBtn.disabled = true;
-        uploadBtn.innerText = "কম্প্রেস ও আপলোড হচ্ছে...";
+        uploadBtn.innerText = "আপলোড হচ্ছে...";
 
         try {
-          let processedFile = file;
-          if (file.type.startsWith('image/')) {
-            processedFile = await compressImage(file);
-          }
-
-          const storageRef = ref(storage, `past_documents/${Date.now()}_${processedFile.name}`);
-          const snapshot = await uploadBytes(storageRef, processedFile);
+          const storageRef = ref(storage, `past_documents/${Date.now()}_${file.name}`);
+          const snapshot = await uploadBytes(storageRef, file);
           const downloadURL = await getDownloadURL(snapshot.ref);
 
           await addDoc(collection(db, "past_documents"), {
             title: title,
-            fileName: processedFile.name,
+            fileName: file.name,
             fileUrl: downloadURL,
-            fileType: processedFile.type || processedFile.name.split('.').pop(),
+            fileType: file.type || file.name.split('.').pop(),
             uploadedAt: Date.now(),
             uploadedBy: auth.currentUser ? auth.currentUser.email : "Unknown"
           });
