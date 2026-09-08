@@ -52,8 +52,57 @@
     <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
     </div><button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
     </div></div>
+
+    <!-- ব্যাকআপ ও রিস্টোর মডাল -->
+    <div id="backupRestoreModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-2xl border-2 border-indigo-500 relative">
+        <button onclick="closeBackupRestoreModal()" class="absolute top-3 right-3 text-gray-400 font-bold text-lg">✕</button>
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">📦</div>
+          <h3 class="text-base font-bold text-gray-800">ডাটা ব্যাকআপ ও রিস্টোর</h3>
+        </div>
+        <div class="space-y-3 pt-2">
+          <button onclick="exportFullBackup()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2">
+            <span>📦</span> ব্যাকআপ ডাউনলোড করুন
+          </button>
+          <button onclick="document.getElementById('modalRestoreInput').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2">
+            <span>🔄</span> ডাটা রিস্টোর করুন
+          </button>
+          <input type="file" id="modalRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
+        </div>
+        <button onclick="closeBackupRestoreModal()" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
+
     <script>
-    window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
+    window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};
+
+    window.openBackupRestoreModal = function() {
+      const m = document.getElementById("backupRestoreModal");
+      if (m) {
+        m.classList.remove("hidden");
+        m.classList.add("flex");
+      }
+    };
+
+    window.closeBackupRestoreModal = function() {
+      const m = document.getElementById("backupRestoreModal");
+      if (m) {
+        m.classList.add("hidden");
+        m.classList.remove("flex");
+      }
+    };
+
+    window.toggleQuickMenu = function() {
+      const content = document.getElementById("quickMenuContent");
+      const arrow = document.getElementById("menuArrowIcon");
+      if (!content) return;
+      content.classList.toggle("hidden");
+      if (arrow) {
+        arrow.style.transform = content.classList.contains("hidden") ? "rotate(0deg)" : "rotate(180deg)";
+      }
+    };
+    </script>
 
     <div class="max-w-4xl mx-auto">
       <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
@@ -80,12 +129,10 @@
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasurer" onclick="window.location.href='treasury.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
           
-          <!-- আলাদা ব্যাকআপ ও রিস্টোর বাটন -->
-          <button id="menu-btn-backup" onclick="exportFullBackup()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📦 ব্যাকআপ</button>
-          <button id="menu-btn-restore" onclick="document.getElementById('menuRestoreInput').click()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🔄 রিস্টোর</button>
-          <input type="file" id="menuRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
+          <!-- ব্যাকআপ ও রিস্টোর মেনু ট্যাব / বাটন -->
+          <button id="menu-btn-backup" onclick="openBackupRestoreModal()" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">📦 ব্যাকআপ ও রিস্টোর</button>
 
-          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-4">⚙️ সেটিংস</button>
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
         </div>
       </div>
 
@@ -141,18 +188,11 @@
             <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
           
-          <!-- আলাদা ব্যাকআপ কার্ড -->
-          <div id="dash-card-backup" onclick="exportFullBackup()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center">
+          <!-- ব্যাকআপ ও রিস্টোর ড্যাশবোর্ড ট্যাব / কার্ড -->
+          <div id="dash-card-backup" onclick="openBackupRestoreModal()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2">
             <div class="text-2xl mb-1">📦</div>
-            <div class="text-xs opacity-90 font-medium">ব্যাকআপ ডাউনলোড</div>
+            <div class="text-xs opacity-90 font-medium">ডাটা ব্যাকআপ ও রিস্টোর</div>
           </div>
-
-          <!-- আলাদা রিস্টোর কার্ড -->
-          <div id="dash-card-restore" onclick="document.getElementById('dashRestoreInput').click()" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
-            <div class="text-2xl mb-1">🔄</div>
-            <div class="text-xs opacity-90 font-medium">ডাটা রিস্টোর</div>
-          </div>
-          <input type="file" id="dashRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
         </div>
       </div>
     </div>
@@ -383,6 +423,7 @@
           const dateStr = new Date().toISOString().split("T")[0];
           saveAs(blob, `DurgaPuja_Backup_${dateStr}.json`);
           alert("ব্যাকআপ ফাইল সফলভাবে ডাউনলোড হয়েছে!");
+          closeBackupRestoreModal();
         } catch (e) {
           console.error(e);
           alert("ব্যাকআপ তৈরি করতে সমস্যা হয়েছে: " + e.message);
@@ -403,7 +444,6 @@
           try {
             const parsed = JSON.parse(e.target.result);
             
-            // collections অথবা data থেকে ডাটা অবজেক্ট খুঁজে বের করা
             const collectionsData = parsed.collections || parsed.data;
 
             if (!collectionsData) {
@@ -412,7 +452,6 @@
               return;
             }
 
-            // JSON এর কলেকশন নাম থেকে Firestore এর কলেকশন নামের ম্যাপিং
             const collectionMapping = {
               "users": "app_users",
               "members": "members",
@@ -432,7 +471,6 @@
                 for (const item of items) {
                   const { id, ...itemData } = item;
                   if (id !== undefined && id !== null) {
-                    // Doc ID-কে String এ রূপান্তর করে Firestore-এ সেভ করা
                     await setDoc(doc(db, colName, String(id)), itemData);
                   }
                 }
