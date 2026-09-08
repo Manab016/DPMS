@@ -168,13 +168,12 @@
 
         <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
           <button id="menu-btn-members" onclick="window.location.href='members.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">👬 সদস্য</button>
-          <button id="menu-btn-subscription" onclick="window.location.href='chada.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
-          <button id="menu-btn-expense" onclick="window.location.assign('expense.html')" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
-          <button id="menu-btn-booking" onclick="window.location.href='booking.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
-          <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
-          <button id="menu-btn-treasurer" onclick="window.location.href='treasury.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
-          
-          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
+          <button id="menu-btn-chada" onclick="window.location.href='chada.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💰 চাঁদা</button>
+          <button id="menu-btn-expense" onclick="window.location.assign('expense.html')" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">💵 খরচ</button>
+          <button id="menu-btn-booking" onclick="window.location.href='booking.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
+          <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
+          <button id="menu-btn-treasury" onclick="window.location.href='treasury.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
+          <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
         </div>
       </div>
 
@@ -203,7 +202,7 @@
             <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
           </div>
-          <div id="dash-card-subscription" onclick="window.location.href='chada.html'" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
+          <div id="dash-card-chada" onclick="window.location.href='chada.html'" class="bg-emerald-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-emerald-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">💰</div>
             <div class="text-xs font-medium opacity-90">মোট চাঁদা</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalSubAmount">₹0</div>
@@ -218,16 +217,16 @@
           <div id="dash-card-booking" onclick="window.location.href='booking.html'" class="bg-amber-700 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-amber-800 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">🎫</div>
             <div class="text-xs opacity-90">বুকিং</div>
-            <div class="text-xl font-bold mt-1">0</div>
+            <div class="text-xl font-bold mt-1" id="dashTotalBookingCount">0</div>
           </div>
           <div id="dash-card-sales" onclick="window.location.href='sales.html'" class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">🎫</div>
             <div class="text-xs opacity-90">বিক্রয়</div>
-            <div class="text-xl font-bold mt-1">0</div>
+            <div class="text-xl font-bold mt-1" id="dashTotalSalesCount">0</div>
           </div>
-           <div id="dash-card-treasurer" onclick="window.location.href='treasury.html'" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
+           <div id="dash-card-treasury" onclick="window.location.href='treasury.html'" class="bg-cyan-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-cyan-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">📊</div>
-            <div class="text-xs opacity-90">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
+            <div class="text-xs opacity-90 font-medium">কোষাধ্যক্ষ ব্যবস্থাপনা</div>
           </div>
           
           <!-- বিগত বছরের ডকুমেন্ট ড্যাশবোর্ড কার্ড -->
@@ -272,7 +271,7 @@
       window.currentUserRole = "user";
       window.userPermissions = [];
 
-      onAuthStateChanged(auth, (user) => {
+      onAuthStateChanged(auth, async (user) => {
         if (!user) {
           window.location.replace("index.html");
           return;
@@ -283,36 +282,38 @@
 
         window.currentUserRole = isAdmin ? "admin" : "user";
         window.userPermissions = isAdmin
-          ? ["subscription","expense","booking","sales","treasurer","members","backup","documents"]
+          ? ["chada","expense","booking","sales","treasury","members","backup","documents"]
           : [];
 
-        setupUIBasedOnRoleAndPermissions(user);
-
+        // Fetch user permissions from Firestore for non-admin users
         if (!isAdmin) {
-          getDoc(doc(db, "app_users", user.uid))
-            .then(snap => {
-              if (!snap.exists()) return;
+          try {
+            const snap = await getDoc(doc(db, "app_users", user.uid));
+            if (snap.exists()) {
               const data = snap.data();
-
               if (data.disabled === true || data.deleted === true) {
                 window.location.replace("index.html");
                 return;
               }
-
-              window.userPermissions =
-                Array.isArray(data.permissions) ? data.permissions : [];
-
-              setupUIBasedOnRoleAndPermissions(user);
-            })
-            .catch((err) => {
-              console.error("Role/permission load:", err);
-            });
+              window.currentUserRole = data.role || "user";
+              window.userPermissions = Array.isArray(data.permissions) ? data.permissions : [];
+            } else {
+              window.userPermissions = [];
+            }
+          } catch (err) {
+            console.error("Role/permission load:", err);
+            window.userPermissions = [];
+          }
         }
+
+        setupUIBasedOnRoleAndPermissions(user);
 
         logUserLogin(user);
         loadSubscriptions();
         loadTotalMembersCount();
         loadTotalExpenseCount();
+        loadTotalBookingCount();
+        loadTotalSalesCount();
         loadCommitteeExecutives();
         loadPastDocuments();
       });
@@ -390,6 +391,30 @@
         });
       }
 
+      function loadTotalBookingCount() {
+        onSnapshot(collection(db, "bookings"), (snapshot) => {
+          let total = 0;
+          snapshot.forEach((docSnap) => {
+            const d = docSnap.data();
+            total += Number(d.amount ?? d.price ?? d.total ?? 1) || 1;
+          });
+          const el = document.getElementById("dashTotalBookingCount");
+          if (el) el.innerText = total.toLocaleString("en-IN");
+        });
+      }
+
+      function loadTotalSalesCount() {
+        onSnapshot(collection(db, "sales"), (snapshot) => {
+          let total = 0;
+          snapshot.forEach((docSnap) => {
+            const d = docSnap.data();
+            total += Number(d.amount ?? d.price ?? d.total ?? 1) || 1;
+          });
+          const el = document.getElementById("dashTotalSalesCount");
+          if (el) el.innerText = total.toLocaleString("en-IN");
+        });
+      }
+
       function logUserLogin(user) {
         addDoc(collection(db, "login_history"), {
           userId: user.uid,
@@ -405,18 +430,47 @@
         if (window.currentUserRole === "admin") {
           if (roleBadge) roleBadge.innerText = "রোল: Admin";
         } else {
-          if (roleBadge) roleBadge.innerText = "রোল: User";
+          if (roleBadge) roleBadge.innerText = `রোল: ${window.currentUserRole}`;
         }
 
-        const allModules = ["subscription", "expense", "booking", "sales", "treasurer", "backup", "documents"];
-        allModules.forEach((mod) => {
-          const dashCard = document.getElementById(`dash-card-${mod}`);
-          if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
-            if (dashCard) dashCard.style.display = "flex";
-          } else {
-            if (dashCard) dashCard.style.display = "none";
+        const moduleMapping = {
+          "members": "members",
+          "chada": "chada",
+          "expense": "expense",
+          "booking": "booking",
+          "sales": "sales",
+          "treasury": "treasury",
+          "settings": "settings"
+        };
+
+        const isAdmin = window.currentUserRole === "admin";
+
+        // Handle menu buttons and dashboard cards based on exact permissions
+        Object.keys(moduleMapping).forEach((modKey) => {
+          const permName = moduleMapping[modKey];
+          const menuBtn = document.getElementById(`menu-btn-${modKey}`);
+          const dashCard = document.getElementById(`dash-card-${modKey}`);
+
+          const hasAccess = isAdmin || window.userPermissions.includes(permName);
+
+          if (menuBtn) {
+            menuBtn.style.display = hasAccess ? "flex" : "none";
+          }
+          if (dashCard) {
+            dashCard.style.display = hasAccess ? "flex" : "none";
           }
         });
+
+        // Always show settings or backup/documents if admin, or hide if no permission
+        const backupCard = document.getElementById("dash-card-backup");
+        if (backupCard) {
+          backupCard.style.display = isAdmin ? "flex" : "none";
+        }
+
+        const documentsCard = document.getElementById("dash-card-documents");
+        if (documentsCard) {
+          documentsCard.style.display = isAdmin ? "flex" : "none";
+        }
       }
 
       function loadSubscriptions() {
@@ -436,7 +490,7 @@
           else othersAmt += amt;
         });
         const grandTotal = membersAmt + othersAmt;
-        const dashCardSub = document.querySelector("#dash-card-subscription .text-2xl.font-bold");
+        const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
         if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
       }
 
@@ -510,8 +564,6 @@
             processedFile = await compressImage(file);
           }
 
-          // [FIX APPLIED HERE]: Convert the file to ArrayBuffer using FileReader
-          // This avoids the 'storage/unknown' error caused by the file:// protocol restriction in WebViews
           const fileBuffer = await new Promise((resolve, reject) => {
             const reader = new FileReader();
             reader.onload = (e) => resolve(e.target.result);
