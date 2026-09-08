@@ -424,7 +424,7 @@
           let total = 0;
           snapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            total += Number(d.amount ?? d.price ?? d.total ?? 1) || 1;
+            total += Number(d.quantity ?? d.tickets ?? d.ticketCount ?? d.count ?? 1) || 1;
           });
           const el = document.getElementById("dashTotalBookingCount");
           if (el) el.innerText = total.toLocaleString("en-IN");
@@ -436,7 +436,7 @@
           let total = 0;
           snapshot.forEach((docSnap) => {
             const d = docSnap.data();
-            total += Number(d.amount ?? d.price ?? d.total ?? 1) || 1;
+            total += Number(d.quantity ?? d.tickets ?? d.ticketCount ?? d.count ?? 1) || 1;
           });
           const el = document.getElementById("dashTotalSalesCount");
           if (el) el.innerText = total.toLocaleString("en-IN");
