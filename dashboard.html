@@ -384,11 +384,17 @@
           committeeList = [];
           snapshot.forEach((docSnap) => { committeeList.push({ id: docSnap.id, ...docSnap.data() }); });
           renderExecutiveTicker();
+        }, (error) => {
+          committeeList = [];
+          renderExecutiveTicker();
         });
 
         onSnapshot(collection(db, "members"), (snapshot) => {
           membersList = [];
           snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
+          renderExecutiveTicker();
+        }, (error) => {
+          membersList = [];
           renderExecutiveTicker();
         });
       }
