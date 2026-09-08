@@ -208,7 +208,7 @@
 <tr class="bg-gray-100 text-gray-700 border-b">
 <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
 <th class="p-2.5 border-r text-center align-middle">নাম</th>
-<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th><th class="p-2.5 border-r text-center align-middle">পাসওয়ার্ড</th>
+<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
 <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
 </tr>
 </thead>
@@ -373,8 +373,10 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
   getAuth,
+  initializeAuth,
   setPersistence,
   browserLocalPersistence,
+  inMemoryPersistence,
   onAuthStateChanged,
   signOut,
   updatePassword,
@@ -461,13 +463,9 @@ onAuthStateChanged(auth, async (user) => {
   }
 
   // মেইন অ্যাডমিন আইডিতে ভুল করে ডিলিট বা ডিজেবল ট্যাগ থাকলে তা অটোমেটিক ঠিক করে দেবে
-  if (userDocData.disabled || userDocData.deleted) {
   if (window.isMasterAdmin && (userDocData.disabled || userDocData.deleted)) {
-    await signOut(auth);
       try {
-    window.location.replace("index.html");
           await updateDoc(doc(db, "app_users", user.uid), { disabled: false, deleted: false });
-    return;
           userDocData.disabled = false;
           userDocData.deleted = false;
       } catch (e) { console.log("Master admin auto-fix failed", e); }
@@ -488,13 +486,6 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("profileEmailDisplay").innerText = user.email || "-";
   document.getElementById("profileNameDisplay").innerText = displayName || "নাম দেওয়া নেই";
   document.getElementById("profileRoleBadge").innerText = ROLE_NAMES[window.currentUserRole] || "সাধারণ সদস্য";
-
-  if (settingsRoleBadge) {
-    settingsRoleBadge.innerText =
-      window.currentUserRole === "admin"
-        ? "রোল: Admin"
-        : "রোল: সাধারণ সদস্য";
-  }
 
   const shownPerms = window.userPermissions;
 
@@ -594,7 +585,10 @@ function loadAppUsers() {
   onSnapshot(collection(db, "app_users"), (snapshot) => {
     allUsersData = [];
     snapshot.forEach((docSnap) => {
-      allUsersData.push({ id: docSnap.id, ...docSnap.data() });
+      const data = docSnap.data();
+      if (data.deleted !== true && data.disabled !== true) {
+        allUsersData.push({ id: docSnap.id, ...data });
+      }
     });
     renderUsersTable(allUsersData);
   });
@@ -634,7 +628,7 @@ window.handleSaveUser = async function(event) {
   try {
     if (editId) {
       await updateDoc(doc(db, "app_users", editId), {
-        name, email, role, permissions: selectedPerms, updatedAt: Date.now()
+        name, email, role, permissions: selectedPerms, updatedAt: Date.now(), disabled: false, deleted: false
       });
       alert("ব্যবহারকারীর তথ্য ও Permission আপডেট হয়েছে।");
     } else {
@@ -643,12 +637,17 @@ window.handleSaveUser = async function(event) {
 
       const secondaryName = "user-create-" + Date.now();
       const secondaryApp = initializeApp(firebaseConfig, secondaryName);
-      const secondaryAuth = getAuth(secondaryApp);
+      
+      // এখানে initializeAuth ব্যবহার করা হয়েছে যাতে মেইন অ্যাডমিনের সেশন ওভাররাইট না হয়
+      const secondaryAuth = initializeAuth(secondaryApp, {
+        persistence: inMemoryPersistence
+      });
+      
       const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
       await setDoc(doc(db, "app_users", cred.user.uid), {
         uid: cred.user.uid,
         name, email, role, permissions: selectedPerms,
-        disabled: false,
+        disabled: false, deleted: false,
         createdAt: Date.now(),
         createdBy: auth.currentUser.uid,
         createdByEmail: auth.currentUser.email
