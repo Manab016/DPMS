@@ -254,7 +254,7 @@
                 </div>
 
                 <div> 
-                  <label class="block text-xs font-bold text-gray-600 mb-1">পুজো কোষাধ্যক্ষ</label>
+                  <label class="block text-xs font-bold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
                   <div class="relative">
                     <input id="subCollectorMember" type="text" value="" autocomplete="off"
                       placeholder="কোষাধ্যক্ষের নাম"
@@ -661,7 +661,7 @@
           if (membersList && membersList.length > 0) {
             let found = membersList.find(item => {
               const role = (item.role || item.designation || item.position || "").toLowerCase();
-              return role.includes('পুজো কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
+              return role.includes('পূজা কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
             });
             if (!found) {
               found = membersList.find(item => {
