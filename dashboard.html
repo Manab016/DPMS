@@ -510,8 +510,21 @@
             processedFile = await compressImage(file);
           }
 
+          // [FIX APPLIED HERE]: Convert the file to ArrayBuffer using FileReader
+          // This avoids the 'storage/unknown' error caused by the file:// protocol restriction in WebViews
+          const fileBuffer = await new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (e) => resolve(e.target.result);
+            reader.onerror = (e) => reject(e);
+            reader.readAsArrayBuffer(processedFile);
+          });
+
+          const metadata = {
+            contentType: processedFile.type || 'application/octet-stream'
+          };
+
           const storageRef = ref(storage, `past_documents/${Date.now()}_${processedFile.name}`);
-          const snapshot = await uploadBytes(storageRef, processedFile);
+          const snapshot = await uploadBytes(storageRef, fileBuffer, metadata);
           const downloadURL = await getDownloadURL(snapshot.ref);
 
           await addDoc(collection(db, "past_documents"), {
