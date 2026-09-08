@@ -389,19 +389,14 @@
           renderExecutiveTicker();
         });
 
-        try {
-          onSnapshot(collection(db, "members"), (snapshot) => {
-            membersList = [];
-            snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
-            renderExecutiveTicker();
-          }, (error) => {
-            membersList = [];
-            renderExecutiveTicker();
-          });
-        } catch (e) {
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          membersList = [];
+          snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
+          renderExecutiveTicker();
+        }, (error) => {
           membersList = [];
           renderExecutiveTicker();
-        }
+        });
       }
 
       function loadTotalMembersCount() {
@@ -488,7 +483,6 @@
 
         const isAdmin = window.currentUserRole === "admin";
 
-        // Handle menu buttons and dashboard cards based on exact permissions
         Object.keys(moduleMapping).forEach((modKey) => {
           const permName = moduleMapping[modKey];
           const menuBtn = document.getElementById(`menu-btn-${modKey}`);
@@ -504,7 +498,6 @@
           }
         });
 
-        // Always show settings or backup/documents if admin, or hide if no permission
         const backupCard = document.getElementById("dash-card-backup");
         if (backupCard) {
           backupCard.style.display = isAdmin ? "flex" : "none";
@@ -541,46 +534,60 @@
          return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
       };
 
-      // ইমেজ ফাইল দ্রুত আপলোডের জন্য কম্প্রেস করার ফাংশন
+      // নিরাপদ ও ফেইল-প্রুফ ইমেজ কম্প্রেসর (টাইমআউট এবং ফলব্যাক সহ)
       async function compressImage(file, maxWidth = 1200, quality = 0.7) {
-        if (!file.type.startsWith('image/')) return file;
+        if (!file || !file.type || !file.type.startsWith('image/')) return file;
         return new Promise((resolve) => {
           const reader = new FileReader();
-          reader.readAsDataURL(file);
+          let timeoutId = setTimeout(() => resolve(file), 5000); // ৫ সেকেন্ড সেফটি টাইমআউট
+
           reader.onload = (event) => {
             const img = new Image();
             img.src = event.target.result;
             img.onload = () => {
-              const canvas = document.createElement('canvas');
-              let width = img.width;
-              let height = img.height;
-              if (width > maxWidth) {
-                height = Math.round((height * maxWidth) / width);
-                width = maxWidth;
-              }
-              canvas.width = width;
-              canvas.height = height;
-              const ctx = canvas.getContext('2d');
-              ctx.drawImage(img, 0, 0, width, height);
-              canvas.toBlob((blob) => {
-                if (!blob) {
-                  resolve(file);
-                  return;
+              try {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                if (width > maxWidth) {
+                  height = Math.round((height * maxWidth) / width);
+                  width = maxWidth;
                 }
-                const compressedFile = new File([blob], file.name, {
-                  type: 'image/jpeg',
-                  lastModified: Date.now(),
-                });
-                resolve(compressedFile);
-              }, 'image/jpeg', quality);
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                canvas.toBlob((blob) => {
+                  clearTimeout(timeoutId);
+                  if (!blob) {
+                    resolve(file);
+                    return;
+                  }
+                  const compressedFile = new File([blob], file.name, {
+                    type: 'image/jpeg',
+                    lastModified: Date.now(),
+                  });
+                  resolve(compressedFile);
+                }, 'image/jpeg', quality);
+              } catch (e) {
+                clearTimeout(timeoutId);
+                resolve(file);
+              }
             };
-            img.onerror = () => resolve(file);
+            img.onerror = () => {
+              clearTimeout(timeoutId);
+              resolve(file);
+            };
           };
-          reader.onerror = () => resolve(file);
+          reader.onerror = () => {
+            clearTimeout(timeoutId);
+            resolve(file);
+          };
+          reader.readAsDataURL(file);
         });
       }
 
-      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (অপ্টিমাইজড)
+      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (অপ্টিমাইজড ও ফিক্সড)
       window.uploadPastDocument = async function() {
         const titleInput = document.getElementById("docTitleInput");
         const fileInput = document.getElementById("docFileInput");
@@ -594,7 +601,7 @@
           return;
         }
         if (!file) {
-          alert("অনুগ্রহ করে একটি ফাইল (PDF বা Excel) সিলেক্ট করুন।");
+          alert("অনুগ্রহ করে একটি ফাইল (PDF, Excel বা ইমেজ) সিলেক্ট করুন।");
           return;
         }
 
@@ -603,23 +610,16 @@
 
         try {
           let processedFile = file;
-          if (file.type.startsWith('image/')) {
+          if (file.type && file.type.startsWith('image/')) {
             processedFile = await compressImage(file);
           }
-
-          const fileBuffer = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = (e) => reject(e);
-            reader.readAsArrayBuffer(processedFile);
-          });
 
           const metadata = {
             contentType: processedFile.type || 'application/octet-stream'
           };
 
           const storageRef = ref(storage, `past_documents/${Date.now()}_${processedFile.name}`);
-          const snapshot = await uploadBytes(storageRef, fileBuffer, metadata);
+          const snapshot = await uploadBytes(storageRef, processedFile, metadata);
           const downloadURL = await getDownloadURL(snapshot.ref);
 
           await addDoc(collection(db, "past_documents"), {
