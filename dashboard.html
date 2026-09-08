@@ -389,14 +389,19 @@
           renderExecutiveTicker();
         });
 
-        onSnapshot(collection(db, "members"), (snapshot) => {
+        try {
+          onSnapshot(collection(db, "members"), (snapshot) => {
+            membersList = [];
+            snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
+            renderExecutiveTicker();
+          }, (error) => {
+            membersList = [];
+            renderExecutiveTicker();
+          });
+        } catch (e) {
           membersList = [];
-          snapshot.forEach((docSnap) => { membersList.push({ id: docSnap.id, ...docSnap.data() }); });
           renderExecutiveTicker();
-        }, (error) => {
-          membersList = [];
-          renderExecutiveTicker();
-        });
+        }
       }
 
       function loadTotalMembersCount() {
