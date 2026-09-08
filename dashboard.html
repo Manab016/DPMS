@@ -396,7 +396,7 @@
          return window.currentUserRole === "admin" || window.userPermissions.includes(tabName);
       };
 
-      // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত
+      // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত (পাসওয়ার্ড বা পারমিশন ইস্যু এড়াতে ট্রাই-ক্যাচসহ)
       const COLLECTIONS = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users"];
 
       window.exportFullBackup = async function() {
@@ -408,14 +408,18 @@
           };
 
           for (const colName of COLLECTIONS) {
-            const querySnapshot = await getDocs(collection(db, colName));
-            backupData.collections[colName] = [];
-            querySnapshot.forEach((docSnap) => {
-              backupData.collections[colName].push({
-                id: docSnap.id,
-                ...docSnap.data()
+            try {
+              const querySnapshot = await getDocs(collection(db, colName));
+              backupData.collections[colName] = [];
+              querySnapshot.forEach((docSnap) => {
+                backupData.collections[colName].push({
+                  id: docSnap.id,
+                  ...docSnap.data()
+                });
               });
-            });
+            } catch (err) {
+              console.warn(`Skipping collection ${colName} due to permission error:`, err);
+            }
           }
 
           const dataStr = JSON.stringify(backupData, null, 2);
@@ -471,7 +475,11 @@
                 for (const item of items) {
                   const { id, ...itemData } = item;
                   if (id !== undefined && id !== null) {
-                    await setDoc(doc(db, colName, String(id)), itemData);
+                    try {
+                      await setDoc(doc(db, colName, String(id)), itemData);
+                    } catch (itemErr) {
+                      console.warn(`Could not restore item in ${colName}:`, itemErr);
+                    }
                   }
                 }
               }
