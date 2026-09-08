@@ -254,13 +254,15 @@
                 </div>
 
                 <div> 
-                  <label class="block text-xs font-bold text-gray-600 mb-1">চাঁদা গ্রহণকারী</label>
+                  <label class="block text-xs font-bold text-gray-600 mb-1">পুজো কোষাধ্যক্ষ</label>
                   <div class="relative">
                     <input id="subCollectorMember" type="text" value="" autocomplete="off"
-                      oninput="searchCollector('expenseTreasurer')"
+                      placeholder="কোষাধ্যক্ষের নাম"
+                      oninput="searchCollector('subCollectorMember')"
                       class="w-full p-2.5 border rounded-lg text-sm bg-white">
                     <div id="collectorResultsMember" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto hidden"></div>
-               </div>
+                  </div>
+                </div>
               
                 <div class="grid grid-cols-2 gap-2">
                   <div><label class="block text-xs font-bold text-gray-600 mb-1">তারিখ *</label>
@@ -303,9 +305,10 @@
                   <input id="otherDataVillage" type="text" class="w-full p-2.5 border rounded-lg text-sm bg-white">
                 </div>
                 <div>
-                  <label class="block text-xs font-bold text-gray-600 mb-1">চাঁদা গ্রহণকারী</label>
+                  <label class="block text-xs font-bold text-gray-600 mb-1">পুজো কোষাধ্যক্ষ</label>
                   <div class="relative">
                     <input id="subCollectorOther" type="text" value="" autocomplete="off"
+                      placeholder="কোষাধ্যক্ষের নাম"
                       oninput="searchCollector('subCollectorOther')"
                       class="w-full p-2.5 border rounded-lg text-sm bg-white">
                     <div id="collectorResultsOther" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto hidden"></div>
@@ -656,7 +659,6 @@
           }
           
           if (membersList && membersList.length > 0) {
-            // ১. নির্দিষ্ট পদবী খুঁজবে (যেমন: পুজো কোষাধ্যক্ষ বা কোষাধ্যক্ষ)
             let found = membersList.find(item => {
               const role = (item.role || item.designation || item.position || "").toLowerCase();
               return role.includes('পুজো কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
@@ -671,7 +673,6 @@
           }
         } catch(e) {}
         
-        // ২. যদি মেম্বার লিস্টে না পাওয়া যায় তবে লোকাল স্টোরেজ বা ডিফল্ট চেক করবে
         return localStorage.getItem("pujaKosadhokkoName") || "";
       }
 
