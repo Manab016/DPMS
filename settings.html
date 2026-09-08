@@ -208,7 +208,7 @@
 <tr class="bg-gray-100 text-gray-700 border-b">
 <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
 <th class="p-2.5 border-r text-center align-middle">নাম</th>
-<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th><th class="p-2.5 border-r text-center align-middle">পাসওয়ার্ড</th>
+<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
 <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
 </tr>
 </thead>
@@ -320,7 +320,7 @@
 </div>
 <div class="mb-2">
 <label class="block text-xs font-bold text-gray-700 mb-2">Permission — যা দেওয়া হবে শুধু সেটাই দেখা যাবে</label>
-<p class="text-[10px] text-red-600 font-semibold mb-2">কোনো Permission না দিলে এই ব্যবহারকারী কোনো module দেখতে বা খুলতে পারবেবিধা পাবে না。</p>
+<p class="text-[10px] text-red-600 font-semibold mb-2">কোনো Permission না দিলে এই ব্যবহারকারী কোনো module দেখতে বা খুলতে পারবেবিধা পাবে না।</p>
 <div class="grid grid-cols-2 gap-2 text-xs">
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_members" type="checkbox"/> সদস্য</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_chada" type="checkbox"/> চাঁদা</label>
@@ -373,6 +373,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {
   getAuth,
+  initializeAuth,
   setPersistence,
   browserLocalPersistence,
   inMemoryPersistence,
@@ -461,10 +462,17 @@ onAuthStateChanged(auth, async (user) => {
     userDocData = {};
   }
 
-  if (userDocData.disabled || userDocData.deleted) {
-    await signOut(auth);
-    window.location.replace("index.html");
-    return;
+  // মেইন অ্যাডমিন আইডিতে ভুল করে ডিলিট বা ডিজেবল ট্যাগ থাকলে তা অটোমেটিক ঠিক করে দেবে
+  if (window.isMasterAdmin && (userDocData.disabled || userDocData.deleted)) {
+      try {
+          await updateDoc(doc(db, "app_users", user.uid), { disabled: false, deleted: false });
+          userDocData.disabled = false;
+          userDocData.deleted = false;
+      } catch (e) { console.log("Master admin auto-fix failed", e); }
+  } else if (userDocData.disabled || userDocData.deleted) {
+      await signOut(auth);
+      window.location.replace("index.html");
+      return;
   }
 
   window.currentUserRole = window.isMasterAdmin ? "admin" : (userDocData.role || "member");
@@ -478,13 +486,6 @@ onAuthStateChanged(auth, async (user) => {
   document.getElementById("profileEmailDisplay").innerText = user.email || "-";
   document.getElementById("profileNameDisplay").innerText = displayName || "নাম দেওয়া নেই";
   document.getElementById("profileRoleBadge").innerText = ROLE_NAMES[window.currentUserRole] || "সাধারণ সদস্য";
-
-  if (settingsRoleBadge) {
-    settingsRoleBadge.innerText =
-      window.currentUserRole === "admin"
-        ? "রোল: Admin"
-        : "রোল: সাধারণ সদস্য";
-  }
 
   const shownPerms = window.userPermissions;
 
@@ -585,7 +586,6 @@ function loadAppUsers() {
     allUsersData = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      // ডিলিট হওয়া বা নিষ্ক্রিয় ইউজারদের লিস্ট থেকে লুকিয়ে ফেলার জন্য কন্ডিশন যোগ করা হয়েছে 
       if (data.deleted !== true && data.disabled !== true) {
         allUsersData.push({ id: docSnap.id, ...data });
       }
@@ -627,10 +627,8 @@ window.handleSaveUser = async function(event) {
 
   try {
     if (editId) {
-      // এডিট করার সময় disabled ও deleted ফলস করে দেওয়া হলো যাতে রেস্টোর ঠিকঠাক হয়
       await updateDoc(doc(db, "app_users", editId), {
-        name, email, role, permissions: selectedPerms, updatedAt: Date.now(),
-        disabled: false, deleted: false
+        name, email, role, permissions: selectedPerms, updatedAt: Date.now(), disabled: false, deleted: false
       });
       alert("ব্যবহারকারীর তথ্য ও Permission আপডেট হয়েছে।");
     } else {
@@ -639,15 +637,17 @@ window.handleSaveUser = async function(event) {
 
       const secondaryName = "user-create-" + Date.now();
       const secondaryApp = initializeApp(firebaseConfig, secondaryName);
-      const secondaryAuth = getAuth(secondaryApp);
-      // সেশন ওভাররাইট ও সাথে সাথে লগআউট হওয়ার সমস্যা আটকাতে inMemoryPersistence ব্যবহার করা হলো
-      await setPersistence(secondaryAuth, inMemoryPersistence);
+      
+      // এখানে initializeAuth ব্যবহার করা হয়েছে যাতে মেইন অ্যাডমিনের সেশন ওভাররাইট না হয়
+      const secondaryAuth = initializeAuth(secondaryApp, {
+        persistence: inMemoryPersistence
+      });
+      
       const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
       await setDoc(doc(db, "app_users", cred.user.uid), {
         uid: cred.user.uid,
         name, email, role, permissions: selectedPerms,
-        disabled: false,
-        deleted: false,
+        disabled: false, deleted: false,
         createdAt: Date.now(),
         createdBy: auth.currentUser.uid,
         createdByEmail: auth.currentUser.email
