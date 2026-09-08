@@ -843,13 +843,22 @@
           return;
         }
 
-        let storedMembers = JSON.parse(localStorage.getItem("membersData")) || membersData;
+        let storedMembers = JSON.parse(localStorage.getItem("membersData")) || 
+                            JSON.parse(localStorage.getItem("members")) || 
+                            JSON.parse(localStorage.getItem("committeeMembers")) || 
+                            membersData;
+
+        if (!Array.isArray(storedMembers)) {
+          storedMembers = [];
+        }
+
         const q = query.toLowerCase();
-        const matches = storedMembers.filter(m => 
-          (m.name && m.name.toLowerCase().includes(q)) || 
-          (m.mobile && m.mobile.includes(q)) || 
-          (m.id && m.id.toString().includes(q))
-        );
+        const matches = storedMembers.filter(m => {
+          const name = (m.name || m.memberName || m.fullName || "").toLowerCase();
+          const mobile = (m.mobile || m.phone || m.contact || "").toString();
+          const id = (m.id || m.memberId || "").toString();
+          return name.includes(q) || mobile.includes(q) || id.includes(q);
+        });
 
         if (!matches.length) {
           suggBox.innerHTML = `<div class="p-2.5 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>`;
@@ -857,15 +866,21 @@
           return;
         }
 
-        suggBox.innerHTML = matches.map(m => `
-          <div onclick="selectMember(${m.id}, '${m.name}', '${m.mobile}', '${m.address || ''}')" class="p-2.5 hover:bg-amber-50 cursor-pointer border-b text-xs flex justify-between items-center">
-            <div>
-              <div class="font-bold text-gray-800">${m.name}</div>
-              <div class="text-[11px] text-gray-500">মোবাইল: ${m.mobile || 'N/A'}</div>
+        suggBox.innerHTML = matches.map(m => {
+          const mName = m.name || m.memberName || m.fullName || "সদস্য";
+          const mMobile = m.mobile || m.phone || m.contact || "N/A";
+          const mId = m.id || m.memberId || "0";
+          const mAddress = m.address || m.vill || m.village || "";
+          return `
+            <div onclick="selectMember(${mId}, '${mName.replace(/'/g, "\\'")}', '${mMobile}', '${mAddress.replace(/'/g, "\\'")}')" class="p-2.5 hover:bg-amber-50 cursor-pointer border-b text-xs flex justify-between items-center">
+              <div>
+                <div class="font-bold text-gray-800">${mName}</div>
+                <div class="text-[11px] text-gray-500">মোবাইল: ${mMobile}</div>
+              </div>
+              <div class="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">আইডি: ${mId}</div>
             </div>
-            <div class="text-[11px] bg-orange-100 text-orange-700 px-2 py-0.5 rounded font-bold">আইডি: ${m.id}</div>
-          </div>
-        `).join("");
+          `;
+        }).join("");
         suggBox.classList.remove("hidden");
       }
 
@@ -1613,8 +1628,8 @@
             <td class="p-2 border-r text-center font-bold text-gray-700">${getTxTypeName(i.type)}</td>
             <td class="p-2 border-r text-center font-bold text-orange-700">₹${i.amount}</td>
             <td class="p-2 border-r text-center">${i.desc || '-'}</td>
-            <td class="p-2 border-r text-center">₹${i.currentCash}</td>
-            <td class="p-2 border-r text-center">₹${i.currentBank}</td>
+            <td class="p-2 border-r text-center font-bold text-green-700">₹${i.currentCash}</td>
+            <td class="p-2 border-r text-center font-bold text-blue-700">₹${i.currentBank}</td>
             <td class="p-2 text-center whitespace-nowrap">
               <div class="flex items-center justify-center gap-1">
                 <button onclick="editTx(${i.id})" class="text-amber-700 bg-amber-100 px-2 py-1 rounded text-[11px]" title="এডিট">✏️</button>
@@ -1623,6 +1638,14 @@
             </td>
           </tr>
         `).join("");
+
+        let pagHtml = "";
+        if (totalPages > 1) {
+          for (let p = 1; p <= totalPages; p++) {
+            pagHtml += `<button onclick="txPage=${p}; renderTxTable();" class="px-2.5 py-1 rounded border text-xs font-bold ${p === txPage ? 'bg-orange-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100'}">${p}</button>`;
+          }
+        }
+        document.getElementById("txPagination").innerHTML = pagHtml;
       }
 
       function renderCashTable() {
@@ -1641,7 +1664,7 @@
           <tr class="border-b hover:bg-gray-50">
             <td class="p-2 border-r text-center"><input type="checkbox" class="row-checkbox" value="${i.id}"></td>
             <td class="p-2 border-r text-center">${i.date}</td>
-            <td class="p-2 border-r text-center font-bold text-gray-800">${i.recipient}</td>
+            <td class="p-2 border-r text-center font-bold">${i.recipient}</td>
             <td class="p-2 border-r text-center">${i.payMode === 'online' ? 'অনলাইন' : 'নগদ'}</td>
             <td class="p-2 border-r text-center">${i.purpose}</td>
             <td class="p-2 border-r text-center font-bold text-red-600">₹${i.amount}</td>
@@ -1657,117 +1680,102 @@
       }
 
       function deleteTx(id) {
-        if (!confirm("এই লেনদেনটি ডিলিট করতে চান?")) return;
+        if (!confirm("এই লেনদেনটি মুছতে চান?")) return;
         txData = txData.filter(x => x.id !== id);
         saveData();
         renderTxTable();
         updateBalances();
       }
 
-      function deleteAllTx() {
-        if (!confirm("সব লেনদেন ডিলিট করতে চান?")) return;
-        txData = [];
-        saveData();
-        renderTxTable();
-        updateBalances();
-      }
-
-      function deleteMarkedTx() {
-        const checkboxes = document.querySelectorAll('#subViewTx .row-checkbox:checked');
-        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
-        if (!confirm("নির্বাচিত লেনদেনগুলো ডিলিট করতে চান?")) return;
-        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
-        txData = txData.filter(x => !ids.includes(x.id));
-        saveData();
-        renderTxTable();
-        updateBalances();
-      }
-
       function deleteCash(id) {
-        if (!confirm("এই পেমেন্টটি ডিলিট করতে চান?")) return;
+        if (!confirm("এই পেমেন্টটি মুছতে চান?")) return;
         cashData = cashData.filter(x => x.id !== id);
         saveData();
         renderCashTable();
         updateBalances();
       }
 
-      function deleteAllCash() {
-        if (!confirm("সব পেমেন্ট ডিলিট করতে চান?")) return;
-        cashData = [];
-        saveData();
-        renderCashTable();
-        updateBalances();
-      }
-
-      function deleteMarkedCash() {
-        const checkboxes = document.querySelectorAll('#subViewCash .row-checkbox:checked');
-        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
-        if (!confirm("নির্বাচিত পেমেন্টগুলো ডিলিট করতে চান?")) return;
-        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
-        cashData = cashData.filter(x => !ids.includes(x.id));
-        saveData();
-        renderCashTable();
-        updateBalances();
-      }
-
       function deleteLoan(id) {
-        if (!confirm("এই ঋণ রেকর্ডটি ডিলিট করতে চান?")) return;
+        if (!confirm("এই ঋণ রেকর্ডটি মুছতে চান?")) return;
         loanData = loanData.filter(x => x.id !== id);
         saveData();
         renderLoanTable();
         updateBalances();
       }
 
+      function deleteMarkedTx() {
+        const checked = Array.from(document.querySelectorAll("#txTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
+        if (!checked.length) { alert("কোনো লেনদেন নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত লেনদেনগুলো মুছতে চান?")) return;
+        txData = txData.filter(x => !checked.includes(x.id));
+        saveData();
+        renderTxTable();
+        updateBalances();
+      }
+
+      function deleteAllTx() {
+        if (!confirm("সব লেনদেন মুছে ফেলতে চান?")) return;
+        txData = [];
+        saveData();
+        renderTxTable();
+        updateBalances();
+      }
+
+      function deleteMarkedCash() {
+        const checked = Array.from(document.querySelectorAll("#cashTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
+        if (!checked.length) { alert("কোনো পেমেন্ট নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত পেমেন্টগুলো মুছতে চান?")) return;
+        cashData = cashData.filter(x => !checked.includes(x.id));
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
+      function deleteAllCash() {
+        if (!confirm("সব পেমেন্ট মুছে ফেলতে চান?")) return;
+        cashData = [];
+        saveData();
+        renderCashTable();
+        updateBalances();
+      }
+
+      function deleteMarkedLoan() {
+        const checked = Array.from(document.querySelectorAll("#loanTableBody .row-checkbox:checked")).map(cb => Number(cb.value));
+        if (!checked.length) { alert("কোনো ঋণ রেকর্ড নির্বাচিত করা হয়নি।"); return; }
+        if (!confirm("নির্বাচিত ঋণ রেকর্ডগুলো মুছতে চান?")) return;
+        loanData = loanData.filter(x => !checked.includes(x.id));
+        saveData();
+        renderLoanTable();
+        updateBalances();
+      }
+
       function deleteAllLoan() {
-        if (!confirm("সব ঋণ রেকর্ড ডিলিট করতে চান?")) return;
+        if (!confirm("সব ঋণ রেকর্ড মুছে ফেলতে চান?")) return;
         loanData = [];
         saveData();
         renderLoanTable();
         updateBalances();
       }
 
-      function deleteMarkedLoan() {
-        const checkboxes = document.querySelectorAll('#loanSection .row-checkbox:checked');
-        if (!checkboxes.length) { alert("কোনো সারি নির্বাচন করা হয়নি"); return; }
-        if (!confirm("নির্বাচিত ঋণ রেকর্ডগুলো ডিলিট করতে চান?")) return;
-        const ids = Array.from(checkboxes).map(cb => Number(cb.value));
-        loanData = loanData.filter(x => !ids.includes(x.id));
-        saveData();
-        renderLoanTable();
-        updateBalances();
-      }
-
       function toggleAllRows(master, type) {
-        let checkboxes;
-        if (type === 'tx') {
-          checkboxes = document.querySelectorAll('#subViewTx .row-checkbox');
-        } else if (type === 'cash') {
-          checkboxes = document.querySelectorAll('#subViewCash .row-checkbox');
-        } else if (type === 'loan') {
-          checkboxes = document.querySelectorAll('#loanSection .row-checkbox');
-        }
-        if (checkboxes) {
-          checkboxes.forEach(cb => cb.checked = master.checked);
-        }
+        const checkboxes = document.querySelectorAll(type === 'tx' ? "#txTableBody .row-checkbox" : type === 'cash' ? "#cashTableBody .row-checkbox" : "#loanTableBody .row-checkbox");
+        checkboxes.forEach(cb => cb.checked = master.checked);
       }
 
       function filterLoans() {
-        const query = document.getElementById("loanSearchInput").value.toLowerCase();
+        const q = document.getElementById("loanSearchInput").value.toLowerCase();
         const rows = document.querySelectorAll("#loanTableBody tr");
         rows.forEach(row => {
           const text = row.innerText.toLowerCase();
-          if (text.includes(query) || query === "") {
-            row.style.display = "";
-          } else {
-            row.style.display = "none";
-          }
+          row.style.display = text.includes(q) ? "" : "none";
         });
       }
 
       function exportReport(type) {
-        alert(`${type} এক্সপোর্ট প্রক্রিয়া শুরু হচ্ছে...`);
+        alert(type + " এক্সপোর্ট ফিচার শীঘ্রই যুক্ত করা হচ্ছে।");
       }
 
+      // Initial Load
       window.onload = function() {
         setDefaultDates();
         renderTxTable();
