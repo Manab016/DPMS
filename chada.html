@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
+    <title>দুর্গাপূজা ব্যবস্থাপনা - চাঁদা সংগ্রহ</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -11,12 +11,10 @@
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
-      #subTableBody td,
-      #subTableBody th {
+      th, td {
         text-align: center;
         vertical-align: middle;
         white-space: nowrap;
-        width: auto;
       }
 
       /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশন (ডান থেকে বামে) */
@@ -213,6 +211,8 @@
 
         <div id="adminSubControls" class="flex flex-wrap gap-2 mb-4">
           <button onclick="openAddSubModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">➕ চাঁদা যোগ</button>
+          <button onclick="deleteSelectedSubscriptions()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
+          <button onclick="deleteAllSubscriptions()" class="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">🗑️ সব ডিলিট</button>
         </div>
 
         <!-- চাঁদা যোগ popup: সদস্য ও দাতা আলাদা tab -->
@@ -220,7 +220,9 @@
           <div class="bg-white w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5">
             <div class="flex items-center justify-between border-b pb-3 mb-4">
               <h3 id="subEntryModalTitle" class="text-lg font-bold text-orange-700">➕ চাঁদা যোগ করুন</h3>
+              <button onclick="closeSubEntryModal()" class="text-gray-400 font-bold">✕</button>
             </div>
+            <input type="hidden" id="editSubDocId">
 
             <!-- দুইটি tab পাশাপাশি -->
             <div class="grid grid-cols-2 gap-2 bg-orange-50 p-1.5 rounded-xl border border-orange-200 mb-4">
@@ -364,15 +366,24 @@
           </div>
           <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
-              <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
-                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">Member ID</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 text-center">অ্যাকশন</th>
-              </tr></thead>
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="p-2 border-r text-center w-10"><input type="checkbox" id="selectAllSub" onclick="toggleSelectAllSub()" class="cursor-pointer w-4 h-4"></th>
+                  <th class="p-2 border-r text-center">নাম</th>
+                  <th class="p-2 border-r text-center">মোবাইল</th>
+                  <th class="p-2 border-r text-center">গ্রাম</th>
+                  <th class="p-2 border-r text-center">Member ID</th>
+                  <th class="p-2 border-r text-center">চাঁদা</th>
+                  <th class="p-2 border-r text-center">তারিখ</th>
+                  <th class="p-2 border-r text-center">গ্রহণকারী</th>
+                  <th class="p-2 text-center">অ্যাকশন</th>
+                </tr>
+              </thead>
               <tbody id="memberContributionTableBody"></tbody>
             </table>
           </div>
           <div id="memberContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
         </div>
-
         </div>
 
         <!-- দাতার তালিকা -->
@@ -384,13 +395,22 @@
           </div>
           <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
             <table class="w-full border-collapse text-xs">
-              <thead class="sticky top-0 z-10"><tr class="bg-gray-100 text-gray-700">
-                <th class="p-2 border-r text-center">নাম</th><th class="p-2 border-r text-center">মোবাইল</th><th class="p-2 border-r text-center">গ্রাম</th><th class="p-2 border-r text-center">চাঁদা</th><th class="p-2 border-r text-center">তারিখ</th><th class="p-2 border-r text-center">গ্রহণকারী</th><th class="p-2 text-center">অ্যাকশন</th>
-              </tr></thead>
+              <thead class="sticky top-0 z-10">
+                <tr class="bg-gray-100 text-gray-700">
+                  <th class="p-2 border-r text-center w-10"><input type="checkbox" id="selectAllDonor" onclick="toggleSelectAllDonor()" class="cursor-pointer w-4 h-4"></th>
+                  <th class="p-2 border-r text-center">নাম</th>
+                  <th class="p-2 border-r text-center">মোবাইল</th>
+                  <th class="p-2 border-r text-center">গ্রাম</th>
+                  <th class="p-2 border-r text-center">চাঁদা</th>
+                  <th class="p-2 border-r text-center">তারিখ</th>
+                  <th class="p-2 border-r text-center">গ্রহণকারী</th>
+                  <th class="p-2 text-center">অ্যাকশন</th>
+                </tr>
+              </thead>
               <tbody id="otherContributionTableBody"></tbody>
             </table>
           </div>
-          <div id="otherContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
+          <div id="donorContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
         </div>
         </div>
       </div>
@@ -511,8 +531,102 @@
       </div>
     </div>
 
-    <script>
-      // 👨‍💻 Developer Modal Script matching members page exactly
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+      import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+      const firebaseConfig = {
+        apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+        authDomain: "durgapuja-2026.firebaseapp.com",
+        projectId: "durgapuja-2026",
+        storageBucket: "durgapuja-2026.firebasestorage.app",
+        messagingSenderId: "625976130920",
+        appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const auth = getAuth(app);
+      setPersistence(auth, browserLocalPersistence);
+      const db = getFirestore(app);
+
+      const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+      window.currentUserRole = "user";
+      window.isMasterAdmin = false;
+
+      onAuthStateChanged(auth, async (user) => {
+        if (user) {
+          window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+          window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
+          const profileEmailDisplay = document.getElementById("profileEmailDisplay");
+          if (profileEmailDisplay) profileEmailDisplay.innerText = user.email || "";
+          const profileRoleBadge = document.getElementById("profileRoleBadge");
+          if (profileRoleBadge) profileRoleBadge.innerText = window.isMasterAdmin ? "প্রধান প্রশাসক" : "সদস্য";
+        }
+        loadMembersData();
+        loadSubscriptionsData();
+      });
+
+      window.handleLogout = async function() {
+        try {
+          await signOut(auth);
+          localStorage.clear();
+          window.location.href = "index.html";
+        } catch (e) {
+          console.error(e);
+        }
+      };
+
+      let allMembers = [];
+      let allSubscriptions = [];
+
+      function loadMembersData() {
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          allMembers = [];
+          snapshot.forEach((docSnap) => { allMembers.push({ id: docSnap.id, ...docSnap.data() }); });
+          allMembers.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
+          allMembers.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
+          try { localStorage.setItem("membersData", JSON.stringify(allMembers)); } catch(e){}
+          const dashCount = document.getElementById('dashTotalMembersCount');
+          if (dashCount) dashCount.innerText = allMembers.length;
+          renderMemberSubscriptionTable();
+        });
+      }
+
+      function loadSubscriptionsData() {
+        onSnapshot(collection(db, "subscriptions"), (snapshot) => {
+          allSubscriptions = [];
+          snapshot.forEach((docSnap) => { allSubscriptions.push({ id: docSnap.id, ...docSnap.data() }); });
+          allSubscriptions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          try { localStorage.setItem("subscriptionsData", JSON.stringify(allSubscriptions)); } catch(e){}
+          updateSubscriptionTotals();
+          renderMemberSubscriptionTable();
+          renderOtherSubscriptionTable();
+        });
+      }
+
+      function updateSubscriptionTotals() {
+        let memberTotal = 0;
+        let otherTotal = 0;
+        allSubscriptions.forEach(sub => {
+          const amt = parseFloat(sub.amount) || 0;
+          if (sub.type === 'member') memberTotal += amt;
+          else if (sub.type === 'other') otherTotal += amt;
+        });
+        const grandTotal = memberTotal + otherTotal;
+        
+        const mEl = document.getElementById('subTotalMembersAmount');
+        const oEl = document.getElementById('subTotalOthersAmount');
+        const gEl = document.getElementById('subGrandTotal');
+        const dashSub = document.getElementById('dashTotalSubAmount');
+
+        if (mEl) mEl.innerText = `₹${memberTotal}`;
+        if (oEl) oEl.innerText = `₹${otherTotal}`;
+        if (gEl) gEl.innerText = `₹${grandTotal}`;
+        if (dashSub) dashSub.innerText = `₹${grandTotal}`;
+      }
+
+      // 👨‍💻 Developer Modal Script
       window.toggleDevModal = function() {
         const m = document.getElementById("devModal");
         if(!m) return;
@@ -533,33 +647,21 @@
         }
       };
 
-      // -- কোষাধ্যক্ষ নাম খোঁজার ফাংশন --
       function getPujaKosadhokkoName() {
         try {
-          const keys = ['committeeMembers', 'committee_members', 'committee', 'committeeList', 'membersData'];
-          for (let key of keys) {
-            const data = localStorage.getItem(key);
-            if (data) {
-              const list = JSON.parse(data);
-              const found = list.find(item => 
-                (item.post && (item.post.includes('কোষাধ্যক্ষ') || item.post.toLowerCase().includes('treasurer'))) ||
-                (item.role && (item.role.includes('কোষাধ্যক্ষ') || item.role.toLowerCase().includes('treasurer')))
-              );
-              if (found && (found.name || found.memberName)) {
-                return found.name || found.memberName;
-              }
-            }
-          }
-        } catch(e) {
-          console.error(e);
-        }
+          const found = allMembers.find(item => 
+            item.role && (item.role.includes('কোষাধ্যক্ষ') || item.role.toLowerCase().includes('treasurer'))
+          );
+          if (found && found.name) return found.name;
+        } catch(e) {}
         return "";
       }
 
-      // -- চাঁদা ফর্ম খোলা ও বন্ধ করার ফাংশন --
-      function openAddSubModal() {
+      window.openAddSubModal = function() {
         const modal = document.getElementById("subEntryModal");
         if(modal) {
+          document.getElementById("editSubDocId").value = "";
+          document.getElementById("subEntryModalTitle").innerText = "➕ চাঁদা যোগ করুন";
           modal.classList.remove("hidden");
           modal.classList.add("flex");
 
@@ -575,18 +677,17 @@
           if(colMember && !colMember.value && kosadhokkoName) colMember.value = kosadhokkoName;
           if(colOther && !colOther.value && kosadhokkoName) colOther.value = kosadhokkoName;
         }
-      }
+      };
 
-      function closeSubEntryModal() {
+      window.closeSubEntryModal = function() {
         const modal = document.getElementById("subEntryModal");
         if(modal) {
           modal.classList.add("hidden");
           modal.classList.remove("flex");
         }
-      }
+      };
 
-      // -- সদস্য সার্চ ও সিঙ্ক ফিক্স (membersData থেকে synced) --
-      function searchMemberForSub() {
+      window.searchMemberForSub = function() {
         const query = document.getElementById('memberSearchInput').value.toLowerCase().trim();
         const resultsDiv = document.getElementById('memberSearchResults');
         if (!query) {
@@ -594,31 +695,20 @@
             resultsDiv.innerHTML = '';
             return;
         }
-        
-        let members = [];
-        try {
-            members = JSON.parse(localStorage.getItem('membersData') || localStorage.getItem('members') || '[]');
-        } catch(e) {
-            members = [];
-        }
-        
-        const filtered = members.filter(m => 
+        const filtered = allMembers.filter(m => 
             (m.name && m.name.toLowerCase().includes(query)) ||
             (m.mobile && m.mobile.toLowerCase().includes(query)) ||
             (m.village && m.village.toLowerCase().includes(query)) ||
-            (m.autoId && m.autoId.toLowerCase().includes(query)) ||
-            (m.memberId && m.memberId.toLowerCase().includes(query))
+            (m.autoId && m.autoId.toLowerCase().includes(query))
         );
-        
         if (filtered.length === 0) {
             resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
             resultsDiv.classList.remove('hidden');
             return;
         }
-        
         let html = '';
         filtered.forEach(m => {
-            const displayId = m.autoId || m.memberId || m.id || '';
+            const displayId = m.autoId || m.id || '';
             html += `<div onclick="selectMemberForSub('${m.id || ''}', '${m.name || ''}', '${m.mobile || ''}', '${m.village || ''}', '${displayId}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs">
                 <div class="font-bold text-gray-800">${m.name}</div>
                 <div class="text-gray-500 text-[11px]">ID: ${displayId} | মোবাইল: ${m.mobile || 'নেই'} | গ্রাম: ${m.village || 'নেই'}</div>
@@ -626,22 +716,19 @@
         });
         resultsDiv.innerHTML = html;
         resultsDiv.classList.remove('hidden');
-      }
+      };
 
-      function selectMemberForSub(id, name, mobile, village, memberId) {
+      window.selectMemberForSub = function(id, name, mobile, village, memberId) {
         document.getElementById('selectedMemberId').value = id;
         document.getElementById('memberSearchInput').value = name;
-        // Store extra hidden meta if needed
-        window._selectedMemberMeta = { id, name, mobile, village, memberId };
         const infoDiv = document.getElementById('selectedMemberInfo');
         if (infoDiv) {
             infoDiv.innerText = `নির্বাচিত: ${name} (${memberId}) - ${village || ''}`;
         }
         document.getElementById('memberSearchResults').classList.add('hidden');
-      }
+      };
 
-      // -- গ্রহণকারী সার্চ ফাংশন --
-      function searchCollector(inputId) {
+      window.searchCollector = function(inputId) {
         const query = document.getElementById(inputId).value.toLowerCase().trim();
         const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
         const resultsDiv = document.getElementById(resultsId);
@@ -650,22 +737,12 @@
             resultsDiv.innerHTML = '';
             return;
         }
-        
-        let members = [];
-        try {
-            members = JSON.parse(localStorage.getItem('membersData') || localStorage.getItem('members') || '[]');
-        } catch(e) {
-            members = [];
-        }
-        
-        const filtered = members.filter(m => m.name && m.name.toLowerCase().includes(query));
-        
+        const filtered = allMembers.filter(m => m.name && m.name.toLowerCase().includes(query));
         if (filtered.length === 0) {
             resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো নাম পাওয়া যায়নি</div>';
             resultsDiv.classList.remove('hidden');
             return;
         }
-        
         let html = '';
         filtered.forEach(m => {
             html += `<div onclick="selectCollector('${inputId}', '${m.name}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs font-semibold text-gray-800">
@@ -674,16 +751,15 @@
         });
         resultsDiv.innerHTML = html;
         resultsDiv.classList.remove('hidden');
-      }
+      };
 
-      function selectCollector(inputId, name) {
+      window.selectCollector = function(inputId, name) {
         document.getElementById(inputId).value = name;
         const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
         document.getElementById(resultsId).classList.add('hidden');
-      }
+      };
 
-      // -- চাঁদা এন্ট্রি ট্যাব (সদস্য/দাতা) পরিবর্তন --
-      function switchSubEntryTab(tab) {
+      window.switchSubEntryTab = function(tab) {
         const memberForm = document.getElementById('memberContributionForm');
         const otherForm = document.getElementById('otherContributionForm');
         const memberTab = document.getElementById('subTabMember');
@@ -700,10 +776,9 @@
             otherTab.className = "sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm";
             memberTab.className = "sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
         }
-      }
+      };
 
-      // -- চাঁদার তালিকা ট্যাব পরিবর্তন --
-      function switchContributionListTab(tab) {
+      window.switchContributionListTab = function(tab) {
         const memberPanel = document.getElementById('memberContributionListPanel');
         const donorPanel = document.getElementById('donorContributionListPanel');
         const memberTab = document.getElementById('contributionListTabMember');
@@ -720,80 +795,10 @@
             donorTab.className = "contribution-list-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-sm";
             memberTab.className = "contribution-list-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold";
         }
-      }
+      };
 
-      // -- সেটিংস সাব-ট্যাব পরিবর্তন --
-      function switchSettingsSubTab(tab) {
-        const tabs = ['profile', 'system', 'users', 'history'];
-        tabs.forEach(t => {
-            const sec = document.getElementById('subSection' + t.charAt(0).toUpperCase() + t.slice(1));
-            const btn = document.getElementById('tabBtn' + t.charAt(0).toUpperCase() + t.slice(1));
-            if (sec && btn) {
-                if (t === tab) {
-                    sec.classList.remove('hidden');
-                    btn.classList.add('bg-white', 'shadow-sm', 'text-gray-800');
-                    btn.classList.remove('text-gray-500');
-                } else {
-                    sec.classList.add('hidden');
-                    btn.classList.remove('bg-white', 'shadow-sm', 'text-gray-800');
-                    btn.classList.add('text-gray-500');
-                }
-            }
-        });
-      }
-
-      // -- ইউজার ও পাসওয়ার্ড মডাল --
-      function openCreateUserModal() {
-        const modal = document.getElementById("createUserModal");
-        if(modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-      }
-
-      function closeCreateUserModal() {
-        const modal = document.getElementById("createUserModal");
-        if(modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-      }
-
-      function openPasswordModal() {
-        const modal = document.getElementById("changePasswordModal");
-        if(modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
-      }
-
-      function closePasswordModal() {
-        const modal = document.getElementById("changePasswordModal");
-        if(modal) { modal.classList.add("hidden"); modal.classList.remove("flex"); }
-      }
-
-      function toggleQuickMenu() {
-        const menu = document.getElementById("quickMenuContent");
-        const arrow = document.getElementById("menuArrowIcon");
-        if (menu) menu.classList.toggle("hidden");
-        if (arrow) arrow.classList.toggle("rotate-180");
-      }
-
-      function toggleCommitteeList() {
-        const wrapper = document.getElementById("committeeTickerWrapper");
-        const arrow = document.getElementById("commArrowIcon");
-        if (wrapper) wrapper.classList.toggle("hidden");
-        if (arrow) arrow.classList.toggle("rotate-180");
-      }
-
-      function switchTab(tabName) {
-        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
-          const sec = document.getElementById("section-" + t);
-          if (sec) {
-            if (t === tabName) sec.classList.remove("hidden");
-            else sec.classList.add("hidden");
-          }
-        });
-      }
-
-      // -- চাঁদা সেভ ও রেন্ডার ফাংশন (Fix Implemented) --
-      window.saveSubFromNewForm = function(type) {
-        let subs = [];
-        try {
-          subs = JSON.parse(localStorage.getItem('subscriptionsData') || '[]');
-        } catch(e) { subs = []; }
-
+      window.saveSubFromNewForm = async function(type) {
+        const docId = document.getElementById("editSubDocId").value;
         if (type === 'member') {
           const memberId = document.getElementById('selectedMemberId').value;
           const memberName = document.getElementById('memberSearchInput').value.trim();
@@ -803,29 +808,44 @@
           const note = document.getElementById('subNoteMember').value.trim();
 
           if (!memberName) {
-            alert('দয়া করে সদস্য নির্বাচন করুন বা নাম দিন।');
+            alert("সদস্য নির্বাচন করুন!");
             return;
           }
-          if (amount <= 0) {
-            alert('সঠিক চাঁদার পরিমাণ দিন।');
+          if (!date || amount <= 0) {
+            alert("সঠিক তারিখ এবং পরিমাণ দিন!");
             return;
           }
 
-          let meta = window._selectedMemberMeta || {};
-          const newSub = {
-            id: 'sub_' + Date.now(),
+          const memberObj = allMembers.find(m => m.id === memberId) || {};
+          const subData = {
             type: 'member',
-            memberId: meta.memberId || memberId || 'N/A',
+            memberId: memberId || memberObj.id || '',
             name: memberName,
-            mobile: meta.mobile || '',
-            village: meta.village || '',
-            collector: collector,
-            date: date || new Date().toISOString().split('T')[0],
-            amount: amount,
-            note: note
+            mobile: memberObj.mobile || '-',
+            village: memberObj.village || '-',
+            displayMemberId: memberObj.autoId || '',
+            collector: collector || '-',
+            date,
+            amount,
+            note: note || '-',
+            updatedAt: Date.now()
           };
-          subs.push(newSub);
-        } else if (type === 'other') {
+
+          try {
+            if (docId) {
+              await updateDoc(doc(db, "subscriptions", docId), subData);
+              alert("চাঁদার তথ্য সফলভাবে আপডেট হয়েছে!");
+            } else {
+              subData.createdAt = Date.now();
+              await addDoc(collection(db, "subscriptions"), subData);
+              alert("সদস্যের চাঁদা সফলভাবে যুক্ত হয়েছে!");
+            }
+            closeSubEntryModal();
+          } catch(e) {
+            console.error(e);
+            alert("সংরক্ষণ করতে সমস্যা হয়েছে!");
+          }
+        } else {
           const name = document.getElementById('otherDataName').value.trim();
           const mobile = document.getElementById('otherDataMobile').value.trim();
           const village = document.getElementById('otherDataVillage').value.trim();
@@ -835,169 +855,455 @@
           const note = document.getElementById('subNoteOther').value.trim();
 
           if (!name) {
-            alert('দয়া করে দাতার নাম লিখুন।');
+            alert("দাতার নাম লিখুন!");
             return;
           }
-          if (amount <= 0) {
-            alert('সঠিক চাঁদার পরিমাণ দিন।');
+          if (!date || amount <= 0) {
+            alert("সঠিক তারিখ এবং পরিমাণ দিন!");
             return;
           }
 
-          const newSub = {
-            id: 'sub_' + Date.now(),
+          const subData = {
             type: 'other',
-            memberId: '',
-            name: name,
-            mobile: mobile,
-            village: village,
-            collector: collector,
-            date: date || new Date().toISOString().split('T')[0],
-            amount: amount,
-            note: note
+            name,
+            mobile: mobile || '-',
+            village: village || '-',
+            collector: collector || '-',
+            date,
+            amount,
+            note: note || '-',
+            updatedAt: Date.now()
           };
-          subs.push(newSub);
-        }
 
-        localStorage.setItem('subscriptionsData', JSON.stringify(subs));
-        closeSubEntryModal();
-        loadAndRenderSubscriptions();
-        alert('চাঁদা সফলভাবে সেভ করা হয়েছে!');
+          try {
+            if (docId) {
+              await updateDoc(doc(db, "subscriptions", docId), subData);
+              alert("দাতার চাঁদার তথ্য সফলভাবে আপডেট হয়েছে!");
+            } else {
+              subData.createdAt = Date.now();
+              await addDoc(collection(db, "subscriptions"), subData);
+              alert("দাতার চাঁদা সফলভাবে যুক্ত হয়েছে!");
+            }
+            closeSubEntryModal();
+          } catch(e) {
+            console.error(e);
+            alert("সংরক্ষণ করতে সমস্যা হয়েছে!");
+          }
+        }
       };
 
-      function loadAndRenderSubscriptions() {
-        let subs = [];
-        try {
-          subs = JSON.parse(localStorage.getItem('subscriptionsData') || '[]');
-        } catch(e) { subs = []; }
+      window.openEditSubscription = function(id) {
+        const sub = allSubscriptions.find(s => s.id === id);
+        if (!sub) return;
+        openAddSubModal();
+        document.getElementById("editSubDocId").value = sub.id;
+        document.getElementById("subEntryModalTitle").innerText = "✏️ চাঁদার তথ্য আপডেট করুন";
 
-        let memberTotal = 0;
-        let otherTotal = 0;
-
-        subs.forEach(s => {
-          if (s.type === 'member') {
-            memberTotal += (parseFloat(s.amount) || 0);
-          } else if (s.type === 'other') {
-            otherTotal += (parseFloat(s.amount) || 0);
-          }
-        });
-
-        const grandTotal = memberTotal + otherTotal;
-
-        // Update UI elements & totals
-        const elSubTotalMembers = document.getElementById('subTotalMembersAmount');
-        const elSubTotalOthers = document.getElementById('subTotalOthersAmount');
-        const elSubGrandTotal = document.getElementById('subGrandTotal');
-        const elDashTotalSub = document.getElementById('dashTotalSubAmount');
-
-        if (elSubTotalMembers) elSubTotalMembers.innerText = '₹' + memberTotal.toLocaleString('en-IN');
-        if (elSubTotalOthers) elSubTotalOthers.innerText = '₹' + otherTotal.toLocaleString('en-IN');
-        if (elSubGrandTotal) elSubGrandTotal.innerText = '₹' + grandTotal.toLocaleString('en-IN');
-        if (elDashTotalSub) elDashTotalSub.innerText = '₹' + grandTotal.toLocaleString('en-IN');
-
-        renderMemberContributions(subs);
-        renderOtherContributions(subs);
-      }
-
-      function renderMemberContributions(subs) {
-        if (!subs) {
-          try { subs = JSON.parse(localStorage.getItem('subscriptionsData') || '[]'); } catch(e) { subs = []; }
+        if (sub.type === 'member') {
+          switchSubEntryTab('member');
+          document.getElementById('selectedMemberId').value = sub.memberId || '';
+          document.getElementById('memberSearchInput').value = sub.name || '';
+          document.getElementById('subCollectorMember').value = sub.collector || '';
+          document.getElementById('subDateMember').value = sub.date || '';
+          document.getElementById('subAmountMember').value = sub.amount || 1500;
+          document.getElementById('subNoteMember').value = sub.note || '';
+          const infoDiv = document.getElementById('selectedMemberInfo');
+          if (infoDiv) infoDiv.innerText = `নির্বাচিত: ${sub.name} (${sub.displayMemberId || ''}) - ${sub.village || ''}`;
+        } else {
+          switchSubEntryTab('other');
+          document.getElementById('otherDataName').value = sub.name || '';
+          document.getElementById('otherDataMobile').value = sub.mobile !== '-' ? sub.mobile : '';
+          document.getElementById('otherDataVillage').value = sub.village !== '-' ? sub.village : '';
+          document.getElementById('subCollectorOther').value = sub.collector || '';
+          document.getElementById('subDateOther').value = sub.date || '';
+          document.getElementById('subAmountOther').value = sub.amount || 1500;
+          document.getElementById('subNoteOther').value = sub.note || '';
         }
-        const tbody = document.getElementById('memberContributionTableBody');
-        if (!tbody) return;
+      };
 
-        const searchQuery = (document.getElementById('memberListSearch') ? document.getElementById('memberListSearch').value : '').toLowerCase().trim();
-        
-        const memberSubs = subs.filter(s => s.type === 'member' && (
-          !searchQuery || 
-          (s.name && s.name.toLowerCase().includes(searchQuery)) ||
-          (s.mobile && s.mobile.toLowerCase().includes(searchQuery)) ||
-          (s.village && s.village.toLowerCase().includes(searchQuery)) ||
-          (s.memberId && s.memberId.toLowerCase().includes(searchQuery))
-        ));
-
-        if (memberSubs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">কোনো সদস্যের চাঁদার রেকর্ড পাওয়া যায়নি</td></tr>';
-          return;
-        }
-
-        let html = '';
-        memberSubs.forEach(s => {
-          html += `<tr class="border-b hover:bg-orange-50/50">
-            <td class="p-2 border-r font-bold text-gray-800">${s.name || ''}</td>
-            <td class="p-2 border-r text-gray-600">${s.mobile || 'নেই'}</td>
-            <td class="p-2 border-r text-gray-600">${s.village || 'নেই'}</td>
-            <td class="p-2 border-r text-gray-600">${s.memberId || 'N/A'}</td>
-            <td class="p-2 border-r font-bold text-orange-700">₹${(parseFloat(s.amount) || 0).toLocaleString('en-IN')}</td>
-            <td class="p-2 border-r text-gray-600">${s.date || ''}</td>
-            <td class="p-2 text-center">
-              <button onclick="deleteSubscription('${s.id}')" class="bg-red-100 text-red-700 px-2 py-1 rounded text-[11px] font-bold hover:bg-red-200">মুছুন</button>
-            </td>
-          </tr>`;
-        });
-        tbody.innerHTML = html;
-      }
-
-      function renderOtherContributions(subs) {
-        if (!subs) {
-          try { subs = JSON.parse(localStorage.getItem('subscriptionsData') || '[]'); } catch(e) { subs = []; }
-        }
-        const tbody = document.getElementById('otherContributionTableBody');
-        if (!tbody) return;
-
-        const otherSubs = subs.filter(s => s.type === 'other');
-
-        if (otherSubs.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="7" class="p-4 text-center text-gray-500">কোনো দাতার চাঁদার রেকর্ড পাওয়া যায়নি</td></tr>';
-          return;
-        }
-
-        let html = '';
-        otherSubs.forEach(s => {
-          html += `<tr class="border-b hover:bg-orange-50/50">
-            <td class="p-2 border-r font-bold text-gray-800">${s.name || ''}</td>
-            <td class="p-2 border-r text-gray-600">${s.mobile || 'নেই'}</td>
-            <td class="p-2 border-r text-gray-600">${s.village || 'নেই'}</td>
-            <td class="p-2 border-r font-bold text-orange-700">₹${(parseFloat(s.amount) || 0).toLocaleString('en-IN')}</td>
-            <td class="p-2 border-r text-gray-600">${s.date || ''}</td>
-            <td class="p-2 border-r text-gray-600">${s.collector || 'নেই'}</td>
-            <td class="p-2 text-center">
-              <button onclick="deleteSubscription('${s.id}')" class="bg-red-100 text-red-700 px-2 py-1 rounded text-[11px] font-bold hover:bg-red-200">মুছুন</button>
-            </td>
-          </tr>`;
-        });
-        tbody.innerHTML = html;
-      }
-
-      window.deleteSubscription = function(id) {
-        if (confirm('আপনি কি নিশ্চিত এই চাঁদার রেকর্ডটি মুছে ফেলতে চান?')) {
+      window.deleteSubscription = async function(id) {
+        if (confirm("আপনি কি নিশ্চিত যে এই চাঁদার এন্ট্রি মুছে ফেলতে চান?")) {
           try {
-            let subs = JSON.parse(localStorage.getItem('subscriptionsData') || '[]');
-            subs = subs.filter(s => s.id !== id);
-            localStorage.setItem('subscriptionsData', JSON.stringify(subs));
-            loadAndRenderSubscriptions();
-          } catch(e) {}
+            await deleteDoc(doc(db, "subscriptions", id));
+            alert("সফলভাবে মুছে ফেলা হয়েছে।");
+          } catch(e) {
+            alert("মুছে ফেলতে সমস্যা হয়েছে!");
+          }
         }
+      };
+
+      window.deleteSelectedSubscriptions = async function() {
+        const boxes = document.querySelectorAll(".sub-checkbox:checked");
+        if (boxes.length === 0) {
+          alert("কোনো এন্ট্রি নির্বাচন করা হয়নি!");
+          return;
+        }
+        if (confirm(`আপনি কি নিশ্চিত যে নির্বাচিত ${boxes.length}টি এন্ট্রি মুছে ফেলতে চান?`)) {
+          try {
+            for (let cb of boxes) {
+              await deleteDoc(doc(db, "subscriptions", cb.value));
+            }
+            alert("নির্বাচিত এন্ট্রিগুলি সফলভাবে মুছে ফেলা হয়েছে।");
+          } catch(e) {
+            alert("ডিলিট করতে সমস্যা হয়েছে!");
+          }
+        }
+      };
+
+      window.deleteAllSubscriptions = async function() {
+        if (confirm("সতর্কতা! সমস্ত চাঁদার রেকর্ড মুছে ফেলতে চান?")) {
+          try {
+            for (let sub of allSubscriptions) {
+              await deleteDoc(doc(db, "subscriptions", sub.id));
+            }
+            alert("সমস্ত রেকর্ড মুছে ফেলা হয়েছে।");
+          } catch(e) {
+            alert("সমস্যা হয়েছে!");
+          }
+        }
+      };
+
+      window.toggleSelectAllSub = function() {
+        const isChecked = document.getElementById("selectAllSub").checked;
+        document.querySelectorAll(".sub-checkbox").forEach(cb => cb.checked = isChecked);
+      };
+
+      window.toggleSelectAllDonor = function() {
+        const isChecked = document.getElementById("selectAllDonor").checked;
+        document.querySelectorAll(".donor-checkbox").forEach(cb => cb.checked = isChecked);
+      };
+
+      // Rendering Member Subscription Table with Paid/Unpaid status based on members list
+      window.renderMemberSubscriptionTable = function() {
+        const tbody = document.getElementById("memberContributionTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+
+        const searchText = (document.getElementById("memberListSearch")?.value || "").toLowerCase();
+        
+        // Map members and check if they paid
+        const memberSubsMap = {};
+        allSubscriptions.filter(s => s.type === 'member').forEach(s => {
+          if (s.memberId) memberSubsMap[s.memberId] = s;
+        });
+
+        const displayList = allMembers.filter(m => {
+          const name = (m.name || "").toLowerCase();
+          const mobile = (m.mobile || "").toLowerCase();
+          const village = (m.village || "").toLowerCase();
+          const autoId = (m.autoId || "").toLowerCase();
+          return name.includes(searchText) || mobile.includes(searchText) || village.includes(searchText) || autoId.includes(searchText);
+        });
+
+        displayList.forEach(m => {
+          const sub = memberSubsMap[m.id];
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+
+          let actionHtml = '';
+          if (sub) {
+            actionHtml = `
+              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">✏️</button>
+              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>
+            `;
+          } else {
+            actionHtml = `<span class="text-gray-400 text-[11px]">বাকি</span>`;
+          }
+
+          tr.innerHTML = `
+            <td class="p-2 border-r text-center">${sub ? `<input type="checkbox" class="sub-checkbox" value="${sub.id}">` : ''}</td>
+            <td class="p-2 border-r font-bold text-gray-800 text-center">${m.name || ''}</td>
+            <td class="p-2 border-r text-gray-700 text-center">${m.mobile || ''}</td>
+            <td class="p-2 border-r text-gray-700 text-center">${m.village || ''}</td>
+            <td class="p-2 border-r font-bold text-orange-600 text-center">${m.autoId || ''}</td>
+            <td class="p-2 border-r text-center font-bold ${sub ? 'text-emerald-700' : 'text-red-600'}">${sub ? '₹' + sub.amount : '₹0 (বাকি)'}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub ? sub.date : '-'}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub ? sub.collector : '-'}</td>
+            <td class="p-2 text-center">${actionHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
       };
 
       window.filterMemberContributionList = function() {
-        renderMemberContributions();
+        renderMemberSubscriptionTable();
       };
 
-      window.exportMemberListReport = function() { alert('এক্সপোর্ট ফিচার প্রস্তুত হচ্ছে...'); };
-      window.exportMemberPaidReport = function() { alert('এক্সপোর্ট ফিচার প্রস্তুত হচ্ছে...'); };
-      window.exportMemberUnpaidReport = function() { alert('এক্সপোর্ট ফিচার প্রস্তুত হচ্ছে...'); };
-      window.exportOtherDataReport = function() { alert('এক্সপোর্ট ফিচার প্রস্তুত হচ্ছে...'); };
+      window.renderOtherSubscriptionTable = function() {
+        const tbody = document.getElementById("otherContributionTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
 
-      // Initialize counts and subscriptions data on load
-      window.addEventListener('DOMContentLoaded', () => {
-        try {
-          const members = JSON.parse(localStorage.getItem('membersData') || '[]');
-          const countEl = document.getElementById('dashTotalMembersCount');
-          if (countEl) countEl.innerText = members.length;
-        } catch(e) {}
+        const donorSubs = allSubscriptions.filter(s => s.type === 'other');
+        donorSubs.forEach(sub => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+          tr.innerHTML = `
+            <td class="p-2 border-r text-center"><input type="checkbox" class="donor-checkbox sub-checkbox" value="${sub.id}"></td>
+            <td class="p-2 border-r font-bold text-gray-800 text-center">${sub.name || ''}</td>
+            <td class="p-2 border-r text-gray-700 text-center">${sub.mobile || ''}</td>
+            <td class="p-2 border-r text-gray-700 text-center">${sub.village || ''}</td>
+            <td class="p-2 border-r font-bold text-emerald-700 text-center">₹${sub.amount || 0}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub.date || ''}</td>
+            <td class="p-2 border-r text-center text-gray-600">${sub.collector || ''}</td>
+            <td class="p-2 text-center">
+              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">✏️</button>
+              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      };
 
-        loadAndRenderSubscriptions();
-      });
+      // Excel Exports styled matching members page (`members (2).html`) with summary at bottom
+      window.exportMemberListReport = async function() {
+        await generateMemberReportExcel('all');
+      };
+
+      window.exportMemberPaidReport = async function() {
+        await generateMemberReportExcel('paid');
+      };
+
+      window.exportMemberUnpaidReport = async function() {
+        await generateMemberReportExcel('unpaid');
+      };
+
+      async function generateMemberReportExcel(filterType) {
+        const memberSubsMap = {};
+        allSubscriptions.filter(s => s.type === 'member').forEach(s => {
+          if (s.memberId) memberSubsMap[s.memberId] = s;
+        });
+
+        let data = allMembers.map(m => ({
+          member: m,
+          sub: memberSubsMap[m.id]
+        }));
+
+        let titleText = "সকল সদস্যের চাঁদা তালিকা";
+        if (filterType === 'paid') {
+          data = data.filter(item => item.sub);
+          titleText = "চাঁদা প্রদানকারী সদস্যদের তালিকা";
+        } else if (filterType === 'unpaid') {
+          data = data.filter(item => !item.sub);
+          titleText = "চাঁদা প্রদান করেননি এমন সদস্যদের তালিকা";
+        }
+
+        if (data.length === 0) {
+          alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
+          return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("সদস্য চাঁদা রিপোর্ট", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+        worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+        worksheet.columns = [{ width: 14 }, { width: 25 }, { width: 18 }, { width: 20 }, { width: 16 }, { width: 16 }, { width: 18 }, { width: 22 }];
+
+        // Title Block
+        worksheet.mergeCells("A1:H1");
+        const title1 = worksheet.getCell("A1");
+        title1.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        title1.font = { name: "Kalpurush", size: 18, bold: true };
+        title1.alignment = { horizontal: "center", vertical: "middle" };
+        title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+        title1.border = { top:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
+        worksheet.getRow(1).height = 35;
+
+        worksheet.mergeCells("A2:H2");
+        const title2 = worksheet.getCell("A2");
+        title2.value = titleText;
+        title2.font = { name: "Kalpurush", size: 16, bold: true };
+        title2.alignment = { horizontal: "center", vertical: "middle" };
+        title2.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+        title2.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
+        worksheet.getRow(2).height = 30;
+
+        const headers = ["Member ID", "নাম", "মোবাইল", "গ্রাম", "পরিমাণ", "তারিখ", "গ্রহণকারী", "স্ট্যাটাস"];
+        const headerRow = worksheet.getRow(4);
+        headerRow.values = headers;
+        headerRow.height = 30;
+        headerRow.eachCell({ includeEmpty: false }, cell => {
+          cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
+          cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
+          cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        });
+
+        let rowNo = 5;
+        let totalAmountCollected = 0;
+        let paidCount = 0;
+        let unpaidCount = 0;
+
+        allMembers.forEach(m => {
+          const sub = memberSubsMap[m.id];
+          if (filterType === 'paid' && !sub) return;
+          if (filterType === 'unpaid' && sub) return;
+
+          if (sub) {
+            totalAmountCollected += parseFloat(sub.amount) || 0;
+            paidCount++;
+          } else {
+            unpaidCount++;
+          }
+
+          const row = worksheet.getRow(rowNo);
+          row.values = [
+            m.autoId || "",
+            m.name || "",
+            m.mobile !== "-" ? (m.mobile || "") : "",
+            m.village || "",
+            sub ? sub.amount : 0,
+            sub ? sub.date : "-",
+            sub ? sub.collector : "-",
+            sub ? "পরিশোধিত" : "বাকি"
+          ];
+          row.height = 25;
+          row.eachCell({ includeEmpty: false }, cell => {
+            cell.font = { name:"Kalpurush", size:11 };
+            cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
+            cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+            cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+          });
+          rowNo++;
+        });
+
+        // Summary Rows at the bottom (sobar niche)
+        const summaryRows = [
+          { label: "মোট চাঁদা আদায় (Total Amount)", val: `₹${totalAmountCollected}` },
+          { label: "চাঁদা দিয়েছে (Paid Count)", val: `${paidCount} জন` },
+          { label: "চাঁদা দেয়নি (Unpaid Count)", val: `${unpaidCount} জন` }
+        ];
+
+        summaryRows.forEach(s => {
+          worksheet.mergeCells(`A${rowNo}:D${rowNo}`);
+          worksheet.mergeCells(`E${rowNo}:H${rowNo}`);
+          
+          const lblCell = worksheet.getCell(`A${rowNo}`);
+          lblCell.value = s.label;
+          lblCell.font = { name: "Kalpurush", size: 12, bold: true };
+          lblCell.alignment = { horizontal: "center", vertical: "middle" };
+          lblCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
+
+          const valCell = worksheet.getCell(`E${rowNo}`);
+          valCell.value = s.val;
+          valCell.font = { name: "Kalpurush", size: 12, bold: true };
+          valCell.alignment = { horizontal: "center", vertical: "middle" };
+          valCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
+
+          for (let col = 1; col <= 8; col++) {
+            worksheet.getCell(rowNo, col).border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+          }
+          worksheet.getRow(rowNo).height = 28;
+          rowNo++;
+        });
+
+        worksheet.pageSetup.printTitlesRow = "4:4";
+        worksheet.pageSetup.printArea = `A1:H${rowNo-1}`;
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `Member_Subscription_${filterType}.xlsx`);
+      };
+
+      window.exportOtherDataReport = async function() {
+        const donorSubs = allSubscriptions.filter(s => s.type === 'other');
+        if (donorSubs.length === 0) {
+          alert("এক্সপোর্ট করার মতো কোনো দাতার ডেটা নেই!");
+          return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("দাতার চাঁদা তালিকা", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
+        worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
+        worksheet.columns = [{ width: 25 }, { width: 18 }, { width: 20 }, { width: 16 }, { width: 16 }, { width: 22 }, { width: 22 }];
+
+        worksheet.mergeCells("A1:G1");
+        const title1 = worksheet.getCell("A1");
+        title1.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        title1.font = { name: "Kalpurush", size: 18, bold: true };
+        title1.alignment = { horizontal: "center", vertical: "middle" };
+        title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+        title1.border = { top:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
+        worksheet.getRow(1).height = 35;
+
+        worksheet.mergeCells("A2:G2");
+        const title2 = worksheet.getCell("A2");
+        title2.value = "অন্যান্য দাতাদের চাঁদা তালিকা";
+        title2.font = { name: "Kalpurush", size: 16, bold: true };
+        title2.alignment = { horizontal: "center", vertical: "middle" };
+        title2.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
+        title2.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
+        worksheet.getRow(2).height = 30;
+
+        const headers = ["দাতার নাম", "মোবাইল", "গ্রাম", "পরিমাণ", "তারিখ", "গ্রহণকারী", "মন্তব্য"];
+        const headerRow = worksheet.getRow(4);
+        headerRow.values = headers;
+        headerRow.height = 30;
+        headerRow.eachCell({ includeEmpty: false }, cell => {
+          cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
+          cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
+          cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        });
+
+        let rowNo = 5;
+        let totalDonorAmount = 0;
+
+        donorSubs.forEach(sub => {
+          totalDonorAmount += parseFloat(sub.amount) || 0;
+          const row = worksheet.getRow(rowNo);
+          row.values = [
+            sub.name || "",
+            sub.mobile !== "-" ? (sub.mobile || "") : "",
+            sub.village || "",
+            sub.amount || 0,
+            sub.date || "",
+            sub.collector || "",
+            sub.note || ""
+          ];
+          row.height = 25;
+          row.eachCell({ includeEmpty: false }, cell => {
+            cell.font = { name:"Kalpurush", size:11 };
+            cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
+            cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
+            cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+          });
+          rowNo++;
+        });
+
+        // Summary row at bottom
+        worksheet.mergeCells(`A${rowNo}:C${rowNo}`);
+        worksheet.mergeCells(`D${rowNo}:G${rowNo}`);
+
+        const lblCell = worksheet.getCell(`A${rowNo}`);
+        lblCell.value = `মোট দাতা: ${donorSubs.length} জন | মোট পরিমাণ`;
+        lblCell.font = { name: "Kalpurush", size: 12, bold: true };
+        lblCell.alignment = { horizontal: "center", vertical: "middle" };
+        lblCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
+
+        const valCell = worksheet.getCell(`D${rowNo}`);
+        valCell.value = `₹${totalDonorAmount}`;
+        valCell.font = { name: "Kalpurush", size: 12, bold: true };
+        valCell.alignment = { horizontal: "center", vertical: "middle" };
+        valCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
+
+        for (let col = 1; col <= 7; col++) {
+          worksheet.getCell(rowNo, col).border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        }
+        worksheet.getRow(rowNo).height = 28;
+
+        worksheet.pageSetup.printTitlesRow = "4:4";
+        worksheet.pageSetup.printArea = `A1:G${rowNo}`;
+        const buffer = await workbook.xlsx.writeBuffer();
+        saveAs(new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "Donor_Subscriptions.xlsx");
+      };
+
+      window.switchTab = function(tabName) {
+        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+          const sec = document.getElementById("section-" + t);
+          if (sec) {
+            if (t === tabName) sec.classList.remove("hidden");
+            else sec.classList.add("hidden");
+          }
+        });
+      };
     </script>
   </body>
 </html>
