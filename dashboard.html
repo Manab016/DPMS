@@ -761,12 +761,16 @@
           try {
             const parsed = JSON.parse(e.target.result);
             
-            const collectionsData = parsed.collections || parsed.data;
-
+            // Fix: পার্ট বাই পার্ট কাস্টম JSON আপলোডের সাপোর্ট
+            let collectionsData = parsed.collections || parsed.data;
             if (!collectionsData) {
-              alert("ব্যাকআপ ফাইল সঠিক নয়।");
-              input.value = "";
-              return;
+              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
+                collectionsData = parsed;
+              } else {
+                alert("ব্যাকআপ ফাইল সঠিক নয়।");
+                input.value = "";
+                return;
+              }
             }
 
             const collectionMapping = {
@@ -788,11 +792,19 @@
               if (Array.isArray(items)) {
                 for (const item of items) {
                   const { id, ...itemData } = item;
-                  if (id !== undefined && id !== null) {
+                  if (id !== undefined && id !== null && String(id).trim() !== "") {
                     try {
-                      await setDoc(doc(db, colName, String(id)), itemData);
+                      // Fix: merge: true যুক্ত করা হয়েছে যাতে অন্য ফিল্ড ডিলিট না হয়
+                      await setDoc(doc(db, colName, String(id)), itemData, { merge: true });
                     } catch (itemErr) {
                       console.warn(`Could not restore item in ${colName}:`, itemErr);
+                    }
+                  } else {
+                     // Fix: যদি কাস্টম ফাইলে ID না থাকে তবে নতুন করে যুক্ত হবে
+                     try {
+                      await addDoc(collection(db, colName), itemData);
+                    } catch (addErr) {
+                      console.warn(`Could not add item in ${colName}:`, addErr);
                     }
                   }
                 }
