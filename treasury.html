@@ -388,16 +388,16 @@
         <form onsubmit="saveLoanForm(event)" class="space-y-3">
           <input type="hidden" id="loanEditId">
           <!-- সদস্য ফিল্ড -->
-          <label class="block text-xs font-bold text-gray-600 mb-1">সদস্য খুঁজুন *</label>
-                  <div class="relative">
-                    <input id="memberSearchInput" type="text" autocomplete="off"
-                      placeholder="নাম / মোবাইল / গ্রাম / Member ID দিয়ে খুঁজুন..."
-                      oninput="searchMemberForSub()"
-                      class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                    <div id="memberSearchResults" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto hidden"></div>
-                  </div>
-                  <input type="hidden" id="selectedMemberId">
-                  <div id="selectedMemberInfo" class="text-[11px] text-emerald-700 font-semibold mt-1"></div>
+          <div id="loanMemberSelectSection" class="relative">
+            <label class="block text-xs font-bold text-gray-700 mb-1">সদস্য নির্বাচন করুন *</label>
+            <input type="text" id="loanMemberSearch" oninput="handleMemberSearch(this.value)" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white" autocomplete="off">
+            <input type="hidden" id="loanMemberId">
+            <input type="hidden" id="loanMemberName">
+            <input type="hidden" id="loanMemberMobile">
+            <input type="hidden" id="loanMemberAddress">
+            <!-- ড্রপডাউন সাজেশন লিস্ট -->
+            <div id="memberSuggestions" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 hidden"></div>
+            <p class="text-[11px] text-gray-500 mt-1">সদস্য খুঁজতে উপরে টাইপ করুন</p>
           </div>
 
           <!-- অন্যান্য ফিল্ড (নাম, মোবাইল, ঠিকানা) -->
