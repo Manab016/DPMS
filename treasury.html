@@ -160,13 +160,11 @@
                       <th class="p-2 border-r text-center">লেনদেনের ধরন</th>
                       <th class="p-2 border-r text-center">পরিমাণ (₹)</th>
                       <th class="p-2 border-r text-center">বিবরণ</th>
-                      <th class="p-2 border-r text-center">কোষাধ্যক্ষের নগদ</th>
-                      <th class="p-2 border-r text-center">ব্যাংকে জমা</th>
                       <th class="p-2 text-center">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody id="txTableBody">
-                    <tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>
+                    <tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1448,7 +1446,7 @@
         const tbody = document.getElementById("txTableBody");
         tbody.innerHTML = "";
         if (!txData || txData.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>';
           document.getElementById("txPagination").innerHTML = "";
           return;
         }
@@ -1471,8 +1469,6 @@
             <td class="p-2 border-r text-center font-semibold text-gray-700">${typeText}</td>
             <td class="p-2 border-r text-center font-bold text-emerald-700">₹${item.amount}</td>
             <td class="p-2 border-r text-center">${item.desc || '-'}</td>
-            <td class="p-2 border-r text-center font-semibold text-gray-700">-</td>
-            <td class="p-2 border-r text-center font-semibold text-gray-700">-</td>
             <td class="p-2 text-center">
               <button onclick="editTx(${item.id})" title="এডিট" class="text-blue-600 hover:text-blue-800 px-1">✏️</button>
               <button onclick="deleteTx(${item.id})" title="মুছুন" class="text-red-600 hover:text-red-800 px-1">🗑️</button>
@@ -1520,11 +1516,9 @@
       function renderLoanTable() {
         const tbody = document.getElementById("loanTableBody");
         tbody.innerHTML = "";
+        let dataToRender = (filteredLoanData && document.getElementById("loanSearchInput").value.trim() !== "") ? filteredLoanData : loanData;
 
-        const searchInput = document.getElementById("loanSearchInput");
-        const dataset = (filteredLoanData.length > 0 || (searchInput && searchInput.value.trim())) ? filteredLoanData : loanData;
-
-        if (!dataset || dataset.length === 0) {
+        if (!dataToRender || dataToRender.length === 0) {
           tbody.innerHTML = '<tr><td colspan="11" class="p-4 text-center text-gray-500">কোনো ঋণ রেকর্ড পাওয়া যায়নি</td></tr>';
           document.getElementById("loanPagination").innerHTML = "";
           return;
@@ -1532,143 +1526,247 @@
 
         const start = (loanPage - 1) * itemsPerPage;
         const end = start + itemsPerPage;
-        const paginatedData = dataset.slice(start, end);
+        const paginatedData = dataToRender.slice(start, end);
 
         paginatedData.forEach(item => {
           const origAmt = Number(item.amount) || 0;
           const rate = Number(item.rate) || 36;
-          const interest = Math.round((origAmt * rate * 365) / (365 * 100));
+          const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
 
-          let pPaid = 0, iPaid = 0;
-          if (item.payments && item.payments.length > 0) {
+          let paidPrin = 0, paidInt = 0;
+          if (item.payments) {
             item.payments.forEach(p => {
-              pPaid += Number(p.principalPaid) || 0;
-              iPaid += Number(p.interestPaid) || 0;
+              paidPrin += Number(p.principalPaid) || 0;
+              paidInt += Number(p.interestPaid) || 0;
             });
           }
 
-          const duePrin = Math.max(0, origAmt - pPaid);
-          const dueInt = Math.max(0, interest - iPaid);
+          const duePrin = Math.max(0, origAmt - paidPrin);
+          const dueInt = Math.max(0, totalInterest - paidInt);
           const totalDue = duePrin + dueInt;
-
-          let statusBadge = '';
-          if (totalDue === 0) {
-            statusBadge = '<span class="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-[10px] font-bold">পরিশোধিত</span>';
-          } else if (pPaid > 0 || iPaid > 0) {
-            statusBadge = '<span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full text-[10px] font-bold">আংশিক</span>';
-          } else {
-            statusBadge = '<span class="bg-orange-100 text-orange-800 px-2 py-0.5 rounded-full text-[10px] font-bold">চলমান</span>';
-          }
+          const status = totalDue === 0 ? '<span class="text-emerald-600 font-bold">পরিশোধিত</span>' : '<span class="text-orange-600 font-bold">চলমান</span>';
 
           const tr = document.createElement("tr");
           tr.className = "border-b hover:bg-orange-50 transition";
           tr.innerHTML = `
             <td class="p-2 border-r text-center"><input type="checkbox" class="loan-checkbox" value="${item.id}"></td>
             <td class="p-2 border-r text-center font-bold text-gray-800">${item.name}</td>
-            <td class="p-2 border-r text-center">${item.mobile || 'N/A'}</td>
+            <td class="p-2 border-r text-center">${item.mobile || '-'}</td>
             <td class="p-2 border-r text-center">${item.address || '-'}</td>
-            <td class="p-2 border-r text-center font-bold">₹${origAmt.toLocaleString('en-IN')}</td>
+            <td class="p-2 border-r text-center font-bold text-gray-700">₹${origAmt}</td>
             <td class="p-2 border-r text-center">${rate}%</td>
-            <td class="p-2 border-r text-center text-orange-700 font-semibold">₹${duePrin.toLocaleString('en-IN')}</td>
-            <td class="p-2 border-r text-center text-orange-700 font-semibold">₹${dueInt.toLocaleString('en-IN')}</td>
-            <td class="p-2 border-r text-center text-red-600 font-bold">₹${totalDue.toLocaleString('en-IN')}</td>
-            <td class="p-2 border-r text-center">${statusBadge}</td>
+            <td class="p-2 border-r text-center font-bold text-red-600">₹${duePrin}</td>
+            <td class="p-2 border-r text-center font-bold text-red-600">₹${dueInt}</td>
+            <td class="p-2 border-r text-center font-bold text-orange-700">₹${totalDue}</td>
+            <td class="p-2 border-r text-center">${status}</td>
             <td class="p-2 text-center whitespace-nowrap">
-              <button onclick="openLoanRepayModal(${item.id})" title="ঋণ পরিশোধ" class="text-emerald-600 hover:text-emerald-800 px-1 font-bold text-sm">💰</button>
-              <button onclick="viewLoanHistory(${item.id})" title="পরিশোধ ইতিহাস" class="text-amber-600 hover:text-amber-800 px-1 font-bold text-sm">📜</button>
-              <button onclick="editLoan(${item.id})" title="এডিট" class="text-blue-600 hover:text-blue-800 px-1 text-sm">✏️</button>
-              <button onclick="deleteLoan(${item.id})" title="মুছুন" class="text-red-600 hover:text-red-800 px-1 text-sm">🗑️</button>
+              <button onclick="openLoanRepayModal(${item.id})" title="পরিশোধ" class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-bold mr-1">পরিশোধ</button>
+              <button onclick="viewLoanHistory(${item.id})" title="ইতিহাস" class="bg-blue-100 text-blue-700 px-2 py-1 rounded text-xs font-bold mr-1">ইতিহাস</button>
+              <button onclick="editLoan(${item.id})" title="এডিট" class="text-blue-600 hover:text-blue-800 px-1">✏️</button>
+              <button onclick="deleteLoan(${item.id})" title="মুছুন" class="text-red-600 hover:text-red-800 px-1">🗑️</button>
             </td>
           `;
           tbody.appendChild(tr);
         });
+        renderPagination('loan', dataToRender.length);
+      }
 
-        renderPagination('loan', dataset.length);
+      function renderPagination(type, totalItems) {
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        const pagDiv = document.getElementById(`${type}Pagination`);
+        if (!pagDiv) return;
+        pagDiv.innerHTML = "";
+
+        if (totalPages <= 1) return;
+
+        for (let i = 1; i <= totalPages; i++) {
+          const btn = document.createElement("button");
+          btn.innerText = i;
+          let currentPage = type === 'tx' ? txPage : type === 'cash' ? cashPage : loanPage;
+          if (i === currentPage) {
+            btn.className = "px-2.5 py-1 bg-orange-600 text-white rounded font-bold shadow-sm";
+          } else {
+            btn.className = "px-2.5 py-1 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 border";
+            btn.onclick = () => {
+              if (type === 'tx') { txPage = i; renderTxTable(); }
+              else if (type === 'cash') { cashPage = i; renderCashTable(); }
+              else { loanPage = i; renderLoanTable(); }
+            };
+          }
+          pagDiv.appendChild(btn);
+        }
       }
 
       function filterLoans() {
-        const input = document.getElementById("loanSearchInput");
-        if (!input) return;
-        const q = input.value.toLowerCase().trim();
-        if (!q) {
-          filteredLoanData = [];
-        } else {
-          filteredLoanData = loanData.filter(item => {
-            const name = (item.name || "").toLowerCase();
-            const mobile = (item.mobile || "").toLowerCase();
-            const address = (item.address || "").toLowerCase();
-            const amount = (item.amount || "").toString();
-            const remarks = (item.remarks || "").toLowerCase();
-            return name.includes(q) || mobile.includes(q) || address.includes(q) || amount.includes(q) || remarks.includes(q);
-          });
-        }
+        const q = document.getElementById("loanSearchInput").value.toLowerCase();
+        filteredLoanData = loanData.filter(x => 
+          (x.name && x.name.toLowerCase().includes(q)) || 
+          (x.mobile && x.mobile.includes(q)) || 
+          (x.remarks && x.remarks.toLowerCase().includes(q)) || 
+          (x.amount && x.amount.toString().includes(q))
+        );
         loanPage = 1;
         renderLoanTable();
       }
 
-      function renderPagination(type, totalItems) {
-        const containerId = type === 'tx' ? 'txPagination' : type === 'cash' ? 'cashPagination' : 'loanPagination';
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const totalPages = Math.ceil(totalItems / itemsPerPage);
-        if (totalPages <= 1) {
-          container.innerHTML = "";
-          return;
-        }
-
-        let currentPage = type === 'tx' ? txPage : type === 'cash' ? cashPage : loanPage;
-
-        let html = `<div class="flex items-center gap-1">`;
-        html += `<button onclick="changePage('${type}', ${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''} class="px-2.5 py-1 rounded border text-xs bg-white text-gray-700 hover:bg-orange-50 disabled:opacity-50">পূর্ববর্তী</button>`;
-
-        for (let i = 1; i <= totalPages; i++) {
-          if (i === currentPage) {
-            html += `<button class="px-2.5 py-1 rounded border text-xs bg-orange-600 text-white font-bold">${i}</button>`;
-          } else {
-            html += `<button onclick="changePage('${type}', ${i})" class="px-2.5 py-1 rounded border text-xs bg-white text-gray-700 hover:bg-orange-50">${i}</button>`;
-          }
-        }
-
-        html += `<button onclick="changePage('${type}', ${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''} class="px-2.5 py-1 rounded border text-xs bg-white text-gray-700 hover:bg-orange-50 disabled:opacity-50">পরবর্তী</button>`;
-        html += `</div>`;
-        container.innerHTML = html;
-      }
-
-      function changePage(type, page) {
-        if (type === 'tx') {
-          txPage = page;
-          renderTxTable();
-        } else if (type === 'cash') {
-          cashPage = page;
-          renderCashTable();
-        } else if (type === 'loan') {
-          loanPage = page;
-          renderLoanTable();
-        }
-      }
-
-      function toggleAllRows(master, type) {
-        const checked = master.checked;
+      function toggleAllRows(checkbox, type) {
         const checkboxes = document.querySelectorAll(`.${type}-checkbox`);
-        checkboxes.forEach(cb => cb.checked = checked);
-      }
-
-      function exportReport(type) {
-        alert(`${type.toUpperCase()} এক্সপোর্ট প্রসেস করা হচ্ছে...`);
+        checkboxes.forEach(cb => cb.checked = checkbox.checked);
       }
 
       function toggleDevModal() {
-        alert("ডেভেলপার: নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি ডিজিটাল টিম");
+        alert("ডেভেলপার মোড: ডেটা ব্রাউজার কনসোল বা লোকাল স্টোরেজ থেকে এক্সেস করা যাবে।");
       }
 
-      window.addEventListener("DOMContentLoaded", () => {
-        setDefaultDates();
+      // --- EXCEL EXPORT ---
+      async function exportReport(type) {
+        if (typeof ExcelJS === 'undefined') {
+          alert("ExcelJS লাইব্রেরি লোড হয়নি। ইন্টারনেট কানেকশন চেক করুন।");
+          return;
+        }
+
+        const workbook = new ExcelJS.Workbook();
+        const worksheet = workbook.addWorksheet("Report");
+
+        worksheet.properties.defaultRowHeight = 25;
+
+        worksheet.mergeCells('A1:G1');
+        const titleCell = worksheet.getCell('A1');
+        titleCell.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+        titleCell.font = { size: 16, bold: true, color: { argb: 'FFC2410C' } };
+        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        worksheet.mergeCells('A2:G2');
+        const subTitleCell = worksheet.getCell('A2');
+        subTitleCell.value = type === 'transactions' ? 'কোষাধ্যক্ষ হিসাব - লেনদেন তালিকা' : type === 'cash' ? 'কোষাধ্যক্ষ হিসাব - নগদ পেমেন্ট তালিকা' : 'ঋণ ব্যবস্থাপনা তালিকা';
+        subTitleCell.font = { size: 12, bold: true };
+        subTitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        worksheet.addRow([]); // Blank Row
+
+        let columns = [];
+        let rowDataArray = [];
+
+        if (type === 'transactions') {
+          columns = [
+            { header: 'তারিখ', key: 'date', width: 15 },
+            { header: 'লেনদেনের ধরন', key: 'type', width: 25 },
+            { header: 'পরিমাণ (₹)', key: 'amount', width: 18 },
+            { header: 'বিবরণ', key: 'desc', width: 40 }
+          ];
+          worksheet.unmergeCells('A1:G1'); worksheet.mergeCells('A1:D1');
+          worksheet.unmergeCells('A2:G2'); worksheet.mergeCells('A2:D2');
+
+          txData.forEach(item => {
+            const typeText = item.type === 'cash_addition' ? 'নগদ জমা' : item.type === 'cash_to_bank' ? 'নগদ থেকে ব্যাংকে জমা' : item.type === 'deposit' ? 'ব্যাংকে জমা' : 'ব্যাংক থেকে তোলা';
+            rowDataArray.push({
+              date: item.date,
+              type: typeText,
+              amount: `₹${item.amount}`,
+              desc: item.desc || '-'
+            });
+          });
+        } else if (type === 'cash') {
+          columns = [
+            { header: 'তারিখ', key: 'date', width: 15 },
+            { header: 'প্রাপকের নাম', key: 'recipient', width: 25 },
+            { header: 'পেমেন্টের ধরন', key: 'payMode', width: 18 },
+            { header: 'উদ্দেশ্য/খাত', key: 'purpose', width: 25 },
+            { header: 'পরিমাণ (₹)', key: 'amount', width: 18 },
+            { header: 'বিবরণ', key: 'desc', width: 40 }
+          ];
+          worksheet.unmergeCells('A1:G1'); worksheet.mergeCells('A1:F1');
+          worksheet.unmergeCells('A2:G2'); worksheet.mergeCells('A2:F2');
+          
+          cashData.forEach(item => {
+            rowDataArray.push({
+              date: item.date,
+              recipient: item.recipient,
+              payMode: item.payMode === 'online' ? 'অনলাইন' : 'নগদ',
+              purpose: item.purpose,
+              amount: `₹${item.amount}`,
+              desc: item.desc || '-'
+            });
+          });
+        } else if (type === 'loans') {
+          columns = [
+            { header: 'ঋণগ্রহীতা', key: 'name', width: 25 },
+            { header: 'মোবাইল', key: 'mobile', width: 18 },
+            { header: 'ঠিকানা', key: 'address', width: 30 },
+            { header: 'ঋণের পরিমাণ (₹)', key: 'amount', width: 18 },
+            { header: 'সুদের হার', key: 'rate', width: 12 },
+            { header: 'বাকি আসল (₹)', key: 'duePrin', width: 18 },
+            { header: 'বাকি সুদ (₹)', key: 'dueInt', width: 18 },
+            { header: 'মোট বাকি (₹)', key: 'totalDue', width: 18 },
+            { header: 'অবস্থা', key: 'status', width: 15 }
+          ];
+          worksheet.unmergeCells('A1:G1'); worksheet.mergeCells('A1:I1');
+          worksheet.unmergeCells('A2:G2'); worksheet.mergeCells('A2:I2');
+
+          let dataToExport = (filteredLoanData && document.getElementById("loanSearchInput").value.trim() !== "") ? filteredLoanData : loanData;
+
+          dataToExport.forEach(loan => {
+            const origAmt = Number(loan.amount) || 0;
+            const rate = Number(loan.rate) || 36;
+            const totalInterest = Math.round((origAmt * rate * 365) / (365 * 100));
+            let paidPrin = 0, paidInt = 0;
+            if (loan.payments) {
+              loan.payments.forEach(p => {
+                paidPrin += Number(p.principalPaid) || 0;
+                paidInt += Number(p.interestPaid) || 0;
+              });
+            }
+            const duePrin = Math.max(0, origAmt - paidPrin);
+            const dueInt = Math.max(0, totalInterest - paidInt);
+            const totalDue = duePrin + dueInt;
+            const status = totalDue === 0 ? 'পরিশোধিত' : 'চলমান';
+
+            rowDataArray.push({
+              name: loan.name,
+              mobile: loan.mobile || '-',
+              address: loan.address || '-',
+              amount: `₹${origAmt}`,
+              rate: `${rate}%`,
+              duePrin: `₹${duePrin}`,
+              dueInt: `₹${dueInt}`,
+              totalDue: `₹${totalDue}`,
+              status: status
+            });
+          });
+        }
+
+        const headerRow = worksheet.getRow(4);
+        columns.forEach((col, idx) => {
+          const cell = headerRow.getCell(idx + 1);
+          cell.value = col.header;
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFE65100' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+          cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+          worksheet.getColumn(idx + 1).width = col.width;
+        });
+
+        rowDataArray.forEach((rowObj, index) => {
+          const row = worksheet.getRow(5 + index);
+          columns.forEach((col, idx) => {
+            const cell = row.getCell(idx + 1);
+            cell.value = rowObj[col.key];
+            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+          });
+        });
+
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        saveAs(blob, `Treasury_Report_${type}_${new Date().getTime()}.xlsx`);
+      }
+
+      window.onload = () => {
+        updateBalances();
         renderTxTable();
         renderCashTable();
         renderLoanTable();
-        updateBalances();
-      });
+      };
     </script>
   </body>
 </html>
