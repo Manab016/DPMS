@@ -428,7 +428,7 @@
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-700 mb-1">সুদের হার (% বার্ষিক) *</label>
+            <label class="block text-xs font-bold text-gray-700 mb-1">সুদের হার (%বার্ষিক) *</label>
             <select id="loanInterestRate" onchange="calculateLoanInterest()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
               <option value="36">36%</option>
               <option value="24">24%</option>
@@ -966,16 +966,36 @@
         const sugg = document.getElementById("memberSuggestions");
         if (!query.trim()) { sugg.classList.add("hidden"); return; }
 
-        sugg.innerHTML = `
-          <div onclick="selectMember('রামপ্রসাদ সরকার', '9800112233', 'সহরা, আদিনা')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b">
-            <div class="font-bold text-gray-800">রামপ্রসাদ সরকার</div>
-            <div class="text-gray-500">📞 9800112233 | 🏠 সহরা, আদিনা</div>
-          </div>
-          <div onclick="selectMember('শ্যামল দাস', '9733221100', 'মালদা')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs">
-            <div class="font-bold text-gray-800">শ্যামল দাস</div>
-            <div class="text-gray-500">📞 9733221100 | 🏠 মালদা</div>
-          </div>
-        `;
+        let allMembers = JSON.parse(localStorage.getItem("sodosso_data")) || 
+                         JSON.parse(localStorage.getItem("sodossoData")) || 
+                         JSON.parse(localStorage.getItem("membersData")) || [];
+
+        const q = query.toLowerCase();
+        const filtered = allMembers.filter(m => 
+          (m.name && m.name.toLowerCase().includes(q)) || 
+          (m.mobile && m.mobile.includes(q)) || 
+          (m.memberId && m.memberId.toLowerCase().includes(q))
+        );
+
+        if (filtered.length === 0) {
+          sugg.innerHTML = '<div class="p-2.5 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
+          sugg.classList.remove("hidden");
+          return;
+        }
+
+        let html = '';
+        filtered.forEach(m => {
+          const name = m.name || 'অজানা নাম';
+          const mobile = m.mobile || m.phone || 'N/A';
+          const address = m.address || m.village || '-';
+          html += `
+            <div onclick="selectMember('${name}', '${mobile}', '${address}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b">
+              <div class="font-bold text-gray-800">${name}</div>
+              <div class="text-gray-500">📞 ${mobile} | 🏠 ${address}</div>
+            </div>
+          `;
+        });
+        sugg.innerHTML = html;
         sugg.classList.remove("hidden");
       }
 
