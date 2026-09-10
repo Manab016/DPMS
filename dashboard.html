@@ -766,6 +766,24 @@
             if (!collectionsData) {
               if (typeof parsed === 'object' && !Array.isArray(parsed)) {
                 collectionsData = parsed;
+              } else if (Array.isArray(parsed)) {
+                // Fix: যখন JSON ফাইলে সরাসরি Array থাকে (যেমন members_backup_restore.json)
+                let defaultCol = "members";
+                const possibleCollections = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents"];
+                for (let pc of possibleCollections) {
+                  if (file.name.toLowerCase().includes(pc)) {
+                    defaultCol = pc;
+                    break;
+                  }
+                }
+                const selectedCol = prompt("এই ফাইলে ডাটা লিস্ট (Array) পাওয়া গেছে। আপনি এটি কোন কালেকশনে রিস্টোর করবেন তা নিচে ইংরেজিতে লিখুন:", defaultCol);
+                
+                if (!selectedCol) {
+                   input.value = "";
+                   return; // ইউজার ক্যানসেল করলে বাতিল হবে
+                }
+                collectionsData = {};
+                collectionsData[selectedCol] = parsed;
               } else {
                 alert("ব্যাকআপ ফাইল সঠিক নয়।");
                 input.value = "";
