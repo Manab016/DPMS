@@ -72,7 +72,7 @@
           <div id="subViewTx" class="space-y-4">
             
             <!-- টপ স্ট্যাটাস কার্ডস -->
-            <div class="flex flex-col gap-3 mb-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
               <!-- কার্ড ১: কোষাধ্যক্ষের কাছে নগদ -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#EAF6EC] text-[#1B8A46]">
@@ -126,7 +126,7 @@
               </div>
 
               <!-- কার্ড ৫: অবশিষ্ট টাকা -->
-              <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
+              <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4 sm:col-span-2 lg:col-span-2">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#FDF4E6] text-[#CA812D]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a2.25 2.25 0 0 0-2.25-2.25H15a3 3 0 1 1-6 0H5.25A2.25 2.25 0 0 0 3 12m18 0v6a2.25 2.25 0 0 1-2.25 2.25H5.25A2.25 2.25 0 0 1 3 18v-6m18 0V9M3 12V9m18 0a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 9m18 0V6a2.25 2.25 0 0 0-2.25-2.25H5.25A2.25 2.25 0 0 0 3 6v3" />
@@ -633,6 +633,22 @@
         if (txD) txD.value = today;
         if (cashD) cashD.value = today;
         if (loanD) loanD.value = today;
+      }
+
+      function getTreasurerNameFromMembers() {
+        let allMembers = JSON.parse(localStorage.getItem("sodosso_data")) || 
+                         JSON.parse(localStorage.getItem("sodossoData")) || 
+                         JSON.parse(localStorage.getItem("membersData")) || [];
+        
+        let treasurer = allMembers.find(m => {
+          const role = (m.role || m.designation || m.position || "").toLowerCase();
+          return role.includes("কোষাধ্যক্ষ") || role.includes("treasurer");
+        });
+
+        if (treasurer && treasurer.name) {
+          return treasurer.name;
+        }
+        return "প্রধান কোষাধ্যক্ষ";
       }
 
       // --- TAB SWITCHING ---
@@ -1375,10 +1391,16 @@
 
       // --- RECEIPT MODAL ---
       function showReceiptModal(loan, payment) {
+        const savedLogo = localStorage.getItem("committee_logo") || localStorage.getItem("committeeLogo") || localStorage.getItem("logo");
+        const treasurerName = getTreasurerNameFromMembers();
+
         const content = document.getElementById("receiptContent");
         content.innerHTML = `
           <div class="text-center border-b pb-3 mb-3">
-            <h4 class="font-bold text-orange-700 text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+            <div class="flex justify-center mb-1.5">
+              ${savedLogo ? `<img src="${savedLogo}" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-orange-400 bg-white" />` : `<div class="w-12 h-12 rounded-full border border-orange-400 bg-white flex items-center justify-center text-lg">Durga</div>`}
+            </div>
+            <h4 class="font-bold text-orange-700 text-sm md:text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
             <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
             <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${payment.receiptNo}</p>
           </div>
@@ -1392,9 +1414,15 @@
             <div class="flex justify-between border-t pt-1.5 font-bold text-sm text-gray-900"><span>মোট পরিশোধ:</span> <strong class="text-orange-700">₹${(Number(payment.totalPaid)||0).toLocaleString('en-IN')}</strong></div>
             ${payment.remarks ? `<div class="text-[11px] text-gray-500 pt-1">মন্তব্য: ${payment.remarks}</div>` : ''}
           </div>
-          <div class="mt-6 pt-4 border-t flex justify-between text-[11px] text-gray-500">
-            <div>কোষাধ্যক্ষ স্বাক্ষর</div>
-            <div>গ্রহীতার স্বাক্ষর</div>
+          <div class="mt-6 pt-4 border-t flex justify-between items-end text-[11px] text-gray-600 font-semibold">
+            <div class="text-center">
+              <div class="mb-1 text-gray-800">${treasurerName}</div>
+              <div class="border-t border-gray-400 pt-0.5">কোষাধ্যক্ষ স্বাক্ষর</div>
+            </div>
+            <div class="text-center">
+              <div class="mb-1 text-gray-800">${loan.name}</div>
+              <div class="border-t border-gray-400 pt-0.5">গ্রহীতার স্বাক্ষর</div>
+            </div>
           </div>
         `;
 
