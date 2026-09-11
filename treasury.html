@@ -73,7 +73,6 @@
             
             <!-- টপ স্ট্যাটাস কার্ডস -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
-              <!-- কার্ড ১: কোষাধ্যক্ষের কাছে নগদ -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#EAF6EC] text-[#1B8A46]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -86,7 +85,6 @@
                 </div>
               </div>
 
-              <!-- কার্ড ২: ব্যাংকে জমা -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#EAF3FC] text-[#1D68B7]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -99,7 +97,6 @@
                 </div>
               </div>
 
-              <!-- কার্ড ৩: মোট ঋণ দেওয়া -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#FCECEE] text-[#B83141]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
@@ -112,7 +109,6 @@
                 </div>
               </div>
 
-              <!-- কার্ড ৪: মোট ঋণ পরিশোধ -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#F2EBFB] text-[#693EBE]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.5" stroke="currentColor" class="w-6 h-6">
@@ -125,7 +121,6 @@
                 </div>
               </div>
 
-              <!-- কার্ড ৫: অবশিষ্ট টাকা -->
               <div class="bg-white p-4 rounded-xl shadow-[0_2px_12px_-4px_rgba(0,0,0,0.08)] border border-gray-100 flex items-center gap-4 sm:col-span-2 lg:col-span-2">
                 <div class="w-[46px] h-[46px] rounded-xl flex items-center justify-center shrink-0 bg-[#FDF4E6] text-[#CA812D]">
                   <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="w-6 h-6">
@@ -370,7 +365,7 @@
       </div>
     </div>
 
-    <!-- ================= মোডাল ৩: নতুন ঋণ যোগ করুন ================= -->
+    <!-- ================= মোডাল ৩: নতুন ঋণ যোগ করুন (Updated) ================= -->
     <div id="loanModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
       <div class="bg-white w-full max-w-lg max-h-[88vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
         <button onclick="closeLoanModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
@@ -385,17 +380,34 @@
 
         <form onsubmit="saveLoanForm(event)" class="space-y-3">
           <input type="hidden" id="loanEditId">
+          <input type="hidden" id="loanFormType" value="member"> <!-- Stores form type: member/other -->
+
           <!-- সদস্য ফিল্ড -->
           <div id="loanMemberSelectSection" class="relative">
             <label class="block text-xs font-bold text-gray-700 mb-1">সদস্য নির্বাচন করুন *</label>
-            <input type="text" id="loanMemberSearch" oninput="handleMemberSearch(this.value)" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white" autocomplete="off">
+            <input type="text" id="loanMemberSearch" oninput="handleMemberSearch(this.value)" placeholder="নাম, মোবাইল বা ID দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white" autocomplete="off">
             <input type="hidden" id="loanMemberId">
             <input type="hidden" id="loanMemberName">
             <input type="hidden" id="loanMemberMobile">
             <input type="hidden" id="loanMemberAddress">
+            
             <!-- ড্রপডাউন সাজেশন লিস্ট -->
             <div id="memberSuggestions" class="absolute left-0 right-0 top-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-48 overflow-y-auto z-50 hidden"></div>
-            <p class="text-[11px] text-gray-500 mt-1">সদস্য খুঁজতে উপরে টাইপ করুন</p>
+            
+            <!-- নির্বাচিত সদস্যের বিস্তারিত সংক্ষেপ কার্ড (সদস্য সিলেক্ট করলে নিচে দেখাবে) -->
+            <div id="selectedMemberCard" class="hidden mt-2 p-2.5 bg-amber-50 border border-amber-300 rounded-lg text-xs space-y-1 relative">
+              <button type="button" onclick="clearSelectedMember()" class="absolute top-1.5 right-2 text-gray-400 hover:text-red-600 font-bold">✕</button>
+              <div class="flex flex-wrap items-center gap-2 font-bold text-gray-800">
+                <span id="cardMemName"></span>
+                <span id="cardMemId" class="bg-orange-600 text-white text-[10px] px-1.5 py-0.5 rounded font-mono"></span>
+              </div>
+              <div class="text-gray-600 flex flex-wrap gap-x-3 gap-y-0.5 text-[11px]">
+                <span>📞 <span id="cardMemMobile"></span></span>
+                <span>🏠 <span id="cardMemAddress"></span></span>
+              </div>
+            </div>
+
+            <p id="memberSearchHelp" class="text-[11px] text-gray-500 mt-1">সদস্য খুঁজতে উপরে টাইপ করুন</p>
           </div>
 
           <!-- অন্যান্য ফিল্ড (নাম, মোবাইল, ঠিকানা) -->
@@ -448,6 +460,47 @@
           <div>
             <label class="block text-xs font-bold text-gray-700 mb-1">ঋণের তারিখ *</label>
             <input type="date" id="loanDate" class="w-full p-2.5 border rounded-lg text-sm bg-white" required>
+          </div>
+
+          <!-- ✍️ গ্রহীতা ও গ্যারান্টার/কোষাধ্যক্ষ স্বাক্ষর (ফাইল + ক্যামেরা) -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
+            <!-- গ্রহীতার স্বাক্ষর -->
+            <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+              <label class="block text-xs font-bold text-gray-700 mb-1">গ্রহীতার স্বাক্ষর</label>
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <label class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-orange-50 text-[11px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center shadow-xs flex items-center justify-center gap-1">
+                  📁 ফাইল
+                  <input type="file" accept="image/*" onchange="handleSigUpload(this, 'borrowerSigData', 'borrowerSigPreview')" class="hidden">
+                </label>
+                <label class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-orange-50 text-[11px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center shadow-xs flex items-center justify-center gap-1">
+                  📷 ক্যামেরা
+                  <input type="file" accept="image/*" capture="environment" onchange="handleSigUpload(this, 'borrowerSigData', 'borrowerSigPreview')" class="hidden">
+                </label>
+              </div>
+              <input type="hidden" id="borrowerSigData">
+              <div id="borrowerSigPreview" class="h-14 border border-dashed border-gray-300 rounded-lg bg-white flex items-center justify-center text-gray-400 text-[11px]">
+                কোনো স্বাক্ষর নাই
+              </div>
+            </div>
+
+            <!-- গ্যারান্টার / কোষাধ্যক্ষ স্বাক্ষর -->
+            <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+              <label class="block text-xs font-bold text-gray-700 mb-1">গ্যারান্টার/কোষাধ্যক্ষ স্বাক্ষর</label>
+              <div class="flex items-center gap-1.5 mb-1.5">
+                <label class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-orange-50 text-[11px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center shadow-xs flex items-center justify-center gap-1">
+                  📁 ফাইল
+                  <input type="file" accept="image/*" onchange="handleSigUpload(this, 'guarantorSigData', 'guarantorSigPreview')" class="hidden">
+                </label>
+                <label class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-orange-50 text-[11px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center shadow-xs flex items-center justify-center gap-1">
+                  📷 ক্যামেরা
+                  <input type="file" accept="image/*" capture="environment" onchange="handleSigUpload(this, 'guarantorSigData', 'guarantorSigPreview')" class="hidden">
+                </label>
+              </div>
+              <input type="hidden" id="guarantorSigData">
+              <div id="guarantorSigPreview" class="h-14 border border-dashed border-gray-300 rounded-lg bg-white flex items-center justify-center text-gray-400 text-[11px]">
+                কোনো স্বাক্ষর নাই
+              </div>
+            </div>
           </div>
 
           <div>
@@ -525,7 +578,6 @@
         <button onclick="closeLoanHistoryModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
         <h3 id="historyModalTitle" class="text-base font-bold text-gray-900 text-center mb-4">পরিশোধ ইতিহাস</h3>
 
-        <!-- ঋণের সংক্ষিপ্ত তথ্য -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 bg-amber-50 p-3 rounded-xl border border-amber-200 mb-4 text-xs">
           <div>মূল ঋণ: <strong id="historyOrigLoan" class="block text-gray-800">₹০</strong></div>
           <div>মোট পরিশোধযোগ্য: <strong id="historyTotPayable" class="block text-gray-800">₹০</strong></div>
@@ -921,11 +973,7 @@
       function openAddLoanModal() {
         document.getElementById("loanModalTitle").innerText = "নতুন ঋণ";
         document.getElementById("loanEditId").value = "";
-        document.getElementById("loanMemberSearch").value = "";
-        document.getElementById("loanMemberId").value = "";
-        document.getElementById("loanMemberName").value = "";
-        document.getElementById("loanMemberMobile").value = "";
-        document.getElementById("loanMemberAddress").value = "";
+        clearSelectedMember();
         document.getElementById("loanName").value = "";
         document.getElementById("loanMobile").value = "";
         document.getElementById("loanAddress").value = "";
@@ -933,6 +981,8 @@
         document.getElementById("loanTotalInterest").value = "0";
         document.getElementById("loanTotalPayable").value = "0";
         document.getElementById("loanRemarks").value = "";
+        clearSig('borrowerSigData', 'borrowerSigPreview');
+        clearSig('guarantorSigData', 'guarantorSigPreview');
         setDefaultDates();
         switchLoanTab('all');
         document.getElementById("loanModal").classList.remove("hidden");
@@ -951,6 +1001,7 @@
 
         const selectSec = document.getElementById("loanMemberSelectSection");
         const otherFields = document.getElementById("loanOtherFields");
+        const formTypeInput = document.getElementById("loanFormType");
 
         btnAll.className = "py-2 rounded-lg text-gray-600";
         btnPrev.className = "py-2 rounded-lg text-gray-600";
@@ -960,11 +1011,13 @@
           btnOther.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           selectSec.classList.add("hidden");
           otherFields.classList.remove("hidden");
+          if (formTypeInput) formTypeInput.value = "other";
         } else {
           if (tab === 'all') btnAll.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           else btnPrev.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           selectSec.classList.remove("hidden");
           otherFields.classList.add("hidden");
+          if (formTypeInput) formTypeInput.value = "member";
         }
       }
 
@@ -985,11 +1038,12 @@
                          JSON.parse(localStorage.getItem("membersData")) || [];
 
         const q = query.toLowerCase();
-        const filtered = allMembers.filter(m => 
-          (m.name && m.name.toLowerCase().includes(q)) || 
-          (m.mobile && m.mobile.includes(q)) || 
-          (m.memberId && m.memberId.toLowerCase().includes(q))
-        );
+        const filtered = allMembers.filter(m => {
+          const name = (m.name || "").toLowerCase();
+          const mobile = (m.mobile || m.phone || "").toLowerCase();
+          const memId = (m.memberId || m.id || m.sodossoId || "").toString().toLowerCase();
+          return name.includes(q) || mobile.includes(q) || memId.includes(q);
+        });
 
         if (filtered.length === 0) {
           sugg.innerHTML = '<div class="p-2.5 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
@@ -998,14 +1052,26 @@
         }
 
         let html = '';
-        filtered.forEach(m => {
+        filtered.forEach((m, idx) => {
           const name = m.name || 'অজানা নাম';
           const mobile = m.mobile || m.phone || 'N/A';
-          const address = m.address || m.village || '-';
+          const address = m.address || m.village || m.gram || '-';
+          const memId = m.memberId || m.id || m.sodossoId || ('M' + String(idx + 1).padStart(3, '0'));
+
+          const safeName = name.replace(/'/g, "\\'");
+          const safeMobile = mobile.replace(/'/g, "\\'");
+          const safeAddress = address.replace(/'/g, "\\'");
+          const safeId = memId.replace(/'/g, "\\'");
+
           html += `
-            <div onclick="selectMember('${name}', '${mobile}', '${address}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b">
-              <div class="font-bold text-gray-800">${name}</div>
-              <div class="text-gray-500">📞 ${mobile} | 🏠 ${address}</div>
+            <div onclick="selectMember('${safeName}', '${safeMobile}', '${safeAddress}', '${safeId}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
+              <div>
+                <div class="font-bold text-gray-800">${name}</div>
+                <div class="text-gray-500">📞 ${mobile} | 🏠 ${address}</div>
+              </div>
+              <div class="bg-orange-100 text-orange-800 font-bold text-xs px-2 py-1 rounded shrink-0 border border-orange-200">
+                ID: ${memId}
+              </div>
             </div>
           `;
         });
@@ -1013,25 +1079,67 @@
         sugg.classList.remove("hidden");
       }
 
-      function selectMember(name, mobile, address) {
+      function selectMember(name, mobile, address, id) {
         document.getElementById("loanMemberSearch").value = name;
+        document.getElementById("loanMemberId").value = id || "";
         document.getElementById("loanMemberName").value = name;
         document.getElementById("loanMemberMobile").value = mobile;
         document.getElementById("loanMemberAddress").value = address;
         document.getElementById("memberSuggestions").classList.add("hidden");
+
+        // সদস্য নির্বাচিত কার্ড ফিল্ডে তথ্য দেখানো
+        document.getElementById("cardMemName").innerText = name;
+        document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
+        document.getElementById("cardMemMobile").innerText = mobile || "N/A";
+        document.getElementById("cardMemAddress").innerText = address || "-";
+        document.getElementById("selectedMemberCard").classList.remove("hidden");
+      }
+
+      function clearSelectedMember() {
+        document.getElementById("loanMemberSearch").value = "";
+        document.getElementById("loanMemberId").value = "";
+        document.getElementById("loanMemberName").value = "";
+        document.getElementById("loanMemberMobile").value = "";
+        document.getElementById("loanMemberAddress").value = "";
+        document.getElementById("selectedMemberCard").classList.add("hidden");
+      }
+
+      // ✍️ স্বাক্ষর ছবি প্রসেস ফাংশন
+      function handleSigUpload(input, hiddenInputId, previewContainerId) {
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function(e) {
+            const base64 = e.target.result;
+            document.getElementById(hiddenInputId).value = base64;
+            document.getElementById(previewContainerId).innerHTML = `
+              <div class="relative w-full h-full flex items-center justify-center p-1">
+                <img src="${base64}" class="max-h-12 object-contain" />
+                <button type="button" onclick="clearSig('${hiddenInputId}', '${previewContainerId}')" class="absolute top-0 right-1 text-red-600 font-bold text-xs bg-white rounded-full px-1 shadow">✕</button>
+              </div>
+            `;
+          };
+          reader.readAsDataURL(input.files[0]);
+        }
+      }
+
+      function clearSig(hiddenInputId, previewContainerId) {
+        document.getElementById(hiddenInputId).value = "";
+        document.getElementById(previewContainerId).innerHTML = `<span class="text-gray-400 text-[11px]">কোনো স্বাক্ষর নাই</span>`;
       }
 
       function saveLoanForm(e) {
         e.preventDefault();
         const editId = document.getElementById("loanEditId").value;
+        const formType = document.getElementById("loanFormType").value || "member";
 
-        let name = "", mobile = "", address = "";
-        const otherHidden = document.getElementById("loanOtherFields").classList.contains("hidden");
+        let name = "", mobile = "", address = "", memberId = "";
+        const isOther = formType === "other" || !document.getElementById("loanOtherFields").classList.contains("hidden");
 
-        if (otherHidden) {
+        if (!isOther) {
           name = document.getElementById("loanMemberName").value || document.getElementById("loanMemberSearch").value;
           mobile = document.getElementById("loanMemberMobile").value;
           address = document.getElementById("loanMemberAddress").value;
+          memberId = document.getElementById("loanMemberId").value;
         } else {
           name = document.getElementById("loanName").value;
           mobile = document.getElementById("loanMobile").value;
@@ -1044,16 +1152,25 @@
         const rate = parseFloat(document.getElementById("loanInterestRate").value) || 0;
         const date = document.getElementById("loanDate").value;
         const remarks = document.getElementById("loanRemarks").value;
+        const borrowerSig = document.getElementById("borrowerSigData").value || "";
+        const guarantorSig = document.getElementById("guarantorSigData").value || "";
 
         if (editId) {
           const idx = loanData.findIndex(x => x.id === Number(editId));
           if (idx !== -1) {
-            loanData[idx] = { ...loanData[idx], name, mobile, address, amount, rate, date, remarks };
+            loanData[idx] = { 
+              ...loanData[idx], 
+              name, mobile, address, memberId, amount, rate, date, remarks,
+              borrowerSig, guarantorSig,
+              formType: isOther ? 'other' : 'member'
+            };
           }
         } else {
           loanData.push({
             id: Date.now(),
-            name, mobile, address, amount, rate, date, remarks,
+            name, mobile, address, memberId, amount, rate, date, remarks,
+            borrowerSig, guarantorSig,
+            formType: isOther ? 'other' : 'member',
             payments: []
           });
         }
@@ -1070,17 +1187,48 @@
         document.getElementById("loanModalTitle").innerText = "ঋণ সংশোধন করুন";
         document.getElementById("loanEditId").value = item.id;
 
-        switchLoanTab('other');
-        document.getElementById("loanName").value = item.name;
-        document.getElementById("loanMobile").value = item.mobile || "";
-        document.getElementById("loanAddress").value = item.address || "";
+        // যে ফর্মে সেভ করা হয়েছিল ঠিক সেই ফর্মেই খোলা ফিক্স করা হয়েছে
+        if (item.formType === 'other' || (!item.memberId && !item.formType)) {
+          switchLoanTab('other');
+          document.getElementById("loanName").value = item.name || "";
+          document.getElementById("loanMobile").value = item.mobile || "";
+          document.getElementById("loanAddress").value = item.address || "";
+        } else {
+          switchLoanTab('all');
+          selectMember(item.name || "", item.mobile || "", item.address || "", item.memberId || "");
+        }
 
         document.getElementById("loanAmount").value = item.amount;
         document.getElementById("loanInterestRate").value = item.rate || 36;
         document.getElementById("loanDate").value = item.date;
         document.getElementById("loanRemarks").value = item.remarks || "";
-        calculateLoanInterest();
 
+        // স্বাক্ষর লোড
+        if (item.borrowerSig) {
+          document.getElementById("borrowerSigData").value = item.borrowerSig;
+          document.getElementById("borrowerSigPreview").innerHTML = `
+            <div class="relative w-full h-full flex items-center justify-center p-1">
+              <img src="${item.borrowerSig}" class="max-h-12 object-contain" />
+              <button type="button" onclick="clearSig('borrowerSigData', 'borrowerSigPreview')" class="absolute top-0 right-1 text-red-600 font-bold text-xs bg-white rounded-full px-1 shadow">✕</button>
+            </div>
+          `;
+        } else {
+          clearSig('borrowerSigData', 'borrowerSigPreview');
+        }
+
+        if (item.guarantorSig) {
+          document.getElementById("guarantorSigData").value = item.guarantorSig;
+          document.getElementById("guarantorSigPreview").innerHTML = `
+            <div class="relative w-full h-full flex items-center justify-center p-1">
+              <img src="${item.guarantorSig}" class="max-h-12 object-contain" />
+              <button type="button" onclick="clearSig('guarantorSigData', 'guarantorSigPreview')" class="absolute top-0 right-1 text-red-600 font-bold text-xs bg-white rounded-full px-1 shadow">✕</button>
+            </div>
+          `;
+        } else {
+          clearSig('guarantorSigData', 'guarantorSigPreview');
+        }
+
+        calculateLoanInterest();
         document.getElementById("loanModal").classList.remove("hidden");
         document.getElementById("loanModal").classList.add("flex");
       }
@@ -1392,6 +1540,14 @@
         const savedLogo = localStorage.getItem("committee_logo") || localStorage.getItem("committeeLogo") || localStorage.getItem("logo");
         const treasurerName = getTreasurerNameFromMembers();
 
+        const borrowerSigDisplay = loan.borrowerSig 
+          ? `<img src="${loan.borrowerSig}" class="max-h-10 mx-auto" />` 
+          : `<div class="mb-1 text-gray-800">${loan.name}</div>`;
+
+        const guarantorSigDisplay = loan.guarantorSig 
+          ? `<img src="${loan.guarantorSig}" class="max-h-10 mx-auto" />` 
+          : `<div class="mb-1 text-gray-800">${treasurerName}</div>`;
+
         const content = document.getElementById("receiptContent");
         content.innerHTML = `
           <div class="text-center border-b pb-3 mb-3">
@@ -1404,7 +1560,7 @@
           </div>
           <div class="space-y-1.5 text-xs text-gray-700">
             <div class="flex justify-between"><span>তারিখ:</span> <strong>${payment.date}</strong></div>
-            <div class="flex justify-between"><span>ঋণগ্রহীতা:</span> <strong>${loan.name}</strong></div>
+            <div class="flex justify-between"><span>ঋণগ্রহীতা:</span> <strong>${loan.name} ${loan.memberId ? `(${loan.memberId})` : ''}</strong></div>
             <div class="flex justify-between"><span>মোবাইল:</span> <strong>${loan.mobile || 'N/A'}</strong></div>
             <div class="border-t border-dashed my-2"></div>
             <div class="flex justify-between"><span>পরিশোধিত আসল:</span> <strong class="text-emerald-700">₹${(Number(payment.principalPaid)||0).toLocaleString('en-IN')}</strong></div>
@@ -1414,11 +1570,11 @@
           </div>
           <div class="mt-6 pt-4 border-t flex justify-between items-end text-[11px] text-gray-600 font-semibold">
             <div class="text-center">
-              <div class="mb-1 text-gray-800">${treasurerName}</div>
-              <div class="border-t border-gray-400 pt-0.5">কোষাধ্যক্ষ স্বাক্ষর</div>
+              ${guarantorSigDisplay}
+              <div class="border-t border-gray-400 pt-0.5">কোষাধ্যক্ষ/গ্যারান্টার স্বাক্ষর</div>
             </div>
             <div class="text-center">
-              <div class="mb-1 text-gray-800">${loan.name}</div>
+              ${borrowerSigDisplay}
               <div class="border-t border-gray-400 pt-0.5">গ্রহীতার স্বাক্ষর</div>
             </div>
           </div>
@@ -1560,7 +1716,7 @@
           tr.className = "border-b hover:bg-orange-50 transition";
           tr.innerHTML = `
             <td class="p-2 border-r text-center"><input type="checkbox" class="loan-checkbox" value="${item.id}"></td>
-            <td class="p-2 border-r text-center font-bold text-gray-800">${item.name}</td>
+            <td class="p-2 border-r text-center font-bold text-gray-800">${item.name} ${item.memberId ? `<br><span class="text-[10px] text-gray-500 font-normal">(${item.memberId})</span>` : ''}</td>
             <td class="p-2 border-r text-center">${item.mobile || 'N/A'}</td>
             <td class="p-2 border-r text-center">${item.address || '-'}</td>
             <td class="p-2 border-r text-center font-bold">₹${origAmt.toLocaleString('en-IN')}</td>
@@ -1595,7 +1751,8 @@
             const address = (item.address || "").toLowerCase();
             const amount = (item.amount || "").toString();
             const remarks = (item.remarks || "").toLowerCase();
-            return name.includes(q) || mobile.includes(q) || address.includes(q) || amount.includes(q) || remarks.includes(q);
+            const memId = (item.memberId || "").toLowerCase();
+            return name.includes(q) || mobile.includes(q) || address.includes(q) || amount.includes(q) || remarks.includes(q) || memId.includes(q);
           });
         }
         loanPage = 1;
