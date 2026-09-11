@@ -62,6 +62,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       <div id="adminMemberControls" class="flex flex-wrap gap-2 mb-4 hidden">
         <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ যোগ করুন</button>
+        <button onclick="makeAllOrdinaryMembers()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-amber-700 shadow-sm">🔄 সবাইকে সাধারণ সদস্য করুন</button>
         <button onclick="exportToExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
         <button onclick="deleteSelectedMembers()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
         <button onclick="deleteAllMembers()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button>
@@ -123,12 +124,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
       <input type="tel" id="newMemberMobile" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
       
-      <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি</label>
-      <input type="file" id="photoInput" onchange="processImage(this, 'photoPreview', 300, 300)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
+      <div class="flex items-center justify-between mb-1">
+        <label class="block text-xs font-semibold text-gray-600">সদস্যের ছবি</label>
+        <a href="https://www.pixelcut.ai/ai-image-editor?tool=removeBackground" target="_blank" class="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1">✂️ Pixelcut AI রিমুভার</a>
+      </div>
+      <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(this)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
       <img id="photoPreview" class="w-16 h-16 object-cover rounded-md border border-gray-300 hidden mx-auto mb-3" />
       
       <label class="block text-xs font-semibold text-gray-600 mb-1">স্বাক্ষর</label>
-      <input type="file" id="sigInput" onchange="processSignatureImage(this, 'sigPreview')" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
+      <input type="file" id="sigInput" accept="image/*" onchange="processSignatureImage(this, 'sigPreview')" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
       <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded hidden px-2 py-1 mx-auto mb-4" />
       
       <div class="flex justify-end gap-2">
@@ -239,7 +243,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
         allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
         
-        // সিঙ্ক করার জন্য localStorage-এ সেভ করা হলো
         try {
           localStorage.setItem("membersData", JSON.stringify(allMembersData));
         } catch (e) {}
@@ -364,6 +367,13 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const boxes = document.querySelectorAll(".member-checkbox");
       selectAll.checked = boxes.length > 0 && [...boxes].every(cb => cb.checked);
     }
+
+    window.handlePhotoUpload = function(input) {
+      if (input.files && input.files[0]) {
+        window.processImage(input, 'photoPreview', 300, 300);
+        window.open("https://www.pixelcut.ai/ai-image-editor?tool=removeBackground", "_blank");
+      }
+    };
 
     window.processImage = function(input, previewId, maxWidth, maxHeight) {
       const file = input.files[0];
@@ -507,6 +517,26 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       } catch (error) {
         console.error("Error saving member: ", error);
         alert("ডাটা সেভ করতে সমস্যা হয়েছে!");
+      }
+    };
+
+    window.makeAllOrdinaryMembers = async function() {
+      if (allMembersData.length === 0) {
+        alert("কোনো সদস্য নেই!");
+        return;
+      }
+      if (confirm("আপনি কি নিশ্চিত যে সমস্ত সদস্যের পদ 'সাধারণ সদস্য' করতে চান?")) {
+        try {
+          for (let m of allMembersData) {
+            if (m.role !== "সাধারণ সদস্য") {
+              await updateDoc(doc(db, "members", m.id), { role: "সাধারণ সদস্য", updatedAt: Date.now() });
+            }
+          }
+          alert("সকল সদস্যের পদ সফলভাবে 'সাধারণ সদস্য' করা হয়েছে!");
+        } catch (error) {
+          console.error("Error updating roles: ", error);
+          alert("পদ পরিবর্তন করতে সমস্যা হয়েছে!");
+        }
       }
     };
 
