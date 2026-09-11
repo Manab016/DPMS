@@ -69,7 +69,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       </div>
 
       <div class="flex flex-row gap-2 mb-4 items-stretch w-full">
-        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 min-w-0 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
+        <input type="text" id="searchInput" onkeyup="filterMembers()" placeholder="নাম, মোবাইল, পদ দিয়ে খুঁজুন..." class="flex-1 min-w-0 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500" />
         <select id="villageFilter" onchange="filterMembers()" class="w-40 md:w-48 shrink-0 p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500 bg-white">
           <option value="">সব গ্রাম (All)</option>
         </select>
@@ -124,16 +124,24 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
       <input type="tel" id="newMemberMobile" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
       
-      <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের ছবি</label>
-      <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(this)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
-      <img id="photoPreview" class="w-16 h-16 object-cover rounded-md border border-gray-300 hidden mx-auto mb-3" />
-      
       <div class="flex items-center justify-between mb-1">
-        <label class="block text-xs font-semibold text-gray-600">স্বাক্ষর</label>
+        <label class="block text-xs font-semibold text-gray-600">সদস্যের ছবি</label>
         <a href="https://www.pixelcut.ai/ai-image-editor?tool=removeBackground" target="_blank" class="text-xs text-indigo-600 font-bold hover:underline flex items-center gap-1">✂️ Pixelcut AI রিমুভার</a>
       </div>
+      <input type="file" id="photoInput" accept="image/*" onchange="handlePhotoUpload(this)" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
+      
+      <div id="photoPreviewBox" class="hidden text-center mb-3">
+        <img id="photoPreview" class="w-16 h-16 object-cover rounded-md border border-gray-300 mx-auto" />
+        <button type="button" onclick="clearPhoto()" class="text-xs text-red-600 font-bold hover:underline mt-1">❌ ছবি রিমুভ করুন</button>
+      </div>
+      
+      <label class="block text-xs font-semibold text-gray-600 mb-1">স্বাক্ষর</label>
       <input type="file" id="sigInput" accept="image/*" onchange="processSignatureImage(this, 'sigPreview')" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
-      <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded hidden px-2 py-1 mx-auto mb-4" />
+      
+      <div id="sigPreviewBox" class="hidden text-center mb-4">
+        <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded px-2 py-1 mx-auto" />
+        <button type="button" onclick="clearSignature()" class="text-xs text-red-600 font-bold hover:underline mt-1">❌ স্বাক্ষর রিমুভ করুন</button>
+      </div>
       
       <div class="flex justify-end gap-2">
         <button onclick="closeAddModal()" class="bg-gray-300 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
@@ -145,7 +153,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
     <div id="idCardBox" class="bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
       <div id="idCardHeader" class="px-2 py-1.5 flex flex-col justify-center items-center relative">
-        <h4 class="font-bold text-[13px] leading-tight text-center">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+        <h4 class="font-bold text-[13px] leading-tight text-center">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
         <p class="text-[9px] font-medium text-center mt-0.5 opacity-90">এটি কমিটির অফিসিয়াল পরিচয়পত্র</p>
         <span id="vipBadge" class="hidden absolute right-2 top-1.5 bg-yellow-400 text-black text-[9px] px-2 py-0.5 rounded font-extrabold shadow-sm border border-yellow-500 tracking-wider">VIP</span>
       </div>
@@ -374,9 +382,23 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       }
     };
 
-    window.processImage = function(input, previewId, maxWidth = 300, maxHeight = 300) {
-      if (!input.files || !input.files[0]) return;
+    window.clearPhoto = function() {
+      document.getElementById("photoInput").value = "";
+      document.getElementById("photoPreview").src = "";
+      document.getElementById("photoPreviewBox").classList.add("hidden");
+      processedPhotoBase64 = "";
+    };
+
+    window.clearSignature = function() {
+      document.getElementById("sigInput").value = "";
+      document.getElementById("sigPreview").src = "";
+      document.getElementById("sigPreviewBox").classList.add("hidden");
+      processedSigBase64 = "";
+    };
+
+    window.processImage = function(input, previewId, maxWidth, maxHeight) {
       const file = input.files[0];
+      if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -394,13 +416,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const ctx = canvas.getContext("2d");
           ctx.drawImage(img, 0, 0, width, height);
           const dataUrl = canvas.toDataURL("image/jpeg", 0.7);
-          const previewElement = document.getElementById(previewId);
-          if (previewElement) {
-            previewElement.src = dataUrl;
-            previewElement.classList.remove("hidden");
+          document.getElementById(previewId).src = dataUrl;
+          
+          if (previewId === "photoPreview") {
+            document.getElementById("photoPreviewBox").classList.remove("hidden");
+            processedPhotoBase64 = dataUrl;
+          } else if (previewId === "sigPreview") {
+            document.getElementById("sigPreviewBox").classList.remove("hidden");
+            processedSigBase64 = dataUrl;
           }
-          if (previewId === "photoPreview") processedPhotoBase64 = dataUrl;
-          else if (previewId === "sigPreview") processedSigBase64 = dataUrl;
         };
         img.src = e.target.result;
       };
@@ -408,8 +432,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.processSignatureImage = function(input, previewId) {
-      if (!input.files || !input.files[0]) return;
       const file = input.files[0];
+      if (!file) return;
       const reader = new FileReader();
       reader.onload = function(e) {
         const img = new Image();
@@ -422,14 +446,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
           const data = imageData.data;
           let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-          let hasDarkPixels = false;
           for (let i = 0; i < data.length; i += 4) {
             const r = data[i], g = data[i + 1], b = data[i + 2], a = data[i + 3];
             const brightness = (r * 299 + g * 587 + b * 114) / 1000;
             if (brightness > 180 || a === 0) {
               data[i + 3] = 0;
             } else {
-              hasDarkPixels = true;
               data[i] = 0; data[i + 1] = 0; data[i + 2] = 0;
               const x = (i / 4) % canvas.width;
               const y = Math.floor((i / 4) / canvas.width);
@@ -439,21 +461,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
               if (y > maxY) maxY = y;
             }
           }
-          if (!hasDarkPixels || minX >= maxX || minY >= maxY) {
-            const dataUrl = e.target.result;
-            const previewElement = document.getElementById(previewId);
-            if (previewElement) {
-              previewElement.src = dataUrl;
-              previewElement.classList.remove("hidden");
-            }
-            if (previewId === "sigPreview") processedSigBase64 = dataUrl;
-            return;
+          if (minX > maxX || minY > maxY) { minX = 0; minY = 0; maxX = canvas.width; maxY = canvas.height; }
+          else {
+             const padding = 10;
+             minX = Math.max(0, minX - padding);
+             minY = Math.max(0, minY - padding);
+             maxX = Math.min(canvas.width, maxX + padding);
+             maxY = Math.min(canvas.height, maxY + padding);
           }
-          const padding = 10;
-          minX = Math.max(0, minX - padding);
-          minY = Math.max(0, minY - padding);
-          maxX = Math.min(canvas.width, maxX + padding);
-          maxY = Math.min(canvas.height, maxY + padding);
           ctx.putImageData(imageData, 0, 0);
           const cropWidth = maxX - minX;
           const cropHeight = maxY - minY;
@@ -464,11 +479,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           cropCtx.drawImage(canvas, minX, minY, cropWidth, cropHeight, 0, 0, cropWidth, cropHeight);
           const dataUrl = cropCanvas.toDataURL("image/png");
           const previewElement = document.getElementById(previewId);
-          if (previewElement) {
-            previewElement.src = dataUrl;
-            previewElement.classList.remove("hidden");
-          }
-          if (previewId === "sigPreview") processedSigBase64 = dataUrl;
+          previewElement.src = dataUrl;
+          document.getElementById("sigPreviewBox").classList.remove("hidden");
+          processedSigBase64 = dataUrl;
         };
         img.src = e.target.result;
       };
@@ -513,9 +526,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
         return;
       }
-      const memberData = { name, village, role, mobile: mobile || "-", updatedAt: Date.now() };
-      if (processedPhotoBase64) memberData.photo = processedPhotoBase64;
-      if (processedSigBase64) memberData.signature = processedSigBase64;
+      const memberData = { 
+        name, 
+        village, 
+        role, 
+        mobile: mobile || "-", 
+        photo: processedPhotoBase64 || "", 
+        signature: processedSigBase64 || "", 
+        updatedAt: Date.now() 
+      };
 
       try {
         if (docId) {
@@ -563,14 +582,28 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       updateRoleOptions(member.id);
       document.getElementById("newMemberRole").value = member.role;
       document.getElementById("newMemberMobile").value = member.mobile !== "-" ? member.mobile : "";
+      
       processedPhotoBase64 = member.photo || "";
       processedSigBase64 = member.signature || "";
+      
+      const photoPreviewBox = document.getElementById("photoPreviewBox");
       const photoPreview = document.getElementById("photoPreview");
-      if(member.photo) { photoPreview.src = member.photo; photoPreview.classList.remove("hidden"); }
-      else { photoPreview.classList.add("hidden"); }
+      if(member.photo) { 
+        photoPreview.src = member.photo; 
+        photoPreviewBox.classList.remove("hidden"); 
+      } else { 
+        photoPreviewBox.classList.add("hidden"); 
+      }
+      
+      const sigPreviewBox = document.getElementById("sigPreviewBox");
       const sigPreview = document.getElementById("sigPreview");
-      if(member.signature) { sigPreview.src = member.signature; sigPreview.classList.remove("hidden"); }
-      else { sigPreview.classList.add("hidden"); }
+      if(member.signature) { 
+        sigPreview.src = member.signature; 
+        sigPreviewBox.classList.remove("hidden"); 
+      } else { 
+        sigPreviewBox.classList.add("hidden"); 
+      }
+      
       document.getElementById("addMemberModal").classList.remove("hidden");
     };
 
@@ -649,7 +682,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       worksheet.columns = [{ width: 14 }, { width: 28 }, { width: 18 }, { width: 22 }, { width: 22 }, { width: 30 }];
       worksheet.mergeCells("A1:F1");
       const title = worksheet.getCell("A1");
-      title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+      title.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
       title.font = { name: "Kalpurush", size: 18, bold: true };
       title.alignment = { horizontal: "center", vertical: "middle" };
       title.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
@@ -737,8 +770,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("newMemberMobile").value = "";
       document.getElementById("photoInput").value = "";
       document.getElementById("sigInput").value = "";
-      document.getElementById("photoPreview").classList.add("hidden");
-      document.getElementById("sigPreview").classList.add("hidden");
+      document.getElementById("photoPreviewBox").classList.add("hidden");
+      document.getElementById("sigPreviewBox").classList.add("hidden");
       processedPhotoBase64 = "";
       processedSigBase64 = "";
       document.getElementById("modalTitle").innerText = "নতুন সদস্য যুক্ত করুন";
