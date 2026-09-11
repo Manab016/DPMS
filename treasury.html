@@ -136,7 +136,7 @@
                   </svg>
                 </div>
                 <div>
-                  <div class="text-gray-500 text-[13px] font-medium leading-tight">অবশিষ্ট টাকা<br><span class="text-[11px] text-gray-400">(নগদ + ব্যাংক)</span></div>
+                  <div class="text-gray-500 text-[13px] font-medium leading-tight">অবশিষ্ট টাকা<br><span class="text-[11px] text-gray-400">(ন নগদ + ব্যাংক)</span></div>
                   <div id="cardRemainingBalance" class="font-bold text-[22px] text-[#CA812D]">₹০</div>
                 </div>
               </div>
@@ -277,7 +277,6 @@
       </div>
     </div>
 
-    <!-- (সমস্ত মোডাল অপরিবর্তিত রাখা হয়েছে) -->
     <!-- ================= মোডাল ১: নতুন লেনদেন যোগ করুন ================= -->
     <div id="txModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
       <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
@@ -1591,21 +1590,23 @@
             const rate = Number(item.rate) || 36;
             const interest = parseFloat(((amt * rate * 365) / (365 * 100)).toFixed(2));
             let paidPrin = 0, paidInt = 0;
+            
             if (item.payments) {
               item.payments.forEach(p => {
                 paidPrin += Number(p.principalPaid) || 0;
                 paidInt += Number(p.interestPaid) || 0;
               });
             }
+            
             const duePrin = Math.max(0, parseFloat((amt - paidPrin).toFixed(2)));
             const dueInt = Math.max(0, parseFloat((interest - paidInt).toFixed(2)));
-            const totalDue = duePrin + dueInt;
+            const totalDue = parseFloat((duePrin + dueInt).toFixed(2));
             
             grandTotalDue += totalDue;
 
             dataRows.push({
-              date: item.date,
-              name: item.name,
+              date: item.date || '-',
+              name: item.name || '-',
               mobile: item.mobile || '-',
               amount: amt,
               rate: rate,
@@ -1614,93 +1615,73 @@
               totalDue: totalDue
             });
           });
+          
           totalAmount = grandTotalDue; 
         }
 
-        const sheet = workbook.addWorksheet('Report');
+        if (dataRows.length === 0) {
+          alert("এক্সপোর্ট করার জন্য কোনো তথ্য নেই!");
+          return;
+        }
+
+        // Worksheet তৈরি
+        const worksheet = workbook.addWorksheet('Report Data');
         
-        // --- 1. Top Header Styling (কমিটির নাম ও রিপোর্ট টাইটেল) ---
-        const endColIndex = columns.length; 
-        const endColLetter = String.fromCharCode(64 + endColIndex);
+        // Committee Title
+        worksheet.mergeCells('A1:' + String.fromCharCode(64 + columns.length) + '1');
+        const titleRow = worksheet.getCell('A1');
+        titleRow.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        titleRow.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFF6600' } };
+        titleRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        // Subtitle (Report Title)
+        worksheet.mergeCells('A2:' + String.fromCharCode(64 + columns.length) + '2');
+        const subTitleRow = worksheet.getCell('A2');
+        subTitleRow.value = reportTitle;
+        subTitleRow.font = { name: 'Arial', size: 12, bold: true };
+        subTitleRow.alignment = { vertical: 'middle', horizontal: 'center' };
+
+        worksheet.addRow([]); // Blank row
+
+        // Add Columns
+        worksheet.columns = columns;
         
-        sheet.mergeCells(`A1:${endColLetter}1`);
-        const titleCell = sheet.getCell('A1');
-        titleCell.value = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
-        // HTML এর অরেঞ্জ কালারের মত হুবহু রঙ (Tailwind orange-700)
-        titleCell.font = { name: 'Kalpurush', size: 16, bold: true, color: { argb: 'FFC2410C' } }; 
-        titleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-        sheet.mergeCells(`A2:${endColLetter}2`);
-        const subtitleCell = sheet.getCell('A2');
-        subtitleCell.value = `রিপোর্ট: ${reportTitle}`;
-        subtitleCell.font = { size: 12, bold: true, color: { argb: 'FF374151' } };
-        subtitleCell.alignment = { vertical: 'middle', horizontal: 'center' };
-
-        // ফাঁকা রো (Spcaing)
-        sheet.addRow([]);
-
-        // বর্ডার স্টাইল ভ্যারিয়েবল (All Side Border)
-        const borderStyle = {
-          top: {style:'thin'},
-          left: {style:'thin'},
-          bottom: {style:'thin'},
-          right: {style:'thin'}
-        };
-
-        // --- 2. Table Headers ---
-        const headerRow = sheet.addRow(columns.map(c => c.header));
-        headerRow.eachCell((cell, colNumber) => {
-          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }; // White Text
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFC2410C' } }; // Orange Bg
-          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          cell.border = borderStyle;
-          // Set Column Width
-          sheet.getColumn(colNumber).width = columns[colNumber - 1].width;
+        // Header Styling
+        const headerRow = worksheet.getRow(4);
+        headerRow.eachCell((cell) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF9CB9C' } };
+          cell.font = { bold: true };
+          cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
         });
 
-        // --- 3. Data Rows ---
-        dataRows.forEach(rowData => {
-          const row = sheet.addRow(columns.map(c => rowData[c.key]));
-          row.eachCell({ includeEmpty: true }, (cell) => {
-            // Auto fit Data (Wrap Text) & Center Alignment
-            cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-            cell.border = borderStyle;
+        // Add Data
+        dataRows.forEach(row => {
+          const addedRow = worksheet.addRow(row);
+          addedRow.eachCell((cell) => {
+            cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+            cell.alignment = { vertical: 'middle', horizontal: 'center' };
           });
         });
 
-        // --- 4. Total Row (সবার নিচে টোটাল) ---
-        const totalRowData = new Array(columns.length).fill('');
-        totalRowData[0] = 'মোট (Total):';
-        
-        // টোটাল অ্যামাউন্ট সঠিক কলামে বসানো
-        if (type === 'transactions' || type === 'cash') {
-            totalRowData[columns.findIndex(c => c.key === 'amount')] = totalAmount;
-        } else if (type === 'loans') {
-            totalRowData[columns.findIndex(c => c.key === 'totalDue')] = totalAmount;
+        // Footer Total Row
+        if (type !== 'loans') {
+          const totalRow = worksheet.addRow({ [columns[0].key]: 'সর্বমোট', amount: totalAmount });
+          totalRow.eachCell((cell) => {
+             cell.font = { bold: true };
+             cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFEEEEEE' } };
+             cell.border = { top: {style:'thin'}, left: {style:'thin'}, bottom: {style:'thin'}, right: {style:'thin'} };
+             cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          });
         }
 
-        const tRow = sheet.addRow(totalRowData);
-        tRow.eachCell({ includeEmpty: true }, (cell, colNumber) => {
-          cell.font = { bold: true, color: { argb: 'FF9A3412' } };
-          cell.alignment = { vertical: 'middle', horizontal: 'center', wrapText: true };
-          cell.border = borderStyle;
-          // সম্পূর্ণ টোটাল রো তে হালকা অরেঞ্জ ব্যাকগ্রাউন্ড
-          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFEDD5' } }; 
-        });
-
-        // --- 5. Generate and Download Excel File ---
-        workbook.xlsx.writeBuffer().then((buffer) => {
-          const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          saveAs(blob, fileName);
-          // ডাউনলোড সফল হওয়ার অ্যালার্ট মেসেজ 
-          alert("এক্সেল রিপোর্ট সফলভাবে ডাউনলোড হয়েছে!");
-        }).catch(err => {
-          alert("এক্সেল ফাইল তৈরি করতে সমস্যা হয়েছে।");
-          console.error(err);
-        });
+        // Generate Buffer & Save
+        const buffer = await workbook.xlsx.writeBuffer();
+        const blob = new Blob([buffer], { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+        saveAs(blob, fileName);
       }
 
-      // Initial Data Loading
+      // --- Initialization ---
       window.onload = () => {
         updateBalances();
         renderTxTable();
