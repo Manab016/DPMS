@@ -160,13 +160,11 @@
                       <th class="p-2 border-r text-center">লেনদেনের ধরন</th>
                       <th class="p-2 border-r text-center">পরিমাণ (₹)</th>
                       <th class="p-2 border-r text-center">বিবরণ</th>
-                      <th class="p-2 border-r text-center">কোষাধ্যক্ষের নগদ</th>
-                      <th class="p-2 border-r text-center">ব্যাংকে জমা</th>
                       <th class="p-2 text-center">অ্যাকশন</th>
                     </tr>
                   </thead>
                   <tbody id="txTableBody">
-                    <tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>
+                    <tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>
                   </tbody>
                 </table>
               </div>
@@ -1448,7 +1446,7 @@
         const tbody = document.getElementById("txTableBody");
         tbody.innerHTML = "";
         if (!txData || txData.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>';
           document.getElementById("txPagination").innerHTML = "";
           return;
         }
@@ -1471,8 +1469,6 @@
             <td class="p-2 border-r text-center font-semibold text-gray-700">${typeText}</td>
             <td class="p-2 border-r text-center font-bold text-emerald-700">₹${item.amount}</td>
             <td class="p-2 border-r text-center">${item.desc || '-'}</td>
-            <td class="p-2 border-r text-center font-semibold text-gray-700">-</td>
-            <td class="p-2 border-r text-center font-semibold text-gray-700">-</td>
             <td class="p-2 text-center">
               <button onclick="editTx(${item.id})" title="এডিট" class="text-blue-600 hover:text-blue-800 px-1">✏️</button>
               <button onclick="deleteTx(${item.id})" title="মুছুন" class="text-red-600 hover:text-red-800 px-1">🗑️</button>
