@@ -1982,16 +1982,46 @@
         setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
 
-      // --- Firebase Cloud Sync (members + treasury data) ---
+      // --- Firebase Cloud Sync (same direct Firestore pattern used by the other pages) ---
       window.firebaseMembersCache = [];
       window.treasuryDb = null;
       window.treasuryAuth = null;
-      let treasuryCloudDocIds = { transactions:new Map(), cash:new Map(), loans:new Map() };
       let treasuryCloudReady = false;
       let treasuryUserReady = false;
-      let treasuryCloudMutationBusy = false;
-      let treasuryCloudSnapshotPending = false;
+      let treasuryCloudStarted = false;
       let treasuryCloudWriteQueue = Promise.resolve();
+
+      // Firestore is the source of truth. These shadows let saveData() update only the
+      // records changed on this device; it NEVER uploads the whole local array or deletes
+      // another device's records just because they are not in this browser's old cache.
+      const treasuryCloudShadow = {
+        transactions: new Map(),
+        cash: new Map(),
+        loans: new Map()
+      };
+
+      function treasuryCleanItem(item) {
+        const clean = { ...(item || {}) };
+        delete clean._docId;
+        return clean;
+      }
+
+      function treasurySame(a, b) {
+        try { return JSON.stringify(treasuryCleanItem(a)) === JSON.stringify(treasuryCleanItem(b)); }
+        catch(e) { return false; }
+      }
+
+      function treasuryArray(kind) {
+        if (kind === 'transactions') return txData;
+        if (kind === 'cash') return cashData;
+        return loanData;
+      }
+
+      function setTreasuryArray(kind, arr) {
+        if (kind === 'transactions') txData = arr;
+        else if (kind === 'cash') cashData = arr;
+        else loanData = arr;
+      }
 
       async function initTreasuryFirebase() {
         try {
@@ -2001,30 +2031,21 @@
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
           ]);
-          const { getAuth, onAuthStateChanged } = authMod;
+          const { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
-          const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = storageMod;
+          const { getStorage } = storageMod;
 
           const app = initializeApp(window.treasuryFirebaseConfig, "treasuryApp");
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
           window.treasuryStorage = getStorage(app);
+          try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
 
-          onAuthStateChanged(window.treasuryAuth, async (user) => {
-            treasuryUserReady = !!user;
-            if (!user) {
-              treasuryCloudReady = false;
-              console.warn("Treasury Firebase: user is not signed in. Cloud sync will wait for login.");
-              return;
-            }
-            await startTreasuryCloudSync();
-          });
-
-          // Members can be read by any signed-in user according to the supplied Firestore Rules.
+          // Members also use the same real-time Firestore listener as the other pages.
           onSnapshot(collection(window.treasuryDb, "members"), snap => {
             const members = [];
             snap.forEach(d => members.push({ id:d.id, ...d.data() }));
-            members.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+            members.sort((a,b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
             window.firebaseMembersCache = members.map((m,i) => normalizeMemberForTreasury(m,i));
             try {
               localStorage.setItem("membersData", JSON.stringify(window.firebaseMembersCache));
@@ -2034,147 +2055,147 @@
             if (input && input.value.trim()) handleMemberSearch(input.value);
           }, err => console.warn("Members sync error:", err));
 
+          onAuthStateChanged(window.treasuryAuth, async (user) => {
+            treasuryUserReady = !!user;
+            if (!user) {
+              treasuryCloudReady = false;
+              treasuryCloudStarted = false;
+              return;
+            }
+            await startTreasuryCloudSync();
+          });
+
           async function startTreasuryCloudSync() {
-            if (treasuryCloudReady) return;
+            if (treasuryCloudStarted) return;
+            treasuryCloudStarted = true;
             try {
               const snap = await getDocs(collection(window.treasuryDb, "treasurer"));
               const cloud = { transactions:[], cash:[], loans:[] };
+              const cloudById = { transactions:new Map(), cash:new Map(), loans:new Map() };
+
               snap.forEach(d => {
                 const v = d.data() || {};
                 const kind = v.kind;
-                if (kind === "transactions" || kind === "cash" || kind === "loans") {
-                  const item = { ...(v.data || {}) , _docId:d.id };
-                  if (item.id !== undefined && item.id !== null) cloud[kind].push(item);
+                if (!cloud[kind]) return;
+                const item = { ...(v.data || {}), _docId:d.id };
+                if (item.id !== undefined && item.id !== null) {
+                  const key = String(item.id);
+                  cloudById[kind].set(key, { docId:d.id, data:treasuryCleanItem(item) });
+                  cloud[kind].push(item);
                 }
               });
 
-              // First-time migration: keep existing browser records and upload them to the
-              // single `treasurer` collection allowed by the supplied Firestore Rules.
-              const localSets = [
-                ["transactions", txData],
-                ["cash", cashData],
-                ["loans", loanData]
-              ];
-              for (const [kind, localArray] of localSets) {
-                if (!cloud[kind].length && localArray.length) {
-                  for (const item of localArray) {
-                    const payload = { kind, data: { ...item } };
-                    delete payload.data._docId;
+              // Merge old local-only records into Firebase instead of replacing cloud data.
+              for (const kind of ['transactions','cash','loans']) {
+                const local = treasuryArray(kind) || [];
+                for (const item of local) {
+                  const key = String(item.id);
+                  if (!cloudById[kind].has(key)) {
                     try {
-                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
-                      item._docId = ref.id;
-                      cloud[kind].push({ ...item });
+                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), {
+                        kind, data:treasuryCleanItem(item)
+                      });
+                      const migrated = { ...item, _docId:ref.id };
+                      cloud.push(migrated);
+                      cloudById[kind].set(key, { docId:ref.id, data:treasuryCleanItem(migrated) });
                     } catch(e) {
-                      console.warn("Initial cloud migration failed:", kind, e);
+                      console.error("Treasury local migration failed", kind, e);
                     }
                   }
                 }
               }
 
-              if (cloud.transactions.length) txData = cloud.transactions;
-              if (cloud.cash.length) cashData = cloud.cash;
-              if (cloud.loans.length) loanData = cloud.loans;
+              for (const kind of ['transactions','cash','loans']) {
+                setTreasuryArray(kind, cloud[kind]);
+                treasuryCloudShadow[kind] = cloudById[kind];
+              }
               saveLocalTreasuryOnly();
-              rebuildTreasuryCloudMaps();
               treasuryCloudReady = true;
               renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
 
+              // EXACTLY like the working pages: every device listens to Firestore in real time.
               onSnapshot(collection(window.treasuryDb, "treasurer"), snap2 => {
-                // Delete/edit-এর মাঝখানে পুরনো snapshot এসে local UI-কে আবার পুরনো data-তে ফিরিয়ে দেবে না।
-                if (treasuryCloudMutationBusy) {
-                  treasuryCloudSnapshotPending = true;
-                  return;
-                }
                 const next = { transactions:[], cash:[], loans:[] };
+                const nextShadow = { transactions:new Map(), cash:new Map(), loans:new Map() };
+
                 snap2.forEach(d => {
                   const v = d.data() || {};
-                  if (v.kind && next[v.kind]) {
-                    const item = { ...(v.data || {}), _docId:d.id };
-                    next[v.kind].push(item);
-                  }
+                  const kind = v.kind;
+                  if (!next[kind]) return;
+                  const item = { ...(v.data || {}), _docId:d.id };
+                  if (item.id === undefined || item.id === null) return;
+                  next[kind].push(item);
+                  nextShadow[kind].set(String(item.id), {
+                    docId:d.id,
+                    data:treasuryCleanItem(item)
+                  });
                 });
+
                 txData = next.transactions;
                 cashData = next.cash;
                 loanData = next.loans;
+                treasuryCloudShadow.transactions = nextShadow.transactions;
+                treasuryCloudShadow.cash = nextShadow.cash;
+                treasuryCloudShadow.loans = nextShadow.loans;
                 saveLocalTreasuryOnly();
-                rebuildTreasuryCloudMaps();
                 renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
-              }, err => console.warn("treasurer sync error:", err));
+              }, err => console.error("Treasurer realtime sync error:", err));
             } catch(e) {
               treasuryCloudReady = false;
-              console.error("Treasurer cloud sync failed:", e);
+              treasuryCloudStarted = false;
+              console.error("Treasurer Firebase sync failed:", e);
             }
           }
 
-          async function saveArrayToCloud(kind, arr) {
+          async function syncTreasuryKind(kind) {
             if (!window.treasuryDb || !treasuryCloudReady || !treasuryUserReady) return;
-            const oldMap = treasuryCloudDocIds[kind] || new Map();
-            const currentIds = new Set(arr.map(x => String(x.id)));
 
-            // আগে cloud-এ থাকা কিন্তু local-এ আর নেই — সেগুলো delete
-            for (const [dataId, docId] of oldMap) {
-              if (!currentIds.has(String(dataId)) && docId) {
-                try {
-                  await deleteDoc(doc(window.treasuryDb, "treasurer", docId));
-                } catch(e) {
-                  console.error("Cloud delete failed:", kind, dataId, e);
-                  throw e;
-                }
+            const arr = treasuryArray(kind) || [];
+            const shadow = treasuryCloudShadow[kind] || new Map();
+            const current = new Map(arr.map(item => [String(item.id), item]));
+
+            // Add/update ONLY records changed on this device.
+            for (const [key, item] of current) {
+              const old = shadow.get(key);
+              const clean = treasuryCleanItem(item);
+              if (old && treasurySame(old.data, clean)) continue;
+
+              if (old?.docId) {
+                await updateDoc(doc(window.treasuryDb, "treasurer", old.docId), { kind, data:clean });
+                item._docId = old.docId;
+              } else {
+                const ref = await addDoc(collection(window.treasuryDb, "treasurer"), { kind, data:clean });
+                item._docId = ref.id;
+                shadow.set(key, { docId:ref.id, data:clean });
               }
             }
 
-            const newMap = new Map();
-            for (const item of arr) {
-              const dataId = String(item.id);
-              let docId = item._docId || oldMap.get(dataId);
-              const clean = { ...item };
-              delete clean._docId;
-              const payload = { kind, data: clean };
-              try {
-                if (docId) {
-                  await updateDoc(doc(window.treasuryDb, "treasurer", docId), payload);
-                } else {
-                  const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
-                  docId = ref.id;
-                  item._docId = docId;
-                }
-                newMap.set(dataId, docId);
-              } catch(e) {
-                console.error("Cloud save failed:", kind, e);
-                throw e;
+            // Delete ONLY records that existed in this device's last Firestore snapshot
+            // and were deliberately removed from the current array.
+            for (const [key, old] of shadow) {
+              if (!current.has(key) && old?.docId) {
+                await deleteDoc(doc(window.treasuryDb, "treasurer", old.docId));
               }
             }
-            treasuryCloudDocIds[kind] = newMap;
           }
 
           window.saveTreasuryToCloud = function() {
             saveLocalTreasuryOnly();
             if (!treasuryCloudReady || !treasuryUserReady) return Promise.resolve();
 
-            // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
             treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
-              treasuryCloudMutationBusy = true;
               try {
-                await saveArrayToCloud("transactions", txData);
-                await saveArrayToCloud("cash", cashData);
-                await saveArrayToCloud("loans", loanData);
+                await syncTreasuryKind('transactions');
+                await syncTreasuryKind('cash');
+                await syncTreasuryKind('loans');
               } catch(e) {
-                console.error("Treasury cloud sync operation failed:", e);
-                alert("Firebase-এ পরিবর্তন সংরক্ষণ করা যায়নি। আপনার login এবং treasurer permission পরীক্ষা করুন।");
-              } finally {
-                treasuryCloudMutationBusy = false;
-                treasuryCloudSnapshotPending = false;
+                console.error("Treasury cloud save failed:", e);
+                alert("Firebase-এ তথ্য সংরক্ষণ করা যায়নি। Login/permission পরীক্ষা করুন।");
               }
             });
             return treasuryCloudWriteQueue;
           };
 
-          function rebuildTreasuryCloudMaps() {
-            treasuryCloudDocIds.transactions = new Map(txData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
-            treasuryCloudDocIds.cash = new Map(cashData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
-            treasuryCloudDocIds.loans = new Map(loanData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
-          }
-          window._rebuildTreasuryCloudMaps = rebuildTreasuryCloudMaps;
           window._treasuryStartCloudSync = startTreasuryCloudSync;
         } catch(e) {
           console.error("Firebase Treasury initialization failed:", e);
