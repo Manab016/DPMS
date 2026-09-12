@@ -183,6 +183,7 @@
           <button id="menu-btn-booking" onclick="window.location.href='booking.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বুকিং</button>
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasury" onclick="window.location.href='treasury.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
+          <button id="menu-btn-daitobonton" onclick="window.location.href='daitobonton.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📋 দায়িত্ব বণ্টন</button>
           <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border col-span-2">⚙️ সেটিংস</button>
         </div>
       </div>
@@ -240,7 +241,11 @@
           </div>
           
           <!-- বিগত বছরের ডকুমেন্ট ড্যাশবোর্ড কার্ড -->
-          <div id="dash-card-documents" onclick="openDocumentsModal()" class="bg-teal-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-teal-700 transition flex flex-col items-center justify-center text-center col-span-2">
+          <div id="dash-card-daitobonton" onclick="window.location.href='daitobonton.html'" class="bg-orange-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-orange-700 transition flex flex-col items-center justify-center text-center">
+             <div class="text-2xl mb-1">📋</div>
+             <div class="text-xs opacity-90 font-medium">দায়িত্ব বণ্টন</div>
+           </div>
+           <div id="dash-card-documents" onclick="openDocumentsModal()" class="bg-teal-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-teal-700 transition flex flex-col items-center justify-center text-center col-span-2">
             <div class="text-2xl mb-1">📁</div>
             <div class="text-xs opacity-90 font-medium">বিগত বছরের ডকুমেন্ট (PDF / Excel)</div>
           </div>
@@ -273,32 +278,6 @@
       const auth = getAuth(app);
       setPersistence(auth, browserSessionPersistence).catch(() => {});
       const db = getFirestore(app);
-
-      // Dashboard থেকে Android/browser Back চাপলে আগে নিশ্চিত করবে।
-      // Cancel করলে dashboard-এই থাকবে; OK করলে Firebase logout করে login page-এ যাবে।
-      let dashboardBackGuardReady = false;
-      function installDashboardBackGuard() {
-        if (dashboardBackGuardReady) return;
-        dashboardBackGuardReady = true;
-        history.pushState({ dpmsDashboardGuard: true }, '', location.href);
-        window.addEventListener('popstate', async () => {
-          const shouldExit = window.confirm('আপনি কি লগআউট করে বের হতে চান?');
-          if (!shouldExit) {
-            history.pushState({ dpmsDashboardGuard: true }, '', location.href);
-            return;
-          }
-          try { await signOut(auth); } catch (e) { console.warn('Logout failed:', e); }
-          try { localStorage.removeItem('pujaAuthSessionV2'); } catch (e) {}
-          window.location.replace('index.html');
-        });
-      }
-
-      window.handleLogout = async function () {
-        try { await signOut(auth); } finally {
-          try { localStorage.removeItem('pujaAuthSessionV2'); } catch (e) {}
-          window.location.replace('index.html');
-        }
-      };
       const storage = getStorage(app);
 
       let allSubscriptionsData = [];
@@ -309,19 +288,16 @@
 
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
-          try { localStorage.removeItem("pujaAuthSessionV2"); } catch (e) {}
           window.location.replace("index.html");
           return;
         }
-
-        installDashboardBackGuard();
 
         const isAdmin =
           (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
 
         window.currentUserRole = isAdmin ? "admin" : "user";
         window.userPermissions = isAdmin
-          ? ["chada","expense","booking","sales","treasury","members","backup","documents"]
+          ? ["chada","expense","booking","sales","treasury","members","backup","documents","daitobonton"]
           : [];
 
         // Fetch user permissions from Firestore for non-admin users
@@ -507,7 +483,8 @@
           "booking": "booking",
           "sales": "sales",
           "treasury": "treasury",
-          "settings": "settings"
+          "settings": "settings",
+          "daitobonton": "daitobonton"
         };
 
         const isAdmin = window.currentUserRole === "admin";
