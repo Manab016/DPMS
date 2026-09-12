@@ -25,21 +25,54 @@
         display: flex;
         width: max-content;
         animation: autoScroll 45s linear infinite;
+        will-change: transform;
       }
+      .animate-auto-slide.is-manual-scroll { animation-play-state: paused !important; }
       .committee-ticker-wrapper {
-        height: 46px;
-        display: flex;
-        align-items: center;
-        padding: 4px 6px !important;
+        height: 70px;
+        display: block;
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        padding: 5px 6px !important;
+        -webkit-overflow-scrolling: touch;
+        touch-action: pan-x;
+        scrollbar-width: thin;
       }
       .committee-ticker-card {
-        height: 36px;
+        height: 58px;
+        min-width: 150px;
+        max-width: 190px;
         display: inline-flex;
+        flex-direction: column;
         align-items: center;
-        padding: 0 10px !important;
+        justify-content: center;
+        padding: 4px 10px !important;
         border-radius: 10px !important;
-        gap: 6px !important;
-        line-height: 1;
+        gap: 1px !important;
+        line-height: 1.1;
+        vertical-align: middle;
+      }
+      .committee-ticker-card .committee-post {
+        font-size: 10px;
+        color: #9a3412;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .committee-ticker-card .committee-name {
+        font-size: 12px;
+        font-weight: 800;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%;
+      }
+      .committee-ticker-card .committee-mobile {
+        font-size: 10px;
+        color: #4b5563;
+        white-space: nowrap;
       }
       .animate-auto-slide:hover { animation-play-state: paused; }
       .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -295,6 +328,25 @@
       const db = getFirestore(app);
       const storage = getStorage(app);
 
+      // Dashboard থেকে Back চাপলে আগের পেজে ফিরে যাবে না।
+      // কোনো confirmation ছাড়াই logout করে login page-এ যাবে।
+      let dashboardBackGuardReady = false;
+      function installDashboardBackGuard() {
+        if (dashboardBackGuardReady) return;
+        dashboardBackGuardReady = true;
+        history.pushState({ dpmsDashboardGuard: true }, "", location.href);
+        window.addEventListener("popstate", async () => {
+          try {
+            await signOut(auth);
+          } catch (e) {
+            console.warn("Dashboard back logout failed:", e);
+          } finally {
+            try { localStorage.removeItem("pujaAuthSessionV2"); } catch (e) {}
+            window.location.replace("index.html");
+          }
+        });
+      }
+
       let allSubscriptionsData = [];
 
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
@@ -306,6 +358,8 @@
           window.location.replace("index.html");
           return;
         }
+
+        installDashboardBackGuard();
 
         const isAdmin =
           (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
@@ -391,13 +445,34 @@
             const mobile = data.mobile || "";
 
             itemsHtml += `
-              <div class="committee-ticker-card inline-flex items-center bg-white text-gray-800 text-xs rounded-lg font-bold shadow-sm whitespace-nowrap">
-                <span>👑 ${designation}${name}</span>
-                ${mobile ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>` : ""}
+              <div class="committee-ticker-card inline-flex bg-white text-gray-800 rounded-lg font-bold shadow-sm whitespace-nowrap">
+                <div class="committee-post">👑 ${designation || "পদাধিকারী"}</div>
+                <div class="committee-name">${name}</div>
+                ${mobile ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="committee-mobile hover:text-orange-700 transition">📞 ${mobile}</a>` : `<div class="committee-mobile">মোবাইল নেই</div>`}
               </div>
             `;
           });
           container.innerHTML = itemsHtml + itemsHtml;
+        }
+
+        const tickerWrapper = document.getElementById("committeeTickerWrapper");
+        const tickerContent = document.getElementById("committeeTickerContent");
+        if (tickerWrapper && tickerContent && !tickerWrapper.dataset.touchReady) {
+          tickerWrapper.dataset.touchReady = "1";
+          let resumeTimer = null;
+          const pauseTicker = () => {
+            tickerContent.classList.add("is-manual-scroll");
+            if (resumeTimer) clearTimeout(resumeTimer);
+          };
+          const resumeTicker = () => {
+            if (resumeTimer) clearTimeout(resumeTimer);
+            resumeTimer = setTimeout(() => tickerContent.classList.remove("is-manual-scroll"), 1200);
+          };
+          tickerWrapper.addEventListener("touchstart", pauseTicker, { passive: true });
+          tickerWrapper.addEventListener("touchmove", pauseTicker, { passive: true });
+          tickerWrapper.addEventListener("touchend", resumeTicker, { passive: true });
+          tickerWrapper.addEventListener("pointerdown", pauseTicker);
+          tickerWrapper.addEventListener("pointerup", resumeTicker);
         }
 
         onSnapshot(collection(db, "committee"), (snapshot) => {
