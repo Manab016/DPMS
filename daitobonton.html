@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>দায়িত্ব বণ্টন - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<style>
+.data-table td,.data-table th{text-align:center;vertical-align:middle;white-space:nowrap}
+.hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
+</style>
+</head>
+<body class="bg-amber-50/40 p-3 font-sans pb-20">
+<div class="max-w-4xl mx-auto">
+  <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+    <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+    <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p>
+    <p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
+    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p>
+  </div>
+
+  <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5">
+    <div class="flex items-center justify-between mb-4 border-b pb-3">
+      <div class="flex items-center gap-2">
+        <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
+        <h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
+      <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center">
+        <div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div>
+      </div>
+      <div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center">
+        <div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div>
+      </div>
+      <div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center">
+        <div class="text-xs text-gray-600 font-semibold">কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div>
+      </div>
+      <div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center">
+        <div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div>
+      </div>
+    </div>
+
+    <div class="flex flex-wrap gap-2 mb-4">
+      <button onclick="openAddModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">➕ দায়িত্ব বণ্টন যোগ</button>
+      <button onclick="deleteMarked()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">🗑️ Mark Delete</button>
+      <button onclick="deleteAll()" class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">🗑️ Delete All</button>
+      <button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">📊 Excel Export</button>
+    </div>
+
+    <div class="overflow-x-auto border rounded-xl">
+      <table class="w-full border-collapse text-xs data-table">
+        <thead><tr class="bg-gray-100 text-gray-700">
+          <th class="p-2 border">✓</th><th class="p-2 border">তারিখ</th><th class="p-2 border">নাম</th><th class="p-2 border">মোবাইল</th><th class="p-2 border">সদস্য ID</th><th class="p-2 border">দায়িত্ব</th><th class="p-2 border">দায়িত্বের টাকা</th><th class="p-2 border">জমা</th><th class="p-2 border">বাকি</th><th class="p-2 border">অ্যাকশন</th>
+        </tr></thead>
+        <tbody id="tableBody"><tr><td colspan="10" class="p-5 text-center text-gray-500">তথ্য লোড হচ্ছে...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div id="entryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
+  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
+    <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
+    <h3 id="modalTitle" class="text-base font-bold text-gray-900 text-center mb-4">নতুন দায়িত্ব বণ্টন</h3>
+    <form onsubmit="saveEntry(event)" class="space-y-3">
+      <input type="hidden" id="editId">
+      <div><label class="block text-xs font-bold text-gray-700 mb-1">তারিখ</label><input type="date" id="date" required class="w-full p-2.5 border rounded-lg text-sm"></div>
+      <div><label class="block text-xs font-bold text-gray-700 mb-1">নাম</label><input id="name" required class="w-full p-2.5 border rounded-lg text-sm" placeholder="দায়িত্বপ্রাপ্ত ব্যক্তির নাম"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল</label><input id="mobile" class="w-full p-2.5 border rounded-lg text-sm"></div>
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য ID</label><input id="memberId" class="w-full p-2.5 border rounded-lg text-sm"></div>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm" placeholder="যেমন: চাঁদা সংগ্রহ / বাজার / প্রসাদ"></div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের টাকা</label><input type="number" step="any" min="0" id="amount" required class="w-full p-2.5 border rounded-lg text-sm"></div>
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">জমা হয়েছে</label><input type="number" step="any" min="0" id="deposited" value="0" class="w-full p-2.5 border rounded-lg text-sm"></div>
+      </div>
+      <div><label class="block text-xs font-bold text-gray-700 mb-1">মন্তব্য</label><input id="remarks" class="w-full p-2.5 border rounded-lg text-sm"></div>
+      <div class="pt-2 border-t"><button type="submit" class="w-full bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-orange-700 shadow-sm">সংরক্ষণ করুন</button></div>
+    </form>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut, browserSessionPersistence, setPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDocs } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+setPersistence(auth,browserSessionPersistence).catch(()=>{});
+let rows=[]; let currentUser=null;
+const ADMIN_EMAIL="bappasarkar1173@gmail.com";
+const money=n=>"₹"+(Number(n)||0).toLocaleString("en-IN",{maximumFractionDigits:2});
+const today=()=>new Date().toISOString().slice(0,10);
+
+auth.onAuthStateChanged = onAuthStateChanged;
+onAuthStateChanged(auth,async user=>{
+ if(!user){location.replace('index.html');return;}
+ currentUser=user;
+ // Keep the module protected; admin always has access.
+ if((user.email||'').toLowerCase()!==ADMIN_EMAIL.toLowerCase()){
+   try{
+     const snap=await getDocs(collection(db,'app_users'));
+     const mine=snap.docs.find(d=>d.id===user.uid);
+     const p=mine?.data()?.permissions||[];
+     if(!p.includes('daitobonton')){ alert('এই মডিউল ব্যবহারের অনুমতি নেই।'); location.replace('dashboard.html'); return; }
+   }catch(e){ location.replace('dashboard.html'); return; }
+ }
+ onSnapshot(collection(db,'daitobonton'),snap=>{
+   rows=[]; snap.forEach(d=>rows.push({id:d.id,...d.data()}));
+   rows.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || Number(b.createdAt||0)-Number(a.createdAt||0));
+   render();
+ },err=>{console.error(err); document.getElementById('tableBody').innerHTML='<tr><td colspan="10" class="p-5 text-center text-rose-600">Firebase থেকে তথ্য আনা যাচ্ছে না</td></tr>';});
+ loadChada();
+});
+
+function loadChada(){
+ // দায়িত্ব বণ্টন থেকে পূজা কোষাধ্যক্ষের কাছে জমা হওয়া চাঁদাই
+ // এই মডিউলের 'মোট চাঁদা' হিসাবে realtime update হবে।
+ onSnapshot(collection(db,'daitobonton'),snap=>{
+   let total=0;
+   snap.forEach(d=>{
+     const x=d.data()||{};
+     total += Number(x.deposited)||0;
+   });
+   document.getElementById('totalChada').textContent=money(total);
+ },err=>console.error('চাঁদার হিসাব আনা যায়নি:',err));
+}
+function render(){
+ let assigned=0,deposited=0,due=0;
+ rows.forEach(x=>{const a=Number(x.amount)||0,p=Math.min(Math.max(Number(x.deposited)||0,0),a);assigned+=a;deposited+=p;due+=Math.max(0,a-p);});
+ document.getElementById('totalAssigned').textContent=money(assigned);document.getElementById('totalDeposited').textContent=money(deposited);document.getElementById('totalDue').textContent=money(due);
+ const body=document.getElementById('tableBody');
+ if(!rows.length){body.innerHTML='<tr><td colspan="10" class="p-5 text-center text-gray-500">কোনো দায়িত্ব বণ্টনের তথ্য নেই</td></tr>';return;}
+ body.innerHTML=rows.map(x=>{const a=Number(x.amount)||0,p=Math.min(Math.max(Number(x.deposited)||0,a),a),d=Math.max(0,a-p),id=JSON.stringify(x.id).replace(/'/g,'&#39;');return `<tr class="border-t hover:bg-amber-50"><td class="p-2 border"><input type="checkbox" class="rowCheck" value="${x.id}"></td><td class="p-2 border">${x.date||'-'}</td><td class="p-2 border font-semibold">${esc(x.name)}</td><td class="p-2 border">${esc(x.mobile)}</td><td class="p-2 border">${esc(x.memberId)}</td><td class="p-2 border">${esc(x.responsibility)}</td><td class="p-2 border font-bold">${money(a)}</td><td class="p-2 border text-emerald-700 font-bold">${money(p)}</td><td class="p-2 border ${d>0?'text-rose-700':'text-emerald-700'} font-bold">${money(d)}</td><td class="p-2 border"><div class="flex flex-wrap justify-center gap-1"><button onclick='editEntry(${id})' class="bg-blue-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Edit</button><button onclick='deleteEntry(${id})' class="bg-red-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Delete</button>${d>0?`<button onclick='depositToTreasurer(${id})' class="bg-orange-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">কোষাধ্যক্ষের কাছে জমা</button>`:''}</div></td></tr>`;}).join('');
+}
+function esc(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
+window.openAddModal=()=>{document.getElementById('modalTitle').textContent='নতুন দায়িত্ব বণ্টন';document.getElementById('editId').value='';document.getElementById('date').value=today();['name','mobile','memberId','responsibility','amount','remarks'].forEach(i=>document.getElementById(i).value='');document.getElementById('deposited').value=0;showModal();};
+window.closeModal=()=>{document.getElementById('entryModal').classList.add('hidden');document.getElementById('entryModal').classList.remove('flex');};
+function showModal(){document.getElementById('entryModal').classList.remove('hidden');document.getElementById('entryModal').classList.add('flex');}
+window.saveEntry=async e=>{e.preventDefault();const id=document.getElementById('editId').value;const amount=Number(document.getElementById('amount').value)||0;let deposited=Number(document.getElementById('deposited').value)||0;deposited=Math.min(Math.max(deposited,0),amount);const data={date:document.getElementById('date').value,name:document.getElementById('name').value.trim(),mobile:document.getElementById('mobile').value.trim(),memberId:document.getElementById('memberId').value.trim(),responsibility:document.getElementById('responsibility').value.trim(),amount,deposited,remarks:document.getElementById('remarks').value.trim(),updatedAt:Date.now()};try{if(id)await updateDoc(doc(db,'daitobonton',id),data);else await addDoc(collection(db,'daitobonton'),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||''});closeModal();}catch(err){alert('সংরক্ষণ করা যায়নি: '+err.message);}};
+window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;document.getElementById('modalTitle').textContent='দায়িত্ব বণ্টন সংশোধন';document.getElementById('editId').value=x.id;document.getElementById('date').value=x.date||today();document.getElementById('name').value=x.name||'';document.getElementById('mobile').value=x.mobile||'';document.getElementById('memberId').value=x.memberId||'';document.getElementById('responsibility').value=x.responsibility||'';document.getElementById('amount').value=x.amount||0;document.getElementById('deposited').value=x.deposited||0;document.getElementById('remarks').value=x.remarks||'';showModal();};
+window.deleteEntry=async id=>{if(!confirm('এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?'))return;try{await deleteDoc(doc(db,'daitobonton',id));}catch(e){alert('Delete করা যায়নি: '+e.message);}};
+window.deleteMarked=async()=>{const ids=[...document.querySelectorAll('.rowCheck:checked')].map(x=>x.value);if(!ids.length)return alert('অন্তত একটি রেকর্ড নির্বাচন করুন');if(!confirm(`${ids.length} টি রেকর্ড মুছে ফেলবেন?`))return;try{await Promise.all(ids.map(id=>deleteDoc(doc(db,'daitobonton',id))));}catch(e){alert('Delete করা যায়নি: '+e.message);}};
+window.deleteAll=async()=>{if(!rows.length)return;if(!confirm('সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!'))return;try{await Promise.all(rows.map(x=>deleteDoc(doc(db,'daitobonton',x.id))));}catch(e){alert('Delete All করা যায়নি: '+e.message);}};
+window.depositToTreasurer=async id=>{const x=rows.find(r=>r.id===id);if(!x)return;const amount=Math.max(0,(Number(x.amount)||0)-(Number(x.deposited)||0));if(amount<=0)return alert('এই রেকর্ডে আর কোনো বাকি নেই।');if(!confirm(`${money(amount)} কোষাধ্যক্ষের কাছে জমা হিসেবে দেখাবেন?`))return;try{await addDoc(collection(db,'treasurer'),{kind:'transactions',data:{id:Date.now(),date:today(),type:'income',amount,desc:`চাঁদা — ${x.name||''} — ${x.responsibility||''}`,receiver:'পূজা কোষাধ্যক্ষ',receiverRole:'puja_treasury'}});await updateDoc(doc(db,'daitobonton',id),{deposited:(Number(x.deposited)||0)+amount,updatedAt:Date.now(),depositedToTreasurerAt:Date.now()});alert('কোষাধ্যক্ষের হিসাবে জমা হয়েছে।');}catch(e){alert('কোষাধ্যক্ষের হিসাবে জমা করা যায়নি: '+e.message);}};
+window.exportExcel=async()=>{if(!rows.length)return alert('Export করার মতো তথ্য নেই');const wb=new ExcelJS.Workbook();const ws=wb.addWorksheet('দায়িত্ব বণ্টন');ws.columns=[{header:'তারিখ',key:'date',width:14},{header:'নাম',key:'name',width:22},{header:'মোবাইল',key:'mobile',width:16},{header:'সদস্য ID',key:'memberId',width:18},{header:'দায়িত্ব',key:'responsibility',width:28},{header:'দায়িত্বের টাকা',key:'amount',width:16},{header:'জমা',key:'deposited',width:16},{header:'বাকি',key:'due',width:16},{header:'মন্তব্য',key:'remarks',width:28}];rows.forEach(x=>ws.addRow({...x,due:Math.max(0,(Number(x.amount)||0)-(Number(x.deposited)||0))}));ws.getRow(1).font={bold:true};const buf=await wb.xlsx.writeBuffer();saveAs(new Blob([buf],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}),'দায়িত্ব-বণ্টন.xlsx');};
+window.addEventListener('beforeunload',()=>{});
+</script>
+</body>
+</html>
