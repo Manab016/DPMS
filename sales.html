@@ -1191,6 +1191,7 @@
               <td class="p-2 border-r font-bold text-emerald-600">₹${paid}</td>
               <td class="p-2 border-r font-bold text-red-600">₹${due}</td>
               <td class="p-2 whitespace-nowrap">
+                <button onclick="editSale('${sale.id}')" class="text-blue-600 bg-blue-100 px-2 py-1 rounded mr-1" title="এডিট">✏️</button>
                 <button onclick="deleteSale('${sale.id}', ${sale.quantity || 0}, '${escAttr(sale.bookNo || "")}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
               </td>
             </tr>
@@ -1210,7 +1211,8 @@
             <td class="p-2 border-r font-bold text-emerald-600">₹${paid}</td>
             <td class="p-2 border-r font-bold text-red-600">₹${due}</td>
             <td class="p-2 whitespace-nowrap">
-              <button onclick="deleteSale('${sale.id}', ${sale.quantity || 0}, '${escAttr(sale.bookNo || "")}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
+              <button onclick="editSale('${sale.id}')" class="text-blue-600 bg-blue-100 px-2 py-1 rounded mr-1" title="এডিট">✏️</button>
+                <button onclick="deleteSale('${sale.id}', ${sale.quantity || 0}, '${escAttr(sale.bookNo || "")}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
             </td>
           </tr>
         `;
@@ -1237,6 +1239,88 @@
         await updateDoc(doc(db, "bookings", book.id), { sold: newSold });
       }
     }
+
+    window.editSale = function(id) {
+      const sale = salesData.find(s => s.id === id);
+      if (!sale) {
+        alert("বিক্রয় রেকর্ড পাওয়া যায়নি।");
+        return;
+      }
+
+      editSaleId = id;
+      currentSaleType = sale.type || "member";
+      selectedSaleMember = null;
+
+      document.getElementById("salesModalTitle").innerText = "টিকিট বিক্রয় সম্পাদনা";
+      setSaleType(currentSaleType);
+
+      document.getElementById("saleDate").value = sale.date || "";
+      document.getElementById("saleBookNo").value = sale.bookNo || "";
+
+      document.getElementById("useTicketNumbers").checked = sale.hasTicketNumbers !== false;
+      toggleTicketNumbers();
+
+      document.getElementById("saleStartTicket").value =
+        sale.startTicket ?? "";
+      document.getElementById("saleEndTicket").value =
+        sale.endTicket ?? "";
+      document.getElementById("saleQuantity").value = sale.quantity || "";
+      document.getElementById("salePricePerTicket").value = sale.pricePerTicket || 100;
+      document.getElementById("saleTotalAmount").value = sale.totalAmount || 0;
+      document.getElementById("salePaidAmount").value = sale.initialPaid || 0;
+      document.getElementById("saleCollector").value = sale.collector || "";
+
+      if (currentSaleType === "member") {
+        const member = membersData.find(m =>
+          (sale.memberId && getMemberId(m) === sale.memberId) ||
+          String(m.name || "").trim().toLowerCase() === String(sale.name || "").trim().toLowerCase()
+        );
+
+        if (member) {
+          selectedSaleMember = member;
+          document.getElementById("saleMemberSearch").value = member.name || "";
+          document.getElementById("selectedMemberName").textContent = member.name || "";
+
+          const mid = getMemberId(member);
+          const idEl = document.getElementById("selectedMemberId");
+          idEl.textContent = mid ? `ID: ${mid}` : "";
+          idEl.classList.toggle("hidden", !mid);
+
+          document.getElementById("selectedMemberMobile").textContent =
+            `📞 ${member.mobile || member.phone || "নম্বর নেই"}`;
+
+          const villageEl = document.getElementById("selectedMemberVillage");
+          villageEl.textContent = member.village ? `🏠 ${member.village}` : "";
+          villageEl.classList.toggle("hidden", !member.village);
+
+          document.getElementById("selectedMemberInfo").classList.remove("hidden");
+          document.getElementById("memberSearchResults").classList.add("hidden");
+          showMemberBookingDetails(member);
+        } else {
+          clearSaleMember();
+        }
+
+        document.getElementById("saleCustomerName").value = "";
+      } else {
+        document.getElementById("saleCustomerName").value = sale.name || "";
+        clearSaleMember();
+      }
+
+      // Keep the saved collector instead of replacing it with the default treasurer.
+      renderCollectorCard();
+      document.getElementById("saleCollector").value = sale.collector || "";
+
+      document.getElementById("bookDetailsDisplay").classList.add("hidden");
+      if (sale.bookNo) checkBookDetails();
+
+      document.getElementById("saleQuantity").value = sale.quantity || 0;
+      document.getElementById("saleTotalAmount").value = sale.totalAmount || 0;
+      calcDueAmount();
+
+      const modal = document.getElementById("salesModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+    };
 
     window.deleteSale = async function(id, qty, bookNo) {
       if (!confirm("আপনি কি এই বিক্রয় রেকর্ডটি মুছে ফেলতে চান?")) return;
