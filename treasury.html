@@ -968,7 +968,7 @@
         const desc = document.getElementById("txDesc").value;
 
         if (editId) {
-          const idx = txData.findIndex(x => x.id === Number(editId));
+          const idx = txData.findIndex(x => String(x.id) === String(editId));
           if (idx !== -1) { txData[idx] = { ...txData[idx], date, type, amount, desc }; }
         } else {
           txData.push({ id: Date.now(), date, type, amount, desc });
@@ -976,7 +976,7 @@
         saveData(); closeTxModal(); renderTxTable(); updateBalances();
       }
       function editTx(id) {
-        const item = txData.find(x => x.id === id);
+        const item = txData.find(x => String(x.id) === String(id));
         if (!item) return;
         document.getElementById("txModalTitle").innerText = "লেনদেন সংশোধন করুন";
         document.getElementById("txEditId").value = item.id;
@@ -990,14 +990,14 @@
       }
       function deleteTx(id) {
         if (!confirm("আপনি কি নিশ্চিত যে এই লেনদেনটি মুছে ফেলতে চান?")) return;
-        txData = txData.filter(x => x.id !== id);
+        txData = txData.filter(x => String(x.id) !== String(id));
         saveData(); renderTxTable(); updateBalances();
       }
       function deleteMarkedTx() {
-        const selected = Array.from(document.querySelectorAll('.tx-checkbox:checked')).map(cb => Number(cb.value));
+        const selected = Array.from(document.querySelectorAll('.tx-checkbox:checked')).map(cb => String(cb.value));
         if (selected.length === 0) { alert("অনুগ্রহ করে অন্তত একটি লেনদেন নির্বাচন করুন"); return; }
         if (!confirm(`আপনি কি নির্বাচিত ${selected.length} টি লেনদেন মুছে ফেলতে চান?`)) return;
-        txData = txData.filter(x => !selected.includes(x.id));
+        txData = txData.filter(x => !selected.includes(String(x.id)));
         saveData(); renderTxTable(); updateBalances();
       }
       function deleteAllTx() {
@@ -1033,7 +1033,7 @@
         const desc = document.getElementById("cashDesc").value;
 
         if (editId) {
-          const idx = cashData.findIndex(x => x.id === Number(editId));
+          const idx = cashData.findIndex(x => String(x.id) === String(editId));
           if (idx !== -1) { cashData[idx] = { ...cashData[idx], date, recipient, payMode, amount, purpose, desc }; }
         } else {
           cashData.push({ id: Date.now(), date, recipient, payMode, amount, purpose, desc });
@@ -1041,7 +1041,7 @@
         saveData(); closeCashModal(); renderCashTable(); updateBalances();
       }
       function editCash(id) {
-        const item = cashData.find(x => x.id === id);
+        const item = cashData.find(x => String(x.id) === String(id));
         if (!item) return;
         document.getElementById("cashModalTitle").innerText = "পেমেন্ট সংশোধন করুন";
         document.getElementById("cashEditId").value = item.id;
@@ -1056,14 +1056,14 @@
       }
       function deleteCash(id) {
         if (!confirm("আপনি কি এই পেমেন্টটি মুছে ফেলতে চান?")) return;
-        cashData = cashData.filter(x => x.id !== id);
+        cashData = cashData.filter(x => String(x.id) !== String(id));
         saveData(); renderCashTable(); updateBalances();
       }
       function deleteMarkedCash() {
-        const selected = Array.from(document.querySelectorAll('.cash-checkbox:checked')).map(cb => Number(cb.value));
+        const selected = Array.from(document.querySelectorAll('.cash-checkbox:checked')).map(cb => String(cb.value));
         if (selected.length === 0) { alert("অনুগ্রহ করে অন্তত একটি পেমেন্ট নির্বাচন করুন"); return; }
         if (!confirm(`আপনি কি নির্বাচিত ${selected.length} টি পেমেন্ট মুছে ফেলতে চান?`)) return;
-        cashData = cashData.filter(x => !selected.includes(x.id));
+        cashData = cashData.filter(x => !selected.includes(String(x.id)));
         saveData(); renderCashTable(); updateBalances();
       }
       function deleteAllCash() {
@@ -1263,7 +1263,7 @@
         const guarantorSig = document.getElementById("guarantorSigData").value || "";
 
         if (editId) {
-          const idx = loanData.findIndex(x => x.id === Number(editId));
+          const idx = loanData.findIndex(x => String(x.id) === String(editId));
           if (idx !== -1) {
             loanData[idx] = { ...loanData[idx], name, mobile, address, memberId, amount, rate, date, remarks, borrowerSig, guarantorSig, formType: isOther ? 'other' : 'member' };
           }
@@ -1273,7 +1273,7 @@
         saveData(); closeLoanModal(); renderLoanTable(); updateBalances();
       }
       function editLoan(id) {
-        const item = loanData.find(x => x.id === id);
+        const item = loanData.find(x => String(x.id) === String(id));
         if (!item) return;
         document.getElementById("loanModalTitle").innerText = "ঋণ সংশোধন করুন";
         document.getElementById("loanEditId").value = item.id;
@@ -1307,14 +1307,14 @@
       }
       function deleteLoan(id) {
         if (!confirm("আপনি কি এই ঋণ রেকর্ডটি সম্পূর্ণ মুছে ফেলতে চান?")) return;
-        loanData = loanData.filter(x => x.id !== id);
+        loanData = loanData.filter(x => String(x.id) !== String(id));
         saveData(); renderLoanTable(); updateBalances();
       }
       function deleteMarkedLoan() {
-        const selected = Array.from(document.querySelectorAll('.loan-checkbox:checked')).map(cb => Number(cb.value));
+        const selected = Array.from(document.querySelectorAll('.loan-checkbox:checked')).map(cb => String(cb.value));
         if (selected.length === 0) { alert("অনুগ্রহ করে অন্তত একটি ঋণ রেকর্ড নির্বাচন করুন"); return; }
         if (!confirm(`আপনি কি নির্বাচিত ${selected.length} টি ঋণ রেকর্ড মুছে ফেলতে চান?`)) return;
-        loanData = loanData.filter(x => !selected.includes(x.id));
+        loanData = loanData.filter(x => !selected.includes(String(x.id)));
         saveData(); renderLoanTable(); updateBalances();
       }
       function deleteAllLoan() {
@@ -1554,8 +1554,14 @@
       // 🆕 EXCEL REPORT EXPORT FUNCTION (সম্পূর্ণ আপডেট করা হয়েছে)
       // ----------------------------------------------------
       async function exportReport(type) {
-        if (typeof ExcelJS === "undefined") {
-          alert("ExcelJS লাইব্রেরি সঠিকভাবে লোড হয়নি।");
+        try {
+          // ExcelJS না লোড হলেও export বন্ধ হবে না — CSV fallback থাকবে।
+          if (typeof ExcelJS === "undefined") {
+            exportReportCSV(type);
+            return;
+          }
+        } catch (e) {
+          exportReportCSV(type);
           return;
         }
 
@@ -1727,6 +1733,42 @@
         saveAs(blob, fileName);
       }
 
+      // ExcelJS/CDN unavailable হলে সরাসরি CSV export
+      function exportReportCSV(type) {
+        let rows = [], fileName = "treasury_export.csv";
+        const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
+        if (type === "transactions") {
+          rows = [["তারিখ","লেনদেনের ধরন","পরিমাণ (₹)","বিবরণ"]];
+          txData.forEach(x => rows.push([x.date, x.type, x.amount, x.desc || ""]));
+          fileName = "Transaction_Report.csv";
+        } else if (type === "cash") {
+          rows = [["তারিখ","প্রাপকের নাম","পেমেন্টের ধরন","উদ্দেশ্য/খাত","পরিমাণ (₹)","বিবরণ"]];
+          cashData.forEach(x => rows.push([x.date,x.recipient,x.payMode === "online" ? "অনলাইন" : "নগদ",x.purpose,x.amount,x.desc || ""]));
+          fileName = "Cash_Payments.csv";
+        } else if (type === "loans") {
+          rows = [["তারিখ","ঋণগ্রহীতা","মোবাইল","আসল (₹)","সুদের হার (%)","বাকি আসল (₹)","বাকি সুদ (₹)","মোট বাকি (₹)"]];
+          loanData.forEach(item => {
+            const amt = Number(item.amount)||0, rate=Number(item.rate)||0;
+            const interest = Number(((amt*rate)/100).toFixed(2));
+            let pp=0,pi=0;
+            (item.payments||[]).forEach(p=>{pp+=Number(p.principalPaid)||0;pi+=Number(p.interestPaid)||0;});
+            const dp=Math.max(0,Number((amt-pp).toFixed(2))), di=Math.max(0,Number((interest-pi).toFixed(2)));
+            rows.push([item.date||"",item.name||"",item.mobile||"",amt,rate,dp,di,Number((dp+di).toFixed(2))]);
+          });
+          fileName = "Loan_Report.csv";
+        } else {
+          alert("অজানা এক্সপোর্ট ধরন");
+          return;
+        }
+        if (rows.length <= 1) { alert("এক্সপোর্ট করার জন্য কোনো তথ্য নেই!"); return; }
+        const csv = "\uFEFF" + rows.map(r => r.map(q).join(",")).join("\n");
+        const blob = new Blob([csv], {type:"text/csv;charset=utf-8;"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href=url; a.download=fileName; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url),1000);
+      }
+
       // --- Firebase Cloud Sync (members + treasury data) ---
       window.firebaseMembersCache = [];
       window.treasuryDb = null;
@@ -1734,6 +1776,9 @@
       let treasuryCloudDocIds = { transactions:new Map(), cash:new Map(), loans:new Map() };
       let treasuryCloudReady = false;
       let treasuryUserReady = false;
+      let treasuryCloudMutationBusy = false;
+      let treasuryCloudSnapshotPending = false;
+      let treasuryCloudWriteQueue = Promise.resolve();
 
       async function initTreasuryFirebase() {
         try {
@@ -1819,6 +1864,11 @@
               renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
 
               onSnapshot(collection(window.treasuryDb, "treasurer"), snap2 => {
+                // Delete/edit-এর মাঝখানে পুরনো snapshot এসে local UI-কে আবার পুরনো data-তে ফিরিয়ে দেবে না।
+                if (treasuryCloudMutationBusy) {
+                  treasuryCloudSnapshotPending = true;
+                  return;
+                }
                 const next = { transactions:[], cash:[], loans:[] };
                 snap2.forEach(d => {
                   const v = d.data() || {};
@@ -1842,13 +1892,21 @@
 
           async function saveArrayToCloud(kind, arr) {
             if (!window.treasuryDb || !treasuryCloudReady || !treasuryUserReady) return;
-            const oldMap = treasuryCloudDocIds[kind];
+            const oldMap = treasuryCloudDocIds[kind] || new Map();
             const currentIds = new Set(arr.map(x => String(x.id)));
+
+            // আগে cloud-এ থাকা কিন্তু local-এ আর নেই — সেগুলো delete
             for (const [dataId, docId] of oldMap) {
-              if (!currentIds.has(String(dataId))) {
-                try { await deleteDoc(doc(window.treasuryDb, "treasurer", docId)); } catch(e) { console.warn(e); }
+              if (!currentIds.has(String(dataId)) && docId) {
+                try {
+                  await deleteDoc(doc(window.treasuryDb, "treasurer", docId));
+                } catch(e) {
+                  console.error("Cloud delete failed:", kind, dataId, e);
+                  throw e;
+                }
               }
             }
+
             const newMap = new Map();
             for (const item of arr) {
               const dataId = String(item.id);
@@ -1867,20 +1925,32 @@
                 newMap.set(dataId, docId);
               } catch(e) {
                 console.error("Cloud save failed:", kind, e);
-                alert("Firebase-এ সংরক্ষণ করা যায়নি। আপনার login/treasurer permission এবং Firestore Rules পরীক্ষা করুন।");
+                throw e;
               }
             }
             treasuryCloudDocIds[kind] = newMap;
           }
 
-          window.saveTreasuryToCloud = async function() {
-            if (!treasuryCloudReady || !treasuryUserReady) {
-              saveLocalTreasuryOnly();
-              return;
-            }
-            await saveArrayToCloud("transactions", txData);
-            await saveArrayToCloud("cash", cashData);
-            await saveArrayToCloud("loans", loanData);
+          window.saveTreasuryToCloud = function() {
+            saveLocalTreasuryOnly();
+            if (!treasuryCloudReady || !treasuryUserReady) return Promise.resolve();
+
+            // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
+            treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
+              treasuryCloudMutationBusy = true;
+              try {
+                await saveArrayToCloud("transactions", txData);
+                await saveArrayToCloud("cash", cashData);
+                await saveArrayToCloud("loans", loanData);
+              } catch(e) {
+                console.error("Treasury cloud sync operation failed:", e);
+                alert("Firebase-এ পরিবর্তন সংরক্ষণ করা যায়নি। আপনার login এবং treasurer permission পরীক্ষা করুন।");
+              } finally {
+                treasuryCloudMutationBusy = false;
+                treasuryCloudSnapshotPending = false;
+              }
+            });
+            return treasuryCloudWriteQueue;
           };
 
           function rebuildTreasuryCloudMaps() {
@@ -1908,7 +1978,8 @@
       // existing saveData() calls, so the UI and all existing button handlers stay unchanged.
       saveData = function() {
         saveLocalTreasuryOnly();
-        if (window.saveTreasuryToCloud) window.saveTreasuryToCloud();
+        if (window.saveTreasuryToCloud) return window.saveTreasuryToCloud();
+        return Promise.resolve();
       };
 
       // --- Initialization ---
