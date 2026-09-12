@@ -17,6 +17,7 @@
         messagingSenderId: "625976130920",
         appId: "1:625976130920:web:60190b21f1c7563cdd2add",
       };
+      window.treasuryFirebaseConfig = firebaseConfig;
     </script>
     <style>
       .data-table td, .data-table th {
@@ -1126,39 +1127,74 @@
         document.getElementById("loanTotalInterest").value = interest;
         document.getElementById("loanTotalPayable").value = parseFloat((amt + interest).toFixed(2));
       }
-      function handleMemberSearch(query) {
+      function normalizeMemberForTreasury(m, idx) {
+        const name = (m?.name || m?.memberName || m?.sodossoName || "").toString().trim();
+        const mobile = (m?.mobile ?? m?.phone ?? m?.mobileNumber ?? "").toString().trim();
+        const village = (m?.village ?? m?.gram ?? m?.address ?? m?.area ?? "-").toString().trim();
+        const role = (m?.role ?? m?.designation ?? m?.position ?? "সাধারণ সদস্য").toString().trim();
+        const id = (m?.memberId ?? m?.sodossoId ?? m?.autoId ?? m?.id ?? ("M" + String(idx + 1).padStart(3, "0"))).toString();
+        return { ...m, name, mobile, village, role, memberId: id };
+      }
+
+      async function getMembersFromFirebaseOnce() {
+        try {
+          const { getDocs, collection } = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+          const snap = await getDocs(collection(window.treasuryDb, "members"));
+          const list = [];
+          snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+          list.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+          return list.map((m,i) => normalizeMemberForTreasury(m,i));
+        } catch (e) {
+          console.warn("Member Firebase read failed:", e);
+          return [];
+        }
+      }
+
+      function renderMemberSuggestions(filtered) {
         const sugg = document.getElementById("memberSuggestions");
-        if (!query.trim()) { sugg.classList.add("hidden"); return; }
-        let allMembers = JSON.parse(localStorage.getItem("sodosso_data")) || [];
-        const q = query.toLowerCase();
-        const filtered = allMembers.filter(m => {
-          const name = (m.name || "").toLowerCase();
-          const mobile = (m.mobile || m.phone || "").toLowerCase();
-          const memId = (m.memberId || m.id || m.sodossoId || "").toString().toLowerCase();
-          return name.includes(q) || mobile.includes(q) || memId.includes(q);
-        });
-        if (filtered.length === 0) {
+        if (!sugg) return;
+        if (!filtered.length) {
           sugg.innerHTML = '<div class="p-2.5 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
           sugg.classList.remove("hidden");
           return;
         }
-        let html = '';
-        filtered.forEach((m, idx) => {
-          const name = m.name || 'অজানা নাম';
-          const mobile = m.mobile || m.phone || 'N/A';
-          const address = m.address || m.village || m.gram || '-';
-          const memId = m.memberId || m.id || m.sodossoId || ('M' + String(idx + 1).padStart(3, '0'));
-          const safeName = name.replace(/'/g, "\\'");
-          const safeMobile = mobile.replace(/'/g, "\\'");
-          const safeAddress = address.replace(/'/g, "\\'");
-          const safeId = memId.replace(/'/g, "\\'");
-          html += `<div onclick="selectMember('${safeName}', '${safeMobile}', '${safeAddress}', '${safeId}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
-              <div><div class="font-bold text-gray-800">${name}</div><div class="text-gray-500">📞 ${mobile} | 🏠 ${address}</div></div>
-              <div class="bg-orange-100 text-orange-800 font-bold text-xs px-2 py-1 rounded shrink-0 border border-orange-200">ID: ${memId}</div>
-            </div>`;
-        });
-        sugg.innerHTML = html; sugg.classList.remove("hidden");
+        sugg.innerHTML = filtered.slice(0, 50).map((m, idx) => {
+          const name = m.name || "অজানা নাম";
+          const mobile = m.mobile || "N/A";
+          const address = m.address || m.village || m.gram || "-";
+          const memId = m.memberId || m.autoId || m.id || ("M" + String(idx + 1).padStart(3, "0"));
+          const esc = v => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+          return `<div onclick="selectMember('${String(name).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(mobile).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(address).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(memId).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
+            <div><div class="font-bold text-gray-800">${esc(name)}</div><div class="text-gray-500">📞 ${esc(mobile)} | 🏠 ${esc(address)}</div></div>
+            <div class="bg-orange-100 text-orange-800 font-bold text-xs px-2 py-1 rounded shrink-0 border border-orange-200">ID: ${esc(memId)}</div>
+          </div>`;
+        }).join("");
+        sugg.classList.remove("hidden");
       }
+
+      async function handleMemberSearch(query) {
+        const sugg = document.getElementById("memberSuggestions");
+        if (!sugg) return;
+        const raw = String(query || "").trim();
+        if (!raw) { sugg.classList.add("hidden"); return; }
+        let allMembers = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+        if (!allMembers.length) {
+          try { allMembers = JSON.parse(localStorage.getItem("membersData") || localStorage.getItem("sodosso_data") || "[]"); } catch(e) { allMembers = []; }
+        }
+        if (!allMembers.length && window.treasuryDb) allMembers = await getMembersFromFirebaseOnce();
+        allMembers = allMembers.map((m,i) => normalizeMemberForTreasury(m,i));
+        const q = raw.toLocaleLowerCase("bn-BD");
+        const digits = raw.replace(/[^0-9]/g, "");
+        const filtered = allMembers.filter(m => {
+          const fields = [m.name, m.mobile, m.phone, m.memberId, m.autoId, m.id, m.village, m.role, m.address, m.gram]
+            .filter(v => v !== undefined && v !== null).map(v => String(v).toLocaleLowerCase("bn-BD"));
+          return fields.some(v => v.includes(q)) || (digits && fields.some(v => v.replace(/[^0-9]/g, "").includes(digits)));
+        });
+        renderMemberSuggestions(filtered);
+      }
+
+      window.handleMemberSearch = handleMemberSearch;
+
       function selectMember(name, mobile, address, id) {
         document.getElementById("loanMemberSearch").value = name;
         document.getElementById("loanMemberId").value = id || "";
@@ -1691,12 +1727,198 @@
         saveAs(blob, fileName);
       }
 
+      // --- Firebase Cloud Sync (members + treasury data) ---
+      window.firebaseMembersCache = [];
+      window.treasuryDb = null;
+      window.treasuryAuth = null;
+      let treasuryCloudDocIds = { transactions:new Map(), cash:new Map(), loans:new Map() };
+      let treasuryCloudReady = false;
+      let treasuryUserReady = false;
+
+      async function initTreasuryFirebase() {
+        try {
+          const [{ initializeApp }, authMod, fs] = await Promise.all([
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+          ]);
+          const { getAuth, onAuthStateChanged } = authMod;
+          const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
+
+          const app = initializeApp(window.treasuryFirebaseConfig, "treasuryApp");
+          window.treasuryDb = getFirestore(app);
+          window.treasuryAuth = getAuth(app);
+
+          onAuthStateChanged(window.treasuryAuth, async (user) => {
+            treasuryUserReady = !!user;
+            if (!user) {
+              treasuryCloudReady = false;
+              console.warn("Treasury Firebase: user is not signed in. Cloud sync will wait for login.");
+              return;
+            }
+            await startTreasuryCloudSync();
+          });
+
+          // Members can be read by any signed-in user according to the supplied Firestore Rules.
+          onSnapshot(collection(window.treasuryDb, "members"), snap => {
+            const members = [];
+            snap.forEach(d => members.push({ id:d.id, ...d.data() }));
+            members.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+            window.firebaseMembersCache = members.map((m,i) => normalizeMemberForTreasury(m,i));
+            try {
+              localStorage.setItem("membersData", JSON.stringify(window.firebaseMembersCache));
+              localStorage.setItem("sodosso_data", JSON.stringify(window.firebaseMembersCache));
+            } catch(e) {}
+            const input = document.getElementById("loanMemberSearch");
+            if (input && input.value.trim()) handleMemberSearch(input.value);
+          }, err => console.warn("Members sync error:", err));
+
+          async function startTreasuryCloudSync() {
+            if (treasuryCloudReady) return;
+            try {
+              const snap = await getDocs(collection(window.treasuryDb, "treasurer"));
+              const cloud = { transactions:[], cash:[], loans:[] };
+              snap.forEach(d => {
+                const v = d.data() || {};
+                const kind = v.kind;
+                if (kind === "transactions" || kind === "cash" || kind === "loans") {
+                  const item = { ...(v.data || {}) , _docId:d.id };
+                  if (item.id !== undefined && item.id !== null) cloud[kind].push(item);
+                }
+              });
+
+              // First-time migration: keep existing browser records and upload them to the
+              // single `treasurer` collection allowed by the supplied Firestore Rules.
+              const localSets = [
+                ["transactions", txData],
+                ["cash", cashData],
+                ["loans", loanData]
+              ];
+              for (const [kind, localArray] of localSets) {
+                if (!cloud[kind].length && localArray.length) {
+                  for (const item of localArray) {
+                    const payload = { kind, data: { ...item } };
+                    delete payload.data._docId;
+                    try {
+                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
+                      item._docId = ref.id;
+                      cloud[kind].push({ ...item });
+                    } catch(e) {
+                      console.warn("Initial cloud migration failed:", kind, e);
+                    }
+                  }
+                }
+              }
+
+              if (cloud.transactions.length) txData = cloud.transactions;
+              if (cloud.cash.length) cashData = cloud.cash;
+              if (cloud.loans.length) loanData = cloud.loans;
+              saveLocalTreasuryOnly();
+              rebuildTreasuryCloudMaps();
+              treasuryCloudReady = true;
+              renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
+
+              onSnapshot(collection(window.treasuryDb, "treasurer"), snap2 => {
+                const next = { transactions:[], cash:[], loans:[] };
+                snap2.forEach(d => {
+                  const v = d.data() || {};
+                  if (v.kind && next[v.kind]) {
+                    const item = { ...(v.data || {}), _docId:d.id };
+                    next[v.kind].push(item);
+                  }
+                });
+                txData = next.transactions;
+                cashData = next.cash;
+                loanData = next.loans;
+                saveLocalTreasuryOnly();
+                rebuildTreasuryCloudMaps();
+                renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
+              }, err => console.warn("treasurer sync error:", err));
+            } catch(e) {
+              treasuryCloudReady = false;
+              console.error("Treasurer cloud sync failed:", e);
+            }
+          }
+
+          async function saveArrayToCloud(kind, arr) {
+            if (!window.treasuryDb || !treasuryCloudReady || !treasuryUserReady) return;
+            const oldMap = treasuryCloudDocIds[kind];
+            const currentIds = new Set(arr.map(x => String(x.id)));
+            for (const [dataId, docId] of oldMap) {
+              if (!currentIds.has(String(dataId))) {
+                try { await deleteDoc(doc(window.treasuryDb, "treasurer", docId)); } catch(e) { console.warn(e); }
+              }
+            }
+            const newMap = new Map();
+            for (const item of arr) {
+              const dataId = String(item.id);
+              let docId = item._docId || oldMap.get(dataId);
+              const clean = { ...item };
+              delete clean._docId;
+              const payload = { kind, data: clean };
+              try {
+                if (docId) {
+                  await updateDoc(doc(window.treasuryDb, "treasurer", docId), payload);
+                } else {
+                  const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
+                  docId = ref.id;
+                  item._docId = docId;
+                }
+                newMap.set(dataId, docId);
+              } catch(e) {
+                console.error("Cloud save failed:", kind, e);
+                alert("Firebase-এ সংরক্ষণ করা যায়নি। আপনার login/treasurer permission এবং Firestore Rules পরীক্ষা করুন।");
+              }
+            }
+            treasuryCloudDocIds[kind] = newMap;
+          }
+
+          window.saveTreasuryToCloud = async function() {
+            if (!treasuryCloudReady || !treasuryUserReady) {
+              saveLocalTreasuryOnly();
+              return;
+            }
+            await saveArrayToCloud("transactions", txData);
+            await saveArrayToCloud("cash", cashData);
+            await saveArrayToCloud("loans", loanData);
+          };
+
+          function rebuildTreasuryCloudMaps() {
+            treasuryCloudDocIds.transactions = new Map(txData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+            treasuryCloudDocIds.cash = new Map(cashData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+            treasuryCloudDocIds.loans = new Map(loanData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+          }
+          window._rebuildTreasuryCloudMaps = rebuildTreasuryCloudMaps;
+          window._treasuryStartCloudSync = startTreasuryCloudSync;
+        } catch(e) {
+          console.error("Firebase Treasury initialization failed:", e);
+          treasuryCloudReady = false;
+        }
+      }
+
+      function saveLocalTreasuryOnly() {
+        try {
+          localStorage.setItem("treasury_txData", JSON.stringify(txData));
+          localStorage.setItem("treasury_cashData", JSON.stringify(cashData));
+          localStorage.setItem("treasury_loanData", JSON.stringify(loanData));
+        } catch(e) {}
+      }
+
+      // Browser cache is retained as a fallback; cloud sync is triggered by the same
+      // existing saveData() calls, so the UI and all existing button handlers stay unchanged.
+      saveData = function() {
+        saveLocalTreasuryOnly();
+        if (window.saveTreasuryToCloud) window.saveTreasuryToCloud();
+      };
+
       // --- Initialization ---
       window.onload = () => {
+        setDefaultDates();
         updateBalances();
         renderTxTable();
         renderCashTable();
         renderLoanTable();
+        initTreasuryFirebase();
       };
     </script>
   </body>
