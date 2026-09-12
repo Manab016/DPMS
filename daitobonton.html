@@ -37,7 +37,7 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){devModal.classList.toggle("hidden");if(!devModal.classList.contains("hidden"))loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারি","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাটা","খুটাচিঠি","সিংড়াপাড়া","সম্বলখানি"];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারি","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
 function getVillage(m){return m.village||m.gram||m.address||""}
