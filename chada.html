@@ -206,6 +206,7 @@
         <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm space-y-1">
           <div>সদস্যদের মোট: <strong id="subTotalMembersAmount" class="text-orange-700">₹0</strong></div>
           <div>অন্যান্যদের মোট: <strong id="subTotalOthersAmount" class="text-orange-700">₹0</strong></div>
+          <div>দায়িত্ব বণ্টন চাঁদা মোট: <strong id="daitobontonTotalAmount" class="text-orange-700">₹0</strong></div>
           <div class="text-base font-bold text-emerald-700 pt-1 border-t border-amber-200">সর্বমোট: <span id="subGrandTotal">₹0</span></div>
         </div>
 
@@ -567,6 +568,7 @@
         }
         loadMembersData();
         loadSubscriptionsData();
+        loadDaitobontonTotal();
       });
 
       window.handleLogout = async function() {
@@ -626,6 +628,21 @@
         if (oEl) oEl.innerText = `₹${otherTotal}`;
         if (gEl) gEl.innerText = `₹${grandTotal}`;
         if (dashSub) dashSub.innerText = `₹${grandTotal}`;
+      }
+
+      // 📋 দায়িত্ব বণ্টন থেকে কোষাধ্যক্ষের কাছে জমা হওয়া চাঁদার মোট
+      function loadDaitobontonTotal() {
+        onSnapshot(collection(db, "daitobonton"), (snapshot) => {
+          let total = 0;
+          snapshot.forEach((docSnap) => {
+            const data = docSnap.data() || {};
+            total += Number(data.deposited) || 0;
+          });
+          const el = document.getElementById("daitobontonTotalAmount");
+          if (el) el.innerText = `₹${total}`;
+        }, (err) => {
+          console.error("দায়িত্ব বণ্টনের চাঁদা মোট আনা যায়নি:", err);
+        });
       }
 
       // 👨‍💻 Developer Modal Script
