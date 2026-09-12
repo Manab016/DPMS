@@ -8,8 +8,6 @@
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -40,30 +38,6 @@
         max-width: 250px;
         font-size: 11px;
       }
-      .receipt-paper {
-        background: #fff;
-        border: 2px solid #198754;
-        border-radius: 10px;
-        padding: 14px;
-        color: #1f2937;
-        width: 100%;
-        box-sizing: border-box;
-      }
-      .receipt-signature-img {
-        max-height: 52px;
-        max-width: 130px;
-        object-fit: contain;
-        margin: 0 auto 4px;
-      }
-      @media print {
-        body > * { display: none !important; }
-        #receiptModal { display: block !important; position: static !important; background: #fff !important; padding: 0 !important; }
-        #receiptModal > div { display: block !important; width: 100% !important; max-width: 760px !important; margin: 0 auto !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; }
-        #receiptModal > div > button, #receiptModal > div > div:last-child { display: none !important; }
-        #receiptContent { display: block !important; }
-        .receipt-paper { border: 2px solid #198754 !important; }
-        @page { size: A4; margin: 12mm; }
-      }
     </style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
@@ -75,6 +49,33 @@
       <span class="text-base">👨‍💻</span>
       <span class="hidden md:inline">ডেভেলপার</span>
     </button>
+
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
+          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+        </div>
+        <div class="space-y-2.5 text-xs border-t pt-3">
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">নাম:</span>
+            <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">মোবাইল:</span>
+            <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">ইমেইল:</span>
+            <a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a>
+          </div>
+        </div>
+        <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
+
 
     <div class="max-w-4xl mx-auto">
       <!-- কমিটি হেডিং সেকশন -->
@@ -746,9 +747,24 @@
         checkboxes.forEach(cb => cb.checked = checkbox.checked);
       }
       
-      function toggleDevModal() {
-        alert("ডেভেলপার: Manabendra Nath Sarkar");
+<script>
+      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+
+      function loadDevData() {
+        const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
+        document.getElementById("popDevName").textContent = saved.name;
+        document.getElementById("popDevMobile").textContent = saved.mobile;
+        document.getElementById("popDevMobile").href = `tel:${saved.mobile}`;
+        document.getElementById("popDevEmail").textContent = saved.email;
+        document.getElementById("popDevEmail").href = `mailto:${saved.email}`;
       }
+
+      function toggleDevModal() {
+        const modal = document.getElementById("devModal");
+        modal.classList.toggle("hidden");
+        if (!modal.classList.contains("hidden")) loadDevData();
+      }
+    </script>
 
       // ----------------------------------------------------
       // টেবিল রেন্ডার ফাংশনসমূহ (যেগুলো মিসিং ছিলো)
@@ -862,7 +878,7 @@
             <td class="p-2 border-r text-center font-bold text-gray-900">${formatCurrency(totalDue)}</td>
             <td class="p-2 border-r text-center">${status}</td>
             <td class="p-2 text-center whitespace-nowrap">
-               <button onclick="openLoanRepayModal(${item.id})" title="পরিশোধ করুন" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] font-bold mr-1">পরিশোধ</button>
+               <button onclick="openLoanRepayModal(${item.id})" title="পরিশোধ করুন" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] font-bold mr-1">💸</button>
                <button onclick="viewLoanHistory(${item.id})" title="ইতিহাস" class="text-blue-600 px-1">📜</button>
                <button onclick="editLoan(${item.id})" title="এডিট" class="text-indigo-600 px-1">✏️</button>
                <button onclick="deleteLoan(${item.id})" title="মুছুন" class="text-red-600 px-1">🗑️</button>
@@ -1232,27 +1248,6 @@
         document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
         document.getElementById("cardMemAddress").innerText = address || "-";
-
-        // Member page-এর signature সরাসরি ব্যবহার করুন; আলাদা করে আবার upload করতে হবে না।
-        const member = (Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [])
-          .find(m => String(m.memberId || m.autoId || m.id || "") === String(id || ""));
-        if (member) {
-          const borrowerSigEl = document.getElementById("borrowerSigData");
-          const borrowerPreview = document.getElementById("borrowerSigPreview");
-          if (member.signature) {
-            borrowerSigEl.value = member.signature;
-            borrowerPreview.innerHTML = `<div class="relative w-full h-full flex items-center justify-center p-1"><img src="${member.signature}" class="max-h-12 object-contain" /><span class="absolute bottom-0 right-1 text-[9px] text-emerald-700 bg-white px-1 rounded">সদস্য পেজ থেকে</span></div>`;
-          }
-
-          const treasurer = getTreasurerMemberFromCache();
-          const guarantorSigEl = document.getElementById("guarantorSigData");
-          const guarantorPreview = document.getElementById("guarantorSigPreview");
-          if (treasurer?.signature) {
-            guarantorSigEl.value = treasurer.signature;
-            guarantorPreview.innerHTML = `<div class="relative w-full h-full flex items-center justify-center p-1"><img src="${treasurer.signature}" class="max-h-12 object-contain" /><span class="absolute bottom-0 right-1 text-[9px] text-emerald-700 bg-white px-1 rounded">${treasurer.name || "কোষাধ্যক্ষ"}</span></div>`;
-          }
-        }
-
         document.getElementById("selectedMemberCard").classList.remove("hidden");
       }
       function clearSelectedMember() {
@@ -1282,26 +1277,7 @@
         document.getElementById(hiddenInputId).value = "";
         document.getElementById(previewContainerId).innerHTML = `<span class="text-gray-400 text-[11px]">কোনো স্বাক্ষর নাই</span>`;
       }
-      async function uploadTreasuryDataURL(dataUrl, path, contentType) {
-        if (!dataUrl || !String(dataUrl).startsWith("data:")) return dataUrl;
-        if (!window.treasuryStorage) return dataUrl;
-        const response = await fetch(dataUrl);
-        const blob = await response.blob();
-        const snap = await uploadBytes(storageRef(window.treasuryStorage, path), blob, {
-          contentType: contentType || blob.type || "application/octet-stream",
-          cacheControl: "public,max-age=31536000"
-        });
-        return await getDownloadURL(snap.ref);
-      }
-
-      function getTreasurerMemberFromCache() {
-        const list = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
-        const preferred = list.find(m => String(m.role || "").trim() === "পূজা কোষাধ্যক্ষ" && m.signature);
-        if (preferred) return preferred;
-        return list.find(m => ["কোষাধ্যক্ষ", "পূজা কোষাধ্যক্ষ"].includes(String(m.role || "").trim()) && m.signature) || null;
-      }
-
-      async function saveLoanForm(e) {
+      function saveLoanForm(e) {
         e.preventDefault();
         const editId = document.getElementById("loanEditId").value;
         const formType = document.getElementById("loanFormType").value || "member";
@@ -1325,23 +1301,8 @@
         const rate = parseFloat(document.getElementById("loanInterestRate").value) || 0;
         const date = document.getElementById("loanDate").value;
         const remarks = document.getElementById("loanRemarks").value;
-        let borrowerSig = document.getElementById("borrowerSigData").value || "";
-        let guarantorSig = document.getElementById("guarantorSigData").value || "";
-
-        if (!isOther) {
-          const member = (Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [])
-            .find(m => String(m.memberId || m.autoId || m.id || "") === String(memberId || ""));
-          if (member?.signature) borrowerSig = member.signature;
-          const treasurer = getTreasurerMemberFromCache();
-          if (treasurer?.signature) guarantorSig = treasurer.signature;
-        }
-
-        if (String(borrowerSig).startsWith("data:")) {
-          borrowerSig = await uploadTreasuryDataURL(borrowerSig, `loan-signatures/borrower-${Date.now()}.png`, "image/png");
-        }
-        if (String(guarantorSig).startsWith("data:")) {
-          guarantorSig = await uploadTreasuryDataURL(guarantorSig, `loan-signatures/treasurer-${Date.now()}.png`, "image/png");
-        }
+        const borrowerSig = document.getElementById("borrowerSigData").value || "";
+        const guarantorSig = document.getElementById("guarantorSigData").value || "";
 
         if (editId) {
           const idx = loanData.findIndex(x => String(x.id) === String(editId));
@@ -1592,176 +1553,44 @@
         saveData(); viewLoanHistory(loanId); renderLoanTable(); updateBalances();
       }
 
-      let currentReceiptLoan = null;
-      let currentReceiptPayment = null;
-
-      function escapeReceiptText(v) {
-        return String(v ?? "")
-          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
-          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
-      }
-
-      function getReceiptTreasurer() {
-        const list = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
-        return list.find(m => String(m.role || "").trim() === "পূজা কোষাধ্যক্ষ")
-          || list.find(m => String(m.role || "").trim() === "কোষাধ্যক্ষ")
-          || null;
-      }
-
       function showReceiptModal(loan, payment) {
-        currentReceiptLoan = loan;
-        currentReceiptPayment = payment;
-
-        const savedLogo = localStorage.getItem("committee_logo") ||
-                          localStorage.getItem("committeeLogo") ||
-                          localStorage.getItem("logo") || "";
-        const treasurer = getReceiptTreasurer();
-        const borrowerSig = loan.borrowerSig || "";
-        const treasurerSig = treasurer?.signature || loan.guarantorSig || "";
-
-        const origAmt = Number(loan.amount) || 0;
-        const rate = Number(loan.rate) || 0;
-        const totalInterest = Number(((origAmt * rate) / 100).toFixed(2));
-        let paidPrin = 0, paidInt = 0;
-        (loan.payments || []).forEach(p => {
-          paidPrin += Number(p.principalPaid) || 0;
-          paidInt += Number(p.interestPaid) || 0;
-        });
-        const duePrin = Math.max(0, Number((origAmt - paidPrin).toFixed(2)));
-        const dueInt = Math.max(0, Number((totalInterest - paidInt).toFixed(2)));
-        const dueTotal = Number((duePrin + dueInt).toFixed(2));
-
+        const savedLogo = localStorage.getItem("committee_logo") || localStorage.getItem("committeeLogo") || localStorage.getItem("logo");
+        const borrowerSigDisplay = loan.borrowerSig ? `<img src="${loan.borrowerSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">${loan.name}</div>`;
+        const guarantorSigDisplay = loan.guarantorSig ? `<img src="${loan.guarantorSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">গ্যারান্টার</div>`;
         const content = document.getElementById("receiptContent");
         content.innerHTML = `
-          <div id="receiptPaper" class="receipt-paper">
-            <div class="text-center border-b-2 border-emerald-600 pb-3 mb-3">
-              ${savedLogo ? `<img src="${escapeReceiptText(savedLogo)}" class="w-14 h-14 object-contain mx-auto mb-1 rounded-full border border-orange-400 bg-white">` : ""}
-              <h4 class="font-bold text-orange-700 text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-              <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
-              <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${escapeReceiptText(payment.receiptNo || "-")}</p>
+          <div class="text-center border-b pb-3 mb-3">
+            <div class="flex justify-center mb-1.5">
+              ${savedLogo ? `<img src="${savedLogo}" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-orange-400 bg-white" />` : `<div class="w-12 h-12 rounded-full border border-orange-400 bg-white flex items-center justify-center text-lg">Durga</div>`}
             </div>
-
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-xs">
-              <div class="grid grid-cols-2 gap-2">
-                <div><span class="text-gray-500">তারিখ</span><br><strong>${escapeReceiptText(payment.date || "-")}</strong></div>
-                <div><span class="text-gray-500">সদস্য ID</span><br><strong>${escapeReceiptText(loan.memberId || "N/A")}</strong></div>
-                <div><span class="text-gray-500">ঋণগ্রহীতা</span><br><strong>${escapeReceiptText(loan.name || "-")}</strong></div>
-                <div><span class="text-gray-500">মোবাইল</span><br><strong>${escapeReceiptText(loan.mobile || "-")}</strong></div>
-                <div class="col-span-2"><span class="text-gray-500">ঠিকানা</span><br><strong>${escapeReceiptText(loan.address || "-")}</strong></div>
-              </div>
-            </div>
-
-            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 text-xs">
-              <div class="flex justify-between"><span>পরিশোধিত আসল</span><strong class="text-emerald-700">${formatCurrency(payment.principalPaid)}</strong></div>
-              <div class="flex justify-between mt-1"><span>পরিশোধিত সুদ</span><strong class="text-emerald-700">${formatCurrency(payment.interestPaid)}</strong></div>
-              <div class="flex justify-between border-t border-orange-200 mt-2 pt-2 text-sm font-bold"><span>এই রসিদে মোট</span><strong class="text-orange-700">${formatCurrency(payment.totalPaid)}</strong></div>
-            </div>
-
-            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-xs">
-              <div class="flex justify-between"><span>বাকি আসল</span><strong>${formatCurrency(duePrin)}</strong></div>
-              <div class="flex justify-between mt-1"><span>বাকি সুদ</span><strong>${formatCurrency(dueInt)}</strong></div>
-              <div class="flex justify-between border-t border-blue-200 mt-2 pt-2 text-sm font-bold text-blue-900"><span>মোট বাকি</span><strong>${formatCurrency(dueTotal)}</strong></div>
-            </div>
-
-            ${payment.remarks ? `<div class="text-[11px] text-gray-600 mb-4">মন্তব্য: ${escapeReceiptText(payment.remarks)}</div>` : ""}
-
-            <div class="grid grid-cols-2 gap-8 mt-8 pt-4 border-t border-gray-300 text-[10px] text-gray-700">
-              <div class="text-center">
-                <div class="h-14 flex items-end justify-center mb-1">
-                  ${borrowerSig ? `<img src="${escapeReceiptText(borrowerSig)}" class="receipt-signature-img">` : `<span class="text-gray-400">স্বাক্ষর নেই</span>`}
-                </div>
-                <div class="border-t border-gray-500 pt-1 font-bold">ঋণগ্রহীতার স্বাক্ষর</div>
-                <div>${escapeReceiptText(loan.name || "")}</div>
-              </div>
-              <div class="text-center">
-                <div class="h-14 flex items-end justify-center mb-1">
-                  ${treasurerSig ? `<img src="${escapeReceiptText(treasurerSig)}" class="receipt-signature-img">` : `<span class="text-gray-400">স্বাক্ষর নেই</span>`}
-                </div>
-                <div class="border-t border-gray-500 pt-1 font-bold">কোষাধ্যক্ষের স্বাক্ষর</div>
-                <div>${escapeReceiptText(treasurer?.name || "কোষাধ্যক্ষ")}</div>
-              </div>
-            </div>
+            <h4 class="font-bold text-orange-700 text-sm md:text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+            <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
+            <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${payment.receiptNo}</p>
+          </div>
+          <div class="space-y-1.5 text-xs text-gray-700">
+            <div class="flex justify-between"><span>তারিখ:</span> <strong>${payment.date}</strong></div>
+            <div class="flex justify-between"><span>ঋণগ্রহীতা:</span> <strong>${loan.name} ${loan.memberId ? `(${loan.memberId})` : ''}</strong></div>
+            <div class="flex justify-between"><span>মোবাইল:</span> <strong>${loan.mobile || 'N/A'}</strong></div>
+            <div class="border-t border-dashed my-2"></div>
+            <div class="flex justify-between"><span>পরিশোধিত আসল:</span> <strong class="text-emerald-700">${formatCurrency(payment.principalPaid)}</strong></div>
+            <div class="flex justify-between"><span>পরিশোধিত সুদ:</span> <strong class="text-emerald-700">${formatCurrency(payment.interestPaid)}</strong></div>
+            <div class="flex justify-between border-t pt-1.5 font-bold text-sm text-gray-900"><span>মোট পরিশোধ:</span> <strong class="text-orange-700">${formatCurrency(payment.totalPaid)}</strong></div>
+            ${payment.remarks ? `<div class="text-[11px] text-gray-500 pt-1">মন্তব্য: ${payment.remarks}</div>` : ''}
+          </div>
+          <div class="mt-6 pt-4 border-t flex justify-between items-end text-[11px] text-gray-600 font-semibold">
+            <div class="text-center">${guarantorSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্যারান্টার স্বাক্ষর</div></div>
+            <div class="text-center">${borrowerSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্রহীতার স্বাক্ষর</div></div>
           </div>
         `;
-
         document.getElementById("receiptModal").classList.remove("hidden");
         document.getElementById("receiptModal").classList.add("flex");
       }
-
       function closeReceiptModal() {
         document.getElementById("receiptModal").classList.add("hidden");
         document.getElementById("receiptModal").classList.remove("flex");
       }
-
-      async function buildReceiptPDFBlob() {
-        const paper = document.getElementById("receiptPaper");
-        if (!paper) throw new Error("Receipt not found");
-        if (typeof html2canvas === "undefined" || !window.jspdf?.jsPDF) {
-          throw new Error("PDF library not loaded");
-        }
-
-        const canvas = await html2canvas(paper, {
-          scale: 2,
-          useCORS: true,
-          backgroundColor: "#ffffff",
-          logging: false
-        });
-        const imgData = canvas.toDataURL("image/png");
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-        const pageWidth = pdf.internal.pageSize.getWidth();
-        const pageHeight = pdf.internal.pageSize.getHeight();
-        const margin = 10;
-        const imgWidth = pageWidth - margin * 2;
-        const imgHeight = canvas.height * imgWidth / canvas.width;
-        const y = Math.max(margin, Math.min(margin, (pageHeight - imgHeight) / 2));
-        pdf.addImage(imgData, "PNG", margin, y, imgWidth, Math.min(imgHeight, pageHeight - margin * 2));
-        return pdf.output("blob");
-      }
-
-      async function downloadReceiptPDF() {
-        try {
-          const blob = await buildReceiptPDFBlob();
-          const no = currentReceiptPayment?.receiptNo || "Receipt";
-          const fileName = `${no}.pdf`;
-          if (typeof saveAs === "function") saveAs(blob, fileName);
-          else {
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url; a.download = fileName; a.click();
-            setTimeout(() => URL.revokeObjectURL(url), 1000);
-          }
-        } catch (e) {
-          console.error(e);
-          alert("PDF তৈরি করা যায়নি। আবার চেষ্টা করুন।");
-        }
-      }
-
-      async function shareReceiptWhatsApp() {
-        try {
-          const blob = await buildReceiptPDFBlob();
-          const no = currentReceiptPayment?.receiptNo || "Receipt";
-          const file = new File([blob], `${no}.pdf`, { type: "application/pdf" });
-
-          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              title: `ঋণ পরিশোধ রসিদ - ${currentReceiptLoan?.name || ""}`,
-              text: `ঋণ পরিশোধের রসিদ - ${currentReceiptLoan?.name || ""}`,
-              files: [file]
-            });
-            return;
-          }
-
-          const phone = String(currentReceiptLoan?.mobile || "").replace(/\D/g, "");
-          const waText = encodeURIComponent(`ঋণ পরিশোধের রসিদ ${no} - ${currentReceiptLoan?.name || ""}`);
-          window.open(phone ? `https://wa.me/${phone}?text=${waText}` : `https://wa.me/?text=${waText}`, "_blank");
-          alert("এই browser সরাসরি PDF attachment share করতে দেয়নি। WhatsApp খুলে গেছে—PDF-টি Download করে সেখানে attach করুন।");
-        } catch (e) {
-          if (e?.name === "AbortError") return;
-          console.error(e);
-          alert("WhatsApp share করা যায়নি।");
-        }
-      }
+      function downloadReceiptPDF() { window.print(); }
+      function shareReceiptWhatsApp() { alert("হোয়াটসঅ্যাপ শেয়ার সুবিধা খুব শীঘ্রই উপলব্ধ হবে।"); }
 
       // ----------------------------------------------------
       // 🆕 EXCEL REPORT EXPORT FUNCTION (সম্পূর্ণ আপডেট করা হয়েছে)
@@ -1982,70 +1811,46 @@
         setTimeout(()=>URL.revokeObjectURL(url),1000);
       }
 
-      // --- Firebase Cloud Sync (same direct Firestore pattern used by the other pages) ---
+      // --- Firebase Cloud Sync (members + treasury data) ---
       window.firebaseMembersCache = [];
       window.treasuryDb = null;
       window.treasuryAuth = null;
+      let treasuryCloudDocIds = { transactions:new Map(), cash:new Map(), loans:new Map() };
       let treasuryCloudReady = false;
       let treasuryUserReady = false;
-      let treasuryCloudStarted = false;
+      let treasuryCloudMutationBusy = false;
+      let treasuryCloudSnapshotPending = false;
       let treasuryCloudWriteQueue = Promise.resolve();
-
-      // Firestore is the source of truth. These shadows let saveData() update only the
-      // records changed on this device; it NEVER uploads the whole local array or deletes
-      // another device's records just because they are not in this browser's old cache.
-      const treasuryCloudShadow = {
-        transactions: new Map(),
-        cash: new Map(),
-        loans: new Map()
-      };
-
-      function treasuryCleanItem(item) {
-        const clean = { ...(item || {}) };
-        delete clean._docId;
-        return clean;
-      }
-
-      function treasurySame(a, b) {
-        try { return JSON.stringify(treasuryCleanItem(a)) === JSON.stringify(treasuryCleanItem(b)); }
-        catch(e) { return false; }
-      }
-
-      function treasuryArray(kind) {
-        if (kind === 'transactions') return txData;
-        if (kind === 'cash') return cashData;
-        return loanData;
-      }
-
-      function setTreasuryArray(kind, arr) {
-        if (kind === 'transactions') txData = arr;
-        else if (kind === 'cash') cashData = arr;
-        else loanData = arr;
-      }
 
       async function initTreasuryFirebase() {
         try {
-          const [{ initializeApp }, authMod, fs, storageMod] = await Promise.all([
+          const [{ initializeApp }, authMod, fs] = await Promise.all([
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
           ]);
-          const { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } = authMod;
+          const { getAuth, onAuthStateChanged } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
-          const { getStorage } = storageMod;
 
           const app = initializeApp(window.treasuryFirebaseConfig, "treasuryApp");
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
-          window.treasuryStorage = getStorage(app);
-          try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
 
-          // Members also use the same real-time Firestore listener as the other pages.
+          onAuthStateChanged(window.treasuryAuth, async (user) => {
+            treasuryUserReady = !!user;
+            if (!user) {
+              treasuryCloudReady = false;
+              console.warn("Treasury Firebase: user is not signed in. Cloud sync will wait for login.");
+              return;
+            }
+            await startTreasuryCloudSync();
+          });
+
+          // Members can be read by any signed-in user according to the supplied Firestore Rules.
           onSnapshot(collection(window.treasuryDb, "members"), snap => {
             const members = [];
             snap.forEach(d => members.push({ id:d.id, ...d.data() }));
-            members.sort((a,b) => Number(a.createdAt || a.updatedAt || 0) - Number(b.createdAt || b.updatedAt || 0));
+            members.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
             window.firebaseMembersCache = members.map((m,i) => normalizeMemberForTreasury(m,i));
             try {
               localStorage.setItem("membersData", JSON.stringify(window.firebaseMembersCache));
@@ -2055,147 +1860,147 @@
             if (input && input.value.trim()) handleMemberSearch(input.value);
           }, err => console.warn("Members sync error:", err));
 
-          onAuthStateChanged(window.treasuryAuth, async (user) => {
-            treasuryUserReady = !!user;
-            if (!user) {
-              treasuryCloudReady = false;
-              treasuryCloudStarted = false;
-              return;
-            }
-            await startTreasuryCloudSync();
-          });
-
           async function startTreasuryCloudSync() {
-            if (treasuryCloudStarted) return;
-            treasuryCloudStarted = true;
+            if (treasuryCloudReady) return;
             try {
               const snap = await getDocs(collection(window.treasuryDb, "treasurer"));
               const cloud = { transactions:[], cash:[], loans:[] };
-              const cloudById = { transactions:new Map(), cash:new Map(), loans:new Map() };
-
               snap.forEach(d => {
                 const v = d.data() || {};
                 const kind = v.kind;
-                if (!cloud[kind]) return;
-                const item = { ...(v.data || {}), _docId:d.id };
-                if (item.id !== undefined && item.id !== null) {
-                  const key = String(item.id);
-                  cloudById[kind].set(key, { docId:d.id, data:treasuryCleanItem(item) });
-                  cloud[kind].push(item);
+                if (kind === "transactions" || kind === "cash" || kind === "loans") {
+                  const item = { ...(v.data || {}) , _docId:d.id };
+                  if (item.id !== undefined && item.id !== null) cloud[kind].push(item);
                 }
               });
 
-              // Merge old local-only records into Firebase instead of replacing cloud data.
-              for (const kind of ['transactions','cash','loans']) {
-                const local = treasuryArray(kind) || [];
-                for (const item of local) {
-                  const key = String(item.id);
-                  if (!cloudById[kind].has(key)) {
+              // First-time migration: keep existing browser records and upload them to the
+              // single `treasurer` collection allowed by the supplied Firestore Rules.
+              const localSets = [
+                ["transactions", txData],
+                ["cash", cashData],
+                ["loans", loanData]
+              ];
+              for (const [kind, localArray] of localSets) {
+                if (!cloud[kind].length && localArray.length) {
+                  for (const item of localArray) {
+                    const payload = { kind, data: { ...item } };
+                    delete payload.data._docId;
                     try {
-                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), {
-                        kind, data:treasuryCleanItem(item)
-                      });
-                      const migrated = { ...item, _docId:ref.id };
-                      cloud.push(migrated);
-                      cloudById[kind].set(key, { docId:ref.id, data:treasuryCleanItem(migrated) });
+                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
+                      item._docId = ref.id;
+                      cloud[kind].push({ ...item });
                     } catch(e) {
-                      console.error("Treasury local migration failed", kind, e);
+                      console.warn("Initial cloud migration failed:", kind, e);
                     }
                   }
                 }
               }
 
-              for (const kind of ['transactions','cash','loans']) {
-                setTreasuryArray(kind, cloud[kind]);
-                treasuryCloudShadow[kind] = cloudById[kind];
-              }
+              if (cloud.transactions.length) txData = cloud.transactions;
+              if (cloud.cash.length) cashData = cloud.cash;
+              if (cloud.loans.length) loanData = cloud.loans;
               saveLocalTreasuryOnly();
+              rebuildTreasuryCloudMaps();
               treasuryCloudReady = true;
               renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
 
-              // EXACTLY like the working pages: every device listens to Firestore in real time.
               onSnapshot(collection(window.treasuryDb, "treasurer"), snap2 => {
+                // Delete/edit-এর মাঝখানে পুরনো snapshot এসে local UI-কে আবার পুরনো data-তে ফিরিয়ে দেবে না।
+                if (treasuryCloudMutationBusy) {
+                  treasuryCloudSnapshotPending = true;
+                  return;
+                }
                 const next = { transactions:[], cash:[], loans:[] };
-                const nextShadow = { transactions:new Map(), cash:new Map(), loans:new Map() };
-
                 snap2.forEach(d => {
                   const v = d.data() || {};
-                  const kind = v.kind;
-                  if (!next[kind]) return;
-                  const item = { ...(v.data || {}), _docId:d.id };
-                  if (item.id === undefined || item.id === null) return;
-                  next[kind].push(item);
-                  nextShadow[kind].set(String(item.id), {
-                    docId:d.id,
-                    data:treasuryCleanItem(item)
-                  });
+                  if (v.kind && next[v.kind]) {
+                    const item = { ...(v.data || {}), _docId:d.id };
+                    next[v.kind].push(item);
+                  }
                 });
-
                 txData = next.transactions;
                 cashData = next.cash;
                 loanData = next.loans;
-                treasuryCloudShadow.transactions = nextShadow.transactions;
-                treasuryCloudShadow.cash = nextShadow.cash;
-                treasuryCloudShadow.loans = nextShadow.loans;
                 saveLocalTreasuryOnly();
+                rebuildTreasuryCloudMaps();
                 renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
-              }, err => console.error("Treasurer realtime sync error:", err));
+              }, err => console.warn("treasurer sync error:", err));
             } catch(e) {
               treasuryCloudReady = false;
-              treasuryCloudStarted = false;
-              console.error("Treasurer Firebase sync failed:", e);
+              console.error("Treasurer cloud sync failed:", e);
             }
           }
 
-          async function syncTreasuryKind(kind) {
+          async function saveArrayToCloud(kind, arr) {
             if (!window.treasuryDb || !treasuryCloudReady || !treasuryUserReady) return;
+            const oldMap = treasuryCloudDocIds[kind] || new Map();
+            const currentIds = new Set(arr.map(x => String(x.id)));
 
-            const arr = treasuryArray(kind) || [];
-            const shadow = treasuryCloudShadow[kind] || new Map();
-            const current = new Map(arr.map(item => [String(item.id), item]));
-
-            // Add/update ONLY records changed on this device.
-            for (const [key, item] of current) {
-              const old = shadow.get(key);
-              const clean = treasuryCleanItem(item);
-              if (old && treasurySame(old.data, clean)) continue;
-
-              if (old?.docId) {
-                await updateDoc(doc(window.treasuryDb, "treasurer", old.docId), { kind, data:clean });
-                item._docId = old.docId;
-              } else {
-                const ref = await addDoc(collection(window.treasuryDb, "treasurer"), { kind, data:clean });
-                item._docId = ref.id;
-                shadow.set(key, { docId:ref.id, data:clean });
+            // আগে cloud-এ থাকা কিন্তু local-এ আর নেই — সেগুলো delete
+            for (const [dataId, docId] of oldMap) {
+              if (!currentIds.has(String(dataId)) && docId) {
+                try {
+                  await deleteDoc(doc(window.treasuryDb, "treasurer", docId));
+                } catch(e) {
+                  console.error("Cloud delete failed:", kind, dataId, e);
+                  throw e;
+                }
               }
             }
 
-            // Delete ONLY records that existed in this device's last Firestore snapshot
-            // and were deliberately removed from the current array.
-            for (const [key, old] of shadow) {
-              if (!current.has(key) && old?.docId) {
-                await deleteDoc(doc(window.treasuryDb, "treasurer", old.docId));
+            const newMap = new Map();
+            for (const item of arr) {
+              const dataId = String(item.id);
+              let docId = item._docId || oldMap.get(dataId);
+              const clean = { ...item };
+              delete clean._docId;
+              const payload = { kind, data: clean };
+              try {
+                if (docId) {
+                  await updateDoc(doc(window.treasuryDb, "treasurer", docId), payload);
+                } else {
+                  const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
+                  docId = ref.id;
+                  item._docId = docId;
+                }
+                newMap.set(dataId, docId);
+              } catch(e) {
+                console.error("Cloud save failed:", kind, e);
+                throw e;
               }
             }
+            treasuryCloudDocIds[kind] = newMap;
           }
 
           window.saveTreasuryToCloud = function() {
             saveLocalTreasuryOnly();
             if (!treasuryCloudReady || !treasuryUserReady) return Promise.resolve();
 
+            // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
             treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
+              treasuryCloudMutationBusy = true;
               try {
-                await syncTreasuryKind('transactions');
-                await syncTreasuryKind('cash');
-                await syncTreasuryKind('loans');
+                await saveArrayToCloud("transactions", txData);
+                await saveArrayToCloud("cash", cashData);
+                await saveArrayToCloud("loans", loanData);
               } catch(e) {
-                console.error("Treasury cloud save failed:", e);
-                alert("Firebase-এ তথ্য সংরক্ষণ করা যায়নি। Login/permission পরীক্ষা করুন।");
+                console.error("Treasury cloud sync operation failed:", e);
+                alert("Firebase-এ পরিবর্তন সংরক্ষণ করা যায়নি। আপনার login এবং treasurer permission পরীক্ষা করুন।");
+              } finally {
+                treasuryCloudMutationBusy = false;
+                treasuryCloudSnapshotPending = false;
               }
             });
             return treasuryCloudWriteQueue;
           };
 
+          function rebuildTreasuryCloudMaps() {
+            treasuryCloudDocIds.transactions = new Map(txData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+            treasuryCloudDocIds.cash = new Map(cashData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+            treasuryCloudDocIds.loans = new Map(loanData.map(x => [String(x.id), x._docId]).filter(x=>x[1]));
+          }
+          window._rebuildTreasuryCloudMaps = rebuildTreasuryCloudMaps;
           window._treasuryStartCloudSync = startTreasuryCloudSync;
         } catch(e) {
           console.error("Firebase Treasury initialization failed:", e);
