@@ -98,16 +98,39 @@
 </div>
 
 <div id="entryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
-  <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
+  <div class="bg-white w-full max-w-lg rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative flex flex-col max-h-[92vh]">
     <button onclick="closeModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
     <h3 id="modalTitle" class="text-base font-bold text-gray-900 text-center mb-4">নতুন দায়িত্ব বণ্টন</h3>
-    <form onsubmit="saveEntry(event)" class="space-y-3">
+    <form onsubmit="saveEntry(event)" class="space-y-3 overflow-y-auto pr-1">
       <input type="hidden" id="editId">
+
       <div><label class="block text-xs font-bold text-gray-700 mb-1">তারিখ</label><input type="date" id="date" required class="w-full p-2.5 border rounded-lg text-sm"></div>
-      <div><label class="block text-xs font-bold text-gray-700 mb-1">নাম</label><input id="name" required class="w-full p-2.5 border rounded-lg text-sm" placeholder="দায়িত্বপ্রাপ্ত ব্যক্তির নাম"></div>
+
+      <!-- সদস্য নির্বাচন -->
+      <div class="border border-orange-200 rounded-xl p-3 bg-orange-50/40">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <label class="block text-xs font-bold text-gray-700">সদস্য নির্বাচন করুন *</label>
+          <span class="text-[11px] font-bold text-orange-700">নির্বাচিত: <span id="selectedMemberCount">০</span> জন</span>
+        </div>
+        <input id="memberSearchInput" type="text" oninput="filterMemberSelect(this.value)" placeholder="নাম, মোবাইল বা গ্রাম দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white mb-2">
+        <div id="memberSelectList" class="bg-white border rounded-lg max-h-40 overflow-y-auto divide-y"></div>
+        <div class="mt-2"><p class="text-[11px] font-bold text-gray-600 mb-1">নির্বাচিত সদস্য</p><div id="selectedMemberNames" class="space-y-1"></div></div>
+      </div>
+
+      <!-- গ্রুপ লিডার নির্বাচন -->
+      <div class="border border-blue-200 rounded-xl p-3 bg-blue-50/40">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <label class="block text-xs font-bold text-gray-700">গ্রুপ লিডার নির্বাচন</label>
+          <span class="text-[11px] font-bold text-blue-700">নির্বাচিত: <span id="selectedLeaderCount">০</span> জন</span>
+        </div>
+        <input id="leaderSearchInput" type="text" oninput="filterLeaderSelect(this.value)" placeholder="লিডারের নাম, মোবাইল বা গ্রাম দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-white mb-2">
+        <div id="leaderSelectList" class="bg-white border rounded-lg max-h-40 overflow-y-auto divide-y"></div>
+        <div class="mt-2"><p class="text-[11px] font-bold text-gray-600 mb-1">নির্বাচিত গ্রুপ লিডার</p><div id="selectedLeaderNames" class="space-y-1"></div></div>
+      </div>
+
       <div class="grid grid-cols-2 gap-2">
-        <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল</label><input id="mobile" class="w-full p-2.5 border rounded-lg text-sm"></div>
-        <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য ID</label><input id="memberId" class="w-full p-2.5 border rounded-lg text-sm"></div>
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল</label><input id="mobile" class="w-full p-2.5 border rounded-lg text-sm" readonly placeholder="সদস্য নির্বাচন করলে আসবে"></div>
+        <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য ID</label><input id="memberId" class="w-full p-2.5 border rounded-lg text-sm" readonly placeholder="সদস্য নির্বাচন করলে আসবে"></div>
       </div>
       <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm" placeholder="যেমন: চাঁদা সংগ্রহ / বাজার / প্রসাদ"></div>
       <div class="grid grid-cols-2 gap-2">
@@ -147,7 +170,7 @@ import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 setPersistence(auth,browserSessionPersistence).catch(()=>{});
-let rows=[]; let currentUser=null;
+let rows=[]; let currentUser=null; let allMembers=[]; let selectedMembers=[]; let selectedLeaders=[];
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const money=n=>"₹"+(Number(n)||0).toLocaleString("en-IN",{maximumFractionDigits:2});
 const today=()=>new Date().toISOString().slice(0,10);
@@ -165,6 +188,12 @@ onAuthStateChanged(auth,async user=>{
      if(!p.includes('daitobonton')){ alert('এই মডিউল ব্যবহারের অনুমতি নেই।'); location.replace('dashboard.html'); return; }
    }catch(e){ location.replace('dashboard.html'); return; }
  }
+ onSnapshot(collection(db,'members'),snap=>{
+   allMembers=[];
+   snap.forEach(d=>allMembers.push({id:d.id,...d.data()}));
+   allMembers.sort((a,b)=>String(a.name||'').localeCompare(String(b.name||''),'bn'));
+   renderMemberSelectors();
+ },err=>console.error('সদস্য তালিকা আনা যায়নি:',err));
  onSnapshot(collection(db,'daitobonton'),snap=>{
    rows=[]; snap.forEach(d=>rows.push({id:d.id,...d.data()}));
    rows.sort((a,b)=>String(b.date||'').localeCompare(String(a.date||'')) || Number(b.createdAt||0)-Number(a.createdAt||0));
@@ -194,11 +223,55 @@ function render(){
  body.innerHTML=rows.map(x=>{const a=Number(x.amount)||0,p=Math.min(Math.max(Number(x.deposited)||0,a),a),d=Math.max(0,a-p),id=JSON.stringify(x.id).replace(/'/g,'&#39;');return `<tr class="border-t hover:bg-amber-50"><td class="p-2 border"><input type="checkbox" class="rowCheck" value="${x.id}"></td><td class="p-2 border">${x.date||'-'}</td><td class="p-2 border font-semibold">${esc(x.name)}</td><td class="p-2 border">${esc(x.mobile)}</td><td class="p-2 border">${esc(x.memberId)}</td><td class="p-2 border">${esc(x.responsibility)}</td><td class="p-2 border font-bold">${money(a)}</td><td class="p-2 border text-emerald-700 font-bold">${money(p)}</td><td class="p-2 border ${d>0?'text-rose-700':'text-emerald-700'} font-bold">${money(d)}</td><td class="p-2 border"><div class="flex flex-wrap justify-center gap-1"><button onclick='editEntry(${id})' class="bg-blue-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Edit</button><button onclick='deleteEntry(${id})' class="bg-red-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Delete</button>${d>0?`<button onclick='depositToTreasurer(${id})' class="bg-orange-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">কোষাধ্যক্ষের কাছে জমা</button>`:''}</div></td></tr>`;}).join('');
 }
 function esc(v){return String(v??'').replace(/[&<>'"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[m]));}
-window.openAddModal=()=>{document.getElementById('modalTitle').textContent='নতুন দায়িত্ব বণ্টন';document.getElementById('editId').value='';document.getElementById('date').value=today();['name','mobile','memberId','responsibility','amount','remarks'].forEach(i=>document.getElementById(i).value='');document.getElementById('deposited').value=0;showModal();};
+function renderMemberSelectors(){
+ const q1=(document.getElementById('memberSearchInput')?.value||'').trim().toLowerCase();
+ const q2=(document.getElementById('leaderSearchInput')?.value||'').trim().toLowerCase();
+ const leaders=allMembers.filter(m=>/গ্রুপ|লিডার|দলনেতা|leader/i.test(String(m.role||m.post||m.designation||'')));
+ renderSelectableList('memberSelectList',allMembers,q1,selectedMembers,'member');
+ renderSelectableList('leaderSelectList',leaders,q2,selectedLeaders,'leader');
+ renderSelectedNames();
+}
+function renderSelectableList(elId,list,q,selected,type){
+ const el=document.getElementById(elId); if(!el)return;
+ const filtered=list.filter(m=>{const t=`${m.name||''} ${m.mobile||m.phone||''} ${m.village||''} ${m.role||''}`.toLowerCase();return !q||t.includes(q);});
+ if(!filtered.length){el.innerHTML='<div class="p-3 text-center text-xs text-gray-500">কোনো তথ্য পাওয়া যায়নি</div>';return;}
+ el.innerHTML=filtered.map(m=>{
+   const checked=selected.some(x=>x.id===m.id);
+   const phone=m.mobile||m.phone||'-';
+   return `<label class="flex items-center gap-2 p-2.5 hover:bg-amber-50 cursor-pointer text-xs">
+     <input type="checkbox" ${checked?'checked':''} onchange="toggleSelect('${type}','${escAttr(m.id)}')" class="w-4 h-4 accent-orange-600 shrink-0">
+     <span class="min-w-0"><strong class="text-gray-800">${esc(m.name||'-')}</strong><span class="block text-[10px] text-gray-500">${esc(m.village||'')}${phone&&phone!=='-'?' • '+esc(phone):''}</span></span>
+   </label>`;
+ }).join('');
+}
+function renderSelectedNames(){
+ const mc=document.getElementById('selectedMemberCount'),lc=document.getElementById('selectedLeaderCount');
+ if(mc)mc.textContent=bnNum(selectedMembers.length); if(lc)lc.textContent=bnNum(selectedLeaders.length);
+ const mn=document.getElementById('selectedMemberNames'),ln=document.getElementById('selectedLeaderNames');
+ if(mn)mn.innerHTML=selectedMembers.length?selectedMembers.map((m,i)=>`<div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5 text-xs"><span class="text-orange-600 font-bold">${i+1}.</span><span class="font-semibold">${esc(m.name||'-')}</span><span class="text-[10px] text-gray-500">${esc(m.mobile||m.phone||'')}</span></div>`).join(''):'<div class="text-[11px] text-gray-400">এখনও কোনো সদস্য নির্বাচন করা হয়নি</div>';
+ if(ln)ln.innerHTML=selectedLeaders.length?selectedLeaders.map((m,i)=>`<div class="flex items-center gap-2 bg-white border rounded-lg px-2 py-1.5 text-xs"><span class="text-blue-600 font-bold">${i+1}.</span><span class="font-semibold">${esc(m.name||'-')}</span><span class="text-[10px] text-gray-500">${esc(m.mobile||m.phone||'')}</span></div>`).join(''):'<div class="text-[11px] text-gray-400">এখনও কোনো গ্রুপ লিডার নির্বাচন করা হয়নি</div>';
+ const names=selectedMembers.map(m=>m.name||'').filter(Boolean);
+ document.getElementById('name').value=names.join(', ');
+ document.getElementById('mobile').value=selectedMembers.map(m=>m.mobile||m.phone||'').filter(Boolean).join(', ');
+ document.getElementById('memberId').value=selectedMembers.map(m=>m.memberId||m.autoId||m.id||'').filter(Boolean).join(', ');
+}
+function bnNum(n){return String(n).replace(/\d/g,d=>'০১২৩৪৫৬৭৮৯'[d]);}
+function escAttr(v){return String(v??'').replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+window.toggleSelect=(type,id)=>{
+ const source=allMembers.find(m=>String(m.id)===String(id)); if(!source)return;
+ const arr=type==='member'?selectedMembers:selectedLeaders;
+ const idx=arr.findIndex(m=>m.id===source.id);
+ if(idx>=0)arr.splice(idx,1);else arr.push(source);
+ renderMemberSelectors();
+};
+window.filterMemberSelect=()=>renderMemberSelectors();
+window.filterLeaderSelect=()=>renderMemberSelectors();
+function resetSelectors(){selectedMembers=[];selectedLeaders=[];const a=document.getElementById('memberSearchInput'),b=document.getElementById('leaderSearchInput');if(a)a.value='';if(b)b.value='';renderMemberSelectors();}
+window.openAddModal=()=>{document.getElementById('modalTitle').textContent='নতুন দায়িত্ব বণ্টন';document.getElementById('editId').value='';document.getElementById('date').value=today();resetSelectors();['name','mobile','memberId','responsibility','amount','remarks'].forEach(i=>document.getElementById(i).value='');document.getElementById('deposited').value=0;showModal();};
 window.closeModal=()=>{document.getElementById('entryModal').classList.add('hidden');document.getElementById('entryModal').classList.remove('flex');};
-function showModal(){document.getElementById('entryModal').classList.remove('hidden');document.getElementById('entryModal').classList.add('flex');}
-window.saveEntry=async e=>{e.preventDefault();const id=document.getElementById('editId').value;const amount=Number(document.getElementById('amount').value)||0;let deposited=Number(document.getElementById('deposited').value)||0;deposited=Math.min(Math.max(deposited,0),amount);const data={date:document.getElementById('date').value,name:document.getElementById('name').value.trim(),mobile:document.getElementById('mobile').value.trim(),memberId:document.getElementById('memberId').value.trim(),responsibility:document.getElementById('responsibility').value.trim(),amount,deposited,remarks:document.getElementById('remarks').value.trim(),updatedAt:Date.now()};try{if(id)await updateDoc(doc(db,'daitobonton',id),data);else await addDoc(collection(db,'daitobonton'),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||''});closeModal();}catch(err){alert('সংরক্ষণ করা যায়নি: '+err.message);}};
-window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;document.getElementById('modalTitle').textContent='দায়িত্ব বণ্টন সংশোধন';document.getElementById('editId').value=x.id;document.getElementById('date').value=x.date||today();document.getElementById('name').value=x.name||'';document.getElementById('mobile').value=x.mobile||'';document.getElementById('memberId').value=x.memberId||'';document.getElementById('responsibility').value=x.responsibility||'';document.getElementById('amount').value=x.amount||0;document.getElementById('deposited').value=x.deposited||0;document.getElementById('remarks').value=x.remarks||'';showModal();};
+function showModal(){document.getElementById('entryModal').classList.remove('hidden');document.getElementById('entryModal').classList.add('flex');renderMemberSelectors();}
+window.saveEntry=async e=>{e.preventDefault();if(!selectedMembers.length)return alert('দয়া করে অন্তত একজন সদস্য নির্বাচন করুন।');const id=document.getElementById('editId').value;const amount=Number(document.getElementById('amount').value)||0;let deposited=Number(document.getElementById('deposited').value)||0;deposited=Math.min(Math.max(deposited,0),amount);const data={date:document.getElementById('date').value,name:selectedMembers.map(m=>m.name||'').filter(Boolean).join(', '),mobile:selectedMembers.map(m=>m.mobile||m.phone||'').filter(Boolean).join(', '),memberId:selectedMembers.map(m=>m.memberId||m.autoId||m.id||'').filter(Boolean).join(', '),memberIds:selectedMembers.map(m=>m.id),selectedMembers:selectedMembers.map(m=>({id:m.id,name:m.name||'',mobile:m.mobile||m.phone||'',village:m.village||''})),groupLeaders:selectedLeaders.map(m=>({id:m.id,name:m.name||'',mobile:m.mobile||m.phone||'',village:m.village||''})),responsibility:document.getElementById('responsibility').value.trim(),amount,deposited,remarks:document.getElementById('remarks').value.trim(),updatedAt:Date.now()};try{if(id)await updateDoc(doc(db,'daitobonton',id),data);else await addDoc(collection(db,'daitobonton'),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||''});closeModal();}catch(err){alert('সংরক্ষণ করা যায়নি: '+err.message);}};
+window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;document.getElementById('modalTitle').textContent='দায়িত্ব বণ্টন সংশোধন';document.getElementById('editId').value=x.id;document.getElementById('date').value=x.date||today();selectedMembers=(x.selectedMembers||[]).map(m=>allMembers.find(a=>a.id===m.id)||m);if(!selectedMembers.length&&x.name){selectedMembers=String(x.name).split(',').map((n,i)=>allMembers.find(a=>String(a.name||'').trim()===n.trim())||{id:'legacy-'+i,name:n.trim(),mobile:''});}selectedLeaders=(x.groupLeaders||[]).map(m=>allMembers.find(a=>a.id===m.id)||m);document.getElementById('responsibility').value=x.responsibility||'';document.getElementById('amount').value=x.amount||0;document.getElementById('deposited').value=x.deposited||0;document.getElementById('remarks').value=x.remarks||'';document.getElementById('memberSearchInput').value='';document.getElementById('leaderSearchInput').value='';showModal();};
 window.deleteEntry=async id=>{if(!confirm('এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?'))return;try{await deleteDoc(doc(db,'daitobonton',id));}catch(e){alert('Delete করা যায়নি: '+e.message);}};
 window.deleteMarked=async()=>{const ids=[...document.querySelectorAll('.rowCheck:checked')].map(x=>x.value);if(!ids.length)return alert('অন্তত একটি রেকর্ড নির্বাচন করুন');if(!confirm(`${ids.length} টি রেকর্ড মুছে ফেলবেন?`))return;try{await Promise.all(ids.map(id=>deleteDoc(doc(db,'daitobonton',id))));}catch(e){alert('Delete করা যায়নি: '+e.message);}};
 window.deleteAll=async()=>{if(!rows.length)return;if(!confirm('সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!'))return;try{await Promise.all(rows.map(x=>deleteDoc(doc(db,'daitobonton',x.id))));}catch(e){alert('Delete All করা যায়নি: '+e.message);}};
