@@ -36,6 +36,44 @@
       .sub-list-card{position:relative}
       .sub-list-card table tbody tr{transition:background .15s}
       .sub-list-card table tbody tr:hover{background:#fff7ed}
+
+      .member-search-item{
+        padding:.65rem .7rem;
+        border-bottom:1px solid #f1f5f9;
+        cursor:pointer;
+        transition:background .15s ease;
+      }
+      .member-search-item:last-child{border-bottom:0}
+      .member-search-item:hover{background:#fff7ed}
+      .member-search-item .member-search-top{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:.5rem;
+      }
+      .member-search-item .member-search-name{
+        font-weight:700;
+        color:#1f2937;
+        font-size:.75rem;
+      }
+      .member-search-item .member-search-id{
+        flex:0 0 auto;
+        background:#fff7ed;
+        border:1px solid #fdba74;
+        color:#ea580c;
+        border-radius:.35rem;
+        padding:.2rem .45rem;
+        font-size:.65rem;
+        font-weight:800;
+      }
+      .member-search-item .member-search-meta{
+        margin-top:.2rem;
+        display:flex;
+        flex-wrap:wrap;
+        gap:.6rem;
+        color:#6b7280;
+        font-size:.65rem;
+      }
     </style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
@@ -177,7 +215,17 @@
             <label class="block text-xs font-bold text-gray-600 mb-1">সদস্য নির্বাচন করুন *</label>
             <input id="bookingMemberSearch" type="text" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." oninput="searchMembersDropdown(this.value)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             <div id="memberDropdownResults" class="hidden absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto w-[calc(100%-2.5rem)]"></div>
-            <p class="text-[11px] text-gray-500 mt-1" id="selectedMemberInfo">সদস্য খুঁজতে উপরে টাইপ করুন</p>
+            <div id="selectedMemberInfo" class="mt-2 hidden rounded-xl border border-amber-300 bg-amber-50/60 p-2.5 relative">
+              <button type="button" onclick="clearSelectedMember()" class="absolute top-1.5 right-2 text-gray-400 hover:text-gray-700 text-lg leading-none" title="সদস্য পরিবর্তন করুন">×</button>
+              <div class="pr-5 flex items-center gap-2">
+                <strong id="selectedMemberName" class="text-xs text-gray-800"></strong>
+                <span id="selectedMemberId" class="inline-flex items-center rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold"></span>
+              </div>
+              <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-600">
+                <span id="selectedMemberMobile"></span>
+                <span id="selectedMemberVillage"></span>
+              </div>
+            </div>
           </div>
 
           <!-- অন্যান্য ফিল্ড (অন্যান্য ট্যাবের জন্য) -->
@@ -198,12 +246,12 @@
 
           <div class="grid grid-cols-2 gap-2">
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে (১ - ৫০) *</label>
-              <input id="bookingStartTicket" type="number" min="1" max="50" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
+              <input id="bookingStartTicket" type="number" min="1" step="1" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
             <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত (১ - ৫০) *</label>
-              <input id="bookingEndTicket" type="number" min="1" max="50" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
+              <input id="bookingEndTicket" type="number" min="1" step="1" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
             </div>
           </div>
 
@@ -461,35 +509,96 @@
 
       window.searchMembersDropdown = function(q) {
         const resBox = document.getElementById("memberDropdownResults");
-        if (!q.trim()) {
+        const query = String(q || "").trim().toLowerCase();
+
+        if (selectedMemberObject) {
+          const selectedName = String(selectedMemberObject.name || "").trim().toLowerCase();
+          if (query !== selectedName) {
+            window.clearSelectedMember();
+          } else {
+            resBox.classList.add("hidden");
+            return;
+          }
+        }
+
+        if (!query) {
           resBox.classList.add("hidden");
           return;
         }
-        const filtered = allMembersData.filter(m => 
-          [m.name, m.mobile, m.phone, m.memberId].some(v => String(v || "").toLowerCase().includes(q.toLowerCase()))
+
+        const filtered = allMembersData.filter(m =>
+          [m.name, m.mobile, m.phone, m.memberId, m.autoId, m.village].some(v =>
+            String(v || "").toLowerCase().includes(query)
+          )
         );
 
         if (filtered.length === 0) {
-          resBox.innerHTML = `<div class="p-2 text-xs text-gray-500">কোনো সদস্য পাওয়া যায়নি</div>`;
+          resBox.innerHTML = `<div class="p-3 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>`;
           resBox.classList.remove("hidden");
           return;
         }
 
-        resBox.innerHTML = filtered.map(m => `
-          <div onclick="selectMemberItem('${m.id}')" class="p-2 text-xs hover:bg-orange-50 cursor-pointer border-b last:border-b-0">
-            <strong>${esc(m.name)}</strong> (${esc(m.mobile || m.phone || 'নম্বর নেই')})
-          </div>
-        `).join("");
+        resBox.innerHTML = filtered.map(m => {
+          const memberId = m.autoId || m.memberId || "";
+          const mobile = m.mobile || m.phone || "নম্বর নেই";
+          const village = m.village || "";
+          return `
+            <div onclick="selectMemberItem('${m.id}')" class="member-search-item">
+              <div class="member-search-top">
+                <strong class="member-search-name">${esc(m.name || "-")}</strong>
+                ${memberId ? `<span class="member-search-id">ID: ${esc(memberId)}</span>` : ""}
+              </div>
+              <div class="member-search-meta">
+                <span>📞 ${esc(mobile)}</span>
+                ${village ? `<span>🏠 ${esc(village)}</span>` : ""}
+              </div>
+            </div>
+          `;
+        }).join("");
         resBox.classList.remove("hidden");
       };
 
       window.selectMemberItem = function(id) {
         const m = allMembersData.find(x => x.id === id);
         if (!m) return;
+
         selectedMemberObject = m;
-        document.getElementById("bookingMemberSearch").value = m.name + (m.mobile ? ` (${m.mobile})` : "");
-        document.getElementById("selectedMemberInfo").innerText = `নির্বাচিত সদস্য: ${m.name}`;
+
+        const input = document.getElementById("bookingMemberSearch");
+        const info = document.getElementById("selectedMemberInfo");
+        const nameEl = document.getElementById("selectedMemberName");
+        const idEl = document.getElementById("selectedMemberId");
+        const mobileEl = document.getElementById("selectedMemberMobile");
+        const villageEl = document.getElementById("selectedMemberVillage");
+
+        input.value = m.name || "";
+        nameEl.textContent = m.name || "";
+
+        const memberId = m.autoId || m.memberId || "";
+        idEl.textContent = memberId ? `ID: ${memberId}` : "";
+        idEl.classList.toggle("hidden", !memberId);
+
+        mobileEl.textContent = `📞 ${m.mobile || m.phone || "নম্বর নেই"}`;
+        villageEl.textContent = m.village ? `🏠 ${m.village}` : "";
+        villageEl.classList.toggle("hidden", !m.village);
+
+        info.classList.remove("hidden");
         document.getElementById("memberDropdownResults").classList.add("hidden");
+      };
+
+      window.clearSelectedMember = function() {
+        selectedMemberObject = null;
+
+        const input = document.getElementById("bookingMemberSearch");
+        const info = document.getElementById("selectedMemberInfo");
+        const resBox = document.getElementById("memberDropdownResults");
+
+        if (input) {
+          input.value = "";
+          input.focus();
+        }
+        if (info) info.classList.add("hidden");
+        if (resBox) resBox.classList.add("hidden");
       };
 
       window.calculateTicketQuantity = function() {
@@ -508,7 +617,7 @@
         selectedMemberObject = null;
         document.getElementById("bookingModalTitle").innerText = "নতুন টিকিট বুকিং";
         document.getElementById("bookingMemberSearch").value = "";
-        document.getElementById("selectedMemberInfo").innerText = "সদস্য খুঁজতে উপরে টাইপ করুন";
+        document.getElementById("selectedMemberInfo").classList.add("hidden");
         document.getElementById("bookingCustomerName").value = "";
         document.getElementById("bookingBookNo").value = "";
         document.getElementById("bookingStartTicket").value = "";
@@ -578,9 +687,10 @@
             return;
           }
 
-          if (startTicket < 1 || endTicket > 50 || startTicket > endTicket) {
-            alert("টিকিট নম্বর ১ থেকে ৫০ এর মধ্যে হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
-            return;
+          if (startTicket < 1 || endTicket < 1 || startTicket > endTicket ||
+              !Number.isSafeInteger(startTicket) || !Number.isSafeInteger(endTicket)) {
+             alert("টিকিট নম্বর ১ বা তার বেশি হতে হবে এবং 'শুরুর টিকিট' 'শেষ টিকিট' এর চেয়ে ছোট বা সমান হতে হবে।");
+             return;
           }
 
           // Duplicate Ticket Number Check Logic
