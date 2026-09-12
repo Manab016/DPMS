@@ -8,6 +8,8 @@
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -37,6 +39,30 @@
         min-width: 150px;
         max-width: 250px;
         font-size: 11px;
+      }
+      .receipt-paper {
+        background: #fff;
+        border: 2px solid #198754;
+        border-radius: 10px;
+        padding: 14px;
+        color: #1f2937;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      .receipt-signature-img {
+        max-height: 52px;
+        max-width: 130px;
+        object-fit: contain;
+        margin: 0 auto 4px;
+      }
+      @media print {
+        body > * { display: none !important; }
+        #receiptModal { display: block !important; position: static !important; background: #fff !important; padding: 0 !important; }
+        #receiptModal > div { display: block !important; width: 100% !important; max-width: 760px !important; margin: 0 auto !important; box-shadow: none !important; border: 0 !important; padding: 0 !important; }
+        #receiptModal > div > button, #receiptModal > div > div:last-child { display: none !important; }
+        #receiptContent { display: block !important; }
+        .receipt-paper { border: 2px solid #198754 !important; }
+        @page { size: A4; margin: 12mm; }
       }
     </style>
   </head>
@@ -1206,6 +1232,27 @@
         document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
         document.getElementById("cardMemAddress").innerText = address || "-";
+
+        // Member page-এর signature সরাসরি ব্যবহার করুন; আলাদা করে আবার upload করতে হবে না।
+        const member = (Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [])
+          .find(m => String(m.memberId || m.autoId || m.id || "") === String(id || ""));
+        if (member) {
+          const borrowerSigEl = document.getElementById("borrowerSigData");
+          const borrowerPreview = document.getElementById("borrowerSigPreview");
+          if (member.signature) {
+            borrowerSigEl.value = member.signature;
+            borrowerPreview.innerHTML = `<div class="relative w-full h-full flex items-center justify-center p-1"><img src="${member.signature}" class="max-h-12 object-contain" /><span class="absolute bottom-0 right-1 text-[9px] text-emerald-700 bg-white px-1 rounded">সদস্য পেজ থেকে</span></div>`;
+          }
+
+          const treasurer = getTreasurerMemberFromCache();
+          const guarantorSigEl = document.getElementById("guarantorSigData");
+          const guarantorPreview = document.getElementById("guarantorSigPreview");
+          if (treasurer?.signature) {
+            guarantorSigEl.value = treasurer.signature;
+            guarantorPreview.innerHTML = `<div class="relative w-full h-full flex items-center justify-center p-1"><img src="${treasurer.signature}" class="max-h-12 object-contain" /><span class="absolute bottom-0 right-1 text-[9px] text-emerald-700 bg-white px-1 rounded">${treasurer.name || "কোষাধ্যক্ষ"}</span></div>`;
+          }
+        }
+
         document.getElementById("selectedMemberCard").classList.remove("hidden");
       }
       function clearSelectedMember() {
@@ -1235,7 +1282,26 @@
         document.getElementById(hiddenInputId).value = "";
         document.getElementById(previewContainerId).innerHTML = `<span class="text-gray-400 text-[11px]">কোনো স্বাক্ষর নাই</span>`;
       }
-      function saveLoanForm(e) {
+      async function uploadTreasuryDataURL(dataUrl, path, contentType) {
+        if (!dataUrl || !String(dataUrl).startsWith("data:")) return dataUrl;
+        if (!window.treasuryStorage) return dataUrl;
+        const response = await fetch(dataUrl);
+        const blob = await response.blob();
+        const snap = await uploadBytes(storageRef(window.treasuryStorage, path), blob, {
+          contentType: contentType || blob.type || "application/octet-stream",
+          cacheControl: "public,max-age=31536000"
+        });
+        return await getDownloadURL(snap.ref);
+      }
+
+      function getTreasurerMemberFromCache() {
+        const list = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+        const preferred = list.find(m => String(m.role || "").trim() === "পূজা কোষাধ্যক্ষ" && m.signature);
+        if (preferred) return preferred;
+        return list.find(m => ["কোষাধ্যক্ষ", "পূজা কোষাধ্যক্ষ"].includes(String(m.role || "").trim()) && m.signature) || null;
+      }
+
+      async function saveLoanForm(e) {
         e.preventDefault();
         const editId = document.getElementById("loanEditId").value;
         const formType = document.getElementById("loanFormType").value || "member";
@@ -1259,8 +1325,23 @@
         const rate = parseFloat(document.getElementById("loanInterestRate").value) || 0;
         const date = document.getElementById("loanDate").value;
         const remarks = document.getElementById("loanRemarks").value;
-        const borrowerSig = document.getElementById("borrowerSigData").value || "";
-        const guarantorSig = document.getElementById("guarantorSigData").value || "";
+        let borrowerSig = document.getElementById("borrowerSigData").value || "";
+        let guarantorSig = document.getElementById("guarantorSigData").value || "";
+
+        if (!isOther) {
+          const member = (Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [])
+            .find(m => String(m.memberId || m.autoId || m.id || "") === String(memberId || ""));
+          if (member?.signature) borrowerSig = member.signature;
+          const treasurer = getTreasurerMemberFromCache();
+          if (treasurer?.signature) guarantorSig = treasurer.signature;
+        }
+
+        if (String(borrowerSig).startsWith("data:")) {
+          borrowerSig = await uploadTreasuryDataURL(borrowerSig, `loan-signatures/borrower-${Date.now()}.png`, "image/png");
+        }
+        if (String(guarantorSig).startsWith("data:")) {
+          guarantorSig = await uploadTreasuryDataURL(guarantorSig, `loan-signatures/treasurer-${Date.now()}.png`, "image/png");
+        }
 
         if (editId) {
           const idx = loanData.findIndex(x => String(x.id) === String(editId));
@@ -1511,44 +1592,176 @@
         saveData(); viewLoanHistory(loanId); renderLoanTable(); updateBalances();
       }
 
+      let currentReceiptLoan = null;
+      let currentReceiptPayment = null;
+
+      function escapeReceiptText(v) {
+        return String(v ?? "")
+          .replace(/&/g, "&amp;").replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+      }
+
+      function getReceiptTreasurer() {
+        const list = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+        return list.find(m => String(m.role || "").trim() === "পূজা কোষাধ্যক্ষ")
+          || list.find(m => String(m.role || "").trim() === "কোষাধ্যক্ষ")
+          || null;
+      }
+
       function showReceiptModal(loan, payment) {
-        const savedLogo = localStorage.getItem("committee_logo") || localStorage.getItem("committeeLogo") || localStorage.getItem("logo");
-        const borrowerSigDisplay = loan.borrowerSig ? `<img src="${loan.borrowerSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">${loan.name}</div>`;
-        const guarantorSigDisplay = loan.guarantorSig ? `<img src="${loan.guarantorSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">গ্যারান্টার</div>`;
+        currentReceiptLoan = loan;
+        currentReceiptPayment = payment;
+
+        const savedLogo = localStorage.getItem("committee_logo") ||
+                          localStorage.getItem("committeeLogo") ||
+                          localStorage.getItem("logo") || "";
+        const treasurer = getReceiptTreasurer();
+        const borrowerSig = loan.borrowerSig || "";
+        const treasurerSig = treasurer?.signature || loan.guarantorSig || "";
+
+        const origAmt = Number(loan.amount) || 0;
+        const rate = Number(loan.rate) || 0;
+        const totalInterest = Number(((origAmt * rate) / 100).toFixed(2));
+        let paidPrin = 0, paidInt = 0;
+        (loan.payments || []).forEach(p => {
+          paidPrin += Number(p.principalPaid) || 0;
+          paidInt += Number(p.interestPaid) || 0;
+        });
+        const duePrin = Math.max(0, Number((origAmt - paidPrin).toFixed(2)));
+        const dueInt = Math.max(0, Number((totalInterest - paidInt).toFixed(2)));
+        const dueTotal = Number((duePrin + dueInt).toFixed(2));
+
         const content = document.getElementById("receiptContent");
         content.innerHTML = `
-          <div class="text-center border-b pb-3 mb-3">
-            <div class="flex justify-center mb-1.5">
-              ${savedLogo ? `<img src="${savedLogo}" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-orange-400 bg-white" />` : `<div class="w-12 h-12 rounded-full border border-orange-400 bg-white flex items-center justify-center text-lg">Durga</div>`}
+          <div id="receiptPaper" class="receipt-paper">
+            <div class="text-center border-b-2 border-emerald-600 pb-3 mb-3">
+              ${savedLogo ? `<img src="${escapeReceiptText(savedLogo)}" class="w-14 h-14 object-contain mx-auto mb-1 rounded-full border border-orange-400 bg-white">` : ""}
+              <h4 class="font-bold text-orange-700 text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+              <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
+              <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${escapeReceiptText(payment.receiptNo || "-")}</p>
             </div>
-            <h4 class="font-bold text-orange-700 text-sm md:text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-            <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
-            <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${payment.receiptNo}</p>
-          </div>
-          <div class="space-y-1.5 text-xs text-gray-700">
-            <div class="flex justify-between"><span>তারিখ:</span> <strong>${payment.date}</strong></div>
-            <div class="flex justify-between"><span>ঋণগ্রহীতা:</span> <strong>${loan.name} ${loan.memberId ? `(${loan.memberId})` : ''}</strong></div>
-            <div class="flex justify-between"><span>মোবাইল:</span> <strong>${loan.mobile || 'N/A'}</strong></div>
-            <div class="border-t border-dashed my-2"></div>
-            <div class="flex justify-between"><span>পরিশোধিত আসল:</span> <strong class="text-emerald-700">${formatCurrency(payment.principalPaid)}</strong></div>
-            <div class="flex justify-between"><span>পরিশোধিত সুদ:</span> <strong class="text-emerald-700">${formatCurrency(payment.interestPaid)}</strong></div>
-            <div class="flex justify-between border-t pt-1.5 font-bold text-sm text-gray-900"><span>মোট পরিশোধ:</span> <strong class="text-orange-700">${formatCurrency(payment.totalPaid)}</strong></div>
-            ${payment.remarks ? `<div class="text-[11px] text-gray-500 pt-1">মন্তব্য: ${payment.remarks}</div>` : ''}
-          </div>
-          <div class="mt-6 pt-4 border-t flex justify-between items-end text-[11px] text-gray-600 font-semibold">
-            <div class="text-center">${guarantorSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্যারান্টার স্বাক্ষর</div></div>
-            <div class="text-center">${borrowerSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্রহীতার স্বাক্ষর</div></div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-xs">
+              <div class="grid grid-cols-2 gap-2">
+                <div><span class="text-gray-500">তারিখ</span><br><strong>${escapeReceiptText(payment.date || "-")}</strong></div>
+                <div><span class="text-gray-500">সদস্য ID</span><br><strong>${escapeReceiptText(loan.memberId || "N/A")}</strong></div>
+                <div><span class="text-gray-500">ঋণগ্রহীতা</span><br><strong>${escapeReceiptText(loan.name || "-")}</strong></div>
+                <div><span class="text-gray-500">মোবাইল</span><br><strong>${escapeReceiptText(loan.mobile || "-")}</strong></div>
+                <div class="col-span-2"><span class="text-gray-500">ঠিকানা</span><br><strong>${escapeReceiptText(loan.address || "-")}</strong></div>
+              </div>
+            </div>
+
+            <div class="bg-orange-50 border border-orange-200 rounded-lg p-3 mb-3 text-xs">
+              <div class="flex justify-between"><span>পরিশোধিত আসল</span><strong class="text-emerald-700">${formatCurrency(payment.principalPaid)}</strong></div>
+              <div class="flex justify-between mt-1"><span>পরিশোধিত সুদ</span><strong class="text-emerald-700">${formatCurrency(payment.interestPaid)}</strong></div>
+              <div class="flex justify-between border-t border-orange-200 mt-2 pt-2 text-sm font-bold"><span>এই রসিদে মোট</span><strong class="text-orange-700">${formatCurrency(payment.totalPaid)}</strong></div>
+            </div>
+
+            <div class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3 text-xs">
+              <div class="flex justify-between"><span>বাকি আসল</span><strong>${formatCurrency(duePrin)}</strong></div>
+              <div class="flex justify-between mt-1"><span>বাকি সুদ</span><strong>${formatCurrency(dueInt)}</strong></div>
+              <div class="flex justify-between border-t border-blue-200 mt-2 pt-2 text-sm font-bold text-blue-900"><span>মোট বাকি</span><strong>${formatCurrency(dueTotal)}</strong></div>
+            </div>
+
+            ${payment.remarks ? `<div class="text-[11px] text-gray-600 mb-4">মন্তব্য: ${escapeReceiptText(payment.remarks)}</div>` : ""}
+
+            <div class="grid grid-cols-2 gap-8 mt-8 pt-4 border-t border-gray-300 text-[10px] text-gray-700">
+              <div class="text-center">
+                <div class="h-14 flex items-end justify-center mb-1">
+                  ${borrowerSig ? `<img src="${escapeReceiptText(borrowerSig)}" class="receipt-signature-img">` : `<span class="text-gray-400">স্বাক্ষর নেই</span>`}
+                </div>
+                <div class="border-t border-gray-500 pt-1 font-bold">ঋণগ্রহীতার স্বাক্ষর</div>
+                <div>${escapeReceiptText(loan.name || "")}</div>
+              </div>
+              <div class="text-center">
+                <div class="h-14 flex items-end justify-center mb-1">
+                  ${treasurerSig ? `<img src="${escapeReceiptText(treasurerSig)}" class="receipt-signature-img">` : `<span class="text-gray-400">স্বাক্ষর নেই</span>`}
+                </div>
+                <div class="border-t border-gray-500 pt-1 font-bold">কোষাধ্যক্ষের স্বাক্ষর</div>
+                <div>${escapeReceiptText(treasurer?.name || "কোষাধ্যক্ষ")}</div>
+              </div>
+            </div>
           </div>
         `;
+
         document.getElementById("receiptModal").classList.remove("hidden");
         document.getElementById("receiptModal").classList.add("flex");
       }
+
       function closeReceiptModal() {
         document.getElementById("receiptModal").classList.add("hidden");
         document.getElementById("receiptModal").classList.remove("flex");
       }
-      function downloadReceiptPDF() { window.print(); }
-      function shareReceiptWhatsApp() { alert("হোয়াটসঅ্যাপ শেয়ার সুবিধা খুব শীঘ্রই উপলব্ধ হবে।"); }
+
+      async function buildReceiptPDFBlob() {
+        const paper = document.getElementById("receiptPaper");
+        if (!paper) throw new Error("Receipt not found");
+        if (typeof html2canvas === "undefined" || !window.jspdf?.jsPDF) {
+          throw new Error("PDF library not loaded");
+        }
+
+        const canvas = await html2canvas(paper, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: "#ffffff",
+          logging: false
+        });
+        const imgData = canvas.toDataURL("image/png");
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 10;
+        const imgWidth = pageWidth - margin * 2;
+        const imgHeight = canvas.height * imgWidth / canvas.width;
+        const y = Math.max(margin, Math.min(margin, (pageHeight - imgHeight) / 2));
+        pdf.addImage(imgData, "PNG", margin, y, imgWidth, Math.min(imgHeight, pageHeight - margin * 2));
+        return pdf.output("blob");
+      }
+
+      async function downloadReceiptPDF() {
+        try {
+          const blob = await buildReceiptPDFBlob();
+          const no = currentReceiptPayment?.receiptNo || "Receipt";
+          const fileName = `${no}.pdf`;
+          if (typeof saveAs === "function") saveAs(blob, fileName);
+          else {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = fileName; a.click();
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+          }
+        } catch (e) {
+          console.error(e);
+          alert("PDF তৈরি করা যায়নি। আবার চেষ্টা করুন।");
+        }
+      }
+
+      async function shareReceiptWhatsApp() {
+        try {
+          const blob = await buildReceiptPDFBlob();
+          const no = currentReceiptPayment?.receiptNo || "Receipt";
+          const file = new File([blob], `${no}.pdf`, { type: "application/pdf" });
+
+          if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({
+              title: `ঋণ পরিশোধ রসিদ - ${currentReceiptLoan?.name || ""}`,
+              text: `ঋণ পরিশোধের রসিদ - ${currentReceiptLoan?.name || ""}`,
+              files: [file]
+            });
+            return;
+          }
+
+          const phone = String(currentReceiptLoan?.mobile || "").replace(/\D/g, "");
+          const waText = encodeURIComponent(`ঋণ পরিশোধের রসিদ ${no} - ${currentReceiptLoan?.name || ""}`);
+          window.open(phone ? `https://wa.me/${phone}?text=${waText}` : `https://wa.me/?text=${waText}`, "_blank");
+          alert("এই browser সরাসরি PDF attachment share করতে দেয়নি। WhatsApp খুলে গেছে—PDF-টি Download করে সেখানে attach করুন।");
+        } catch (e) {
+          if (e?.name === "AbortError") return;
+          console.error(e);
+          alert("WhatsApp share করা যায়নি।");
+        }
+      }
 
       // ----------------------------------------------------
       // 🆕 EXCEL REPORT EXPORT FUNCTION (সম্পূর্ণ আপডেট করা হয়েছে)
@@ -1782,17 +1995,20 @@
 
       async function initTreasuryFirebase() {
         try {
-          const [{ initializeApp }, authMod, fs] = await Promise.all([
+          const [{ initializeApp }, authMod, fs, storageMod] = await Promise.all([
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
           ]);
           const { getAuth, onAuthStateChanged } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
+          const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = storageMod;
 
           const app = initializeApp(window.treasuryFirebaseConfig, "treasuryApp");
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
+          window.treasuryStorage = getStorage(app);
 
           onAuthStateChanged(window.treasuryAuth, async (user) => {
             treasuryUserReady = !!user;
