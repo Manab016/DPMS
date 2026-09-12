@@ -13,6 +13,41 @@
 </style>
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
+    <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
+    <button
+      onclick="toggleDevModal()"
+      class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
+    >
+      <span class="text-base">👨‍💻</span>
+      <span class="hidden md:inline">ডেভেলপার</span>
+    </button>
+
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
+          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+        </div>
+        <div class="space-y-2.5 text-xs border-t pt-3">
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">নাম:</span>
+            <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">মোবাইল:</span>
+            <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">ইমেইল:</span>
+            <a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a>
+          </div>
+        </div>
+        <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
+
 <div class="max-w-4xl mx-auto">
   <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
     <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
@@ -56,7 +91,7 @@
         <thead><tr class="bg-gray-100 text-gray-700">
           <th class="p-2 border">✓</th><th class="p-2 border">তারিখ</th><th class="p-2 border">নাম</th><th class="p-2 border">মোবাইল</th><th class="p-2 border">সদস্য ID</th><th class="p-2 border">দায়িত্ব</th><th class="p-2 border">দায়িত্বের টাকা</th><th class="p-2 border">জমা</th><th class="p-2 border">বাকি</th><th class="p-2 border">অ্যাকশন</th>
         </tr></thead>
-        <tbody id="tableBody"><tr><td colspan="10" class="p-5 text-center text-gray-500">তথ্য লোড হচ্ছে...</td></tr></tbody>
+        <tbody id="tableBody"><tr><td colspan="10" class="p-5 text-center text-gray-500">কোনো দায়িত্ব বণ্টনের তথ্য নেই</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -84,6 +119,25 @@
     </form>
   </div>
 </div>
+
+    <script>
+      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+
+      function loadDevData() {
+        const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
+        document.getElementById("popDevName").textContent = saved.name;
+        document.getElementById("popDevMobile").textContent = saved.mobile;
+        document.getElementById("popDevMobile").href = `tel:${saved.mobile}`;
+        document.getElementById("popDevEmail").textContent = saved.email;
+        document.getElementById("popDevEmail").href = `mailto:${saved.email}`;
+      }
+
+      function toggleDevModal() {
+        const modal = document.getElementById("devModal");
+        modal.classList.toggle("hidden");
+        if (!modal.classList.contains("hidden")) loadDevData();
+      }
+    </script>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
