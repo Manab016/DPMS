@@ -187,10 +187,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
+  <script type="module" src="dpms-cloud.js"></script>
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -205,6 +207,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     const auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence);
     const db = getFirestore(app);
+    const storage = getStorage(app);
 
     let allMembersData = [];
     window.filteredMembersData = [];
@@ -526,17 +529,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
         return;
       }
-      const memberData = { 
-        name, 
-        village, 
-        role, 
-        mobile: mobile || "-", 
-        photo: processedPhotoBase64 || "", 
-        signature: processedSigBase64 || "", 
-        updatedAt: Date.now() 
-      };
-
       try {
+        const photoUrl = processedPhotoBase64 && String(processedPhotoBase64).startsWith("data:")
+          ? await uploadMemberDataURL(processedPhotoBase64, `member-media/photos/${docId || Date.now()}-${Date.now()}.png`, "image/png")
+          : (processedPhotoBase64 || "");
+        const signatureUrl = processedSigBase64 && String(processedSigBase64).startsWith("data:")
+          ? await uploadMemberDataURL(processedSigBase64, `member-media/signatures/${docId || Date.now()}-${Date.now()}.png`, "image/png")
+          : (processedSigBase64 || "");
+        const memberData = { name, village, role, mobile: mobile || "-", photo: photoUrl, signature: signatureUrl, updatedAt: Date.now() };
         if (docId) {
           await updateDoc(doc(db, "members", docId), memberData);
           alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
@@ -548,7 +548,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         closeAddModal();
       } catch (error) {
         console.error("Error saving member: ", error);
-        alert("ডাটা সেভ করতে সমস্যা হয়েছে!");
+        alert("ডাটা সেভ করতে সমস্যা হয়েছে: " + (error?.message || error));
       }
     };
 
