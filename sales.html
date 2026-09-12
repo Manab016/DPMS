@@ -8,6 +8,136 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <style>
+    /* সদস্য search/result cards — mobile-safe, no left-side clipping */
+    .member-search-item {
+      display: block;
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-bottom: 1px solid #f1f1f1;
+      background: #fff;
+      cursor: pointer;
+      overflow: hidden;
+    }
+    .member-search-item:hover { background: #fffaf0; }
+    .member-search-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      width: 100%;
+      min-width: 0;
+    }
+    .member-search-name {
+      display: block;
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #374151;
+      font-size: 13px;
+      font-weight: 700;
+      line-height: 1.35;
+    }
+    .member-search-id {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      background: #ffedd5;
+      color: #c2410c;
+      border: 1px solid #fdba74;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .member-search-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px 12px;
+      margin-top: 3px;
+      color: #6b7280;
+      font-size: 10px;
+      line-height: 1.35;
+    }
+
+    /* নির্বাচিত সদস্য — দ্বিতীয় ছবির মতো compact orange/yellow card */
+    .selected-member-card {
+      position: relative;
+      margin-top: 6px;
+      padding: 10px 34px 10px 12px;
+      border: 1.5px solid #f59e0b;
+      border-radius: 10px;
+      background: #fffaf0;
+      box-shadow: 0 1px 3px rgba(245,158,11,.08);
+      box-sizing: border-box;
+      overflow: hidden;
+    }
+    .selected-member-card .selected-member-name-wrap {
+      min-width: 0;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+    .selected-member-card strong {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .selected-member-card #selectedMemberId {
+      flex: 0 0 auto;
+      white-space: nowrap;
+      background: #ea580c !important;
+      color: #fff !important;
+      border-radius: 6px;
+      padding: 3px 7px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+
+    /* নির্বাচিত সদস্যের booking/ticket details */
+    .booking-detail-card {
+      margin-top: 7px;
+      padding: 10px;
+      border: 1px solid #fed7aa;
+      border-radius: 10px;
+      background: #fff7ed;
+      box-sizing: border-box;
+    }
+    .booking-detail-card .booking-detail-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+    .booking-detail-card .booking-detail-item {
+      padding: 7px 8px;
+      border: 1px solid #fde68a;
+      border-radius: 7px;
+      background: #fff;
+      min-width: 0;
+    }
+    .booking-detail-card .booking-detail-label {
+      display: block;
+      color: #78716c;
+      font-size: 9px;
+      margin-bottom: 2px;
+    }
+    .booking-detail-card .booking-detail-value {
+      display: block;
+      color: #374151;
+      font-size: 11px;
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    @media (max-width: 480px) {
+      .member-search-item { padding: 10px 10px; }
+      .member-search-name { font-size: 12px; }
+      .selected-member-card { padding-left: 10px; }
+      .booking-detail-card .booking-detail-row { grid-template-columns: 1fr 1fr; }
+    }
+
     @media print {
       body { background: white !important; }
       .no-print { display: none !important; }
@@ -39,9 +169,6 @@
           <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
           <h2 class="text-lg font-bold text-gray-800">🎟️ টিকিট বিক্রয় ব্যবস্থাপনা</h2>
         </div>
-        <button onclick="openAddSalesModal()" class="w-full md:w-auto bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center justify-center gap-1">
-          ➕ নতুন টিকিট বিক্রয়
-        </button>
       </div>
 
       <div class="bg-amber-50/70 p-3.5 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm flex flex-wrap justify-around text-center gap-2">
@@ -52,6 +179,9 @@
 
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
         <div class="flex items-center gap-2">
+          <button onclick="openAddSalesModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">
+            ➕ নতুন টিকিট বিক্রয়
+          </button>
           <button onclick="deleteMarkedSales()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">
             ☑️ মার্ক ডিলিট
           </button>
@@ -161,9 +291,11 @@
 
           <div id="selectedMemberInfo" class="selected-member-card hidden">
             <button type="button" onclick="clearSaleMember()" class="absolute top-1.5 right-2 text-gray-400 hover:text-gray-700 text-lg leading-none" title="সদস্য পরিবর্তন করুন">×</button>
-            <div class="pr-5 flex items-center gap-2">
-              <strong id="selectedMemberName" class="text-xs text-gray-800"></strong>
-              <span id="selectedMemberId" class="inline-flex items-center rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold"></span>
+            <div class="pr-5 flex items-center gap-2 min-w-0">
+              <div class="selected-member-name-wrap min-w-0 flex-1">
+                <strong id="selectedMemberName" class="text-xs text-gray-800"></strong>
+                <span id="selectedMemberId" class="inline-flex items-center rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold"></span>
+              </div>
             </div>
             <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-gray-600">
               <span id="selectedMemberMobile"></span>
@@ -628,13 +760,40 @@
       document.getElementById("bookDetailsDisplay").classList.add("hidden");
     };
 
+    function normalizeMemberValue(value) {
+      return String(value || "")
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, " ");
+    }
+
+    function bookingBelongsToMember(booking, member) {
+      const memberName = normalizeMemberValue(member?.name);
+      const memberPhone = normalizeMemberValue(member?.mobile || member?.phone);
+      const memberId = normalizeMemberValue(getMemberId(member));
+
+      const bookingName = normalizeMemberValue(
+        booking?.name || booking?.memberName || booking?.assignedMember || booking?.customerName
+      );
+      const bookingPhone = normalizeMemberValue(booking?.mobile || booking?.phone);
+      const bookingMemberId = normalizeMemberValue(
+        booking?.memberId || booking?.memberID || booking?.autoId
+      );
+
+      // Prefer an explicit member ID when booking data has one; otherwise
+      // fall back to the same name/phone used by the Booking page.
+      if (memberId && bookingMemberId && memberId === bookingMemberId) return true;
+      if (memberName && bookingName && memberName === bookingName) return true;
+      if (memberPhone && bookingPhone && memberPhone === bookingPhone) return true;
+      return false;
+    }
+
     function showMemberBookingDetails(member) {
       const box = document.getElementById("saleMemberBookingDetails");
-      const name = String(member.name || "").trim().toLowerCase();
+      if (!box) return;
 
       const memberBookings = bookingsData.filter(b =>
-        (b.type || "member") === "member" &&
-        String(b.name || b.memberName || b.assignedMember || "").trim().toLowerCase() === name
+        (b.type || "member") === "member" && bookingBelongsToMember(b, member)
       );
 
       if (!memberBookings.length) {
@@ -643,33 +802,57 @@
         return;
       }
 
+      const memberId = getMemberId(member);
+
       box.innerHTML = `
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-orange-600 font-bold">🎫</span>
-          <strong class="text-xs text-gray-800">এই সদস্যের টিকিট বুকিং</strong>
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <span class="text-orange-600 font-bold">🎫</span>
+            <strong class="text-xs text-gray-800">এই সদস্যের বুকিং টিকিট</strong>
+          </div>
+          ${memberId ? `<span class="shrink-0 rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold">ID: ${esc(memberId)}</span>` : ""}
         </div>
+
         ${memberBookings.map(b => {
           const total = Number(b.quantity || 0);
           const sold = Number(b.sold || 0);
           const rem = Math.max(0, total - sold);
+          const start = b.startTicket ?? "-";
+          const end = b.endTicket ?? "-";
           return `
             <div class="bg-white rounded-lg border border-orange-200 p-2.5 mb-2 last:mb-0">
-              <div class="flex flex-wrap items-center justify-between gap-2">
-                <strong class="text-xs text-gray-800">${esc(b.name || member.name || "")}</strong>
-                <span class="rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold">ID: ${esc(getMemberId(member))}</span>
+              <div class="flex items-center justify-between gap-2 mb-2 min-w-0">
+                <strong class="text-xs text-gray-800 truncate">${esc(b.name || member.name || "")}</strong>
+                ${memberId ? `<span class="shrink-0 rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold">ID: ${esc(memberId)}</span>` : ""}
               </div>
-              <div class="mt-1 grid grid-cols-2 sm:grid-cols-4 gap-2 text-[10px] text-gray-600">
-                <span>📅 ${esc(b.date || "-")}</span>
-                <span>📖 বই: <b>${esc(b.bookNo || "-")}</b></span>
-                <span>🎟️ ${esc(b.startTicket || "-")} - ${esc(b.endTicket || "-")}</span>
-                <span>বাকি: <b class="text-emerald-700">${rem}</b> টি</span>
+
+              <div class="booking-detail-row">
+                <div class="booking-detail-item">
+                  <span class="booking-detail-label">তারিখ</span>
+                  <span class="booking-detail-value">📅 ${esc(b.date || "-")}</span>
+                </div>
+                <div class="booking-detail-item">
+                  <span class="booking-detail-label">বই নম্বর</span>
+                  <span class="booking-detail-value">📖 ${esc(b.bookNo || "-")}</span>
+                </div>
+                <div class="booking-detail-item">
+                  <span class="booking-detail-label">টিকিট নম্বর</span>
+                  <span class="booking-detail-value">🎟️ ${esc(start)} - ${esc(end)}</span>
+                </div>
+                <div class="booking-detail-item">
+                  <span class="booking-detail-label">বুকিং / বাকি</span>
+                  <span class="booking-detail-value">${esc(total)} / <span class="text-emerald-700">${esc(rem)} টি</span></span>
+                </div>
               </div>
             </div>
           `;
         }).join("")}
       `;
+
       box.classList.remove("hidden");
 
+      // Keep the existing convenience behavior: if this member has a booking,
+      // use its book number to populate the sale form.
       const first = memberBookings.find(b => b.bookNo) || memberBookings[0];
       if (first?.bookNo) {
         document.getElementById("saleBookNo").value = first.bookNo;
