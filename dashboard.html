@@ -273,6 +273,32 @@
       const auth = getAuth(app);
       setPersistence(auth, browserSessionPersistence).catch(() => {});
       const db = getFirestore(app);
+
+      // Dashboard থেকে Android/browser Back চাপলে আগে নিশ্চিত করবে।
+      // Cancel করলে dashboard-এই থাকবে; OK করলে Firebase logout করে login page-এ যাবে।
+      let dashboardBackGuardReady = false;
+      function installDashboardBackGuard() {
+        if (dashboardBackGuardReady) return;
+        dashboardBackGuardReady = true;
+        history.pushState({ dpmsDashboardGuard: true }, '', location.href);
+        window.addEventListener('popstate', async () => {
+          const shouldExit = window.confirm('আপনি কি লগআউট করে বের হতে চান?');
+          if (!shouldExit) {
+            history.pushState({ dpmsDashboardGuard: true }, '', location.href);
+            return;
+          }
+          try { await signOut(auth); } catch (e) { console.warn('Logout failed:', e); }
+          try { localStorage.removeItem('pujaAuthSessionV2'); } catch (e) {}
+          window.location.replace('index.html');
+        });
+      }
+
+      window.handleLogout = async function () {
+        try { await signOut(auth); } finally {
+          try { localStorage.removeItem('pujaAuthSessionV2'); } catch (e) {}
+          window.location.replace('index.html');
+        }
+      };
       const storage = getStorage(app);
 
       let allSubscriptionsData = [];
@@ -283,9 +309,12 @@
 
       onAuthStateChanged(auth, async (user) => {
         if (!user) {
+          try { localStorage.removeItem("pujaAuthSessionV2"); } catch (e) {}
           window.location.replace("index.html");
           return;
         }
+
+        installDashboardBackGuard();
 
         const isAdmin =
           (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
