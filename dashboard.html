@@ -6,6 +6,7 @@
     <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
 
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
@@ -351,7 +352,7 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
       import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-      import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+      
 
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -366,7 +367,10 @@
       const auth = getAuth(app);
       setPersistence(auth, browserSessionPersistence).catch(() => {});
       const db = getFirestore(app);
-      const storage = getStorage(app);
+      const SUPABASE_URL = "https://mgxbgmfsukekbwugswzr.supabase.co";
+      const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NeuD6lwxyxvB-xiiVLn_GQ_ZnBgRdor";
+      const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+      const DOCUMENTS_BUCKET = "documents";
 
       // Dashboard Back Guard: Back চাপলে confirmation popup; Cancel = stay, OK = logout.
       let dashboardBackGuardReady = false;
@@ -838,35 +842,21 @@
 
           const fileExt = (file.name.split(".").pop() || "bin").toLowerCase();
           const safeFileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
-          storageRef = ref(storage, `past_documents/${safeFileName}`);
-          // IMPORTANT: বড় ফাইলের আসল data কখনও Firestore-এ যাবে না।
-          // PDF/Excel/ইমেজ সরাসরি Firebase Cloud Storage-এ যাবে; Firestore-এ শুধু metadata + URL থাকবে।
-          // uploadBytesResumable বড় ফাইলের জন্য resumable upload ও progress support করে।
-          const metadata = {
-            contentType: processedFile.type || file.type || "application/octet-stream",
-            customMetadata: {
-              originalName: file.name,
-              title: title,
-              uploadedBy: auth.currentUser.email || auth.currentUser.uid || "Unknown"
-            }
-          };
-
-          const uploadTask = uploadBytesResumable(storageRef, processedFile, metadata);
-
-          await new Promise((resolve, reject) => {
-            uploadTask.on("state_changed",
-              (snapshot) => {
-                const total = snapshot.totalBytes || processedFile.size || 1;
-                const percent = Math.max(0, Math.min(100, Math.round((snapshot.bytesTransferred / total) * 100)));
-                uploadBtn.innerText = `আপলোড হচ্ছে ${percent}%...`;
-              },
-              reject,
-              resolve
-            );
-          });
-
+          const storagePath = `past_documents/${safeFileName}`;
+          // Firebase Storage নয় — Supabase Storage-এর documents bucket ব্যবহার করা হচ্ছে।
           uploadBtn.innerText = "ফাইল সংরক্ষণ হচ্ছে...";
-          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+          const { data: uploadData, error: uploadError } = await supabaseClient.storage
+            .from(DOCUMENTS_BUCKET)
+            .upload(storagePath, processedFile, {
+              contentType: processedFile.type || file.type || "application/octet-stream",
+              upsert: false
+            });
+          if (uploadError) throw uploadError;
+          const { data: publicData } = supabaseClient.storage
+            .from(DOCUMENTS_BUCKET)
+            .getPublicUrl(storagePath);
+          const downloadURL = publicData?.publicUrl || "";
+          if (!downloadURL) throw new Error("Supabase public URL তৈরি করা যায়নি।");
 
           // Storage upload শেষ হওয়ার পর Firestore-এ তালিকার রেকর্ড লিখি।
           // Firestore-এ শুধুমাত্র ছোট metadata record রাখা হচ্ছে — বড় file data নয়।
@@ -874,7 +864,8 @@
             title,
             fileName: file.name,
             fileUrl: downloadURL,
-            storagePath: storageRef.fullPath,
+            storagePath: storagePath,
+            storageBucket: DOCUMENTS_BUCKET,
             fileType: processedFile.type || file.type || fileExt,
             fileSize: processedFile.size || file.size || 0,
             uploadedAt: Date.now(),
@@ -886,7 +877,7 @@
             docRef = await addDoc(collection(db, "past_documents"), docData);
           } catch (firestoreErr) {
             // Storage upload হয়ে গেলে কিন্তু Firestore metadata save না হলে orphan file রেখে দেব না।
-            try { await deleteObject(storageRef); } catch (cleanupErr) { console.warn("Storage cleanup warning:", cleanupErr); }
+            try { await supabaseClient.storage.from(DOCUMENTS_BUCKET).remove([storagePath]); } catch (cleanupErr) { console.warn("Supabase cleanup warning:", cleanupErr); }
             throw firestoreErr;
           }
 
@@ -952,7 +943,12 @@
         try {
           const item = (window.__pastDocumentsCache || []).find(x => x.id === id);
           if (item?.storagePath) {
-            try { await deleteObject(ref(storage, item.storagePath)); } catch (storageErr) { console.warn("Storage delete warning:", storageErr); }
+            try {
+              const bucket = item.storageBucket || DOCUMENTS_BUCKET;
+              const cleanPath = String(item.storagePath).replace(/^\/+/, "").replace(/^documents\//i, "");
+              const { error: removeError } = await supabaseClient.storage.from(bucket).remove([cleanPath]);
+              if (removeError) console.warn("Supabase delete warning:", removeError);
+            } catch (storageErr) { console.warn("Supabase delete warning:", storageErr); }
           }
           await deleteDoc(doc(db, "past_documents", id));
           window.__pastDocumentsCache = (window.__pastDocumentsCache || []).filter(x => x.id !== id);
