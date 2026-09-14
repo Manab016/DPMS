@@ -1063,6 +1063,11 @@
         const result={};rows.forEach(x=>result[x.key]=x);return {result,all:rows,source:"fallback"};
       }
 
+      function displayTithiName(raw, fallback){
+        const text=String(raw||fallback||"");
+        return text.split("—")[0].trim() || fallback || "তিথি";
+      }
+
       function buildPujaCards(year,c){
         const order=["Shashthi","Saptami","Ashtami","Navami","Dashami"];
         const ritual=PUJA_RITUAL_TIMES[year]||{};
@@ -1070,14 +1075,14 @@
           const x=c.result[key]; if(!x)return "";
           const m=PUJA_TITHI_META[key], end=tithiEnd(x.rawTithi), r=ritual[key]||{};
           let extra=x.note?`<div class="mt-2 text-[11px] font-semibold text-orange-700">📌 ${x.note}</div>`:"";
-          if(x.startTime||x.endTime) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2 text-[11px]"><b>তিথি শুরু:</b> ${x.startTime||"—"} &nbsp; <b>তিথি শেষ:</b> ${x.endTime||end||"—"}</div>`;
+          if(x.startTime||x.endTime) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2.5 text-[12px] leading-6"><div><b>শুরু:</b> ${x.startTime||"—"}</div><div><b>শেষ:</b> ${x.endTime||end||"—"}</div></div>`;
           if(x.ritualTime) extra+=`<div class="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 text-[11px] font-bold text-amber-800">🪔 <b>পূজা/আচার সময়:</b> ${x.ritualTime}</div>`;
           if(key==="Ashtami"){
             const ss=r.sandhiStart||x.sandhiStart, se=r.sandhiEnd||x.sandhiEnd;
             if(ss&&se) extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${ss} – ${se}</div><div class="text-[9px] text-gray-500">${r.sandhiNote||"অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট"}</div></div>`;
             else if(end){const n=timeMin(end);if(n!=null)extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[9px] text-gray-500">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}
           }
-          return `<div class="puja-day-card bg-gradient-to-r ${m.color} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="mt-2 text-[10px] text-gray-700 bg-white/70 rounded-lg p-2"><b>তিথি:</b> ${x.rawTithi||key}</div>${x.sunrise?`<div class="mt-1 text-[10px] text-gray-600"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${extra}</div></div></div>`;
+          return `<div class="puja-day-card bg-gradient-to-r ${m.color} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="mt-2 text-[10px] text-gray-700 bg-white/70 rounded-lg p-2"><b>তিথি:</b> ${displayTithiName(x.rawTithi,key)}</div>${x.sunrise?`<div class="mt-1 text-[10px] text-gray-600"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${extra}</div></div></div>`;
         }).join("");
       }
 
@@ -1146,7 +1151,7 @@
                 const x=c.result[k]; if(!x)return '';
                 const m=PUJA_TITHI_META[k],end=tithiEnd(x.rawTithi),r=ritual[k]||{};
                 let extra="";
-                if(x.startTime||x.endTime) extra+=`<div style="margin-top:9px;background:#fff7ed;border-radius:9px;padding:10px 12px;font-size:15px"><b>তিথি শুরু:</b> ${safeText(x.startTime||"—")} &nbsp;&nbsp; <b>তিথি শেষ:</b> ${safeText(x.endTime||end||"—")}</div>`;
+                if(x.startTime||x.endTime) extra+=`<div style="margin-top:9px;background:#fff7ed;border-radius:9px;padding:10px 12px;font-size:16px;line-height:1.8"><div><b>শুরু:</b> ${safeText(x.startTime||"—")}</div><div><b>শেষ:</b> ${safeText(x.endTime||end||"—")}</div></div>`;
                 if(x.ritualTime) extra+=`<div style="margin-top:9px;background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:10px 12px;font-size:15px;font-weight:800;color:#92400e">🪔 পূজা/আচার সময়: ${safeText(x.ritualTime)}</div>`;
                 if(k==='Ashtami'){
                   const ss=r.sandhiStart||x.sandhiStart,se=r.sandhiEnd||x.sandhiEnd;
