@@ -578,8 +578,8 @@
             <input type="text" id="repayRemarks" placeholder="মন্তব্য (ঐচ্ছিক)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
           </div>
 
-          <div class="space-y-2 pt-3 border-t">
-            <button type="submit" class="w-full bg-emerald-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-sm">পরিশোধ নিশ্চিত করুন</button>
+          <div class="grid grid-cols-2 gap-2 pt-3 border-t">
+            <button type="submit" class="w-full bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-orange-700 shadow-sm">পরিশোধ করুন</button>
             <button type="button" onclick="closeLoanRepayModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50">বাতিল</button>
           </div>
         </form>
@@ -836,7 +836,7 @@
             <td class="p-2 border-r text-center font-bold text-gray-900">${formatCurrency(totalDue)}</td>
             <td class="p-2 border-r text-center">${status}</td>
             <td class="p-2 text-center whitespace-nowrap">
-               <button onclick="openLoanRepayModal(${item.id})" title="পরিশোধ করুন" class="bg-emerald-100 text-emerald-800 px-2 py-1 rounded text-[10px] font-bold mr-1">পরিশোধ</button>
+               <button onclick="openLoanRepayModal(${item.id})" title="পরিশোধ করুন" aria-label="পরিশোধ করুন" class="bg-orange-100 text-orange-700 hover:bg-orange-200 px-2 py-1 rounded text-[13px] font-bold mr-1">💰</button>
                <button onclick="viewLoanHistory(${item.id})" title="ইতিহাস" class="text-blue-600 px-1">📜</button>
                <button onclick="editLoan(${item.id})" title="এডিট" class="text-indigo-600 px-1">✏️</button>
                <button onclick="deleteLoan(${item.id})" title="মুছুন" class="text-red-600 px-1">🗑️</button>
