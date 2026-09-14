@@ -208,6 +208,32 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     const db = getFirestore(app);
     const storage = getStorage(app);
 
+    // Upload a member photo/signature dataURL to Firebase Storage.
+    // Returns the public download URL used by the Firestore member document.
+    async function uploadMemberDataURL(dataURL, path, contentType = "image/png") {
+      if (!dataURL || !String(dataURL).startsWith("data:")) {
+        return dataURL || "";
+      }
+
+      const response = await fetch(dataURL);
+      if (!response.ok) {
+        throw new Error("ছবি/স্বাক্ষর প্রস্তুত করা যায়নি");
+      }
+
+      const blob = await response.blob();
+      const fileRef = storageRef(storage, path);
+
+      await uploadBytes(fileRef, blob, {
+        contentType: contentType || blob.type || "image/png",
+        cacheControl: "public,max-age=31536000"
+      });
+
+      return await getDownloadURL(fileRef);
+    }
+
+    // Keep it globally available because saveOrUpdateMember uses this helper.
+    window.uploadMemberDataURL = uploadMemberDataURL;
+
     let allMembersData = [];
     window.filteredMembersData = [];
     let processedPhotoBase64 = "";
