@@ -38,7 +38,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   <div class="max-w-4xl mx-auto">
     
     <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-      <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+      <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
       <p class="text-xs md:text-sm text-gray-700 mt-1">
         স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong>
       </p>
@@ -1204,7 +1204,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const member = allMembersData.find(m => m.id === id);
           await deleteMemberStorageFiles(member);
           await deleteDoc(doc(db, "members", id));
-          alert("সদস্য ও তার ছবি/স্বাক্ষর Supabase Storage থেকেও মুছে ফেলা হয়েছে।");
+          alert("মুছে ফেলা হয়েছে।");
         } catch(error) {
           console.error(error);
           alert("মুছে ফেলতে সমস্যা হয়েছে: " + (error?.message || error));
@@ -1223,7 +1223,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
             await deleteDoc(doc(db, "members", cb.value));
           }
           document.getElementById("selectAll").checked = false;
-          alert("নির্বাচিত সদস্য ও তাদের ছবি/স্বাক্ষর মুছে ফেলা হয়েছে।");
+          alert("মুছে ফেলা হয়েছে।");
         } catch (error) {
           console.error(error);
           alert("ডিলিট করতে সমস্যা হয়েছে: " + (error?.message || error));
@@ -1244,7 +1244,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           }
           const selectAll = document.getElementById("selectAll");
           if (selectAll) selectAll.checked = false;
-          alert("সমস্ত সদস্য এবং তাদের ছবি/স্বাক্ষর Supabase Storage থেকেও মুছে ফেলা হয়েছে।");
+          alert("মুছে ফেলা হয়েছে।");
         } catch (error) {
           console.error(error);
           alert("সব সদস্য ডিলিট করতে সমস্যা হয়েছে: " + (error?.message || error));
@@ -1458,5 +1458,45 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardModal").classList.add("hidden");
     };
   </script>
+
+<script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-SxN0q",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
+  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const pageKey = 'members';
+  const applyCommitteeHeading = (raw) => {
+    const name = String(raw?.[pageKey] || DEFAULT_NAME);
+    const heading = document.getElementById('committeePageHeading');
+    if (heading) heading.textContent = name;
+    try {
+      const old = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+      old[pageKey] = name;
+      localStorage.setItem('pujaCommitteeNames', JSON.stringify(old));
+    } catch (_) {}
+  };
+  try {
+    const local = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+    applyCommitteeHeading(local);
+  } catch (_) { applyCommitteeHeading({}); }
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(([appMod, fsMod]) => {
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot } = fsMod;
+    let app;
+    try { app=initializeApp(firebaseConfig,'committeeHeadingSync'); } catch(e) { app=initializeApp(firebaseConfig,'committeeHeadingSync_'+Math.random().toString(36).slice(2)); }
+    const db=getFirestore(app);
+    onSnapshot(doc(db,'settings','committeeNames'), snap => applyCommitteeHeading(snap.exists()?snap.data():{}), err => console.warn('Committee heading sync failed:',err));
+  }).catch(err => console.error('Committee heading sync init failed:',err));
+})();
+</script>
 </body>
 </html>
