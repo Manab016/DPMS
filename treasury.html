@@ -2291,7 +2291,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
           ]);
-          const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInAnonymously } = authMod;
+          const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
 
 
@@ -2304,8 +2304,6 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           window.treasuryAuth = getAuth(app);
           window.treasuryStorage = null;
           try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
-          let treasuryAnonymousSignInStarted = false;
-
           let memberUnsubscribe = null;
 
           onAuthStateChanged(window.treasuryAuth, async (user) => {
@@ -2314,22 +2312,15 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
               treasuryCloudReady = false;
               if (memberUnsubscribe) { memberUnsubscribe(); memberUnsubscribe = null; }
               window.firebaseMembersCache = [];
-
-              // IMPORTANT:
-              // Android WebView, Chrome and another computer do NOT share localStorage
-              // or the browser login session. If this page has no login session, create
-              // a Firebase Anonymous Auth session so every device can still use the
-              // SAME Firestore "treasurer" collection.
-              if (!treasuryAnonymousSignInStarted) {
-                treasuryAnonymousSignInStarted = true;
-                try {
-                  await signInAnonymously(window.treasuryAuth);
-                  console.log("Treasury Firebase: anonymous cloud login created.");
-                } catch (e) {
-                  treasuryAnonymousSignInStarted = false;
-                  console.error("Treasury Firebase anonymous login failed:", e);
-                  alert("Firebase cloud sync চালু করা যায়নি। Firebase Console-এ Authentication > Sign-in method > Anonymous চালু করুন।");
-                }
+              console.warn("Treasury: Firebase login session পাওয়া যায়নি।");
+              // Treasury must use the same normal Firebase login as the rest of the app.
+              // Do not create a separate anonymous account, otherwise this device can
+              // write/read a different auth context from the logged-in app.
+              const here = location.pathname.split("/").pop() || "treasury.html";
+              if (here === "treasury.html") {
+                setTimeout(() => {
+                  if (!treasuryUserReady) location.href = "index.html";
+                }, 1200);
               }
               return;
             }
@@ -2504,13 +2495,23 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
           window.saveTreasuryToCloud = function() {
             saveLocalTreasuryOnly();
-            if (!treasuryCloudReady || !treasuryUserReady) {
-              console.warn("Treasury cloud save skipped: Firebase login/sync is not ready yet.");
-              return Promise.resolve();
-            }
+
+            // If the user saves immediately after opening the page, Firebase may still be
+            // restoring the login/session or loading the first Firestore snapshot. Never
+            // silently drop that save to localStorage only; wait briefly for cloud sync.
+            const waitForCloud = async () => {
+              const deadline = Date.now() + 15000;
+              while ((!treasuryCloudReady || !treasuryUserReady) && Date.now() < deadline) {
+                await new Promise(r => setTimeout(r, 150));
+              }
+              if (!treasuryCloudReady || !treasuryUserReady) {
+                throw new Error("Firebase cloud sync is not ready. Please login again.");
+              }
+            };
 
             // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
             treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
+              await waitForCloud;
               treasuryCloudMutationBusy = true;
               try {
                 await saveArrayToCloud("transactions", txData);
