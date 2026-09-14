@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>প্রধান কোষাধ্যক্ষ - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -21,6 +22,37 @@
         appId: "1:625976130920:web:60190b21f1c7563cdd2add",
       };
       window.treasuryFirebaseConfig = firebaseConfig;
+      window.treasurySupabase = window.supabase.createClient(
+        "https://mgxbgmfsukekbwugswzr.supabase.co",
+        "sb_publishable_NeuD6lwxyxvB-xiiVLn_GQ_ZnBgRdor"
+      );
+      window.TREASURY_DOCUMENTS_BUCKET = "documents";
+      // Supabase Storage: treasury-specific borrower/guarantor signatures.
+      window.uploadTreasurySignatureIfNeeded = async function(value, folder, recordId) {
+        const sig = String(value || "").trim();
+        if (!sig || !sig.startsWith("data:image/")) return sig;
+        if (!window.treasurySupabase) throw new Error("Supabase সংযোগ পাওয়া যাচ্ছে না।");
+        try {
+          const res = await fetch(sig);
+          const blob = await res.blob();
+          const ext = (blob.type || "image/png").split("/")[1] || "png";
+          const safeExt = ext.replace(/[^a-z0-9]/gi, "") || "png";
+          const safeId = String(recordId || Date.now()).replace(/[^a-z0-9_-]/gi, "_");
+          const path = `treasury-media/signatures/${folder}/${safeId}-${Date.now()}.${safeExt}`;
+          const { error } = await window.treasurySupabase.storage
+            .from("documents")
+            .upload(path, blob, { contentType: blob.type || "image/png", upsert: false });
+          if (error) throw error;
+          const { data } = window.treasurySupabase.storage
+            .from("documents")
+            .getPublicUrl(path);
+          if (!data?.publicUrl) throw new Error("Supabase public URL তৈরি করা যায়নি।");
+          return data.publicUrl;
+        } catch (e) {
+          console.error("Treasury signature upload failed:", e);
+          throw new Error("স্বাক্ষর Supabase Storage-এ আপলোড করা যায়নি।");
+        }
+      };
     </script>
     <style>
       .data-table td, .data-table th {
@@ -1499,10 +1531,10 @@
         // Base64 হলে Firestore-এ না রেখে Firebase Storage-এ file হিসেবে রাখা হবে।
         try {
           if (String(borrowerSig).startsWith("data:image/")) {
-            borrowerSig = await uploadTreasurySignatureIfNeeded(borrowerSig, "borrower", editId || Date.now());
+            borrowerSig = await window.uploadTreasurySignatureIfNeeded(borrowerSig, "borrower", editId || Date.now());
           }
           if (String(guarantorSig).startsWith("data:image/")) {
-            guarantorSig = await uploadTreasurySignatureIfNeeded(guarantorSig, "guarantor", editId || Date.now());
+            guarantorSig = await window.uploadTreasurySignatureIfNeeded(guarantorSig, "guarantor", editId || Date.now());
           }
         } catch (uploadError) {
           alert(uploadError.message || "স্বাক্ষর সংরক্ষণ করা যায়নি।");
@@ -2254,15 +2286,14 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
       async function initTreasuryFirebase() {
         try {
-          const [{ initializeApp }, authMod, fs, storageMod] = await Promise.all([
+          const [{ initializeApp }, authMod, fs] = await Promise.all([
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
           ]);
           const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInAnonymously } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
-          const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = storageMod;
+
 
           // IMPORTANT: Use the SAME default Firebase app/auth instance as index.html/members.html.
           // The previous named "treasuryApp" created a separate Auth instance, so the login
@@ -2271,7 +2302,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           const app = initializeApp(window.treasuryFirebaseConfig);
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
-          window.treasuryStorage = getStorage(app);
+          window.treasuryStorage = null;
           try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
           let treasuryAnonymousSignInStarted = false;
 
@@ -2322,34 +2353,15 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
             await startTreasuryCloudSync();
           });
 
-          async function uploadTreasurySignatureIfNeeded(value, folder, recordId) {
-            const sig = String(value || "").trim();
-            if (!sig || !sig.startsWith("data:image/")) return sig;
-            if (!window.treasuryStorage) return sig;
-            try {
-              const res = await fetch(sig);
-              const blob = await res.blob();
-              const ext = (blob.type || "image/png").split("/")[1] || "png";
-              const safeExt = ext.replace(/[^a-z0-9]/gi, "") || "png";
-              const path = `treasury-media/signatures/${folder}/${recordId}-${Date.now()}.${safeExt}`;
-              const fileRef = storageRef(window.treasuryStorage, path);
-              await uploadBytes(fileRef, blob, { contentType: blob.type || "image/png" });
-              return await getDownloadURL(fileRef);
-            } catch (e) {
-              console.error("Treasury signature upload failed:", e);
-              throw new Error("স্বাক্ষর Firebase Storage-এ আপলোড করা যায়নি।");
-            }
-          }
-
           async function migrateLoanSignaturesToStorage(loan) {
             if (!loan) return loan;
             let changed = false;
             if (String(loan.borrowerSig || "").startsWith("data:image/")) {
-              loan.borrowerSig = await uploadTreasurySignatureIfNeeded(loan.borrowerSig, "borrower", loan.id);
+              loan.borrowerSig = await window.uploadTreasurySignatureIfNeeded(loan.borrowerSig, "borrower", loan.id);
               changed = true;
             }
             if (String(loan.guarantorSig || "").startsWith("data:image/")) {
-              loan.guarantorSig = await uploadTreasurySignatureIfNeeded(loan.guarantorSig, "guarantor", loan.id);
+              loan.guarantorSig = await window.uploadTreasurySignatureIfNeeded(loan.guarantorSig, "guarantor", loan.id);
               changed = true;
             }
             return { loan, changed };
