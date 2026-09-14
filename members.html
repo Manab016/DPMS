@@ -116,7 +116,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <input type="text" id="newMemberCustomRole" placeholder="নিজের সদস্য পদ লিখুন" class="hidden w-full p-2.5 border rounded-lg mb-3 text-sm" />
 
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
-      <input type="tel" id="newMemberMobile" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
+      <input type="tel" id="newMemberMobile" maxlength="21" inputmode="numeric" oninput="formatMobileInput(this)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
 
       <label class="block text-xs font-semibold text-gray-600 mb-1">ঠিকানা</label>
       <textarea id="newMemberAddress" rows="2" placeholder="সম্পূর্ণ ঠিকানা" class="w-full p-2.5 border rounded-lg mb-3 text-sm resize-none"></textarea>
@@ -213,43 +213,51 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <div id="idCardModal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
-    <div class="flex flex-col items-center gap-3 w-full max-w-[390px]">
-      <div id="idCardBox" class="bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
-        <div id="idCardHeader" class="px-3 py-2 flex flex-col justify-center items-center relative">
-          <div class="absolute inset-0 opacity-[0.07] pointer-events-none bg-center bg-contain bg-no-repeat" style="background-image:url('Logo.png')"></div>
-          <h4 class="font-black text-[14px] leading-tight text-center relative z-10">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-          <p class="text-[9px] font-bold text-center mt-0.5 relative z-10">দুর্গাপূজা ২০২৬ • সদস্য পরিচয়পত্র</p>
-          <span id="vipBadge" class="hidden absolute right-2 top-2 bg-yellow-300 text-black text-[9px] px-2.5 py-0.5 rounded-full font-black shadow border border-yellow-500 tracking-wider z-10">VIP</span>
+  <div id="idCardModal" class="fixed inset-0 bg-black/75 hidden flex items-center justify-center p-3 z-50 overflow-auto">
+    <div class="flex flex-col items-center gap-3 w-full max-w-[360px]">
+      <div id="idCardBox" class="id-card-reference relative w-[330px] h-[520px] overflow-hidden rounded-[18px] shadow-2xl border-[4px] border-yellow-200 flex flex-col text-center">
+        <div class="id-card-top-pattern"></div>
+        <div class="id-card-corner corner-tl">❧</div><div class="id-card-corner corner-tr">❧</div>
+        <div class="id-card-corner corner-bl">❧</div><div class="id-card-corner corner-br">❧</div>
+        <div class="id-card-durga-art"><div class="durga-eyes">◉　◉</div><div class="durga-bindi">◆</div><div class="durga-face"></div></div>
+        <div class="id-card-header-ref relative z-10 px-5 pt-8 pb-2">
+          <div class="text-[17px] font-black leading-tight text-yellow-100 drop-shadow-md" id="idCardCommitteeName">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
+          <div class="text-[19px] font-black text-white mt-1 drop-shadow-md">দুর্গাপূজা <span id="idCardYear">২০২৬</span></div>
+          <div class="text-[20px] font-black text-white mt-0.5">সদস্য পরিচয়পত্র</div>
+          <span id="vipBadge" class="hidden mt-1 bg-yellow-300 text-red-900 text-[10px] px-3 py-0.5 rounded-full font-black shadow border border-yellow-500">VIP</span>
         </div>
-        <div id="idCardBody" class="px-3 py-2 flex items-center gap-3 flex-1 relative">
-          <div class="shrink-0 text-center">
-            <img id="idCardPhoto" src="" class="w-[82px] h-[92px] object-cover rounded-xl border-2" />
-            <div class="text-[8px] font-bold mt-1 opacity-70">সদস্য</div>
+
+        <div class="relative z-10 flex justify-center -mt-1">
+          <div class="id-card-photo-ring">
+            <img id="idCardPhoto" src="" class="w-[104px] h-[104px] object-cover rounded-full" />
           </div>
-          <div class="text-left flex-1 min-w-0">
-            <h3 id="idCardName" class="text-[16px] font-black truncate"></h3>
-            <p id="idCardRole" class="text-[10px] font-bold inline-block px-2.5 py-0.5 rounded-full mt-0.5"></p>
-            <div class="mt-1.5 text-[9px] space-y-0.5 leading-tight">
-              <p><strong>আইডি:</strong> <span id="idCardAutoId"></span></p>
-              <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
-              <p><strong>ঠিকানা:</strong> <span id="idCardAddress"></span></p>
-              <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
-              <p id="idCardBloodRow"><strong>Blood:</strong> <span id="idCardBlood"></span></p>
-              <p><strong>Valid:</strong> <span id="idCardValidity"></span></p>
+        </div>
+
+        <div class="relative z-10 mx-5 mt-2 px-3 py-2 rounded-xl bg-white/90 border border-yellow-600/40 shadow-sm">
+          <h3 id="idCardName" class="text-[17px] font-black text-red-900 leading-tight"></h3>
+          <p id="idCardRole" class="text-[11px] font-extrabold text-red-800 mt-0.5"></p>
+          <div class="mt-1.5 text-[10px] font-semibold text-gray-900 leading-[1.45]">
+            <p><strong>আইডি নং:</strong> <span id="idCardAutoId"></span></p>
+            <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
+            <p><strong>ঠিকানা:</strong> <span id="idCardAddress"></span></p>
+            <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
+            <p id="idCardBloodRow"><strong>রক্তের গ্রুপ:</strong> <span id="idCardBlood"></span></p>
+            <p><strong>বৈধতা:</strong> <span id="idCardValidity"></span></p>
+          </div>
+        </div>
+
+        <div class="relative z-10 mt-auto mx-0 px-5 pt-2 pb-3 bg-gradient-to-r from-red-900 via-red-800 to-red-900 text-white border-t-2 border-yellow-300 min-h-[82px]">
+          <div id="signatureArea" class="flex justify-between items-end gap-4">
+            <div id="memberSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
+              <img id="idCardMemberSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+              <div class="border-t border-yellow-200 text-[8px] pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
+            </div>
+            <div id="presSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
+              <img id="idCardPresSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+              <div id="presSigLabel" class="border-t border-yellow-200 text-[8px] pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
             </div>
           </div>
-          <canvas id="idCardQrCode" class="w-12 h-12 shadow-sm bg-white rounded-sm shrink-0"></canvas>
-        </div>
-        <div id="signatureArea" class="px-4 pb-2 pt-1 flex justify-between items-end min-h-[64px] w-full">
-          <div id="memberSigContainer" class="text-center w-[42%] flex flex-col items-center justify-end">
-            <img id="idCardMemberSig" src="" class="h-7 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-            <div class="border-t border-gray-400 text-[8px] pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
-          </div>
-          <div id="presSigContainer" class="text-center w-[42%] flex flex-col items-center justify-end">
-            <img id="idCardPresSig" src="" class="h-7 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-            <div id="presSigLabel" class="border-t border-gray-400 text-[8px] pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
-          </div>
+          <div id="idCardContactLine" class="text-[8px] font-semibold mt-2 text-yellow-100">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
         </div>
       </div>
       <div class="flex gap-2 no-print">
@@ -260,7 +268,22 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <script type="module">
+  <style>
+    .id-card-reference{background:linear-gradient(160deg,#7b160d 0%,#a51d0e 25%,#f5bd42 51%,#ffe7a0 69%,#7d140c 100%);font-family:Georgia,'Noto Serif Bengali',serif;box-sizing:border-box}
+    .id-card-reference:before{content:"";position:absolute;inset:7px;border:1px solid rgba(255,224,120,.9);border-radius:12px;pointer-events:none;z-index:2}
+    .id-card-top-pattern{position:absolute;inset:0;background:radial-gradient(circle at 12% 28%,rgba(255,231,153,.22),transparent 24%),radial-gradient(circle at 88% 33%,rgba(255,235,170,.2),transparent 25%),repeating-radial-gradient(circle at 20% 78%,transparent 0 18px,rgba(128,25,10,.11) 19px 20px);opacity:.9}
+    .id-card-durga-art{position:absolute;right:-28px;top:100px;width:165px;height:190px;opacity:.18;transform:rotate(-2deg);z-index:1}
+    .durga-face{position:absolute;left:34px;top:28px;width:100px;height:135px;border-radius:48% 48% 45% 45%;background:linear-gradient(90deg,#e58a54,#ffd18c,#e58a54);border:3px solid #8c250f}
+    .durga-eyes{position:absolute;left:28px;top:78px;z-index:2;color:#6e130b;font-size:22px;letter-spacing:2px}
+    .durga-bindi{position:absolute;left:77px;top:62px;z-index:3;color:#9d1d0d;font-size:18px}
+    .id-card-photo-ring{width:118px;height:118px;padding:5px;border-radius:50%;background:linear-gradient(145deg,#fff3a5,#d98b12,#fff3a5);border:3px solid #fff2a1;box-shadow:0 3px 12px rgba(70,15,5,.35)}
+    .id-card-photo-ring img{border:3px solid #7e210e;background:#eee}
+    .id-card-corner{position:absolute;color:#ffd56b;font-size:35px;line-height:1;z-index:3;opacity:.9}
+    .corner-tl{top:9px;left:11px;transform:rotate(90deg)}.corner-tr{top:9px;right:11px;transform:rotate(180deg)}.corner-bl{bottom:78px;left:11px}.corner-br{bottom:78px;right:11px;transform:rotate(-90deg)}
+    @media print{#idCardBox.id-card-reference{width:330px!important;height:520px!important}}
+  </style>
+
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -1045,8 +1068,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const validity = document.getElementById("newMemberValidity").value.trim();
       const docId = document.getElementById("editMemberDocId").value;
 
-      if (mobile && !/^\d{10}$/.test(mobile)) {
-        alert("মোবাইল নম্বর দিলে অবশ্যই ১০ সংখ্যার দিতে হবে!");
+      if (mobile && !/^(?:\d{10}|\d{10}\/\d{10})$/.test(mobile)) {
+        alert("মোবাইল নম্বর দিলে ১০ সংখ্যা দিন। দুইটি নম্বর দিতে হলে ১০ সংখ্যা/১০ সংখ্যা লিখুন।");
         document.getElementById("newMemberMobile").focus();
         return;
       }
@@ -1520,15 +1543,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardBloodRow").style.display = member.showBloodGroup === false ? "none" : "block";
       document.getElementById("idCardValidity").innerText = member.validity || "31-12-2026";
       document.getElementById("idCardPhoto").src = member.photo || "";
+      document.getElementById("idCardCommitteeName").innerText = localStorage.getItem("pujaCommitteeName") || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+      document.getElementById("idCardContactLine").innerText = document.getElementById("committeePageHeading")?.innerText || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+      document.getElementById("idCardYear").innerText = String(member.joiningYear || new Date().getFullYear()).replace(/^20/, "");
 
       const qrData = `ID: ${member.autoId || ""}\nনাম: ${member.name || ""}\nগ্রাম: ${member.village || ""}\nপদ: ${member.role || ""}\nমোবাইল: ${member.mobile || ""}`;
       new QRious({ element: document.getElementById('idCardQrCode'), value: qrData, size: 100, level: 'M' });
 
       const cardBox = document.getElementById("idCardBox");
-      const cardHeader = document.getElementById("idCardHeader");
-      const cardBody = document.getElementById("idCardBody");
-      const photoImg = document.getElementById("idCardPhoto");
-      const roleBadge = document.getElementById("idCardRole");
       const vipBadge = document.getElementById("vipBadge");
       const memberSigContainer = document.getElementById("memberSigContainer");
       const presSigContainer = document.getElementById("presSigContainer");
@@ -1537,41 +1559,22 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const presSigLabel = document.getElementById("presSigLabel");
 
       memberSigImg.style.display = member.signature ? "block" : "none";
-      presSigImg.style.display = "none";
+      presSigImg.style.display = presSignature ? "block" : "none";
       memberSigImg.src = member.signature || "";
       presSigImg.src = presSignature || "";
 
+      cardBox.className = "id-card-reference relative w-[330px] h-[520px] overflow-hidden rounded-[18px] shadow-2xl border-[4px] border-yellow-200 flex flex-col text-center";
       if (isPresident) {
-        vipBadge.classList.remove("hidden");
-        vipBadge.innerText = "VIP • সভাপতি";
-        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-[3px] border-yellow-500 flex flex-col relative transition-all duration-300";
-        cardHeader.className = "bg-gradient-to-r from-gray-950 via-gray-900 to-black text-yellow-300 px-3 py-2 flex flex-col justify-center items-center relative border-b border-yellow-600";
-        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-gradient-to-br from-yellow-50 to-amber-100";
-        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-3 border-yellow-500 shadow-md";
-        roleBadge.className = "text-[10px] font-extrabold text-gray-900 bg-yellow-300 border border-yellow-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
-        memberSigContainer.classList.remove("hidden");
-        presSigContainer.classList.add("hidden");
-        presSigLabel.innerText = "নিজস্ব স্বাক্ষর";
+        vipBadge.classList.remove("hidden"); vipBadge.innerText = "VIP • সভাপতি";
+        cardBox.style.filter = "saturate(1.08)";
+        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.add("hidden");
       } else if (isVip) {
-        vipBadge.classList.remove("hidden");
-        vipBadge.innerText = "VIP • প্রধান পদাধিকারী";
-        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-[3px] border-yellow-500 flex flex-col relative transition-all duration-300";
-        cardHeader.className = "bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 text-yellow-200 px-3 py-2 flex flex-col justify-center items-center relative border-b border-yellow-600";
-        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-gradient-to-br from-slate-50 to-indigo-50";
-        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-3 border-yellow-500 shadow-md";
-        roleBadge.className = "text-[10px] font-extrabold text-gray-900 bg-yellow-300 border border-yellow-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
-        memberSigContainer.classList.remove("hidden");
-        presSigContainer.classList.remove("hidden");
+        vipBadge.classList.remove("hidden"); vipBadge.innerText = "VIP • প্রধান পদাধিকারী";
+        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.remove("hidden");
         presSigLabel.innerText = "সভাপতির স্বাক্ষর";
       } else {
         vipBadge.classList.add("hidden");
-        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
-        cardHeader.className = "bg-gradient-to-r from-orange-600 to-red-600 text-white px-3 py-2 flex flex-col justify-center items-center relative";
-        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-amber-50/40";
-        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-2 border-orange-500 shadow-sm";
-        roleBadge.className = "text-[10px] font-bold text-white bg-orange-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
-        memberSigContainer.classList.remove("hidden");
-        presSigContainer.classList.remove("hidden");
+        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.remove("hidden");
         presSigLabel.innerText = "সভাপতির স্বাক্ষর";
       }
       document.getElementById("idCardModal").classList.remove("hidden");
@@ -1636,199 +1639,5 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   }).catch(err => console.error('Committee heading sync init failed:',err));
 })();
 </script>
-
-<script type="module">
-(() => {
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
-    authDomain: "durgapuja-2026.firebaseapp.com",
-    projectId: "durgapuja-2026",
-    storageBucket: "durgapuja-2026.firebasestorage.app",
-    messagingSenderId: "625976130920",
-    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
-  };
-  const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
-    establishedYear: "২০০৯",
-    registrationNo: "S0014684",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
-    mobile: "৯৯৩৩৩৭১৭০২"
-  };
-  const DEFAULT_DEV = {
-    name: "MANABENDRA NATH SARKAR",
-    mobile: "9002652507",
-    email: "manabendranathsarkar112@gmail.com"
-  };
-
-  function setIfExists(id, value, property = "textContent") {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (property === "value" && document.activeElement === el) return;
-    el[property] = value;
-  }
-
-  function applyCommitteeInfo(raw) {
-    const d = { ...DEFAULT_COMMITTEE, ...(raw || {}) };
-    const name = String(d.name || DEFAULT_COMMITTEE.name);
-    const establishedYear = String(d.establishedYear || DEFAULT_COMMITTEE.establishedYear);
-    const registrationNo = String(d.registrationNo || DEFAULT_COMMITTEE.registrationNo);
-    const address = String(d.address || DEFAULT_COMMITTEE.address);
-    const mobile = String(d.mobile || "");
-
-    try { localStorage.setItem("pujaCommitteeInfo", JSON.stringify({ name, establishedYear, registrationNo, address, mobile })); } catch (_) {}
-
-    setIfExists("committeePageHeading", name);
-    setIfExists("committeeEstablishedYear", establishedYear);
-    setIfExists("committeeRegistrationNo", registrationNo);
-    setIfExists("committeeAddress", address);
-    setIfExists("committeeMobile", mobile);
-    const mobileLink = document.getElementById("committeeMobileLink");
-    if (mobileLink) mobileLink.href = "tel:" + mobile.replace(/[^0-9+]/g, "");
-
-    setIfExists("committeeInfoName", name, "value");
-    setIfExists("committeeInfoEstablished", establishedYear, "value");
-    setIfExists("committeeInfoReg", registrationNo, "value");
-    setIfExists("committeeInfoAddress", address, "value");
-    setIfExists("committeeInfoMobile", mobile, "value");
-  }
-
-  function applyDeveloperInfo(raw) {
-    const d = {
-      name: String(raw?.name || DEFAULT_DEV.name),
-      mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
-      email: String(raw?.email || DEFAULT_DEV.email)
-    };
-    try {
-      localStorage.setItem("pujaDevData", JSON.stringify(d));
-      localStorage.setItem("pujaDevName", d.name);
-      localStorage.setItem("pujaDevMobile", d.mobile);
-      localStorage.setItem("pujaDevEmail", d.email);
-    } catch (_) {}
-
-    setIfExists("devNameInput", d.name, "value");
-    setIfExists("devMobileInput", d.mobile, "value");
-    setIfExists("devEmailInput", d.email, "value");
-    setIfExists("popDevName", d.name);
-    setIfExists("popDevMobile", d.mobile);
-    setIfExists("popDevEmail", d.email);
-    setIfExists("devName", d.name);
-    setIfExists("devPhone", d.mobile);
-    setIfExists("devEmail", d.email);
-
-    const a = document.getElementById("popDevMobile");
-    if (a) a.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
-    const p = document.getElementById("devPhone");
-    if (p) p.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
-    const e = document.getElementById("popDevEmail");
-    if (e) e.href = "mailto:" + d.email;
-    const de = document.getElementById("devEmail");
-    if (de) de.href = "mailto:" + d.email;
-  }
-
-  function readLocalCommittee() {
-    try { return JSON.parse(localStorage.getItem("pujaCommitteeInfo") || "null") || DEFAULT_COMMITTEE; }
-    catch (_) { return DEFAULT_COMMITTEE; }
-  }
-
-  function readLocalDev() {
-    try { return JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; }
-    catch (_) { return DEFAULT_DEV; }
-  }
-
-  applyCommitteeInfo(readLocalCommittee());
-  applyDeveloperInfo(readLocalDev());
-
-  Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
-  ]).then(async ([appMod, authMod, fsMod]) => {
-    const { getApps, getApp, initializeApp } = appMod;
-    const { getAuth, onAuthStateChanged } = authMod;
-    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
-
-    let app;
-    try { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
-    catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-
-    let readyResolve;
-    window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
-
-    window.__saveDeveloperDetailsToCloud = async function(dev) {
-      const ctx = await window.__pujaGlobalReady;
-      await setDoc(doc(ctx.db, "settings", "developerInfo"), {
-        name: String(dev?.name || "").trim(),
-        mobile: String(dev?.mobile || "").trim(),
-        email: String(dev?.email || "").trim(),
-        updatedAt: Date.now()
-      }, { merge: true });
-      applyDeveloperInfo(dev);
-    };
-
-    window.__saveCommitteeInfoToCloud = async function(info) {
-      const ctx = await window.__pujaGlobalReady;
-      const data = {
-        name: String(info?.name || DEFAULT_COMMITTEE.name).trim() || DEFAULT_COMMITTEE.name,
-        establishedYear: String(info?.establishedYear || DEFAULT_COMMITTEE.establishedYear).trim() || DEFAULT_COMMITTEE.establishedYear,
-        registrationNo: String(info?.registrationNo || DEFAULT_COMMITTEE.registrationNo).trim() || DEFAULT_COMMITTEE.registrationNo,
-        address: String(info?.address || DEFAULT_COMMITTEE.address).trim() || DEFAULT_COMMITTEE.address,
-        mobile: String(info?.mobile || "").trim()
-      };
-      await setDoc(doc(ctx.db, "settings", "committeeInfo"), { ...data, updatedAt: Date.now() }, { merge: true });
-
-      // Keep the already-existing per-page heading system in sync with the common committee name.
-      const allNames = {
-        dashboard: data.name, members: data.name, chada: data.name,
-        expense: data.name, booking: data.name, sales: data.name,
-        treasury: data.name, daitobonton: data.name, settings: data.name
-      };
-      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...allNames, updatedAt: Date.now() }, { merge: true });
-      applyCommitteeInfo(data);
-      try { localStorage.setItem("pujaCommitteeNames", JSON.stringify(allNames)); } catch (_) {}
-    };
-
-    // Override the older heading helper so its save also uses the authenticated Firebase app.
-    window.__saveCommitteeNamesToCloud = async function(names) {
-      const ctx = await window.__pujaGlobalReady;
-      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...(names || {}), updatedAt: Date.now() }, { merge: true });
-    };
-
-    onAuthStateChanged(auth, user => {
-      if (!user) return;
-      readyResolve({ auth, db, user });
-
-      onSnapshot(doc(db, "settings", "developerInfo"), snap => {
-        applyDeveloperInfo(snap.exists() ? snap.data() : DEFAULT_DEV);
-      }, err => console.warn("Developer details sync failed:", err));
-
-      onSnapshot(doc(db, "settings", "committeeInfo"), snap => {
-        applyCommitteeInfo(snap.exists() ? snap.data() : readLocalCommittee());
-      }, err => console.warn("Committee info sync failed:", err));
-    });
-  }).catch(err => console.error("Global settings sync init failed:", err));
-
-  window.saveCommitteeInfo = async function(e) {
-    if (e) e.preventDefault();
-    const info = {
-      name: document.getElementById("committeeInfoName")?.value || "",
-      establishedYear: document.getElementById("committeeInfoEstablished")?.value || "",
-      registrationNo: document.getElementById("committeeInfoReg")?.value || "",
-      address: document.getElementById("committeeInfoAddress")?.value || "",
-      mobile: document.getElementById("committeeInfoMobile")?.value || ""
-    };
-    try {
-      if (!window.__saveCommitteeInfoToCloud) throw new Error("cloud_not_ready");
-      await window.__saveCommitteeInfoToCloud(info);
-      alert("কমিটির তথ্য সেভ হয়েছে। এখন সব পেজে একই তথ্য দেখা যাবে।");
-    } catch (err) {
-      console.error("Committee info cloud save failed:", err);
-      alert("কমিটির তথ্য সেভ হয়নি। ইন্টারনেট/Firestore সংযোগ পরীক্ষা করুন।");
-    }
-  };
-})();
-</script>
-
 </body>
 </html>
