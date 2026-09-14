@@ -1787,36 +1787,48 @@
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
           ]);
-          const { getAuth, onAuthStateChanged } = authMod;
+          const { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
 
-          const app = initializeApp(window.treasuryFirebaseConfig, "treasuryApp");
+          // IMPORTANT: Use the SAME default Firebase app/auth instance as index.html/members.html.
+          // The previous named "treasuryApp" created a separate Auth instance, so the login
+          // session from the main login page was not reliably available on this page (especially
+          // inside the Android WebView). That caused members and treasury data to remain local.
+          const app = initializeApp(window.treasuryFirebaseConfig);
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
+          try { await setPersistence(window.treasuryAuth, browserSessionPersistence); } catch(e) {}
+
+          let memberUnsubscribe = null;
 
           onAuthStateChanged(window.treasuryAuth, async (user) => {
             treasuryUserReady = !!user;
             if (!user) {
               treasuryCloudReady = false;
+              if (memberUnsubscribe) { memberUnsubscribe(); memberUnsubscribe = null; }
+              window.firebaseMembersCache = [];
               console.warn("Treasury Firebase: user is not signed in. Cloud sync will wait for login.");
               return;
             }
+
+            // Start the members listener ONLY after authentication is confirmed.
+            // Firestore rules require request.auth != null.
+            if (memberUnsubscribe) memberUnsubscribe();
+            memberUnsubscribe = onSnapshot(collection(window.treasuryDb, "members"), snap => {
+              const members = [];
+              snap.forEach(d => members.push({ id:d.id, ...d.data() }));
+              members.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
+              window.firebaseMembersCache = members.map((m,i) => normalizeMemberForTreasury(m,i));
+              try {
+                localStorage.setItem("membersData", JSON.stringify(window.firebaseMembersCache));
+                localStorage.setItem("sodosso_data", JSON.stringify(window.firebaseMembersCache));
+              } catch(e) {}
+              const input = document.getElementById("loanMemberSearch");
+              if (input && input.value.trim()) handleMemberSearch(input.value);
+            }, err => console.warn("Members sync error:", err));
+
             await startTreasuryCloudSync();
           });
-
-          // Members can be read by any signed-in user according to the supplied Firestore Rules.
-          onSnapshot(collection(window.treasuryDb, "members"), snap => {
-            const members = [];
-            snap.forEach(d => members.push({ id:d.id, ...d.data() }));
-            members.sort((a,b) => Number(a.createdAt || 0) - Number(b.createdAt || 0));
-            window.firebaseMembersCache = members.map((m,i) => normalizeMemberForTreasury(m,i));
-            try {
-              localStorage.setItem("membersData", JSON.stringify(window.firebaseMembersCache));
-              localStorage.setItem("sodosso_data", JSON.stringify(window.firebaseMembersCache));
-            } catch(e) {}
-            const input = document.getElementById("loanMemberSearch");
-            if (input && input.value.trim()) handleMemberSearch(input.value);
-          }, err => console.warn("Members sync error:", err));
 
           async function startTreasuryCloudSync() {
             if (treasuryCloudReady) return;
