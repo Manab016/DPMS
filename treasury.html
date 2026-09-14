@@ -2189,7 +2189,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
           ]);
-          const { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence } = authMod;
+          const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence, signInAnonymously } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
           const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = storageMod;
 
@@ -2201,7 +2201,8 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
           window.treasuryStorage = getStorage(app);
-          try { await setPersistence(window.treasuryAuth, browserSessionPersistence); } catch(e) {}
+          try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
+          let treasuryAnonymousSignInStarted = false;
 
           let memberUnsubscribe = null;
 
@@ -2211,7 +2212,23 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
               treasuryCloudReady = false;
               if (memberUnsubscribe) { memberUnsubscribe(); memberUnsubscribe = null; }
               window.firebaseMembersCache = [];
-              console.warn("Treasury Firebase: user is not signed in. Cloud sync will wait for login.");
+
+              // IMPORTANT:
+              // Android WebView, Chrome and another computer do NOT share localStorage
+              // or the browser login session. If this page has no login session, create
+              // a Firebase Anonymous Auth session so every device can still use the
+              // SAME Firestore "treasurer" collection.
+              if (!treasuryAnonymousSignInStarted) {
+                treasuryAnonymousSignInStarted = true;
+                try {
+                  await signInAnonymously(window.treasuryAuth);
+                  console.log("Treasury Firebase: anonymous cloud login created.");
+                } catch (e) {
+                  treasuryAnonymousSignInStarted = false;
+                  console.error("Treasury Firebase anonymous login failed:", e);
+                  alert("Firebase cloud sync চালু করা যায়নি। Firebase Console-এ Authentication > Sign-in method > Anonymous চালু করুন।");
+                }
+              }
               return;
             }
 
@@ -2357,6 +2374,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
             } catch(e) {
               treasuryCloudReady = false;
               console.error("Treasurer cloud sync failed:", e);
+              alert("Firebase cloud sync চালু হয়নি। Firebase Authentication (Anonymous) এবং Firestore Rules পরীক্ষা করুন।");
             }
           }
 
@@ -2403,7 +2421,10 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
           window.saveTreasuryToCloud = function() {
             saveLocalTreasuryOnly();
-            if (!treasuryCloudReady || !treasuryUserReady) return Promise.resolve();
+            if (!treasuryCloudReady || !treasuryUserReady) {
+              console.warn("Treasury cloud save skipped: Firebase login/sync is not ready yet.");
+              return Promise.resolve();
+            }
 
             // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
             treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
