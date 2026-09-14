@@ -8,6 +8,9 @@
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <!-- PDF/ছবি শেয়ার ও A4 প্রিন্টের জন্য -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script>
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -38,7 +41,122 @@
         max-width: 250px;
         font-size: 11px;
       }
-    </style>
+    
+
+      /* ================= ঋণ পরিশোধ রসিদ: A4 Landscape-এর অর্ধেক/A5-সদৃশ ================= */
+      .receipt-sheet {
+        width: 140mm;
+        min-height: 190mm;
+        box-sizing: border-box;
+        background: #fff;
+        border: 2.5px solid #0f9b78;
+        border-radius: 7px;
+        padding: 6mm;
+        color: #17324d;
+        font-family: Arial, "Noto Sans Bengali", sans-serif;
+        margin: 0 auto;
+      }
+      .receipt-logo {
+        width: 24mm;
+        height: 24mm;
+        object-fit: contain;
+        border-radius: 50%;
+        border: 1px solid #d7a24a;
+        background: #fff;
+        display: block;
+        margin: 0 auto;
+      }
+      .receipt-header-line { border-top: 1.3px solid #0f9b78; margin-top: 3mm; }
+      .receipt-info-box {
+        background: #edf6ff;
+        border: 1.2px solid #a9d4f6;
+        border-radius: 4mm;
+        padding: 4mm;
+        margin-top: 5mm;
+      }
+      .receipt-info-row {
+        display:flex;
+        justify-content:space-between;
+        gap: 4mm;
+        padding: 2.5mm 0;
+        border-bottom: 1px solid #9fcbed;
+        font-size: 11px;
+      }
+      .receipt-info-row:last-child { border-bottom: 0; }
+      .receipt-info-row strong { text-align:right; color:#263238; }
+      .receipt-section-box {
+        border: 2px solid #f5a400;
+        border-radius: 4mm;
+        padding: 4mm;
+        margin-top: 4mm;
+        background: #fffbed;
+      }
+      .receipt-section-box.due {
+        border-color:#2387dd;
+        background:#edf6ff;
+      }
+      .receipt-section-title {
+        text-align:center;
+        font-weight:800;
+        text-decoration:underline;
+        font-size: 14px;
+        margin-bottom: 2mm;
+        color:#7b4a13;
+      }
+      .receipt-section-box.due .receipt-section-title { color:#16395c; }
+      .receipt-money-row {
+        display:flex;
+        justify-content:space-between;
+        gap:4mm;
+        padding: 2.2mm 0;
+        font-size: 11px;
+      }
+      .receipt-money-row.total {
+        border-top:1px solid #d89b2a;
+        margin-top:1mm;
+        padding-top:3mm;
+        font-size:13px;
+        font-weight:800;
+      }
+      .receipt-section-box.due .receipt-money-row.total { border-top-color:#2387dd; }
+      .receipt-money-row strong { color:#8b421c; }
+      .receipt-section-box.due .receipt-money-row strong { color:#17324d; }
+      .receipt-signatures {
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 9mm;
+        margin-top: 7mm;
+        padding-top: 5mm;
+        border-top: 1.3px solid #0f9b78;
+        align-items:end;
+      }
+      .receipt-sign-left, .receipt-sign-right { min-height: 33mm; }
+      .receipt-sign-left { display:flex; flex-direction:column; justify-content:flex-end; gap:7mm; }
+      .receipt-sign-box { text-align:center; font-size:10px; font-weight:700; color:#17324d; }
+      .receipt-sign-box img { display:block; width:34mm; height:13mm; object-fit:contain; margin:0 auto 1.5mm; }
+      .receipt-sign-line { border-top:1px solid #4b5563; padding-top:1.2mm; }
+      .receipt-sign-right { display:flex; align-items:flex-end; justify-content:center; }
+      .receipt-footer { text-align:center; margin-top:5mm; color:#187f67; font-size:11px; font-weight:700; line-height:1.7; }
+      .receipt-footer .thanks { color:#15926f; margin-top:2mm; }
+
+      @media (max-width: 640px) {
+        .receipt-sheet { width: 100%; min-height: auto; padding: 4mm; }
+      }
+
+      @page { size: A4 landscape; margin: 5mm; }
+      @media print {
+        html, body { width: 297mm; height: 210mm; background:#fff !important; }
+        body { margin:0 !important; padding:0 !important; }
+        body > * { display:none !important; }
+        #receiptModal { display:block !important; position:static !important; inset:auto !important; width:297mm !important; height:200mm !important; background:#fff !important; padding:0 !important; }
+        #receiptModal .receipt-modal-box { display:block !important; width:297mm !important; max-width:none !important; height:200mm !important; max-height:none !important; overflow:visible !important; padding:0 !important; margin:0 !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:#fff !important; }
+        #receiptModal .receipt-close, #receiptModal .receipt-actions { display:none !important; }
+        #receiptContent { display:block !important; width:297mm !important; height:200mm !important; }
+        #receiptPrintStage { display:flex !important; width:297mm !important; height:200mm !important; align-items:flex-start !important; justify-content:flex-start !important; }
+        .receipt-sheet { width:140mm !important; height:190mm !important; min-height:190mm !important; margin:0 !important; }
+        * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      }
+</style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
@@ -658,14 +776,14 @@
       </div>
     </div>
 
-    <!-- ================= মোডাল ৭: রসিদ মোডাল (Receipt Modal) ================= -->
-    <div id="receiptModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
-      <div class="bg-white w-full max-w-sm rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5 relative">
-        <button onclick="closeReceiptModal()" class="absolute top-4 right-4 text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button>
+    <!-- ================= মোডাল ৭: ঋণ পরিশোধ রসিদ ================= -->
+    <div id="receiptModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-2 sm:p-3 z-50">
+      <div class="receipt-modal-box bg-white w-full max-w-2xl max-h-[94vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-2 sm:p-4 relative">
+        <button onclick="closeReceiptModal()" class="receipt-close absolute top-3 right-3 z-10 text-gray-400 hover:text-gray-700 font-bold text-lg bg-white/90 rounded-full px-1">✕</button>
         <div id="receiptContent"></div>
-        <div class="grid grid-cols-2 gap-2 pt-4 border-t mt-4">
-          <button onclick="downloadReceiptPDF()" class="bg-amber-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-amber-700 shadow-sm">🖨️ প্রিন্ট / ডাউন্লোড</button>
-          <button onclick="shareReceiptWhatsApp()" class="bg-emerald-600 text-white py-2 rounded-xl text-xs font-bold hover:bg-emerald-700 shadow-sm">📲 হোয়াটসঅ্যাপ</button>
+        <div class="receipt-actions grid grid-cols-2 gap-2 pt-3 mt-2 border-t">
+          <button onclick="downloadReceiptPDF()" class="bg-amber-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-amber-700 shadow-sm">🖨️ A4 Landscape প্রিন্ট</button>
+          <button onclick="shareReceiptWhatsApp()" class="bg-emerald-600 text-white py-2.5 rounded-xl text-xs font-bold hover:bg-emerald-700 shadow-sm">💬 WhatsApp Text</button>
         </div>
       </div>
     </div>
@@ -703,16 +821,27 @@
         if (loanD) loanD.value = today;
       }
 
-      function getTreasurerNameFromMembers() {
-        let allMembers = JSON.parse(localStorage.getItem("sodosso_data")) || 
-                         JSON.parse(localStorage.getItem("sodossoData")) || 
-                         JSON.parse(localStorage.getItem("membersData")) || [];
-        let treasurer = allMembers.find(m => {
-          const role = (m.role || m.designation || m.position || "").toLowerCase();
+      function getTreasurerMemberFromMembers() {
+        let allMembers = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+        if (!allMembers.length) {
+          try {
+            allMembers = JSON.parse(localStorage.getItem("membersData") || localStorage.getItem("sodosso_data") || localStorage.getItem("sodossoData") || "[]");
+          } catch(e) { allMembers = []; }
+        }
+        return allMembers.find(m => {
+          const role = String(m.role || m.designation || m.position || "").toLowerCase();
           return role.includes("কোষাধ্যক্ষ") || role.includes("treasurer");
-        });
-        if (treasurer && treasurer.name) return treasurer.name;
-        return "গ্যারান্টার";
+        }) || null;
+      }
+
+      function getTreasurerNameFromMembers() {
+        const treasurer = getTreasurerMemberFromMembers();
+        return treasurer?.name || "কোষাধ্যক্ষ";
+      }
+
+      function getTreasurerSignatureFromMembers() {
+        const treasurer = getTreasurerMemberFromMembers();
+        return treasurer?.signature || "";
       }
 
       function toggleAllRows(checkbox, type) {
@@ -1108,6 +1237,7 @@
         btnOther.className = "py-2 rounded-lg text-gray-600";
 
         if (tab === 'other') {
+          window.selectedLoanMember = null;
           btnOther.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           selectSec.classList.add("hidden");
           otherFields.classList.remove("hidden");
@@ -1202,13 +1332,33 @@
         document.getElementById("loanMemberMobile").value = mobile;
         document.getElementById("loanMemberAddress").value = address;
         document.getElementById("memberSuggestions").classList.add("hidden");
+
+        // সদস্য পেজের একই Firestore record ধরে রাখছি—পরবর্তীতে signature sync করার জন্য।
+        let allMembers = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+        if (!allMembers.length) {
+          try { allMembers = JSON.parse(localStorage.getItem("membersData") || localStorage.getItem("sodosso_data") || "[]"); } catch(e) { allMembers = []; }
+        }
+        window.selectedLoanMember = allMembers.find(m =>
+          String(m.memberId || m.autoId || m.id || "") === String(id || "") ||
+          (String(m.name || "").trim() === String(name || "").trim() && String(m.mobile || m.phone || "") === String(mobile || ""))
+        ) || null;
+
         document.getElementById("cardMemName").innerText = name;
         document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
         document.getElementById("cardMemAddress").innerText = address || "-";
         document.getElementById("selectedMemberCard").classList.remove("hidden");
+
+        // সদস্যের signature থাকলে সেটি borrower signature হিসেবে auto-sync হবে।
+        if (window.selectedLoanMember?.signature) {
+          document.getElementById("borrowerSigData").value = window.selectedLoanMember.signature;
+          document.getElementById("borrowerSigPreview").innerHTML = `<div class="w-full h-full flex items-center justify-center p-1"><img src="${window.selectedLoanMember.signature}" class="max-h-12 object-contain" /></div>`;
+        } else {
+          clearSig('borrowerSigData', 'borrowerSigPreview');
+        }
       }
       function clearSelectedMember() {
+        window.selectedLoanMember = null;
         document.getElementById("loanMemberSearch").value = "";
         document.getElementById("loanMemberId").value = "";
         document.getElementById("loanMemberName").value = "";
@@ -1259,7 +1409,17 @@
         const rate = parseFloat(document.getElementById("loanInterestRate").value) || 0;
         const date = document.getElementById("loanDate").value;
         const remarks = document.getElementById("loanRemarks").value;
-        const borrowerSig = document.getElementById("borrowerSigData").value || "";
+        // সদস্য হলে Members page/Firestore-এর signature-ই রসিদে ব্যবহার হবে।
+        // সদস্য না হলে এখানে upload করা signature ব্যবহার হবে।
+        let borrowerSig = document.getElementById("borrowerSigData").value || "";
+        if (!isOther) {
+          let memberRecord = window.selectedLoanMember || null;
+          if (!memberRecord) {
+            const allMembers = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
+            memberRecord = allMembers.find(m => String(m.memberId || m.autoId || m.id || "") === String(memberId || "") || String(m.name || "").trim() === String(name || "").trim()) || null;
+          }
+          borrowerSig = memberRecord?.signature || "";
+        }
         const guarantorSig = document.getElementById("guarantorSigData").value || "";
 
         if (editId) {
@@ -1407,7 +1567,7 @@
         const iPaid = parseFloat(document.getElementById("repayInterestInput").value) || 0;
         const remarks = document.getElementById("repayRemarks").value;
         if (pPaid <= 0 && iPaid <= 0) { alert("পরিশোধের পরিমাণ সঠিকভাবে লিখুন"); return; }
-        const receiptNo = "REC-" + Math.floor(100000 + Math.random() * 900000);
+        const receiptNo = "#" + String(Math.floor(10 + Math.random() * 90));
         const newPayment = { id: Date.now(), receiptNo, date, principalPaid: pPaid, interestPaid: iPaid, totalPaid: parseFloat((pPaid + iPaid).toFixed(2)), remarks };
         if (!currentRepayLoan.payments) currentRepayLoan.payments = [];
         currentRepayLoan.payments.push(newPayment);
@@ -1511,44 +1671,270 @@
         saveData(); viewLoanHistory(loanId); renderLoanTable(); updateBalances();
       }
 
+      let currentReceiptLoan = null;
+      let currentReceiptPayment = null;
+
+      function bnDigits(value) {
+        return String(value ?? "").replace(/[0-9]/g, d => "০১২৩৪৫৬৭৮৯"[Number(d)]);
+      }
+
+      function formatReceiptDate(dateString) {
+        if (!dateString) return "-";
+        const parts = String(dateString).split("-");
+        if (parts.length === 3) return `${bnDigits(parts[2])}/${bnDigits(parts[1])}/${bnDigits(parts[0])}`;
+        return bnDigits(dateString);
+      }
+
+      function receiptAmount(num) {
+        const val = Number(num) || 0;
+        return "₹" + bnDigits(val.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }));
+      }
+
+      function escapeReceiptHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+      }
+
+      function getReceiptLogoSource() {
+        // Dashboard settings-এর logo key + index.html-এর Logo.png—দুটোই সমর্থিত।
+        return localStorage.getItem("pujaClubLogo") ||
+               localStorage.getItem("committee_logo") ||
+               localStorage.getItem("committeeLogo") ||
+               localStorage.getItem("logo") ||
+               "Logo.png";
+      }
+
+      function calculateLoanReceiptBalance(loan) {
+        const origAmt = Number(loan?.amount) || 0;
+        const rate = Number(loan?.rate) || 0;
+        const totalInterest = Number(((origAmt * rate * 365) / (365 * 100)).toFixed(2));
+        let paidPrin = 0, paidInt = 0;
+        (loan?.payments || []).forEach(p => {
+          paidPrin += Number(p.principalPaid) || 0;
+          paidInt += Number(p.interestPaid) || 0;
+        });
+        return {
+          origAmt,
+          totalInterest,
+          duePrin: Math.max(0, Number((origAmt - paidPrin).toFixed(2))),
+          dueInt: Math.max(0, Number((totalInterest - paidInt).toFixed(2)))
+        };
+      }
+
+      function buildReceiptSignature(src, label, fallbackName="") {
+        if (src) {
+          return `<img src="${src}" alt="${escapeReceiptHtml(label)}" />`;
+        }
+        return `<div style="height:13mm"></div>`;
+      }
+
       function showReceiptModal(loan, payment) {
-        const savedLogo = localStorage.getItem("committee_logo") || localStorage.getItem("committeeLogo") || localStorage.getItem("logo");
-        const borrowerSigDisplay = loan.borrowerSig ? `<img src="${loan.borrowerSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">${loan.name}</div>`;
-        const guarantorSigDisplay = loan.guarantorSig ? `<img src="${loan.guarantorSig}" class="max-h-10 mx-auto" />` : `<div class="mb-1 text-gray-800">গ্যারান্টার</div>`;
+        currentReceiptLoan = loan;
+        currentReceiptPayment = payment;
+
+        const balance = calculateLoanReceiptBalance(loan);
+        const treasurer = getTreasurerMemberFromMembers();
+        const treasurerName = treasurer?.name || "কোষাধ্যক্ষ";
+        const treasurerSig = treasurer?.signature || "";
+        const borrowerSig = loan?.borrowerSig || "";
+        const guarantorSig = loan?.guarantorSig || "";
+        const logoSrc = getReceiptLogoSource();
+        const receiptNo = payment?.receiptNo || "#০১";
+
+        // বর্তমান payment বাদ দিয়ে balance হিসাব করে নিচ্ছি, তারপর current payment বাদ দেওয়ার পরের বাকি দেখানো হবে।
+        const currentPaidPrin = Number(payment?.principalPaid) || 0;
+        const currentPaidInt = Number(payment?.interestPaid) || 0;
+        const dueBeforePrin = balance.duePrin + currentPaidPrin;
+        const dueBeforeInt = balance.dueInt + currentPaidInt;
+
         const content = document.getElementById("receiptContent");
         content.innerHTML = `
-          <div class="text-center border-b pb-3 mb-3">
-            <div class="flex justify-center mb-1.5">
-              ${savedLogo ? `<img src="${savedLogo}" alt="Logo" class="w-12 h-12 object-contain rounded-full border border-orange-400 bg-white" />` : `<div class="w-12 h-12 rounded-full border border-orange-400 bg-white flex items-center justify-center text-lg">Durga</div>`}
+          <div id="receiptPrintStage">
+            <div id="receiptSheet" class="receipt-sheet">
+              <div style="text-align:center">
+                <img id="receiptLogoImage" src="${logoSrc}" alt="Committee Logo" class="receipt-logo"
+                     onerror="this.onerror=null; this.src='Logo.png';" />
+                <div style="font-size:19px;font-weight:800;color:#187f67;margin-top:2mm">ঋণ পরিশোধের রসিদ</div>
+                <div style="font-size:11px;color:#2c7f6d;font-weight:700;margin-top:2mm">রসিদ নম্বর: ${escapeReceiptHtml(receiptNo)}</div>
+                <div style="font-size:11px;color:#2c7f6d;margin-top:1.5mm">তারিখ: ${formatReceiptDate(payment?.date)}</div>
+              </div>
+
+              <div class="receipt-header-line"></div>
+
+              <div class="receipt-info-box">
+                <div class="receipt-info-row"><span>নাম:</span><strong>${escapeReceiptHtml(loan?.name || "-")}</strong></div>
+                <div class="receipt-info-row"><span>মোবাইল:</span><strong>${escapeReceiptHtml(loan?.mobile || "-")}</strong></div>
+                <div class="receipt-info-row"><span>ঠিকানা:</span><strong>${escapeReceiptHtml(loan?.address || "-")}</strong></div>
+                <div class="receipt-info-row"><span>মূল ঋণ:</span><strong style="color:#e15d1d">${receiptAmount(balance.origAmt)}</strong></div>
+                <div class="receipt-info-row"><span>সুদের হার:</span><strong style="color:#7c4fc2">${bnDigits(Number(loan?.rate || 0))}%</strong></div>
+              </div>
+
+              <div class="receipt-section-box">
+                <div class="receipt-section-title">পরিশোধিত পরিমাণ</div>
+                <div class="receipt-money-row"><span>আসল পরিশোধ:</span><strong> ${receiptAmount(currentPaidPrin)}</strong></div>
+                <div class="receipt-money-row"><span>সুদ পরিশোধ:</span><strong> ${receiptAmount(currentPaidInt)}</strong></div>
+                <div class="receipt-money-row total"><span>মোট পরিশোধ:</span><strong> ${receiptAmount(payment?.totalPaid)}</strong></div>
+              </div>
+
+              <div class="receipt-section-box due">
+                <div class="receipt-section-title">বাকি পরিমাণ</div>
+                <div class="receipt-money-row"><span>বাকি আসল:</span><strong> ${receiptAmount(balance.duePrin)}</strong></div>
+                <div class="receipt-money-row"><span>বাকি সুদ:</span><strong> ${receiptAmount(balance.dueInt)}</strong></div>
+                <div class="receipt-money-row total"><span>মোট বাকি:</span><strong> ${receiptAmount(balance.duePrin + balance.dueInt)}</strong></div>
+              </div>
+
+              ${payment?.remarks ? `<div style="font-size:10px;color:#64748b;margin-top:2mm">মন্তব্য: ${escapeReceiptHtml(payment.remarks)}</div>` : ""}
+
+              <div class="receipt-signatures">
+                <div class="receipt-sign-left">
+                  <div class="receipt-sign-box">
+                    ${buildReceiptSignature(borrowerSig, "গ্রহীতার স্বাক্ষর", loan?.name)}
+                    <div class="receipt-sign-line">ঋণ গ্রহীতার স্বাক্ষর</div>
+                  </div>
+                  <div class="receipt-sign-box">
+                    ${buildReceiptSignature(guarantorSig, "গ্যারান্টারের স্বাক্ষর", "গ্যারান্টার")}
+                    <div class="receipt-sign-line">গ্যারান্টারের স্বাক্ষর</div>
+                  </div>
+                </div>
+                <div class="receipt-sign-right">
+                  <div class="receipt-sign-box">
+                    ${buildReceiptSignature(treasurerSig, "কোষাধ্যক্ষের স্বাক্ষর", treasurerName)}
+                    <div class="receipt-sign-line">কোষাধ্যক্ষের স্বাক্ষর</div>
+                    <div style="font-size:9px;margin-top:1mm">${escapeReceiptHtml(treasurerName)}</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="receipt-footer">
+                <div>ধন্যবাদ!</div>
+                <div class="thanks">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
+              </div>
             </div>
-            <h4 class="font-bold text-orange-700 text-sm md:text-base">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-            <p class="text-xs text-gray-600">ঋণ পরিশোধ রসিদ</p>
-            <p class="text-[11px] font-mono text-gray-500 mt-1">রসিদ নং: ${payment.receiptNo}</p>
-          </div>
-          <div class="space-y-1.5 text-xs text-gray-700">
-            <div class="flex justify-between"><span>তারিখ:</span> <strong>${payment.date}</strong></div>
-            <div class="flex justify-between"><span>ঋণগ্রহীতা:</span> <strong>${loan.name} ${loan.memberId ? `(${loan.memberId})` : ''}</strong></div>
-            <div class="flex justify-between"><span>মোবাইল:</span> <strong>${loan.mobile || 'N/A'}</strong></div>
-            <div class="border-t border-dashed my-2"></div>
-            <div class="flex justify-between"><span>পরিশোধিত আসল:</span> <strong class="text-emerald-700">${formatCurrency(payment.principalPaid)}</strong></div>
-            <div class="flex justify-between"><span>পরিশোধিত সুদ:</span> <strong class="text-emerald-700">${formatCurrency(payment.interestPaid)}</strong></div>
-            <div class="flex justify-between border-t pt-1.5 font-bold text-sm text-gray-900"><span>মোট পরিশোধ:</span> <strong class="text-orange-700">${formatCurrency(payment.totalPaid)}</strong></div>
-            ${payment.remarks ? `<div class="text-[11px] text-gray-500 pt-1">মন্তব্য: ${payment.remarks}</div>` : ''}
-          </div>
-          <div class="mt-6 pt-4 border-t flex justify-between items-end text-[11px] text-gray-600 font-semibold">
-            <div class="text-center">${guarantorSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্যারান্টার স্বাক্ষর</div></div>
-            <div class="text-center">${borrowerSigDisplay}<div class="border-t border-gray-400 pt-0.5">গ্রহীতার স্বাক্ষর</div></div>
           </div>
         `;
+
         document.getElementById("receiptModal").classList.remove("hidden");
         document.getElementById("receiptModal").classList.add("flex");
       }
+
       function closeReceiptModal() {
         document.getElementById("receiptModal").classList.add("hidden");
         document.getElementById("receiptModal").classList.remove("flex");
+        currentReceiptLoan = null;
+        currentReceiptPayment = null;
       }
-      function downloadReceiptPDF() { window.print(); }
-      function shareReceiptWhatsApp() { alert("হোয়াটসঅ্যাপ শেয়ার সুবিধা খুব শীঘ্রই উপলব্ধ হবে।"); }
+
+      function waitForReceiptImages() {
+        const root = document.getElementById("receiptSheet");
+        if (!root) return Promise.resolve();
+        const imgs = Array.from(root.querySelectorAll("img"));
+        return Promise.all(imgs.map(img => {
+          if (img.complete) return Promise.resolve();
+          return new Promise(resolve => { img.onload = resolve; img.onerror = resolve; });
+        }));
+      }
+
+      function downloadReceiptPDF() {
+        // প্রিন্ট ডায়ালগ খুললে A4 Landscape + অর্ধেক পেজের রসিদ হিসেবে সরাসরি প্রিন্ট করা যাবে।
+        window.print();
+      }
+
+      async function createReceiptPdfBlob() {
+        const root = document.getElementById("receiptSheet");
+        if (!root) throw new Error("রসিদ পাওয়া যায়নি");
+        if (typeof html2canvas === "undefined" || !window.jspdf?.jsPDF) {
+          throw new Error("PDF লাইব্রেরি লোড হয়নি");
+        }
+        await waitForReceiptImages();
+        const canvas = await html2canvas(root, { scale: 2, useCORS: true, backgroundColor: "#ffffff", logging: false });
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+        const pageW = 297, pageH = 210;
+        const receiptW = 140;
+        const receiptH = 190;
+        const imgData = canvas.toDataURL("image/jpeg", 0.95);
+        pdf.addImage(imgData, "JPEG", 5, 10, receiptW, receiptH, undefined, "FAST");
+        const blob = pdf.output("blob");
+        return { blob, fileName: `Loan_Repayment_${String(currentReceiptPayment?.receiptNo || "Receipt").replace(/[^a-zA-Z0-9_-]/g, "_")}.pdf` };
+      }
+
+      async function shareReceiptWhatsApp() {
+        if (!currentReceiptLoan || !currentReceiptPayment) return;
+
+        const loan = currentReceiptLoan;
+        const payment = currentReceiptPayment;
+        const balance = calculateLoanReceiptBalance(loan);
+        const treasurerName = getTreasurerNameFromMembers();
+        const mobileRaw = String(loan.mobile || "").replace(/[^0-9]/g, "");
+        const whatsappNumber = mobileRaw.length === 10 ? "91" + mobileRaw : mobileRaw;
+
+        // WhatsApp-এর জন্য PDF নয়—সরাসরি সুন্দরভাবে সাজানো TEXT তৈরি হবে।
+        // Text-এ কোনো signature image থাকবে না; শুধু কোষাধ্যক্ষের নাম থাকবে।
+        const money = (num) => receiptAmount(num);
+        const name = String(loan.name || "-");
+        const mobile = String(loan.mobile || "-");
+        const address = String(loan.address || "-");
+        const receiptNo = String(payment.receiptNo || "-");
+        const date = formatReceiptDate(payment.date);
+        const rate = bnDigits(Number(loan.rate || 0)) + "%";
+        const paidPrincipal = Number(payment.principalPaid) || 0;
+        const paidInterest = Number(payment.interestPaid) || 0;
+        const totalPaid = Number(payment.totalPaid) || (paidPrincipal + paidInterest);
+        const totalDue = Number((balance.duePrin + balance.dueInt).toFixed(2));
+
+        // WhatsApp formatting: *bold* + পরিষ্কার separator ব্যবহার করা হয়েছে।
+        const message =
+`🪷 *নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি*
+━━━━━━━━━━━━━━━━━━━━
+          *ঋণ পরিশোধের রসিদ*
+━━━━━━━━━━━━━━━━━━━━
+
+🧾 *রসিদ নম্বর:* ${receiptNo}
+📅 *তারিখ:* ${date}
+
+👤 *ঋণগ্রহীতার তথ্য*
+━━━━━━━━━━━━━━━━━━━━
+*নাম:* ${name}
+*মোবাইল:* ${mobile}
+*ঠিকানা:* ${address}
+
+💰 *ঋণের তথ্য*
+━━━━━━━━━━━━━━━━━━━━
+*মূল ঋণ:* ${money(balance.origAmt)}
+*সুদের হার:* ${rate}
+
+💵 *পরিশোধিত পরিমাণ*
+━━━━━━━━━━━━━━━━━━━━
+আসল পরিশোধ: ${money(paidPrincipal)}
+সুদ পরিশোধ: ${money(paidInterest)}
+*মোট পরিশোধ: ${money(totalPaid)}*
+
+📌 *বাকি পরিমাণ*
+━━━━━━━━━━━━━━━━━━━━
+বাকি আসল: ${money(balance.duePrin)}
+বাকি সুদ: ${money(balance.dueInt)}
+*মোট বাকি: ${money(totalDue)}*
+${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}` : ""}
+
+👨‍💼 *কোষাধ্যক্ষ:* ${treasurerName}
+
+━━━━━━━━━━━━━━━━━━━━
+🙏 *ধন্যবাদ!*
+*নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি*`;
+
+        try {
+          // WhatsApp chat-এ text আগে থেকেই বসে যাবে; ব্যবহারকারী শুধু Send চাপবেন।
+          const url = whatsappNumber
+            ? `https://wa.me/${whatsappNumber}?text=${encodeURIComponent(message)}`
+            : `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+          window.open(url, "_blank");
+        } catch (error) {
+          console.error("WhatsApp text share failed:", error);
+          alert("WhatsApp খোলা যাচ্ছে না। আবার চেষ্টা করুন।");
+        }
+      }
 
       // ----------------------------------------------------
       // 🆕 EXCEL REPORT EXPORT FUNCTION (সম্পূর্ণ আপডেট করা হয়েছে)
