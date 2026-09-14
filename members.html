@@ -284,6 +284,39 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       }
     }
 
+    function normalizeMemberStoragePath(path) {
+      if (!path) return "";
+      let s = String(path).trim();
+      if (!s) return "";
+      // Accept legacy paths that accidentally included the bucket name.
+      s = s.replace(/^\/+/, "");
+      s = s.replace(/^member-media\//i, "");
+      // Also accept a full public Supabase URL.
+      if (/^https?:\/\//i.test(s)) {
+        try {
+          const u = new URL(s);
+          const marker = "/storage/v1/object/public/member-media/";
+          const idx = u.pathname.indexOf(marker);
+          if (idx >= 0) return decodeURIComponent(u.pathname.slice(idx + marker.length));
+        } catch (_) {}
+        return "";
+      }
+      return s;
+    }
+
+    function getSupabaseStoragePathFromUrl(url, bucket = "member-media") {
+      if (!url || typeof url !== "string") return "";
+      try {
+        const u = new URL(url);
+        const marker = `/storage/v1/object/public/${bucket}/`;
+        const idx = u.pathname.indexOf(marker);
+        if (idx === -1) return "";
+        return decodeURIComponent(u.pathname.slice(idx + marker.length));
+      } catch (_) {
+        return "";
+      }
+    }
+
     async function uploadMemberBlob(blob, path, contentType = "image/png", progressCallback) {
       if (!blob) return "";
       const user = auth.currentUser;
@@ -350,6 +383,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     window.filteredMembersData = [];
     let processedPhotoBase64 = "";
     let processedSigBase64 = "";
+    let removeExistingPhoto = false;
+    let removeExistingSignature = false;
+
     let processedPhotoBlob = null;
     let processedSigBlob = null;
     let photoProcessingPromise = Promise.resolve();
@@ -851,6 +887,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         alert("দয়া করে একটি ছবি নির্বাচন করুন।"); input.value = ""; return;
       }
       try {
+        removeExistingPhoto = false;
         await openImageCropEditor(file, "photo");
       } catch (err) {
         if (err?.message !== "crop-cancelled") alert("ছবি প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
@@ -868,6 +905,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         alert("দয়া করে একটি স্বাক্ষরের ছবি নির্বাচন করুন।"); input.value = ""; return;
       }
       try {
+        removeExistingSignature = false;
         await openImageCropEditor(file, "signature");
       } catch (err) {
         if (err?.message !== "crop-cancelled") alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
@@ -876,6 +914,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
     window.clearPhoto = function() {
       processedPhotoBlob = null; processedPhotoBase64 = ""; photoProcessingPromise = Promise.resolve();
+      removeExistingPhoto = true;
       const input = document.getElementById("photoInput"); if (input) input.value = "";
       revokePreviewUrl("photoPreview");
       document.getElementById("photoPreview").removeAttribute("src");
@@ -884,6 +923,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
     window.clearSignature = function() {
       processedSigBlob = null; processedSigBase64 = ""; signatureProcessingPromise = Promise.resolve();
+      removeExistingSignature = true;
       const input = document.getElementById("sigInput"); if (input) input.value = "";
       revokePreviewUrl("sigPreview");
       document.getElementById("sigPreview").removeAttribute("src");
@@ -958,10 +998,13 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         const existingMember = docId ? allMembersData.find(m => m.id === docId) : null;
 
         // Keep existing URLs when the user edits a member but does not select a new image.
-        uploadedPhotoUrl = existingMember?.photo || "";
-        uploadedSignatureUrl = existingMember?.signature || "";
-        uploadedPhotoPath = existingMember?.photoStoragePath || "";
-        uploadedSignaturePath = existingMember?.signatureStoragePath || "";
+        const oldPhotoPath = normalizeMemberStoragePath(existingMember?.photoStoragePath) || getSupabaseStoragePathFromUrl(existingMember?.photo || "", "member-media");
+        const oldSignaturePath = normalizeMemberStoragePath(existingMember?.signatureStoragePath) || getSupabaseStoragePathFromUrl(existingMember?.signature || "", "member-media");
+
+        uploadedPhotoUrl = removeExistingPhoto ? "" : (existingMember?.photo || "");
+        uploadedSignatureUrl = removeExistingSignature ? "" : (existingMember?.signature || "");
+        uploadedPhotoPath = removeExistingPhoto ? "" : (normalizeMemberStoragePath(existingMember?.photoStoragePath) || getSupabaseStoragePathFromUrl(existingMember?.photo || "", "member-media"));
+        uploadedSignaturePath = removeExistingSignature ? "" : (normalizeMemberStoragePath(existingMember?.signatureStoragePath) || getSupabaseStoragePathFromUrl(existingMember?.signature || "", "member-media"));
 
         const uniqueBase = `${docId || "new"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -1022,6 +1065,19 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
         if (docId) {
           await updateDoc(doc(db, "members", docId), memberData);
+
+          const oldPathsToDelete = [];
+          if (oldPhotoPath && (removeExistingPhoto || (processedPhotoBlob && uploadedPhotoPath !== oldPhotoPath))) oldPathsToDelete.push(oldPhotoPath);
+          if (oldSignaturePath && (removeExistingSignature || (processedSigBlob && uploadedSignaturePath !== oldSignaturePath))) oldPathsToDelete.push(oldSignaturePath);
+
+          if (oldPathsToDelete.length) {
+            try {
+              await deleteMemberStorageFiles(oldPathsToDelete);
+            } catch (cleanupError) {
+              console.warn("পুরনো Supabase ফাইল cleanup failed:", cleanupError);
+            }
+          }
+
           alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
         } else {
           memberData.createdAt = Date.now();
@@ -1078,6 +1134,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.openEditModal = function(id) {
+      removeExistingPhoto = false;
+      removeExistingSignature = false;
       const member = allMembersData.find(m => m.id === id);
       if (!member) return;
       document.getElementById("modalTitle").innerText = "সদস্যের তথ্য আপডেট করুন";
@@ -1116,10 +1174,28 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("addMemberModal").classList.remove("hidden");
     };
 
-    async function deleteMemberStorageFiles(member) {
-      // Intentionally disabled: Firebase Auth is separate from Supabase Auth,
-      // so a public/anonymous DELETE policy would be unsafe.
-      return;
+    async function deleteMemberStorageFiles(paths = []) {
+      if (!supabaseClient) return;
+
+      if (!Array.isArray(paths) && paths && typeof paths === "object") {
+        paths = [
+          paths.photoStoragePath || getSupabaseStoragePathFromUrl(paths.photo || "", "member-media"),
+          paths.signatureStoragePath || getSupabaseStoragePathFromUrl(paths.signature || "", "member-media")
+        ];
+      }
+
+      if (!Array.isArray(paths) || !paths.length) return;
+      const cleanPaths = paths.map(normalizeMemberStoragePath).filter(Boolean);
+      if (!cleanPaths.length) return;
+
+      const { data, error } = await supabaseClient
+        .storage
+        .from("member-media")
+        .remove(cleanPaths);
+
+      if (error) throw error;
+      return data || [];
+
     }
 
     window.deleteMember = async function(id) {
@@ -1281,6 +1357,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.openAddModal = function() {
+      removeExistingPhoto = false;
+      removeExistingSignature = false;
       // Always open in NEW-member mode. This prevents an old edit id from
       // making an already-used special post appear selectable.
       document.getElementById("editMemberDocId").value = "";
@@ -1290,6 +1368,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.closeAddModal = function() {
+      removeExistingPhoto = false;
+      removeExistingSignature = false;
       document.getElementById("addMemberModal").classList.add("hidden");
       document.getElementById("editMemberDocId").value = "";
       document.getElementById("newMemberName").value = "";
