@@ -157,7 +157,68 @@
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
 </style>
-  </head>
+  
+<style id="treasury-ui-fixes">
+/* User-requested button placement */
+.treasury-action-row,
+.form-actions,
+.modal-actions {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  gap: 12px !important;
+}
+.treasury-action-row .btn-cancel,
+.form-actions .btn-cancel,
+.modal-actions .btn-cancel {
+  order: 1 !important;
+  margin-right: auto !important;
+}
+.treasury-action-row .btn-submit,
+.form-actions .btn-submit,
+.modal-actions .btn-submit {
+  order: 2 !important;
+  margin-left: auto !important;
+}
+
+/* Receipt text: slightly larger and bolder */
+.receipt,
+.receipt-container,
+.rasid,
+.rasid-container,
+[id*="receipt"],
+[class*="receipt"],
+[id*="rasid"],
+[class*="rasid"] {
+  font-weight: 600;
+}
+.receipt p,
+.receipt-container p,
+.rasid p,
+.rasid-container p,
+[id*="receipt"] p,
+[class*="receipt"] p,
+[id*="rasid"] p,
+[class*="rasid"] p,
+.receipt td,
+.receipt-container td,
+.rasid td,
+.rasid-container td,
+[id*="receipt"] td,
+[class*="receipt"] td,
+[id*="rasid"] td,
+[class*="rasid"] td {
+  font-size: 1.05em;
+  font-weight: 600;
+}
+
+/* Keep signature upload controls visually consistent */
+.signature-upload {
+  font-weight: 500;
+}
+</style>
+
+</head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
     <button
@@ -597,8 +658,8 @@
           </div>
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t">
-            <!-- গ্রহীতার স্বাক্ষর -->
-            <div class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200">
+            <!-- গ্রহীতার স্বাক্ষর: শুধু "অন্যান্য" (non-member) ঋণের ক্ষেত্রে upload করা যাবে -->
+            <div id="borrowerSignatureSection" class="bg-amber-50/50 p-2.5 rounded-xl border border-amber-200 hidden">
               <label class="block text-xs font-bold text-gray-700 mb-1">গ্রহীতার স্বাক্ষর</label>
               <div class="flex items-center gap-1.5 mb-1.5">
                 <label class="flex-1 bg-white border border-gray-300 text-gray-700 hover:bg-orange-50 text-[11px] font-bold py-1.5 px-2 rounded-lg cursor-pointer text-center shadow-xs flex items-center justify-center gap-1">
@@ -1224,6 +1285,12 @@
         document.getElementById("loanModal").classList.add("hidden");
         document.getElementById("loanModal").classList.remove("flex");
       }
+      function toggleBorrowerSignatureUpload(show) {
+        const section = document.getElementById("borrowerSignatureSection");
+        if (!section) return;
+        section.classList.toggle("hidden", !show);
+      }
+
       function switchLoanTab(tab) {
         const btnAll = document.getElementById("loanTabAll");
         const btnPrev = document.getElementById("loanTabPrev");
@@ -1242,12 +1309,17 @@
           selectSec.classList.add("hidden");
           otherFields.classList.remove("hidden");
           if (formTypeInput) formTypeInput.value = "other";
+          // "অন্যান্য" হলে ঋণগ্রহীতার স্বাক্ষর upload option থাকবে।
+          toggleBorrowerSignatureUpload(true);
         } else {
           if (tab === 'all') btnAll.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           else btnPrev.className = "py-2 rounded-lg bg-white text-orange-700 shadow-sm";
           selectSec.classList.remove("hidden");
           otherFields.classList.add("hidden");
           if (formTypeInput) formTypeInput.value = "member";
+          // সদস্য হলে আলাদা করে borrower signature upload দেখাবে না।
+          // সদস্যের নিজের signature Members data থেকে নেওয়া হবে।
+          toggleBorrowerSignatureUpload(false);
         }
       }
       function calculateLoanInterest() {
@@ -1348,6 +1420,7 @@
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
         document.getElementById("cardMemAddress").innerText = address || "-";
         document.getElementById("selectedMemberCard").classList.remove("hidden");
+        toggleBorrowerSignatureUpload(false);
 
         // সদস্যের signature থাকলে সেটি borrower signature হিসেবে auto-sync হবে।
         if (window.selectedLoanMember?.signature) {
@@ -1802,9 +1875,7 @@
 
               <div class="receipt-signatures">
                 <div class="receipt-sign-left">
-                  <div class="receipt-sign-box">
-                    ${buildReceiptSignature(borrowerSig, "গ্রহীতার স্বাক্ষর", loan?.name)}
-                    <div class="receipt-sign-line">ঋণ গ্রহীতার স্বাক্ষর</div>
+                  
                   </div>
                   <div class="receipt-sign-box">
                     ${buildReceiptSignature(guarantorSig, "গ্যারান্টারের স্বাক্ষর", "গ্যারান্টার")}
