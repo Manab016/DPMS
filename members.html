@@ -240,7 +240,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+    import { getStorage, ref as storageRef, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -265,54 +265,91 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     // Fast upload for small, already-compressed member images.
     // Photo/signature are processed in the browser first, then uploaded directly
     // to Firebase Cloud Storage. Firestore stores only the URL/path.
-    function uploadMemberBlob(blob, path, contentType = "image/png", progressCallback) {
-      return new Promise((resolve, reject) => {
-        if (!blob) return resolve("");
-        if (!auth.currentUser) {
-          const err = new Error("Firebase Authentication পাওয়া যায়নি। আবার লগইন করুন।");
-          err.code = "storage/unauthenticated";
-          reject(err);
-          return;
-        }
+    async function uploadMemberBlob(blob, path, contentType = "image/png", progressCallback) {
+      if (!blob) return "";
+      if (!auth.currentUser) {
+        const err = new Error("Firebase Authentication পাওয়া যায়নি। আবার লগইন করুন।");
+        err.code = "storage/unauthenticated";
+        throw err;
+      }
 
-        const fileRef = storageRef(storage, path);
-        const metadata = {
-          contentType: contentType || blob.type || "application/octet-stream",
-          cacheControl: "public,max-age=31536000"
-        };
+      const fileRef = storageRef(storage, path);
+      const metadata = {
+        contentType: contentType || blob.type || "application/octet-stream",
+        cacheControl: "public,max-age=31536000"
+      };
+
+      // ছোট compressed photo/signature-এর জন্য WebView-তে resumable upload-এর বদলে
+      // direct upload ব্যবহার করা হচ্ছে। এতে session/streaming endpoint-এ আটকে যাওয়ার
+      // সম্ভাবনা কমে এবং ছোট ফাইল দ্রুত শেষ হয়।
+      const SMALL_FILE_LIMIT = 2 * 1024 * 1024;
+
+      if (blob.size <= SMALL_FILE_LIMIT) {
+        let lastError = null;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          try {
+            if (typeof progressCallback === "function") progressCallback(0);
+            const result = await Promise.race([
+              uploadBytes(fileRef, blob, metadata),
+              new Promise((_, reject) => setTimeout(() => {
+                const e = new Error("Upload timeout");
+                e.code = "storage/retry-limit-exceeded";
+                reject(e);
+              }, 45000))
+            ]);
+            if (typeof progressCallback === "function") progressCallback(100, result);
+            return await getDownloadURL(result.ref);
+          } catch (error) {
+            lastError = error;
+            if (attempt < 3) {
+              await new Promise(resolve => setTimeout(resolve, 700 * attempt));
+            }
+          }
+        }
+        throw lastError || new Error("ফাইল upload হয়নি।");
+      }
+
+      // বড় ফাইল হলে Firebase-এর resumable upload ব্যবহার করা হবে।
+      return await new Promise((resolve, reject) => {
         const uploadTask = uploadBytesResumable(fileRef, blob, metadata);
         let finished = false;
         const timeoutId = setTimeout(() => {
           if (finished) return;
           finished = true;
           try { uploadTask.cancel(); } catch (_) {}
-          const err = new Error("Firebase Storage-এ 20 সেকেন্ডের মধ্যে upload শেষ হয়নি। Internet/Storage Rules পরীক্ষা করুন।");
+          const err = new Error("Firebase Storage-এ upload শেষ হতে বেশি সময় লাগছে। Internet/Storage Rules পরীক্ষা করুন।");
           err.code = "storage/retry-limit-exceeded";
           reject(err);
-        }, 20000);
+        }, 120000);
 
-        uploadTask.on("state_changed", (snapshot) => {
-          const percent = snapshot.totalBytes ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100) : 0;
-          if (typeof progressCallback === "function") progressCallback(percent, snapshot);
-        }, (error) => {
-          if (finished) return;
-          finished = true;
-          clearTimeout(timeoutId);
-          reject(error);
-        }, async () => {
-          if (finished) return;
-          try {
-            const url = await getDownloadURL(uploadTask.snapshot.ref);
-            finished = true;
-            clearTimeout(timeoutId);
-            if (typeof progressCallback === "function") progressCallback(100, uploadTask.snapshot);
-            resolve(url);
-          } catch (error) {
+        uploadTask.on("state_changed",
+          (snapshot) => {
+            const percent = snapshot.totalBytes
+              ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
+              : 0;
+            if (typeof progressCallback === "function") progressCallback(percent, snapshot);
+          },
+          (error) => {
+            if (finished) return;
             finished = true;
             clearTimeout(timeoutId);
             reject(error);
+          },
+          async () => {
+            if (finished) return;
+            try {
+              const url = await getDownloadURL(uploadTask.snapshot.ref);
+              finished = true;
+              clearTimeout(timeoutId);
+              if (typeof progressCallback === "function") progressCallback(100, uploadTask.snapshot);
+              resolve(url);
+            } catch (error) {
+              finished = true;
+              clearTimeout(timeoutId);
+              reject(error);
+            }
           }
-        });
+        );
       });
     }
 
