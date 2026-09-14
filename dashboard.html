@@ -352,11 +352,33 @@
       // Dashboard থেকে Back চাপলে আগের পেজে ফিরে যাবে না।
       // কোনো confirmation ছাড়াই logout করে login page-এ যাবে।
       let dashboardBackGuardReady = false;
+      let dashboardBackConfirming = false;
+
+      // Dashboard-এ REFRESH করলে logout হবে না।
+      // শুধু Browser/Android Back চাপলে logout confirmation দেখাবে।
       function installDashboardBackGuard() {
         if (dashboardBackGuardReady) return;
         dashboardBackGuardReady = true;
+
+        // একই dashboard URL-এর একটি guard history entry রাখা হচ্ছে।
+        // Refresh (F5/Reload) এ popstate হয় না, তাই refresh করলে session ঠিক থাকবে।
         history.pushState({ dpmsDashboardGuard: true }, "", location.href);
+
         window.addEventListener("popstate", async () => {
+          if (dashboardBackConfirming) return;
+          dashboardBackConfirming = true;
+
+          const shouldLogout = confirm(
+            "আপনি Dashboard থেকে বের হতে যাচ্ছেন।\n\nOK চাপলে Logout হবে এবং Login পেজে চলে যাবেন।\nCancel চাপলে Dashboard-এই থাকবেন।"
+          );
+
+          if (!shouldLogout) {
+            // Cancel করলে আবার Dashboard history guard বসিয়ে দেওয়া হবে।
+            history.pushState({ dpmsDashboardGuard: true }, "", location.href);
+            dashboardBackConfirming = false;
+            return;
+          }
+
           try {
             await signOut(auth);
           } catch (e) {
