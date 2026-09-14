@@ -116,7 +116,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <input type="text" id="newMemberCustomRole" placeholder="নিজের সদস্য পদ লিখুন" class="hidden w-full p-2.5 border rounded-lg mb-3 text-sm" />
 
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
-      <input type="tel" id="newMemberMobile" maxlength="21" inputmode="numeric" oninput="formatMobileInput(this)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
+      <input type="tel" id="newMemberMobile" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
 
       <label class="block text-xs font-semibold text-gray-600 mb-1">ঠিকানা</label>
       <textarea id="newMemberAddress" rows="2" placeholder="সম্পূর্ণ ঠিকানা" class="w-full p-2.5 border rounded-lg mb-3 text-sm resize-none"></textarea>
@@ -260,24 +260,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <script>
-function formatMobileInput(el) {
-  let value = (el.value || "").replace(/[^0-9\/]/g, "");
-  const slashIndex = value.indexOf("/");
-  if (slashIndex === -1) {
-    el.value = value.slice(0, 10);
-    return;
-  }
-  const first = value.slice(0, slashIndex).replace(/[^0-9]/g, "").slice(0, 10);
-  if (first.length < 10) {
-    el.value = first;
-    return;
-  }
-  const second = value.slice(slashIndex + 1).replace(/[^0-9]/g, "").slice(0, 10);
-  el.value = first + "/" + second;
-}
-</script>
-<script type="module">
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -1062,8 +1045,8 @@ function formatMobileInput(el) {
       const validity = document.getElementById("newMemberValidity").value.trim();
       const docId = document.getElementById("editMemberDocId").value;
 
-      if (mobile && !/^(?:\d{10}|\d{10}\/\d{10})$/.test(mobile)) {
-        alert("মোবাইল নম্বর দিলে ১০ সংখ্যা দিন। দুইটি নম্বর দিতে হলে ১০ সংখ্যা/১০ সংখ্যা লিখুন।");
+      if (mobile && !/^\d{10}$/.test(mobile)) {
+        alert("মোবাইল নম্বর দিলে অবশ্যই ১০ সংখ্যার দিতে হবে!");
         document.getElementById("newMemberMobile").focus();
         return;
       }
@@ -1653,5 +1636,199 @@ function formatMobileInput(el) {
   }).catch(err => console.error('Committee heading sync init failed:',err));
 })();
 </script>
+
+<script type="module">
+(() => {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+  };
+  const DEFAULT_COMMITTEE = {
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+    establishedYear: "২০০৯",
+    registrationNo: "S0014684",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
+    mobile: "৯৯৩৩৩৭১৭০২"
+  };
+  const DEFAULT_DEV = {
+    name: "MANABENDRA NATH SARKAR",
+    mobile: "9002652507",
+    email: "manabendranathsarkar112@gmail.com"
+  };
+
+  function setIfExists(id, value, property = "textContent") {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (property === "value" && document.activeElement === el) return;
+    el[property] = value;
+  }
+
+  function applyCommitteeInfo(raw) {
+    const d = { ...DEFAULT_COMMITTEE, ...(raw || {}) };
+    const name = String(d.name || DEFAULT_COMMITTEE.name);
+    const establishedYear = String(d.establishedYear || DEFAULT_COMMITTEE.establishedYear);
+    const registrationNo = String(d.registrationNo || DEFAULT_COMMITTEE.registrationNo);
+    const address = String(d.address || DEFAULT_COMMITTEE.address);
+    const mobile = String(d.mobile || "");
+
+    try { localStorage.setItem("pujaCommitteeInfo", JSON.stringify({ name, establishedYear, registrationNo, address, mobile })); } catch (_) {}
+
+    setIfExists("committeePageHeading", name);
+    setIfExists("committeeEstablishedYear", establishedYear);
+    setIfExists("committeeRegistrationNo", registrationNo);
+    setIfExists("committeeAddress", address);
+    setIfExists("committeeMobile", mobile);
+    const mobileLink = document.getElementById("committeeMobileLink");
+    if (mobileLink) mobileLink.href = "tel:" + mobile.replace(/[^0-9+]/g, "");
+
+    setIfExists("committeeInfoName", name, "value");
+    setIfExists("committeeInfoEstablished", establishedYear, "value");
+    setIfExists("committeeInfoReg", registrationNo, "value");
+    setIfExists("committeeInfoAddress", address, "value");
+    setIfExists("committeeInfoMobile", mobile, "value");
+  }
+
+  function applyDeveloperInfo(raw) {
+    const d = {
+      name: String(raw?.name || DEFAULT_DEV.name),
+      mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
+      email: String(raw?.email || DEFAULT_DEV.email)
+    };
+    try {
+      localStorage.setItem("pujaDevData", JSON.stringify(d));
+      localStorage.setItem("pujaDevName", d.name);
+      localStorage.setItem("pujaDevMobile", d.mobile);
+      localStorage.setItem("pujaDevEmail", d.email);
+    } catch (_) {}
+
+    setIfExists("devNameInput", d.name, "value");
+    setIfExists("devMobileInput", d.mobile, "value");
+    setIfExists("devEmailInput", d.email, "value");
+    setIfExists("popDevName", d.name);
+    setIfExists("popDevMobile", d.mobile);
+    setIfExists("popDevEmail", d.email);
+    setIfExists("devName", d.name);
+    setIfExists("devPhone", d.mobile);
+    setIfExists("devEmail", d.email);
+
+    const a = document.getElementById("popDevMobile");
+    if (a) a.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
+    const p = document.getElementById("devPhone");
+    if (p) p.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
+    const e = document.getElementById("popDevEmail");
+    if (e) e.href = "mailto:" + d.email;
+    const de = document.getElementById("devEmail");
+    if (de) de.href = "mailto:" + d.email;
+  }
+
+  function readLocalCommittee() {
+    try { return JSON.parse(localStorage.getItem("pujaCommitteeInfo") || "null") || DEFAULT_COMMITTEE; }
+    catch (_) { return DEFAULT_COMMITTEE; }
+  }
+
+  function readLocalDev() {
+    try { return JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; }
+    catch (_) { return DEFAULT_DEV; }
+  }
+
+  applyCommitteeInfo(readLocalCommittee());
+  applyDeveloperInfo(readLocalDev());
+
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(async ([appMod, authMod, fsMod]) => {
+    const { getApps, getApp, initializeApp } = appMod;
+    const { getAuth, onAuthStateChanged } = authMod;
+    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
+
+    let app;
+    try { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
+    catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    let readyResolve;
+    window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
+
+    window.__saveDeveloperDetailsToCloud = async function(dev) {
+      const ctx = await window.__pujaGlobalReady;
+      await setDoc(doc(ctx.db, "settings", "developerInfo"), {
+        name: String(dev?.name || "").trim(),
+        mobile: String(dev?.mobile || "").trim(),
+        email: String(dev?.email || "").trim(),
+        updatedAt: Date.now()
+      }, { merge: true });
+      applyDeveloperInfo(dev);
+    };
+
+    window.__saveCommitteeInfoToCloud = async function(info) {
+      const ctx = await window.__pujaGlobalReady;
+      const data = {
+        name: String(info?.name || DEFAULT_COMMITTEE.name).trim() || DEFAULT_COMMITTEE.name,
+        establishedYear: String(info?.establishedYear || DEFAULT_COMMITTEE.establishedYear).trim() || DEFAULT_COMMITTEE.establishedYear,
+        registrationNo: String(info?.registrationNo || DEFAULT_COMMITTEE.registrationNo).trim() || DEFAULT_COMMITTEE.registrationNo,
+        address: String(info?.address || DEFAULT_COMMITTEE.address).trim() || DEFAULT_COMMITTEE.address,
+        mobile: String(info?.mobile || "").trim()
+      };
+      await setDoc(doc(ctx.db, "settings", "committeeInfo"), { ...data, updatedAt: Date.now() }, { merge: true });
+
+      // Keep the already-existing per-page heading system in sync with the common committee name.
+      const allNames = {
+        dashboard: data.name, members: data.name, chada: data.name,
+        expense: data.name, booking: data.name, sales: data.name,
+        treasury: data.name, daitobonton: data.name, settings: data.name
+      };
+      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...allNames, updatedAt: Date.now() }, { merge: true });
+      applyCommitteeInfo(data);
+      try { localStorage.setItem("pujaCommitteeNames", JSON.stringify(allNames)); } catch (_) {}
+    };
+
+    // Override the older heading helper so its save also uses the authenticated Firebase app.
+    window.__saveCommitteeNamesToCloud = async function(names) {
+      const ctx = await window.__pujaGlobalReady;
+      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...(names || {}), updatedAt: Date.now() }, { merge: true });
+    };
+
+    onAuthStateChanged(auth, user => {
+      if (!user) return;
+      readyResolve({ auth, db, user });
+
+      onSnapshot(doc(db, "settings", "developerInfo"), snap => {
+        applyDeveloperInfo(snap.exists() ? snap.data() : DEFAULT_DEV);
+      }, err => console.warn("Developer details sync failed:", err));
+
+      onSnapshot(doc(db, "settings", "committeeInfo"), snap => {
+        applyCommitteeInfo(snap.exists() ? snap.data() : readLocalCommittee());
+      }, err => console.warn("Committee info sync failed:", err));
+    });
+  }).catch(err => console.error("Global settings sync init failed:", err));
+
+  window.saveCommitteeInfo = async function(e) {
+    if (e) e.preventDefault();
+    const info = {
+      name: document.getElementById("committeeInfoName")?.value || "",
+      establishedYear: document.getElementById("committeeInfoEstablished")?.value || "",
+      registrationNo: document.getElementById("committeeInfoReg")?.value || "",
+      address: document.getElementById("committeeInfoAddress")?.value || "",
+      mobile: document.getElementById("committeeInfoMobile")?.value || ""
+    };
+    try {
+      if (!window.__saveCommitteeInfoToCloud) throw new Error("cloud_not_ready");
+      await window.__saveCommitteeInfoToCloud(info);
+      alert("কমিটির তথ্য সেভ হয়েছে। এখন সব পেজে একই তথ্য দেখা যাবে।");
+    } catch (err) {
+      console.error("Committee info cloud save failed:", err);
+      alert("কমিটির তথ্য সেভ হয়নি। ইন্টারনেট/Firestore সংযোগ পরীক্ষা করুন।");
+    }
+  };
+})();
+</script>
+
 </body>
 </html>
