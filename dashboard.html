@@ -180,7 +180,7 @@
     </div>
 
     <!-- JPG export canvas area: screen-এ দেখা যাবে না -->
-    <div id="pujaJpgExport" style="position:fixed;left:-100000px;top:0;width:900px;background:#fff;padding:0;z-index:-1;"></div>
+    <div id="pujaJpgExport" aria-hidden="true" style="position:fixed;left:-100000px;top:0;width:900px;background:#fff;padding:0;z-index:-1;visibility:hidden;pointer-events:none;"></div>
 
     <script>
     window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};
@@ -368,7 +368,7 @@
       const db = getFirestore(app);
       const storage = getStorage(app);
 
-      // Dashboard navigation guard: refresh করলে logout হবে না; Back চাপলে অন্য page-এ যাবে না।
+      // Dashboard Back Guard: Back চাপলে confirmation popup; Cancel = stay, OK = logout.
       let dashboardBackGuardReady = false;
       let dashboardBackConfirming = false;
 
@@ -379,32 +379,31 @@
         history.replaceState({ dpmsDashboardBase: true }, "", location.href);
         history.pushState({ dpmsDashboardGuard: true }, "", location.href);
 
-        window.addEventListener("popstate", async () => {
+        window.addEventListener("popstate", () => {
           if (dashboardBackConfirming) return;
-
-          // Confirm-এর আগেই guard entry ফিরিয়ে দিই, তাই Back-এ অন্য page খুলবে না।
           history.pushState({ dpmsDashboardGuard: true }, "", location.href);
           dashboardBackConfirming = true;
 
-          const shouldLogout = window.confirm(
-            "আপনি Dashboard থেকে বের হতে যাচ্ছেন।\n\nOK চাপলে Logout হবে এবং Login পেজে চলে যাবেন।\nCancel চাপলে Dashboard-এই থাকবেন।"
-          );
+          setTimeout(async () => {
+            const shouldLogout = window.confirm(
+              "আপনি Dashboard থেকে বের হতে যাচ্ছেন।\n\nOK চাপলে Logout হবে এবং Login পেজে চলে যাবেন।\nCancel চাপলে Dashboard-এই থাকবেন।"
+            );
 
-          if (!shouldLogout) {
-            dashboardBackConfirming = false;
-            return;
-          }
+            if (!shouldLogout) {
+              dashboardBackConfirming = false;
+              return;
+            }
 
-          try {
-            await signOut(auth);
-          } catch (e) {
-            console.warn("Dashboard back logout failed:", e);
-          } finally {
-            try { localStorage.removeItem("pujaAuthSessionV2"); } catch (e) {}
-            window.location.replace("index.html");
-          }
+            try { await signOut(auth); }
+            catch (e) { console.warn("Dashboard back logout failed:", e); }
+            finally {
+              try { localStorage.removeItem("pujaAuthSessionV2"); } catch (e) {}
+              window.location.replace("index.html");
+            }
+          }, 0);
         });
       }
+
 
       let allSubscriptionsData = [];
 
@@ -1023,14 +1022,21 @@
       function paksha(d){return String(d?.paksha||d?.data?.paksha||d?.panchang?.paksha||"")}
 
       // ২০২৬-এর জন্য যাচাইকৃত Kolkata Bengali Panjika fallback। API না এলে এটিই দেখাবে।
+      // ২০২৬ কলকাতা বাংলা পঞ্জিকা অনুযায়ী নির্ঘণ্ট।
       const PUJA_FALLBACK = {
         2026:[
-          {key:"Shashthi",date:"2026-10-16",rawTithi:"Shukla Shashthi — শেষ ১৭ অক্টোবর ভোর ০৩:৪৬",note:"বোধন, আমন্ত্রণ ও অধিবাস"},
-          {key:"Saptami",date:"2026-10-17",rawTithi:"Shukla Saptami — শেষ ১৮ অক্টোবর ভোর ০৫:৫৩",note:"নবপত্রিকা প্রবেশ ও সপ্তমী পূজা"},
-          {key:"Ashtami",date:"2026-10-19",rawTithi:"Shukla Ashtami — শেষ ১৯ অক্টোবর সন্ধ্যা ০৭:৫০",note:"মহাষ্টমী পূজা ও সন্ধিপূজা"},
-          {key:"Navami",date:"2026-10-20",rawTithi:"Shukla Navami — শেষ ২১ অক্টোবর সকাল ১০:৪৭-এর আগে",note:"মহানবমী পূজা"},
-          {key:"Dashami",date:"2026-10-21",rawTithi:"Shukla Dashami — ২১ অক্টোবর সকাল ১০:৪৭ পর্যন্ত",note:"বিজয়া দশমী ও বিসর্জন"}
+          {key:"Shashthi",date:"2026-10-16",rawTithi:"শুক্ল ষষ্ঠী — শুরু ১৬ অক্টোবর দুপুর ০১:৪২, শেষ ১৭ অক্টোবর ভোর ০৩:৪৬",note:"বোধন, আমন্ত্রণ ও অধিবাস",startTime:"০১:৪২ PM",endTime:"০৩:৪৬ AM (১৭ অক্টোবর)",ritualTime:"বোধন/আমন্ত্রণ/অধিবাস — ১৬ অক্টোবর রাত ০৮:৩০-এর মধ্যে"},
+          {key:"Saptami",date:"2026-10-17",rawTithi:"শুক্ল সপ্তমী — শুরু ১৭ অক্টোবর ভোর ০৩:৪৬, শেষ ১৮ অক্টোবর ভোর ০৫:৫৩",note:"নবপত্রিকা প্রবেশ ও সপ্তমী পূজা",startTime:"০৩:৪৬ AM",endTime:"০৫:৫৩ AM (১৮ অক্টোবর)",ritualTime:"সপ্তমী পূজা — ১৭ অক্টোবর সকাল ০৭:০৪-এর পরে"},
+          {key:"Ashtami",date:"2026-10-19",rawTithi:"শুক্ল অষ্টমী — শুরু ১৮ অক্টোবর ভোর ০৫:৫৩, শেষ ১৯ অক্টোবর সন্ধ্যা ০৭:৫০",note:"মহাষ্টমী পূজা ও সন্ধিপূজা",startTime:"০৫:৫৩ AM (১৮ অক্টোবর)",endTime:"০৭:৫০ PM",ritualTime:"মহাষ্টমী পূজা — ১৯ অক্টোবর সকাল ০৭:০৫-এর আগে",sandhiStart:"০৭:২৬ PM",sandhiEnd:"০৮:১৪ PM"},
+          {key:"Navami",date:"2026-10-20",rawTithi:"শুক্ল নবমী — শুরু ১৯ অক্টোবর সন্ধ্যা ০৭:৫০, শেষ ২০ অক্টোবর সকাল ০৯:৩১",note:"মহানবমী পূজা",startTime:"০৭:৫০ PM (১৯ অক্টোবর)",endTime:"০৯:৩১ AM",ritualTime:"মহানবমী পূজা — ২০ অক্টোবর সকাল ০৮:৩১–০৯:৩১"},
+          {key:"Dashami",date:"2026-10-21",rawTithi:"শুক্ল দশমী — শুরু ২০ অক্টোবর সকাল ০৯:৩১, শেষ ২১ অক্টোবর সকাল ১০:৪৭",note:"বিজয়া দশমী ও বিসর্জন",startTime:"০৯:৩১ AM (২০ অক্টোবর)",endTime:"১০:৪৭ AM (২১ অক্টোবর)",ritualTime:"বিজয়া দশমী পূজা — ২১ অক্টোবর সকাল ০৮:৩১-এর মধ্যে"}
         ]
+      };
+
+      const PUJA_RITUAL_TIMES = {
+        2026: {
+          Ashtami: {sandhiStart:"০৭:২৬ PM",sandhiEnd:"০৮:১৪ PM",sandhiNote:"অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট"}
+        }
       };
 
       async function calculatePujaSchedule(year){
@@ -1059,12 +1065,18 @@
 
       function buildPujaCards(year,c){
         const order=["Shashthi","Saptami","Ashtami","Navami","Dashami"];
+        const ritual=PUJA_RITUAL_TIMES[year]||{};
         return order.map(key=>{
-          const x=c.result[key];if(!x)return "";const m=PUJA_TITHI_META[key],end=tithiEnd(x.rawTithi);
+          const x=c.result[key]; if(!x)return "";
+          const m=PUJA_TITHI_META[key], end=tithiEnd(x.rawTithi), r=ritual[key]||{};
           let extra=x.note?`<div class="mt-2 text-[11px] font-semibold text-orange-700">📌 ${x.note}</div>`:"";
-          const start=x.startTime||x.start||""; const finish=x.endTime||x.end||end;
-          if(start||finish) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2 text-[11px]"><b>শুরু:</b> ${start||"—"} &nbsp; <b>শেষ:</b> ${finish||"—"}</div>`;
-          if(key==="Ashtami" && end){const n=timeMin(end);if(n!=null)extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[9px] text-gray-500">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}
+          if(x.startTime||x.endTime) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2 text-[11px]"><b>তিথি শুরু:</b> ${x.startTime||"—"} &nbsp; <b>তিথি শেষ:</b> ${x.endTime||end||"—"}</div>`;
+          if(x.ritualTime) extra+=`<div class="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 text-[11px] font-bold text-amber-800">🪔 <b>পূজা/আচার সময়:</b> ${x.ritualTime}</div>`;
+          if(key==="Ashtami"){
+            const ss=r.sandhiStart||x.sandhiStart, se=r.sandhiEnd||x.sandhiEnd;
+            if(ss&&se) extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${ss} – ${se}</div><div class="text-[9px] text-gray-500">${r.sandhiNote||"অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট"}</div></div>`;
+            else if(end){const n=timeMin(end);if(n!=null)extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[9px] text-gray-500">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}
+          }
           return `<div class="puja-day-card bg-gradient-to-r ${m.color} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="mt-2 text-[10px] text-gray-700 bg-white/70 rounded-lg p-2"><b>তিথি:</b> ${x.rawTithi||key}</div>${x.sunrise?`<div class="mt-1 text-[10px] text-gray-600"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${extra}</div></div></div>`;
         }).join("");
       }
@@ -1098,26 +1110,116 @@
             const fb=getFallbackSchedule(year);
             if(Object.keys(fb.result).length===5) data=fb;
           }
+          if(year===2026 && data.result){
+            (PUJA_FALLBACK[2026]||[]).forEach(f=>{
+              if(data.result[f.key]) data.result[f.key]={...f,...data.result[f.key]};
+            });
+          }
           renderPujaSchedule(year,data);
         }catch(e){console.error(e);box.innerHTML='<div class="puja-loading text-center text-sm text-rose-600 font-bold">নির্ঘণ্ট লোড করা যায়নি। আবার আপডেট করুন।</div>'}
         finally{pujaLoading=null}
       };
 
       window.downloadPujaScheduleJPG=async()=>{
-        const state=window.__lastPujaSchedule;if(!state)return;
+        const state=window.__lastPujaSchedule;
+        if(!state){alert("আগে পূজার নির্ঘণ্ট লোড করুন।");return}
         if(typeof html2canvas!=="function"){alert("JPG তৈরির লাইব্রেরি লোড হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");return}
-        const year=state.year,c=state.computed;
-        const exportBox=document.getElementById("pujaJpgExport");
-        const source=c.source==="fallback"?"বাংলা পঞ্জিকা ভিত্তিক তথ্য • কলকাতা":"স্বয়ংক্রিয় পঞ্জিকা • কলকাতা • IST";
-        exportBox.innerHTML=`<div style="width:900px;padding:38px;background:linear-gradient(135deg,#fff7ed,#fff,#fffbeb);font-family:Arial,'Noto Sans Bengali',sans-serif;color:#1f2937"><div style="border:4px solid #ea580c;border-radius:28px;padding:30px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08)"><div style="text-align:center;border-bottom:2px solid #fed7aa;padding-bottom:20px"><div style="font-size:44px">🪔</div><div style="font-size:32px;font-weight:900;color:#c2410c">দুর্গাপূজার নির্ঘণ্ট</div><div style="font-size:19px;font-weight:700;margin-top:7px">${bnDigits(year)} • বাংলা সাল ${bnDigits(banglaYear(c.result.Shashthi?.date||`${year}-10-16`))}</div><div style="font-size:14px;color:#6b7280;margin-top:5px">কলকাতা • IST • ${source}</div></div><div style="margin-top:24px">${["Shashthi","Saptami","Ashtami","Navami","Dashami"].map(k=>{const x=c.result[k];if(!x)return '';const m=PUJA_TITHI_META[k],end=tithiEnd(x.rawTithi);let extra=x.note?`<div style="margin-top:8px;font-size:15px;font-weight:700;color:#c2410c">📌 ${x.note}</div>`:'';if(k==='Ashtami'&&end){const n=timeMin(end);if(n!=null)extra+=`<div style="margin-top:10px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:10px"><b style="color:#be123c">🕯️ সন্ধিপূজা:</b> ${fmtMin(n-24)} – ${fmtMin(n+24)}<div style="font-size:12px;color:#6b7280;margin-top:3px">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট • ১০৮ প্রদীপ/১০৮ পদ্ম নিবেদন, বলি/ভোগ ও আরতি স্থানীয় রীতি অনুযায়ী</div></div>`}return `<div style="margin-bottom:14px;border:1px solid #fed7aa;border-radius:16px;padding:16px;background:#fffaf5"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:30px">${m.icon}</div><div style="flex:1"><div style="font-size:21px;font-weight:900">${m.bn}</div><div style="font-size:16px;font-weight:800;color:#9a3412;margin-top:3px">${formatBnDate(x.date)}</div></div></div><div style="margin-top:10px;background:#fff7ed;border-radius:10px;padding:10px;font-size:14px"><b>তিথি:</b> ${x.rawTithi||k}</div>${extra}</div>`}).join('')}</div><div style="margin-top:16px;padding:12px;border-radius:12px;background:#eff6ff;color:#1e40af;font-size:12px;line-height:1.6">ℹ️ পঞ্জিকা/গণনা পদ্ধতি ও স্থানভেদে তিথির সময় কিছুটা পরিবর্তিত হতে পারে। পূজার চূড়ান্ত আচার সময় স্থানীয় পুরোহিত/পঞ্জিকা অনুযায়ী মিলিয়ে নিন।</div><div style="text-align:center;margin-top:20px;font-size:11px;color:#9ca3af">দুর্গাপূজা ব্যবস্থাপনা • স্বয়ংক্রিয় নির্ঘণ্ট</div></div></div>`;
-        exportBox.style.zIndex="99999";
+
+        const year=state.year,c=state.computed,exportBox=document.getElementById("pujaJpgExport");
+        if(!exportBox){alert("JPG export area পাওয়া যায়নি।");return}
+        const btn=document.getElementById("pujaJpgBtn"),oldText=btn?btn.innerText:"";
+        if(btn){btn.disabled=true;btn.innerText="⏳ JPG তৈরি হচ্ছে..."}
+
+        const committeeName="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        const ritual=PUJA_RITUAL_TIMES[year]||{};
+        const filename=`Durga_Puja_Nirghonto_${year}.jpg`;
+        const safeText=v=>String(v??"").replace(/[<>]/g,"");
+
+        exportBox.innerHTML=`<div style="width:900px;padding:34px;background:#fffaf2;font-family:Arial,'Noto Sans Bengali',sans-serif;color:#292524;box-sizing:border-box">
+          <div style="border:3px solid #b45309;border-radius:24px;padding:28px;background:#fff;box-shadow:0 5px 18px rgba(120,53,15,.10)">
+            <div style="text-align:center;padding:4px 10px 22px;border-bottom:3px double #d97706">
+              <div style="font-size:38px;font-weight:900;color:#7c2d12;line-height:1.25">${safeText(committeeName)}</div>
+              <div style="font-size:29px;font-weight:900;color:#c2410c;margin-top:12px">দুর্গাপূজার নির্ঘণ্ট ${bnDigits(year)}</div>
+            </div>
+            <div style="margin-top:22px">
+              ${["Shashthi","Saptami","Ashtami","Navami","Dashami"].map((k,i)=>{
+                const x=c.result[k]; if(!x)return '';
+                const m=PUJA_TITHI_META[k],end=tithiEnd(x.rawTithi),r=ritual[k]||{};
+                let extra="";
+                if(x.startTime||x.endTime) extra+=`<div style="margin-top:9px;background:#fff7ed;border-radius:9px;padding:10px 12px;font-size:15px"><b>তিথি শুরু:</b> ${safeText(x.startTime||"—")} &nbsp;&nbsp; <b>তিথি শেষ:</b> ${safeText(x.endTime||end||"—")}</div>`;
+                if(x.ritualTime) extra+=`<div style="margin-top:9px;background:#fffbeb;border:1px solid #fcd34d;border-radius:9px;padding:10px 12px;font-size:15px;font-weight:800;color:#92400e">🪔 পূজা/আচার সময়: ${safeText(x.ritualTime)}</div>`;
+                if(k==='Ashtami'){
+                  const ss=r.sandhiStart||x.sandhiStart,se=r.sandhiEnd||x.sandhiEnd;
+                  if(ss&&se) extra+=`<div style="margin-top:10px;background:#fff1f2;border:2px solid #fda4af;border-radius:10px;padding:11px 12px;font-size:16px;font-weight:900;color:#9f1239">🕯️ সন্ধিপূজা: ${safeText(ss)} – ${safeText(se)}</div>`;
+                  else if(end){const n=timeMin(end);if(n!=null)extra+=`<div style="margin-top:10px;background:#fff1f2;border:2px solid #fda4af;border-radius:10px;padding:11px 12px;font-size:16px;font-weight:900;color:#9f1239">🕯️ সন্ধিপূজা: ${fmtMin(n-24)} – ${fmtMin(n+24)}</div>`}
+                }
+                return `<div style="margin-bottom:${i===4?0:14}px;border:1px solid #fed7aa;border-radius:16px;padding:16px;background:${i%2===0?'#fffaf5':'#fffcf8'};box-sizing:border-box">
+                  <div style="display:flex;align-items:center;gap:14px">
+                    <div style="font-size:32px;width:42px;text-align:center">${m.icon}</div>
+                    <div style="flex:1"><div style="font-size:23px;font-weight:900;color:#7c2d12">${m.bn}</div><div style="font-size:16px;font-weight:800;color:#9a3412;margin-top:3px">${safeText(formatBnDate(x.date))}</div></div>
+                  </div>
+                  <div style="margin-top:10px;background:#fff7ed;border-radius:9px;padding:10px 12px;font-size:14px"><b>তিথি:</b> ${safeText(x.rawTithi||k)}</div>${extra}
+                </div>`;
+              }).join('')}
+            </div>
+          </div>
+        </div>`;
+
+        const old={position:exportBox.style.position,left:exportBox.style.left,top:exportBox.style.top,width:exportBox.style.width,zIndex:exportBox.style.zIndex,visibility:exportBox.style.visibility,pointerEvents:exportBox.style.pointerEvents};
         try{
-          const canvas=await html2canvas(exportBox.firstElementChild,{scale:2,useCORS:true,backgroundColor:"#fff",logging:false});
+          exportBox.style.position="fixed"; exportBox.style.left="0"; exportBox.style.top="0"; exportBox.style.width="900px";
+          exportBox.style.zIndex="99999"; exportBox.style.visibility="visible"; exportBox.style.pointerEvents="none";
+          await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+          const canvas=await html2canvas(exportBox,{scale:2,useCORS:true,allowTaint:true,backgroundColor:"#fffaf2",logging:false,removeContainer:true});
+          const dataUrl=canvas.toDataURL("image/jpeg",0.95);
           const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.95));
-          if(!blob)throw new Error("JPG তৈরি হয়নি");
-          const url=URL.createObjectURL(blob);const a=document.createElement("a");a.download=`Durga_Puja_Nirghonto_${year}.jpg`;a.href=url;a.style.display="none";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500);
-        }finally{exportBox.style.zIndex="-1";exportBox.innerHTML=""}
+          if(!blob)throw new Error("JPG blob তৈরি হয়নি");
+
+          // Android WebView bridge থাকলে সরাসরি native Downloads/Media-তে পাঠাবে।
+          let nativeSaved=false;
+          try{
+            const android=window.Android;
+            const base64=dataUrl.split(",")[1];
+            if(android){
+              if(typeof android.saveJpg==="function"){android.saveJpg(base64,filename);nativeSaved=true;}
+              else if(typeof android.downloadBase64==="function"){android.downloadBase64(base64,filename,"image/jpeg");nativeSaved=true;}
+              else if(typeof android.saveImage==="function"){android.saveImage(base64,filename);nativeSaved=true;}
+            }
+          }catch(e){console.warn("Native Android JPG save failed",e)}
+
+          if(!nativeSaved && navigator.share && typeof File!=="undefined"){
+            try{
+              const file=new File([blob],filename,{type:"image/jpeg"});
+              if(!navigator.canShare || navigator.canShare({files:[file]})){
+                await navigator.share({title:"দুর্গাপূজার নির্ঘণ্ট",text:"দুর্গাপূজার নির্ঘণ্ট JPG",files:[file]});
+                nativeSaved=true;
+              }
+            }catch(e){
+              if(e?.name!=="AbortError")console.warn("Web Share JPG failed",e);
+            }
+          }
+
+          if(!nativeSaved){
+            // Chrome/browser fallback: Blob download.
+            const url=URL.createObjectURL(blob);
+            const a=document.createElement("a"); a.href=url; a.download=filename; a.rel="noopener"; a.style.display="none";
+            document.body.appendChild(a); a.click();
+            setTimeout(()=>{a.remove();URL.revokeObjectURL(url)},1500);
+          }
+
+          if(btn)btn.innerText="✅ JPG প্রস্তুত";
+          setTimeout(()=>{if(btn){btn.innerText=oldText||"🖼️ JPG ডাউনলোড";btn.disabled=false}},1400);
+          if(nativeSaved)alert("JPG প্রস্তুত হয়েছে। Android-এ Save/Download সম্পন্ন হয়েছে বা Share অপশন খুলেছে।");
+        }catch(err){
+          console.error("JPG export failed:",err);
+          alert("JPG তৈরি করতে সমস্যা হয়েছে। আবার চেষ্টা করুন।\n\n"+(err?.message||err));
+          if(btn){btn.innerText=oldText||"🖼️ JPG ডাউনলোড";btn.disabled=false}
+        }finally{
+          Object.entries(old).forEach(([k,v])=>exportBox.style[k]=v);
+        }
       };
+
     </script>
   </body>
 </html>
