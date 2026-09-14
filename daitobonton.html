@@ -133,5 +133,118 @@ window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্
 window.deleteMarked=async()=>{const ids=[...document.querySelectorAll(".rowCheck:checked")].map(x=>x.value);if(!ids.length)return alert("অন্তত একটি রেকর্ড নির্বাচন করুন");if(confirm(`${ids.length} টি রেকর্ড মুছে ফেলবেন?`))try{await Promise.all(ids.map(id=>deleteDoc(doc(db,"daitobonton",id))))}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(x=>deleteDoc(doc(db,"daitobonton",x.id))))}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{const x=rows.find(r=>r.id===id);if(!x)return;const n=Math.max(0,(Number(x.amount)||0)-(Number(x.deposited)||0));if(!n)return alert("এই রেকর্ডে আর কোনো বাকি নেই।");const treasurer=getPujaTreasurer();if(!treasurer)return alert("সদস্য তালিকায় ‘পূজা কোষাধ্যক্ষ’ পদ পাওয়া যায়নি।");if(!confirm(`${money(n)} ${treasurer.name||"পূজা কোষাধ্যক্ষ"}-এর কাছে জমা হিসেবে দেখাবেন?`))return;try{await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:today(),type:"income",amount:n,desc:`চাঁদা — ${x.name||""} — ${x.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||"")}});await updateDoc(doc(db,"daitobonton",id),{deposited:(Number(x.deposited)||0)+n,updatedAt:Date.now(),depositedToTreasurerAt:Date.now(),depositedToTreasurerName:treasurer.name||""});alert("কোষাধ্যক্ষের হিসাবে জমা হয়েছে।")}catch(e){alert("কোষাধ্যক্ষের হিসাবে জমা করা যায়নি: "+e.message)}};
-window.exportExcel=async()=>{if(!rows.length)return alert("Export করার মতো তথ্য নেই");const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("দায়িত্ব বণ্টন");ws.columns=[{header:"তারিখ",key:"date",width:14},{header:"নাম",key:"name",width:22},{header:"মোবাইল",key:"mobile",width:16},{header:"সদস্য ID",key:"memberId",width:18},{header:"দায়িত্ব",key:"responsibility",width:28},{header:"দায়িত্বের টাকা",key:"amount",width:16},{header:"জমা",key:"deposited",width:16},{header:"বাকি",key:"due",width:16},{header:"মন্তব্য",key:"remarks",width:28}];rows.forEach(x=>ws.addRow({...x,due:Math.max(0,(Number(x.amount)||0)-(Number(x.deposited)||0))}));ws.getRow(1).font={bold:true};const buf=await wb.xlsx.writeBuffer();saveAs(new Blob([buf],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),"দায়িত্ব-বণ্টন.xlsx")};
+window.exportExcel=async()=>{
+  if(!rows.length)return alert("Export করার মতো তথ্য নেই");
+
+  const wb=new ExcelJS.Workbook();
+  const ws=wb.addWorksheet("দায়িত্ব বণ্টন",{
+    pageSetup:{paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}
+  });
+  ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+
+  // Members page-এর Excel export-এর একই visual style
+  ws.columns=[
+    {width:14},{width:24},{width:18},{width:18},{width:28},
+    {width:16},{width:16},{width:16},{width:30}
+  ];
+
+  const now=new Date();
+  const dd=String(now.getDate()).padStart(2,"0");
+  const mm=String(now.getMonth()+1).padStart(2,"0");
+  const yyyy=now.getFullYear();
+  const exportDate=`${dd}/${mm}/${yyyy}`;
+
+  // উপরের report heading — বছর ও export date স্বয়ংক্রিয়ভাবে বর্তমান বছর/তারিখ অনুযায়ী হবে
+  ws.mergeCells("A1:I1");
+  const title=ws.getCell("A1");
+  title.value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+  title.font={name:"Kalpurush",size:18,bold:true};
+  title.alignment={horizontal:"center",vertical:"middle"};
+  title.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
+  title.border={top:{style:"medium"},left:{style:"medium"},right:{style:"medium"}};
+  ws.getRow(1).height=35;
+
+  ws.mergeCells("A2:I2");
+  const sub=ws.getCell("A2");
+  sub.value=`দায়িত্ব রিপোর্ট - সকল দায়িত্ব | ${yyyy}`;
+  sub.font={name:"Kalpurush",size:16,bold:true};
+  sub.alignment={horizontal:"center",vertical:"middle"};
+  sub.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
+  sub.border={left:{style:"medium"},right:{style:"medium"}};
+  ws.getRow(2).height=30;
+
+  ws.mergeCells("A3:I3");
+  const info=ws.getCell("A3");
+  info.value=`দায়িত্ব বণ্টন রিপোর্ট    তারিখ :- ${exportDate}`;
+  info.font={name:"Kalpurush",size:13,bold:true};
+  info.alignment={horizontal:"center",vertical:"middle"};
+  info.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
+  info.border={left:{style:"medium"},right:{style:"medium"}};
+  ws.getRow(3).height=26;
+
+  ws.mergeCells("A4:I4");
+  const villageCell=ws.getCell("A4");
+  const selectedVillage=(document.getElementById("villageFilter")?.value||"").trim();
+  villageCell.value=selectedVillage?`গ্রাম: ${selectedVillage}`:"গ্রাম: সকল গ্রাম";
+  villageCell.font={name:"Kalpurush",size:12,bold:true};
+  villageCell.alignment={horizontal:"center",vertical:"middle"};
+  villageCell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
+  villageCell.border={bottom:{style:"medium"},left:{style:"medium"},right:{style:"medium"}};
+  ws.getRow(4).height=25;
+
+  const headers=["তারিখ","নাম","মোবাইল","সদস্য ID","দায়িত্ব","দায়িত্বের টাকা","জমা","বাকি","মন্তব্য"];
+  const headerRow=ws.getRow(6);
+  headerRow.values=headers;
+  headerRow.height=30;
+  headerRow.eachCell({includeEmpty:true},cell=>{
+    cell.font={name:"Kalpurush",size:12,bold:true,color:{argb:"FFFFFFFF"}};
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF26522"}};
+    cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+    cell.border={top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
+  });
+
+  let rowNo=7;
+  rows.forEach(x=>{
+    const amount=Number(x.amount)||0;
+    const deposited=Math.min(Math.max(Number(x.deposited)||0,0),amount);
+    const due=Math.max(0,amount-deposited);
+    const row=ws.getRow(rowNo);
+    row.values=[x.date||"",x.name||"",x.mobile||"",x.memberId||"",x.responsibility||"",amount,deposited,due,x.remarks||""];
+    row.height=45;
+    row.eachCell({includeEmpty:true},cell=>{
+      cell.font={name:"Kalpurush",size:11};
+      cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFFBF0"}};
+      cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+      cell.border={top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
+    });
+  
+    // Members export-এর মতো amount/status columns-এ পরিষ্কার emphasis
+    row.getCell(6).font={name:"Kalpurush",size:11,bold:true};
+    row.getCell(7).font={name:"Kalpurush",size:11,bold:true,color:{argb:"FF047857"}};
+    row.getCell(8).font={name:"Kalpurush",size:11,bold:true,color:{argb:"FFBE123C"}};
+    rowNo++;
+  });
+
+  // Total row — Members export-এর মতো yellow summary row
+  const totalAmount=rows.reduce((s,x)=>s+(Number(x.amount)||0),0);
+  const totalDeposited=rows.reduce((s,x)=>s+Math.min(Math.max(Number(x.deposited)||0,0),Number(x.amount)||0),0);
+  const totalDue=Math.max(0,totalAmount-totalDeposited);
+  const totalRow=ws.getRow(rowNo);
+  totalRow.values=["মোট",`${rows.length} টি দায়িত্ব`,"","","","",totalDeposited,totalDue,""];
+  totalRow.height=30;
+  totalRow.eachCell({includeEmpty:true},cell=>{
+    cell.font={name:"Kalpurush",size:13,bold:true};
+    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFD966"}};
+    cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
+    cell.border={top:{style:"medium"},left:{style:"thin"},bottom:{style:"medium"},right:{style:"thin"}};
+  });
+  totalRow.getCell(1).border={top:{style:"medium"},left:{style:"medium"},bottom:{style:"medium"},right:{style:"thin"}};
+  totalRow.getCell(9).border={top:{style:"medium"},left:{style:"thin"},bottom:{style:"medium"},right:{style:"medium"}};
+
+  ws.pageSetup.printTitlesRow="6:6";
+  ws.pageSetup.printArea=`A1:I${rowNo}`;
+
+  const buffer=await wb.xlsx.writeBuffer();
+  saveAs(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),`দায়িত্ব-বণ্টন_${yyyy}.xlsx`);
+};
 </script></body></html>
