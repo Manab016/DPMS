@@ -17,15 +17,15 @@
 <div class="space-y-2.5 text-xs border-t pt-3"><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a></div></div>
 <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button></div></div>
 <div class="max-w-4xl mx-auto">
-<div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p><p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p></div>
+<div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- ২০০৯ | <strong>Regd.No.:- S0014684</strong></p><p class="text-xs md:text-sm text-gray-700">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
-<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">＋ নতুন দায়িত্ব</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-xl text-xs font-bold shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">⬇️ দায়িত্ব রিপোর্ট</button><button onclick="deleteMarked()" class="bg-rose-600 hover:bg-rose-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">🗑️ Mark Delete</button><button onclick="deleteAll()" class="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm">🗑️ সব মুছুন</button></div>
+<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
 <div class="relative flex-1"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span><input id="listSearch" oninput="render()" type="text" placeholder="সদস্য, দায়িত্ব, গ্রুপ লিডার বা গ্রামের নাম লিখে খুঁজুন..." class="w-full p-2.5 pl-9 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"></div>
 <select id="villageFilter" onchange="render()" class="w-full md:w-52 p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><option value="">সব গ্রাম</option></select>
 </div>
-<div class="overflow-x-auto border rounded-xl"><table class="w-full border-collapse text-xs data-table"><thead><tr class="bg-gray-100 text-gray-700"><th class="p-2 border">✓</th><th class="p-2 border">তারিখ</th><th class="p-2 border">নাম</th><th class="p-2 border">মোবাইল</th><th class="p-2 border">সদস্য ID</th><th class="p-2 border">দায়িত্ব</th><th class="p-2 border">দায়িত্বের টাকা</th><th class="p-2 border">জমা</th><th class="p-2 border">বাকি</th><th class="p-2 border">অ্যাকশন</th></tr></thead><tbody id="tableBody"><tr><td colspan="10" class="p-5 text-center text-gray-500">কোনো দায়িত্ব বণ্টনের তথ্য নেই</td></tr></tbody></table></div></div></div>
+<div class="mb-2 text-xs text-gray-500" id="dutyCount">মোট: ০ টি</div><div id="tableBody" class="space-y-3"><div class="p-5 text-center text-gray-500 border rounded-lg">কোনো দায়িত্ব বণ্টনের তথ্য নেই</div></div></div></div>
 <div id="entryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
 <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-0 relative flex flex-col max-h-[90vh]"><div class="flex justify-between items-center p-4 border-b"><h3 id="modalTitle" class="text-base font-bold text-gray-900">নতুন দায়িত্ব যোগ</h3><button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button></div>
 <div class="overflow-y-auto p-4 custom-scroll space-y-5"><form id="entryForm" onsubmit="saveEntry(event)"><input type="hidden" id="editId"><input type="hidden" id="name">
@@ -124,127 +124,196 @@ function render(){
    const haystack=`${x.name||""} ${x.responsibility||""} ${leadersText} ${villagesText} ${x.mobile||""} ${x.memberId||""}`.toLowerCase();
    return (!q||haystack.includes(q))&&(!vf||getRowVillages(x).includes(vf));
  });
- tableBody.innerHTML=filtered.length?filtered.map(x=>{let a=Number(x.amount)||0,p=Math.min(Math.max(Number(x.deposited)||0,0),a),d=Math.max(0,a-p),id=JSON.stringify(x.id);return`<tr class="border-t hover:bg-amber-50"><td class="p-2 border"><input type="checkbox" class="rowCheck" value="${esc(x.id)}"></td><td class="p-2 border">${esc(x.date||"-")}</td><td class="p-2 border font-semibold">${esc(x.name)}</td><td class="p-2 border">${esc(x.mobile)}</td><td class="p-2 border">${esc(x.memberId)}</td><td class="p-2 border">${esc(x.responsibility)}</td><td class="p-2 border font-bold">${money(a)}</td><td class="p-2 border text-emerald-700 font-bold">${money(p)}</td><td class="p-2 border text-rose-700 font-bold">${money(d)}</td><td class="p-2 border"><button onclick='editEntry(${id})' class="bg-blue-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Edit</button> <button onclick='deleteEntry(${id})' class="bg-red-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">Delete</button> ${d>0?`<button onclick='depositToTreasurer(${id})' class="bg-orange-600 text-white px-2 py-1 rounded-md text-[11px] font-bold">কোষাধ্যক্ষের কাছে জমা</button>`:""}</td></tr>`}).join(""):`<tr><td colspan="10" class="p-5 text-center text-gray-500">${rows.length?"কোনো মিল পাওয়া যায়নি":"কোনো দায়িত্ব বণ্টনের তথ্য নেই"}</td></tr>`
+ const countEl=document.getElementById("dutyCount"); if(countEl) countEl.textContent=`মোট: ${filtered.length} টি`;
+ const box=document.getElementById("tableBody");
+ if(!box)return;
+ if(!filtered.length){box.innerHTML=`<div class="p-5 text-center text-gray-500 border rounded-lg">${rows.length?"কোনো মিল পাওয়া যায়নি":"কোনো দায়িত্ব বণ্টনের তথ্য নেই"}</div>`;return;}
+ box.innerHTML=filtered.map(x=>{
+   const amount=Number(x.amount)||0, deposited=Math.min(Math.max(Number(x.deposited)||0,0),amount), due=Math.max(0,amount-deposited), id=JSON.stringify(x.id);
+   const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((name,i)=>({name:name.trim(),mobile:String(x.mobile||"").split(",")[i]||"",memberId:String(x.memberId||"").split(",")[i]||""})):[];
+   const villages=getRowVillages(x); const leaders=getRowLeaders(x);
+   const leaderText=leaders.length?leaders.join(", "):"গ্রুপ লিডার নির্ধারিত নয়";
+   const date=x.date||"-";
+   const detailsId=`duty-details-${String(x.id).replace(/[^a-zA-Z0-9_-]/g,"")}`;
+   return `<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+     <div class="p-3 md:p-4 flex items-start justify-between gap-3">
+       <button type="button" onclick="toggleDutyDetails('${detailsId}',this)" class="min-w-0 flex-1 text-left">
+         <div class="flex items-center gap-2"><span class="text-orange-500 text-xs">⌄</span><h3 class="text-base font-bold text-orange-700 truncate">${esc(leaderText)}</h3></div>
+         <p class="text-xs text-gray-500 mt-1">${members.length} জন সদস্য • ${esc(x.responsibility||"-")} • মোট সংগ্রহ: <span class="font-bold text-gray-800">${money(amount)}</span></p>
+       </button>
+       <div class="flex items-center gap-1 shrink-0">
+         <button type="button" onclick='exportSingleDuty(${id})' title="এক্সপোর্ট" aria-label="এক্সপোর্ট" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg border text-xs hover:bg-gray-200">📥</button>
+         <button type="button" onclick='editEntry(${id})' title="সম্পাদনা" aria-label="সম্পাদনা" class="bg-amber-100 text-amber-700 px-2 py-1.5 rounded-lg text-xs hover:bg-amber-200">✏️</button>
+         <button type="button" onclick='deleteEntry(${id})' title="মুছুন" aria-label="মুছুন" class="bg-red-100 text-red-600 px-2 py-1.5 rounded-lg text-xs hover:bg-red-200">🗑️</button>
+       </div>
+     </div>
+     <div id="${detailsId}" class="hidden border-t bg-white p-3 md:p-4">
+       <div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">গ্রামসমূহ:</div><div class="flex flex-wrap gap-1.5">${(villages.length?villages:["-"]).map(v=>`<span class="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-1 rounded-md text-[11px] font-semibold">${esc(v)}</span>`).join("")}</div></div>
+       <div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">সদস্যসমূহ:</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">${(members.length?members:[{name:"-"}]).map(m=>`<div class="bg-gray-50 border rounded-lg px-3 py-2 text-xs text-gray-700"><div class="font-semibold">${esc(m.name||"-")}</div>${m.memberId?`<div class="text-[10px] text-gray-400">ID: ${esc(m.memberId)}</div>`:""}</div>`).join("")}</div></div>
+       <div class="border-t pt-3"><div class="text-xs font-bold text-gray-700 mb-2">সংগ্রহের তথ্য:</div><div class="grid grid-cols-1 sm:grid-cols-3 gap-2"><div class="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">তারিখ:</span> <b>${esc(date)}</b></div><div class="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">টাকা:</span> <b>${money(amount)}</b></div><div class="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">জমা:</span> <b>${money(deposited)}</b></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><div class="bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">বাকি:</span> <b>${money(due)}</b></div><div class="bg-gray-50 border rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">মন্তব্য:</span> <b>${esc(String(x.remarks||"").replace(/\s*\[গ্রাম:[^\]]*\]/,"" ).replace(/\s*\[লিডার:[^\]]*\]/,"" ).trim()||"-")}</b></div></div></div>
+       ${due>0?`<div class="mt-3 flex justify-end"><button type="button" onclick='depositToTreasurer(${id})' title="কোষাধ্যক্ষের কাছে জমা" aria-label="কোষাধ্যক্ষের কাছে জমা" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg border border-orange-200 text-xs font-bold hover:bg-orange-200">💰</button></div>`:""}
+     </div>
+   </div>`;
+ }).join("");
 }
+window.toggleDutyDetails=function(id,btn){const el=document.getElementById(id);if(!el)return;const open=!el.classList.contains("hidden");el.classList.toggle("hidden",open);const icon=btn?.querySelector("span");if(icon)icon.textContent=open?"⌄":"⌃";};
+
 async function saveEntry(e){e.preventDefault();const ms=selectedMemberIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean),vs=[...document.querySelectorAll(".village-check:checked")].map(x=>x.value),ls=selectedLeaderIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean);if(!ms.length)return alert("দয়া করে অন্তত একজন সদস্য নির্বাচন করুন।");if(!vs.length)return alert("দয়া করে অন্তত একটি গ্রাম নির্বাচন করুন।");const dateEl=document.getElementById("date"),responsibilityEl=document.getElementById("responsibility"),amountEl=document.getElementById("amount"),depositedEl=document.getElementById("deposited"),remarksEl=document.getElementById("remarks"),editIdEl=document.getElementById("editId");let remarks=(remarksEl?.value||"").trim();remarks+=` [গ্রাম: ${vs.join(", ")}]`;if(ls.length)remarks+=` [লিডার: ${ls.map(x=>x.name||"").join(", ")}]`;const amountValue=Number(amountEl?.value)||0;const data={date:dateEl?.value||today(),name:ms.map(x=>x.name||"").filter(Boolean).join(", "),mobile:ms.map(getPhone).join(", "),memberId:ms.map(x=>x.memberId||x.id||"").join(", "),memberIds:ms.map(x=>String(x.id)),selectedMembers:ms.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),groupLeaders:ls.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),villages:vs,responsibility:(responsibilityEl?.value||"").trim(),amount:amountValue,deposited:Math.min(Math.max(Number(depositedEl?.value)||0,0),amountValue),remarks,updatedAt:Date.now()};try{const id=editIdEl?.value||"";if(id){const old=rows.find(x=>String(x.id)===String(id));await updateDoc(doc(db,"daitobonton",id),{...data,createdBy:old?.createdBy||currentUser?.uid||""});}else{await addDoc(collection(db,"daitobonton"),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||""});}closeModal()}catch(err){console.error("Daitobonton save error:",err);alert("সংরক্ষণ করা যায়নি: "+(err?.message||err))}}
 window.saveEntry=saveEntry;
 window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent="দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();responsibility.value=x.responsibility||"";amount.value=x.amount||0;deposited.value=x.deposited||0;remarks.value=x.remarks||"";selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));renderMembersUI();entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
 window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?"))try{await deleteDoc(doc(db,"daitobonton",id))}catch(e){alert("Delete করা যায়নি: "+e.message)}};
-window.deleteMarked=async()=>{const ids=[...document.querySelectorAll(".rowCheck:checked")].map(x=>x.value);if(!ids.length)return alert("অন্তত একটি রেকর্ড নির্বাচন করুন");if(confirm(`${ids.length} টি রেকর্ড মুছে ফেলবেন?`))try{await Promise.all(ids.map(id=>deleteDoc(doc(db,"daitobonton",id))))}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(x=>deleteDoc(doc(db,"daitobonton",x.id))))}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{const x=rows.find(r=>r.id===id);if(!x)return;const n=Math.max(0,(Number(x.amount)||0)-(Number(x.deposited)||0));if(!n)return alert("এই রেকর্ডে আর কোনো বাকি নেই।");const treasurer=getPujaTreasurer();if(!treasurer)return alert("সদস্য তালিকায় ‘পূজা কোষাধ্যক্ষ’ পদ পাওয়া যায়নি।");if(!confirm(`${money(n)} ${treasurer.name||"পূজা কোষাধ্যক্ষ"}-এর কাছে জমা হিসেবে দেখাবেন?`))return;try{await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:today(),type:"income",amount:n,desc:`চাঁদা — ${x.name||""} — ${x.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||"")}});await updateDoc(doc(db,"daitobonton",id),{deposited:(Number(x.deposited)||0)+n,updatedAt:Date.now(),depositedToTreasurerAt:Date.now(),depositedToTreasurerName:treasurer.name||""});alert("কোষাধ্যক্ষের হিসাবে জমা হয়েছে।")}catch(e){alert("কোষাধ্যক্ষের হিসাবে জমা করা যায়নি: "+e.message)}};
-window.exportExcel=async()=>{
-  if(!rows.length)return alert("Export করার মতো তথ্য নেই");
-
-  const wb=new ExcelJS.Workbook();
-  const ws=wb.addWorksheet("দায়িত্ব বণ্টন",{
-    pageSetup:{paperSize:9,orientation:"landscape",fitToPage:true,fitToWidth:1,fitToHeight:0}
+window.exportSingleDuty=async function(id){const x=rows.find(r=>String(r.id)===String(id));if(!x)return;await exportDutiesAsExcel([x]);};
+window.exportExcel=async function(){if(!rows.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(rows);};
+async function exportDutiesAsExcel(list){
+  const wb=new ExcelJS.Workbook(); const ws=wb.addWorksheet("চাঁদা সংগ্রহ দায়িত্ব");
+  ws.columns=[{width:12},{width:40},{width:24}];
+  const border={top:{style:"thin"},bottom:{style:"thin"},left:{style:"thin"},right:{style:"thin"}};
+  const orange="FFFF6600";
+  let r=1;
+  list.forEach((x,index)=>{
+    const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[];
+    const leaders=getRowLeaders(x); const villages=getRowVillages(x);
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি"; ws.getCell(r,1).font={name:"Calibri",size:16,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=35; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`; ws.getCell(r,1).font={name:"Calibri",size:14,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=30; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`; ws.getCell(r,1).font={name:"Calibri",size:14,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=28; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}     তারিখ :- ${x.date||"-"}`; ws.getCell(r,1).font={name:"Calibri",size:12,bold:true}; ws.getCell(r,1).alignment={horizontal:"left",vertical:"center"}; ws.getRow(r).height=25; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`; ws.getCell(r,1).font={name:"Calibri",size:12,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=25; r++;
+    ["SR নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{const c=ws.getCell(r,i+1);c.value=v;c.font={name:"Calibri",size:11,bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.alignment={horizontal:"center",vertical:"center"};c.border=border;}); ws.getRow(r).height=25; r++;
+    members.forEach((m,i)=>{[i+1,m.name||"-",m.mobile||"N/A"].forEach((v,j)=>{const c=ws.getCell(r,j+1);c.value=v;c.font={name:"Calibri",size:11};c.alignment={horizontal:"center",vertical:"center"};c.border=border;});ws.getRow(r).height=26;r++;});
+    ws.getCell(r,2).value="সর্বমোট"; ws.getCell(r,3).value=`₹${(Number(x.amount)||0).toFixed(2)}`; [2,3].forEach(j=>{const c=ws.getCell(r,j);c.font={name:"Calibri",size:12,bold:true};c.alignment={horizontal:"center",vertical:"center"};c.border=border;}); ws.getCell(r,1).border=border; r++;
+    ws.getCell(r,2).value="তারিখ"; ws.getCell(r,3).value=x.date||"-"; [1,2,3].forEach(j=>{const c=ws.getCell(r,j);c.font={name:"Calibri",size:11,bold:j===2};c.alignment={horizontal:"center",vertical:"center"};c.border=border;}); r++;
+    if(index<list.length-1)r+=2;
   });
-  ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+  ws.pageSetup={paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0}; ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
+  const buffer=await wb.xlsx.writeBuffer(); saveAs(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),`চাঁদা-সংগ্রহ-দায়িত্ব_${new Date().getFullYear()}.xlsx`);
+}
 
-  // Members page-এর Excel export-এর একই visual style
-  ws.columns=[
-    {width:14},{width:24},{width:18},{width:18},{width:28},
-    {width:16},{width:16},{width:16},{width:30}
-  ];
+</script><script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-SxN0qs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
 
-  const now=new Date();
-  const dd=String(now.getDate()).padStart(2,"0");
-  const mm=String(now.getMonth()+1).padStart(2,"0");
-  const yyyy=now.getFullYear();
-  const exportDate=`${dd}/${mm}/${yyyy}`;
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(([appMod, fsMod]) => {
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
 
-  // উপরের report heading — বছর ও export date স্বয়ংক্রিয়ভাবে বর্তমান বছর/তারিখ অনুযায়ী হবে
-  ws.mergeCells("A1:I1");
-  const title=ws.getCell("A1");
-  title.value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-  title.font={name:"Kalpurush",size:18,bold:true};
-  title.alignment={horizontal:"center",vertical:"middle"};
-  title.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
-  title.border={top:{style:"medium"},left:{style:"medium"},right:{style:"medium"}};
-  ws.getRow(1).height=35;
+    let app;
+    try { app = initializeApp(firebaseConfig, "developerDetailsSync"); }
+    catch (e) {
+      app = initializeApp(firebaseConfig, "developerDetailsSync_" + Math.random().toString(36).slice(2));
+    }
+    const db = getFirestore(app);
 
-  ws.mergeCells("A2:I2");
-  const sub=ws.getCell("A2");
-  sub.value=`দায়িত্ব রিপোর্ট - সকল দায়িত্ব | ${yyyy}`;
-  sub.font={name:"Kalpurush",size:16,bold:true};
-  sub.alignment={horizontal:"center",vertical:"middle"};
-  sub.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
-  sub.border={left:{style:"medium"},right:{style:"medium"}};
-  ws.getRow(2).height=30;
+    const DEFAULT_DEV = {
+      name: "MANABENDRA NATH SARKAR",
+      mobile: "9002652507",
+      email: "manabendranathsarkar112@gmail.com"
+    };
 
-  ws.mergeCells("A3:I3");
-  const info=ws.getCell("A3");
-  info.value=`দায়িত্ব বণ্টন রিপোর্ট    তারিখ :- ${exportDate}`;
-  info.font={name:"Kalpurush",size:13,bold:true};
-  info.alignment={horizontal:"center",vertical:"middle"};
-  info.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
-  info.border={left:{style:"medium"},right:{style:"medium"}};
-  ws.getRow(3).height=26;
+    function applyDeveloperData(raw) {
+      const d = {
+        name: String(raw?.name || DEFAULT_DEV.name),
+        mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
+        email: String(raw?.email || DEFAULT_DEV.email)
+      };
+      try {
+        localStorage.setItem("pujaDevData", JSON.stringify(d));
+        localStorage.setItem("pujaDevName", d.name);
+        localStorage.setItem("pujaDevMobile", d.mobile);
+        localStorage.setItem("pujaDevEmail", d.email);
+      } catch (_) {}
 
-  ws.mergeCells("A4:I4");
-  const villageCell=ws.getCell("A4");
-  const selectedVillage=(document.getElementById("villageFilter")?.value||"").trim();
-  villageCell.value=selectedVillage?`গ্রাম: ${selectedVillage}`:"গ্রাম: সকল গ্রাম";
-  villageCell.font={name:"Kalpurush",size:12,bold:true};
-  villageCell.alignment={horizontal:"center",vertical:"middle"};
-  villageCell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF4D6"}};
-  villageCell.border={bottom:{style:"medium"},left:{style:"medium"},right:{style:"medium"}};
-  ws.getRow(4).height=25;
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      setText("popDevName", d.name);
+      setText("popDevMobile", d.mobile);
+      setText("popDevEmail", d.email);
+      setText("devName", d.name);
+      setText("devPhone", d.mobile);
+      setText("devEmail", d.email);
 
-  const headers=["তারিখ","নাম","মোবাইল","সদস্য ID","দায়িত্ব","দায়িত্বের টাকা","জমা","বাকি","মন্তব্য"];
-  const headerRow=ws.getRow(6);
-  headerRow.values=headers;
-  headerRow.height=30;
-  headerRow.eachCell({includeEmpty:true},cell=>{
-    cell.font={name:"Kalpurush",size:12,bold:true,color:{argb:"FFFFFFFF"}};
-    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFF26522"}};
-    cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
-    cell.border={top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
-  });
+      const mobile = document.getElementById("popDevMobile");
+      if (mobile) mobile.href = "tel:" + d.mobile;
+      const email = document.getElementById("popDevEmail");
+      if (email) email.href = "mailto:" + d.email;
+      const phone = document.getElementById("devPhone");
+      if (phone) phone.href = "tel:" + d.mobile;
+      const devEmail = document.getElementById("devEmail");
+      if (devEmail) devEmail.href = "mailto:" + d.email;
+    }
 
-  let rowNo=7;
-  rows.forEach(x=>{
-    const amount=Number(x.amount)||0;
-    const deposited=Math.min(Math.max(Number(x.deposited)||0,0),amount);
-    const due=Math.max(0,amount-deposited);
-    const row=ws.getRow(rowNo);
-    row.values=[x.date||"",x.name||"",x.mobile||"",x.memberId||"",x.responsibility||"",amount,deposited,due,x.remarks||""];
-    row.height=45;
-    row.eachCell({includeEmpty:true},cell=>{
-      cell.font={name:"Kalpurush",size:11};
-      cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFFBF0"}};
-      cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
-      cell.border={top:{style:"thin"},left:{style:"thin"},bottom:{style:"thin"},right:{style:"thin"}};
+    onSnapshot(doc(db, "settings", "developerInfo"), snap => {
+      applyDeveloperData(snap.exists() ? snap.data() : DEFAULT_DEV);
+    }, err => {
+      console.warn("Developer details sync failed:", err);
+      let d = DEFAULT_DEV;
+      try { d = JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; } catch (_) {}
+      applyDeveloperData(d);
     });
-  
-    // Members export-এর মতো amount/status columns-এ পরিষ্কার emphasis
-    row.getCell(6).font={name:"Kalpurush",size:11,bold:true};
-    row.getCell(7).font={name:"Kalpurush",size:11,bold:true,color:{argb:"FF047857"}};
-    row.getCell(8).font={name:"Kalpurush",size:11,bold:true,color:{argb:"FFBE123C"}};
-    rowNo++;
-  });
 
-  // Total row — Members export-এর মতো yellow summary row
-  const totalAmount=rows.reduce((s,x)=>s+(Number(x.amount)||0),0);
-  const totalDeposited=rows.reduce((s,x)=>s+Math.min(Math.max(Number(x.deposited)||0,0),Number(x.amount)||0),0);
-  const totalDue=Math.max(0,totalAmount-totalDeposited);
-  const totalRow=ws.getRow(rowNo);
-  totalRow.values=["মোট",`${rows.length} টি দায়িত্ব`,"","","","",totalDeposited,totalDue,""];
-  totalRow.height=30;
-  totalRow.eachCell({includeEmpty:true},cell=>{
-    cell.font={name:"Kalpurush",size:13,bold:true};
-    cell.fill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFD966"}};
-    cell.alignment={horizontal:"center",vertical:"middle",wrapText:true};
-    cell.border={top:{style:"medium"},left:{style:"thin"},bottom:{style:"medium"},right:{style:"thin"}};
-  });
-  totalRow.getCell(1).border={top:{style:"medium"},left:{style:"medium"},bottom:{style:"medium"},right:{style:"thin"}};
-  totalRow.getCell(9).border={top:{style:"medium"},left:{style:"thin"},bottom:{style:"medium"},right:{style:"medium"}};
+    window.__saveDeveloperDetailsToCloud = async function(dev) {
+      await setDoc(doc(db, "settings", "developerInfo"), {
+        name: dev.name || "",
+        mobile: dev.mobile || "",
+        email: dev.email || "",
+        updatedAt: Date.now()
+      }, { merge: true });
+      applyDeveloperData(dev);
+    };
+  }).catch(err => console.error("Developer details sync init failed:", err));
+})();
+</script>
 
-  ws.pageSetup.printTitlesRow="6:6";
-  ws.pageSetup.printArea=`A1:I${rowNo}`;
-
-  const buffer=await wb.xlsx.writeBuffer();
-  saveAs(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),`দায়িত্ব-বণ্টন_${yyyy}.xlsx`);
-};
-</script></body></html>
+<script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-SxN0q",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
+  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const pageKey = 'daitobonton';
+  const applyCommitteeHeading = (raw) => {
+    const name = String(raw?.[pageKey] || DEFAULT_NAME);
+    const heading = document.getElementById('committeePageHeading');
+    if (heading) heading.textContent = name;
+    try {
+      const old = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+      old[pageKey] = name;
+      localStorage.setItem('pujaCommitteeNames', JSON.stringify(old));
+    } catch (_) {}
+  };
+  try {
+    const local = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+    applyCommitteeHeading(local);
+  } catch (_) { applyCommitteeHeading({}); }
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(([appMod, fsMod]) => {
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot } = fsMod;
+    let app;
+    try { app=initializeApp(firebaseConfig,'committeeHeadingSync'); } catch(e) { app=initializeApp(firebaseConfig,'committeeHeadingSync_'+Math.random().toString(36).slice(2)); }
+    const db=getFirestore(app);
+    onSnapshot(doc(db,'settings','committeeNames'), snap => applyCommitteeHeading(snap.exists()?snap.data():{}), err => console.warn('Committee heading sync failed:',err));
+  }).catch(err => console.error('Committee heading sync init failed:',err));
+})();
+</script>
+</body></html>
