@@ -141,6 +141,7 @@
           <input type="text" id="docTitleInput" placeholder="ডকুমেন্টের নাম (যেমন: ২০২৫ সালের পূজার হিসাব / অডিট রিপোর্ট)" class="w-full p-2 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
           <input type="file" id="docFileInput" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
           <button onclick="uploadPastDocument()" id="docUploadBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold shadow transition">আপলোড করুন</button>
+          <p class="text-[10px] text-gray-500 text-center">বড় ফাইল Firebase Cloud Storage-এ সংরক্ষিত হবে; Firestore-এ শুধু তথ্য রাখা হবে।</p>
         </div>
 
         <!-- ডকুমেন্ট লিস্ট -->
@@ -350,7 +351,7 @@
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
       import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
       import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-      import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+      import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -740,14 +741,77 @@
         });
       }
 
-      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (অপ্টিমাইজড ও ফিক্সড)
+      // বিগত বছরের ডকুমেন্ট আপলোড, প্রিভিউ ও ডাউনলোড ফাংশনসমূহ (রিলায়েবল ফিক্স)
+      let pastDocumentsUnsubscribe = null;
+
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#039;");
+      }
+
+      function renderPastDocuments(docs) {
+        const container = document.getElementById("documentsListContainer");
+        if (!container) return;
+
+        docs = Array.isArray(docs) ? docs.slice() : [];
+        docs.sort((a, b) => (Number(b.uploadedAt) || 0) - (Number(a.uploadedAt) || 0));
+
+        if (!docs.length) {
+          container.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">কোনো বিগত বছরের ডকুমেন্ট আপলোড করা হয়নি।</p>`;
+          return;
+        }
+
+        let html = "";
+        docs.forEach((d) => {
+          const dateStr = d.uploadedAt
+            ? new Date(Number(d.uploadedAt)).toLocaleDateString("bn-IN")
+            : "আজ";
+          const fileName = d.fileName || "ডকুমেন্ট";
+          const fileNameLower = fileName.toLowerCase();
+          const fileTypeLower = (d.fileType || "").toLowerCase();
+          const isPdf = fileNameLower.endsWith(".pdf") || fileTypeLower.includes("pdf");
+          const isExcel = fileNameLower.includes("sheet") || fileNameLower.includes("excel") ||
+            fileTypeLower.includes("sheet") || fileTypeLower.includes("excel") ||
+            fileNameLower.endsWith(".xlsx") || fileNameLower.endsWith(".xls");
+
+          let icon = "📄";
+          if (isPdf) icon = "📑";
+          else if (isExcel) icon = "📊";
+
+          const safeTitle = escapeHtml(d.title || fileName);
+          const safeFileName = escapeHtml(fileName);
+          const safeUrl = String(d.fileUrl || "").replace(/"/g, "%22");
+
+          html += `
+            <div class="bg-white p-3 rounded-xl border shadow-sm flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2.5 overflow-hidden min-w-0">
+                <div class="w-9 h-9 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">${icon}</div>
+                <div class="truncate min-w-0">
+                  <h5 class="text-xs font-bold text-gray-800 truncate">${safeTitle}</h5>
+                  <p class="text-[10px] text-gray-500 truncate">${safeFileName} • ${dateStr}</p>
+                </div>
+              </div>
+              <div class="flex items-center gap-1.5 flex-shrink-0">
+                <a href="${safeUrl}" target="_blank" rel="noopener" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="প্রিভিউ">👁️ প্রিভিউ</a>
+                <a href="${safeUrl}" download="${safeFileName}" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="ডাউনলোড">⬇️ ডাউনলোড</a>
+                ${window.currentUserRole === "admin" ? `<button onclick="deletePastDocument('${d.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1.5 rounded-lg text-xs font-semibold transition" title="ডিলিট">❌</button>` : ""}
+              </div>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      }
+
       window.uploadPastDocument = async function() {
         const titleInput = document.getElementById("docTitleInput");
         const fileInput = document.getElementById("docFileInput");
         const uploadBtn = document.getElementById("docUploadBtn");
-
-        const title = titleInput.value.trim();
-        const file = fileInput.files[0];
+        const title = (titleInput?.value || "").trim();
+        const file = fileInput?.files?.[0];
 
         if (!title) {
           alert("অনুগ্রহ করে ডকুমেন্টের নাম লিখুন।");
@@ -757,46 +821,102 @@
           alert("অনুগ্রহ করে একটি ফাইল (PDF, Excel বা ইমেজ) সিলেক্ট করুন।");
           return;
         }
+        if (!auth.currentUser) {
+          alert("আপনার লগইন সেশন পাওয়া যাচ্ছে না। আবার লগইন করুন।");
+          return;
+        }
 
         uploadBtn.disabled = true;
-        uploadBtn.innerText = "কম্প্রেস ও আপলোড হচ্ছে...";
+        uploadBtn.innerText = "আপলোড হচ্ছে 0%...";
 
+        let storageRef = null;
         try {
           let processedFile = file;
-          if (file.type && file.type.startsWith('image/')) {
+          if (file.type && file.type.startsWith("image/")) {
             processedFile = await compressImage(file);
           }
 
-          const fileExt = file.name.split('.').pop() || 'bin';
-          const safeFileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${fileExt}`;
-
-          const storageRef = ref(storage, `past_documents/${safeFileName}`);
+          const fileExt = (file.name.split(".").pop() || "bin").toLowerCase();
+          const safeFileName = `doc_${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${fileExt}`;
+          storageRef = ref(storage, `past_documents/${safeFileName}`);
+          // IMPORTANT: বড় ফাইলের আসল data কখনও Firestore-এ যাবে না।
+          // PDF/Excel/ইমেজ সরাসরি Firebase Cloud Storage-এ যাবে; Firestore-এ শুধু metadata + URL থাকবে।
+          // uploadBytesResumable বড় ফাইলের জন্য resumable upload ও progress support করে।
           const metadata = {
-            contentType: processedFile.type || 'application/octet-stream'
+            contentType: processedFile.type || file.type || "application/octet-stream",
+            customMetadata: {
+              originalName: file.name,
+              title: title,
+              uploadedBy: auth.currentUser.email || auth.currentUser.uid || "Unknown"
+            }
           };
 
-          const snapshot = await uploadBytes(storageRef, processedFile, metadata);
-          const downloadURL = await getDownloadURL(snapshot.ref);
+          const uploadTask = uploadBytesResumable(storageRef, processedFile, metadata);
 
-          await addDoc(collection(db, "past_documents"), {
-            title: title,
-            fileName: file.name,
-            fileUrl: downloadURL,
-            fileType: processedFile.type || fileExt,
-            uploadedAt: Date.now(),
-            uploadedBy: auth.currentUser ? auth.currentUser.email : "Unknown"
+          await new Promise((resolve, reject) => {
+            uploadTask.on("state_changed",
+              (snapshot) => {
+                const total = snapshot.totalBytes || processedFile.size || 1;
+                const percent = Math.max(0, Math.min(100, Math.round((snapshot.bytesTransferred / total) * 100)));
+                uploadBtn.innerText = `আপলোড হচ্ছে ${percent}%...`;
+              },
+              reject,
+              resolve
+            );
           });
 
-          alert("ডকুমেন্ট সফলভাবে আপলোড হয়েছে!");
+          uploadBtn.innerText = "ফাইল সংরক্ষণ হচ্ছে...";
+          const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+
+          // Storage upload শেষ হওয়ার পর Firestore-এ তালিকার রেকর্ড লিখি।
+          // Firestore-এ শুধুমাত্র ছোট metadata record রাখা হচ্ছে — বড় file data নয়।
+          const docData = {
+            title,
+            fileName: file.name,
+            fileUrl: downloadURL,
+            storagePath: storageRef.fullPath,
+            fileType: processedFile.type || file.type || fileExt,
+            fileSize: processedFile.size || file.size || 0,
+            uploadedAt: Date.now(),
+            uploadedBy: auth.currentUser.email || auth.currentUser.uid || "Unknown"
+          };
+
+          let docRef;
+          try {
+            docRef = await addDoc(collection(db, "past_documents"), docData);
+          } catch (firestoreErr) {
+            // Storage upload হয়ে গেলে কিন্তু Firestore metadata save না হলে orphan file রেখে দেব না।
+            try { await deleteObject(storageRef); } catch (cleanupErr) { console.warn("Storage cleanup warning:", cleanupErr); }
+            throw firestoreErr;
+          }
+
+          // Firestore listener-এর জন্য অপেক্ষা না করে সঙ্গে সঙ্গে UI-তে নতুন ফাইল দেখাই।
+          const container = document.getElementById("documentsListContainer");
+          if (container) {
+            const existing = Array.isArray(window.__pastDocumentsCache) ? window.__pastDocumentsCache.slice() : [];
+            existing.push({ id: docRef.id, ...docData });
+            window.__pastDocumentsCache = existing;
+            renderPastDocuments(existing);
+          }
+
           titleInput.value = "";
           fileInput.value = "";
-          loadPastDocuments();
+          uploadBtn.innerText = "আপলোড সম্পন্ন ✓";
+          setTimeout(() => { if (uploadBtn) uploadBtn.innerText = "আপলোড করুন"; }, 1200);
+          alert("ডকুমেন্ট সফলভাবে আপলোড হয়েছে এবং তালিকায় যোগ হয়েছে।");
+
         } catch (err) {
-          console.error("Upload error details:", err);
-          alert("আপলোড করতে সমস্যা হয়েছে: " + (err.message || err));
+          console.error("Past document upload error:", err);
+          let message = err?.message || String(err);
+          if (err?.code === "storage/unauthorized" || err?.code === "permission-denied") {
+            message = "Firebase Storage/Firestore permission নেই। Firebase Rules চেক করুন।";
+          } else if (err?.code === "storage/canceled") {
+            message = "আপলোড বাতিল হয়েছে।";
+          }
+          alert("আপলোড সম্পূর্ণ হয়নি: " + message);
         } finally {
           uploadBtn.disabled = false;
-          uploadBtn.innerText = "আপলোড করুন";
+          if (uploadBtn.innerText !== "আপলোড সম্পন্ন ✓") uploadBtn.innerText = "আপলোড করুন";
         }
       };
 
@@ -804,61 +924,43 @@
         const container = document.getElementById("documentsListContainer");
         if (!container) return;
 
-        onSnapshot(collection(db, "past_documents"), (snapshot) => {
-          let docs = [];
-          snapshot.forEach((docSnap) => {
-            docs.push({ id: docSnap.id, ...docSnap.data() });
-          });
+        // একই modal বারবার খুললে একাধিক onSnapshot listener তৈরি হবে না।
+        if (pastDocumentsUnsubscribe) {
+          try { pastDocumentsUnsubscribe(); } catch (e) {}
+          pastDocumentsUnsubscribe = null;
+        }
 
-          docs.sort((a, b) => b.uploadedAt - a.uploadedAt);
+        container.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">ডকুমেন্ট লোড হচ্ছে...</p>`;
 
-          if (docs.length === 0) {
-            container.innerHTML = `<p class="text-xs text-gray-500 text-center py-4">কোনো বিগত বছরের ডকুমেন্ট আপলোড করা হয়নি।</p>`;
-            return;
+        pastDocumentsUnsubscribe = onSnapshot(
+          collection(db, "past_documents"),
+          (snapshot) => {
+            const docs = [];
+            snapshot.forEach((docSnap) => docs.push({ id: docSnap.id, ...docSnap.data() }));
+            window.__pastDocumentsCache = docs;
+            renderPastDocuments(docs);
+          },
+          (err) => {
+            console.error("Past documents listener error:", err);
+            container.innerHTML = `<p class="text-xs text-rose-600 text-center py-4">ডকুমেন্ট তালিকা লোড করা যাচ্ছে না। Firebase permission/rules চেক করুন।</p>`;
           }
-
-          let html = "";
-          docs.forEach((d) => {
-            const dateStr = new Date(d.uploadedAt).toLocaleDateString("bn-IN");
-            const fileNameLower = (d.fileName || "").toLowerCase();
-            const fileTypeLower = (d.fileType || "").toLowerCase();
-
-            const isPdf = fileNameLower.endsWith(".pdf") || fileTypeLower.includes("pdf");
-            const isExcel = fileNameLower.includes("sheet") || fileNameLower.includes("excel") || fileTypeLower.includes("sheet") || fileTypeLower.includes("excel") || fileNameLower.endsWith(".xlsx") || fileNameLower.endsWith(".xls");
-
-            let icon = "📄";
-            if (isPdf) icon = "📑";
-            else if (isExcel) icon = "📊";
-
-            html += `
-              <div class="bg-white p-3 rounded-xl border shadow-sm flex items-center justify-between gap-2">
-                <div class="flex items-center gap-2.5 overflow-hidden">
-                  <div class="w-9 h-9 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">${icon}</div>
-                  <div class="truncate">
-                    <h5 class="text-xs font-bold text-gray-800 truncate">${d.title}</h5>
-                    <p class="text-[10px] text-gray-500 truncate">${d.fileName} • ${dateStr}</p>
-                  </div>
-                </div>
-                <div class="flex items-center gap-1.5 flex-shrink-0">
-                  <a href="${d.fileUrl}" target="_blank" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="প্রিভিউ">👁️ প্রিভিউ</a>
-                  <a href="${d.fileUrl}" download="${d.fileName}" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="ডাউনলোড">⬇️ ডাউনলোড</a>
-                  ${window.currentUserRole === "admin" ? `<button onclick="deletePastDocument('${d.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1.5 rounded-lg text-xs font-semibold transition" title="ডিলিট">❌</button>` : ""}
-                </div>
-              </div>
-            `;
-          });
-          container.innerHTML = html;
-        });
+        );
       };
 
       window.deletePastDocument = async function(id) {
         if (!confirm("আপনি কি নিশ্চিত এই ডকুমেন্টটি ডিলিট করতে চান?")) return;
         try {
+          const item = (window.__pastDocumentsCache || []).find(x => x.id === id);
+          if (item?.storagePath) {
+            try { await deleteObject(ref(storage, item.storagePath)); } catch (storageErr) { console.warn("Storage delete warning:", storageErr); }
+          }
           await deleteDoc(doc(db, "past_documents", id));
+          window.__pastDocumentsCache = (window.__pastDocumentsCache || []).filter(x => x.id !== id);
+          renderPastDocuments(window.__pastDocumentsCache);
           alert("ডকুমেন্ট সফলভাবে ডিলিট করা হয়েছে।");
         } catch (err) {
           console.error("Delete error:", err);
-          alert("ডিলিট করতে সমস্যা হয়েছে: " + err.message);
+          alert("ডিলিট করতে সমস্যা হয়েছে: " + (err.message || err));
         }
       };
 
