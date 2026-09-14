@@ -1385,7 +1385,7 @@
         document.getElementById(hiddenInputId).value = "";
         document.getElementById(previewContainerId).innerHTML = `<span class="text-gray-400 text-[11px]">কোনো স্বাক্ষর নাই</span>`;
       }
-      function saveLoanForm(e) {
+      async function saveLoanForm(e) {
         e.preventDefault();
         const editId = document.getElementById("loanEditId").value;
         const formType = document.getElementById("loanFormType").value || "member";
@@ -1420,7 +1420,21 @@
           }
           borrowerSig = memberRecord?.signature || "";
         }
-        const guarantorSig = document.getElementById("guarantorSigData").value || "";
+        let guarantorSig = document.getElementById("guarantorSigData").value || "";
+
+        // সদস্যের signature সাধারণত Firebase Storage URL; নতুন non-member/guarantor signature
+        // Base64 হলে Firestore-এ না রেখে Firebase Storage-এ file হিসেবে রাখা হবে।
+        try {
+          if (String(borrowerSig).startsWith("data:image/")) {
+            borrowerSig = await uploadTreasurySignatureIfNeeded(borrowerSig, "borrower", editId || Date.now());
+          }
+          if (String(guarantorSig).startsWith("data:image/")) {
+            guarantorSig = await uploadTreasurySignatureIfNeeded(guarantorSig, "guarantor", editId || Date.now());
+          }
+        } catch (uploadError) {
+          alert(uploadError.message || "স্বাক্ষর সংরক্ষণ করা যায়নি।");
+          return;
+        }
 
         if (editId) {
           const idx = loanData.findIndex(x => String(x.id) === String(editId));
@@ -2159,6 +2173,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
       window.firebaseMembersCache = [];
       window.treasuryDb = null;
       window.treasuryAuth = null;
+      window.treasuryStorage = null;
       let treasuryCloudDocIds = { transactions:new Map(), cash:new Map(), loans:new Map() };
       let treasuryCloudReady = false;
       let treasuryUserReady = false;
@@ -2168,13 +2183,15 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
       async function initTreasuryFirebase() {
         try {
-          const [{ initializeApp }, authMod, fs] = await Promise.all([
+          const [{ initializeApp }, authMod, fs, storageMod] = await Promise.all([
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js"),
+            import("https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js")
           ]);
           const { getAuth, onAuthStateChanged, setPersistence, browserSessionPersistence } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
+          const { getStorage, ref: storageRef, uploadBytes, getDownloadURL } = storageMod;
 
           // IMPORTANT: Use the SAME default Firebase app/auth instance as index.html/members.html.
           // The previous named "treasuryApp" created a separate Auth instance, so the login
@@ -2183,6 +2200,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           const app = initializeApp(window.treasuryFirebaseConfig);
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
+          window.treasuryStorage = getStorage(app);
           try { await setPersistence(window.treasuryAuth, browserSessionPersistence); } catch(e) {}
 
           let memberUnsubscribe = null;
@@ -2216,6 +2234,39 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
             await startTreasuryCloudSync();
           });
 
+          async function uploadTreasurySignatureIfNeeded(value, folder, recordId) {
+            const sig = String(value || "").trim();
+            if (!sig || !sig.startsWith("data:image/")) return sig;
+            if (!window.treasuryStorage) return sig;
+            try {
+              const res = await fetch(sig);
+              const blob = await res.blob();
+              const ext = (blob.type || "image/png").split("/")[1] || "png";
+              const safeExt = ext.replace(/[^a-z0-9]/gi, "") || "png";
+              const path = `treasury-media/signatures/${folder}/${recordId}-${Date.now()}.${safeExt}`;
+              const fileRef = storageRef(window.treasuryStorage, path);
+              await uploadBytes(fileRef, blob, { contentType: blob.type || "image/png" });
+              return await getDownloadURL(fileRef);
+            } catch (e) {
+              console.error("Treasury signature upload failed:", e);
+              throw new Error("স্বাক্ষর Firebase Storage-এ আপলোড করা যায়নি।");
+            }
+          }
+
+          async function migrateLoanSignaturesToStorage(loan) {
+            if (!loan) return loan;
+            let changed = false;
+            if (String(loan.borrowerSig || "").startsWith("data:image/")) {
+              loan.borrowerSig = await uploadTreasurySignatureIfNeeded(loan.borrowerSig, "borrower", loan.id);
+              changed = true;
+            }
+            if (String(loan.guarantorSig || "").startsWith("data:image/")) {
+              loan.guarantorSig = await uploadTreasurySignatureIfNeeded(loan.guarantorSig, "guarantor", loan.id);
+              changed = true;
+            }
+            return { loan, changed };
+          }
+
           async function startTreasuryCloudSync() {
             if (treasuryCloudReady) return;
             try {
@@ -2230,25 +2281,46 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
                 }
               });
 
-              // First-time migration: keep existing browser records and upload them to the
-              // single `treasurer` collection allowed by the supplied Firestore Rules.
+              // Firebase is the primary database. LocalStorage is only a cache/fallback.
+              // If old browser records exist, merge only records that are missing in Firestore.
               const localSets = [
                 ["transactions", txData],
                 ["cash", cashData],
                 ["loans", loanData]
               ];
               for (const [kind, localArray] of localSets) {
-                if (!cloud[kind].length && localArray.length) {
-                  for (const item of localArray) {
-                    const payload = { kind, data: { ...item } };
-                    delete payload.data._docId;
-                    try {
-                      const ref = await addDoc(collection(window.treasuryDb, "treasurer"), payload);
-                      item._docId = ref.id;
-                      cloud[kind].push({ ...item });
-                    } catch(e) {
-                      console.warn("Initial cloud migration failed:", kind, e);
+                const cloudIds = new Set(cloud[kind].map(x => String(x.id)));
+                for (const originalItem of localArray) {
+                  if (cloudIds.has(String(originalItem.id))) continue;
+                  let item = { ...originalItem };
+                  delete item._docId;
+                  if (kind === "loans") {
+                    const migrated = await migrateLoanSignaturesToStorage(item);
+                    item = migrated.loan;
+                  }
+                  try {
+                    const ref = await addDoc(collection(window.treasuryDb, "treasurer"), { kind, data: item });
+                    item._docId = ref.id;
+                    cloud[kind].push({ ...item });
+                    cloudIds.add(String(item.id));
+                  } catch(e) {
+                    console.warn("Initial cloud migration failed:", kind, e);
+                  }
+                }
+              }
+
+              // Migrate any old Base64 loan signatures already stored in Firestore.
+              for (const loan of cloud.loans) {
+                if (String(loan.borrowerSig || "").startsWith("data:image/") || String(loan.guarantorSig || "").startsWith("data:image/")) {
+                  try {
+                    const migrated = await migrateLoanSignaturesToStorage(loan);
+                    if (migrated.changed && loan._docId) {
+                      const clean = { ...loan };
+                      delete clean._docId;
+                      await updateDoc(doc(window.treasuryDb, "treasurer", loan._docId), { kind: "loans", data: clean });
                     }
+                  } catch(e) {
+                    console.warn("Existing loan signature migration failed:", e);
                   }
                 }
               }
@@ -2372,8 +2444,8 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
         } catch(e) {}
       }
 
-      // Browser cache is retained as a fallback; cloud sync is triggered by the same
-      // existing saveData() calls, so the UI and all existing button handlers stay unchanged.
+      // LocalStorage is retained only as a temporary offline cache/fallback.
+      // Firebase Firestore is the primary database; every normal save is synced to cloud.
       saveData = function() {
         saveLocalTreasuryOnly();
         if (window.saveTreasuryToCloud) return window.saveTreasuryToCloud();
