@@ -142,7 +142,7 @@
           <input type="text" id="docTitleInput" placeholder="ডকুমেন্টের নাম (যেমন: ২০২৫ সালের পূজার হিসাব / অডিট রিপোর্ট)" class="w-full p-2 text-xs border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500">
           <input type="file" id="docFileInput" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-teal-50 file:text-teal-700 hover:file:bg-teal-100">
           <button onclick="uploadPastDocument()" id="docUploadBtn" class="w-full bg-teal-600 hover:bg-teal-700 text-white py-2 rounded-lg text-xs font-bold shadow transition">আপলোড করুন</button>
-          <p class="text-[10px] text-gray-500 text-center">বড় ফাইল Firebase Cloud Storage-এ সংরক্ষিত হবে; Firestore-এ শুধু তথ্য রাখা হবে।</p>
+          
         </div>
 
         <!-- ডকুমেন্ট লিস্ট -->
@@ -879,15 +879,6 @@
             // Storage upload হয়ে গেলে কিন্তু Firestore metadata save না হলে orphan file রেখে দেব না।
             try { await supabaseClient.storage.from(DOCUMENTS_BUCKET).remove([storagePath]); } catch (cleanupErr) { console.warn("Supabase cleanup warning:", cleanupErr); }
             throw firestoreErr;
-          }
-
-          // Firestore listener-এর জন্য অপেক্ষা না করে সঙ্গে সঙ্গে UI-তে নতুন ফাইল দেখাই।
-          const container = document.getElementById("documentsListContainer");
-          if (container) {
-            const existing = Array.isArray(window.__pastDocumentsCache) ? window.__pastDocumentsCache.slice() : [];
-            existing.push({ id: docRef.id, ...docData });
-            window.__pastDocumentsCache = existing;
-            renderPastDocuments(existing);
           }
 
           titleInput.value = "";
