@@ -83,6 +83,9 @@
         .no-print { display: none !important; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
+      .puja-day-card{transition:transform .15s ease,box-shadow .15s ease}
+      .puja-day-card:hover{transform:translateY(-1px);box-shadow:0 8px 18px rgba(0,0,0,.08)}
+      .puja-loading{min-height:160px;display:flex;align-items:center;justify-content:center}
     </style>
   </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
@@ -145,6 +148,18 @@
         </div>
 
         <button onclick="closeDocumentsModal()" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
+
+    <!-- 🪔 স্বয়ংক্রিয় পূজার নির্ঘণ্ট -->
+    <div id="pujaScheduleModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
+      <div class="bg-white w-full max-w-2xl p-4 rounded-2xl shadow-2xl border-2 border-orange-500 relative max-h-[92vh] flex flex-col">
+        <button onclick="closePujaScheduleModal()" class="absolute top-3 right-3 text-gray-400 font-bold text-lg">✕</button>
+        <div class="text-center mb-3 pr-8"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">🪔</div><h3 class="text-lg font-bold text-gray-800">দুর্গাপূজার নির্ঘণ্ট</h3><p class="text-[11px] text-gray-500">বাংলা পঞ্জিকা অনুযায়ী স্বয়ংক্রিয়ভাবে হিসাব</p></div>
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-3 mb-3"><div class="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center"><label class="text-xs font-bold text-gray-700 whitespace-nowrap">পূজার বছর:</label><select id="pujaYearSelect" onchange="loadAutomaticPujaSchedule(this.value)" class="flex-1 p-2 border rounded-lg text-sm font-bold bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"></select><button onclick="loadAutomaticPujaSchedule(document.getElementById('pujaYearSelect').value)" class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-xs font-bold">🔄 আপডেট</button></div><p id="pujaScheduleSource" class="text-[10px] text-gray-500 mt-2"></p></div>
+        <div id="pujaScheduleContainer" class="overflow-y-auto flex-1 pr-1"><div class="puja-loading text-xs text-gray-500">নির্ঘণ্ট তৈরি হচ্ছে...</div></div>
+        <div class="mt-3 bg-gray-50 border rounded-xl p-2.5 text-[10px] text-gray-600 leading-relaxed">ℹ️ তিথি সূর্যোদয়ভিত্তিক পঞ্জিকা হিসাব থেকে নেওয়া হয়। পঞ্জিকা/স্থানভেদে কয়েক মিনিট বা তিথির পর্যবেক্ষণে পার্থক্য হতে পারে।</div>
+        <button onclick="closePujaScheduleModal()" class="w-full mt-3 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl text-xs font-bold">বন্ধ করুন</button>
       </div>
     </div>
 
@@ -232,6 +247,7 @@
           <button id="menu-btn-sales" onclick="window.location.href='sales.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">🎫 বিক্রয়</button>
           <button id="menu-btn-treasury" onclick="window.location.href='treasury.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📊 কোষাধ্যক্ষ</button>
           <button id="menu-btn-daitobonton" onclick="window.location.href='daitobonton.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">📋 দায়িত্ব বণ্টন</button>
+          <button id="menu-btn-pujaSchedule" onclick="openPujaScheduleModal()" class="dashboard-menu-btn bg-orange-50 text-orange-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-orange-100 border border-orange-200">🪔 পূজার নির্ঘণ্ট</button>
           <button id="quickSettingsBtn" onclick="window.location.href='settings.html'" class="dashboard-menu-btn bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border">⚙️ সেটিংস</button>
         </div>
       </div>
@@ -806,7 +822,7 @@
       };
 
       // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত
-      const COLLECTIONS = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents"];
+      const COLLECTIONS = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents", "puja_schedules"];
 
       window.exportFullBackup = async function() {
         try {
@@ -865,7 +881,7 @@
               } else if (Array.isArray(parsed)) {
                 // Fix: যখন JSON ফাইলে সরাসরি Array থাকে (যেমন members_backup_restore.json)
                 let defaultCol = "members";
-                const possibleCollections = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents"];
+                const possibleCollections = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents", "puja_schedules"];
                 for (let pc of possibleCollections) {
                   if (file.name.toLowerCase().includes(pc)) {
                     defaultCol = pc;
@@ -896,7 +912,8 @@
               "sales": "sales",
               "treasurer": "treasurer",
               "committee": "committee",
-              "past_documents": "past_documents"
+              "past_documents": "past_documents",
+              "puja_schedules": "puja_schedules"
             };
 
             for (const rawColName of Object.keys(collectionsData)) {
@@ -937,4 +954,31 @@
       };
     </script>
   </body>
-</html>
+</html>           <!-- স্বয়ংক্রিয় পূজার নির্ঘণ্ট কার্ড -->
+           <div id="dash-card-pujaSchedule" onclick="openPujaScheduleModal()" class="bg-orange-500 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-orange-600 transition flex flex-col items-center justify-center text-center">
+             <div class="text-2xl mb-1">🪔</div><div class="text-xs font-bold">পূজার নির্ঘণ্ট</div><div id="dashPujaYearLabel" class="text-[10px] opacity-90 mt-1">চলতি বছরের স্বয়ংক্রিয় নির্ঘণ্ট</div>
+           </div>
+
+       // 🪔 স্বয়ংক্রিয় দুর্গাপূজা নির্ঘণ্ট — Kolkata/IST বাংলা পঞ্জিকা
+       const PUJA_API_BASE = "https://api.apimitra.in/panchang";
+       const PUJA_CITY = "kolkata";
+       const PUJA_TITHI_META = {Shashthi:{bn:"মহাষষ্ঠী",icon:"🌺"},Saptami:{bn:"মহাসপ্তমী",icon:"🌿"},Ashtami:{bn:"মহাষ্টমী",icon:"🌸"},Navami:{bn:"মহানবমী",icon:"🔥"},Dashami:{bn:"বিজয়া দশমী",icon:"🪔"}};
+       const bnDigits=v=>String(v).replace(/\d/g,d=>"০১২৩৪৫৬৭৮৯"[d]);
+       function formatBnDate(ds){const d=new Date(ds+"T00:00:00+05:30"),wd=["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"],mo=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];return `${wd[d.getDay()]}, ${bnDigits(d.getDate())} ${mo[d.getMonth()]} ${bnDigits(d.getFullYear())}`}
+       const banglaYear=ds=>new Date(ds+"T00:00:00+05:30").getFullYear()-593;
+       function normalizeTithi(raw){const s=String(raw||""),l=s.toLowerCase();if(l.includes("shashthi")||l.includes("shasthi")||s.includes("ষষ্ঠী"))return"Shashthi";if(l.includes("saptami")||s.includes("সপ্তমী"))return"Saptami";if(l.includes("ashtami")||s.includes("অষ্টমী"))return"Ashtami";if(l.includes("navami")||s.includes("নবমী"))return"Navami";if(l.includes("dashami")||s.includes("দশমী"))return"Dashami";return null}
+       function tithiEnd(raw){const m=String(raw||"").match(/(?:upto|until|till|ends?\s*at|শেষ|পর্যন্ত)\s*([0-9]{1,2}:[0-9]{2}\s*(?:AM|PM)?)/i);return m?m[1]:""}
+       function timeMin(t){const m=String(t||"").match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);if(!m)return null;let h=+m[1],mi=+m[2],a=(m[3]||"").toUpperCase();if(a==="PM"&&h<12)h+=12;if(a==="AM"&&h===12)h=0;return h*60+mi}
+       function fmtMin(n){n=((n%1440)+1440)%1440;let h=Math.floor(n/60),m=n%60,a=h>=12?"PM":"AM";h=h%12||12;return`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} ${a}`}
+       function addDay(ds,n){const d=new Date(ds+"T00:00:00+05:30");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
+       async function fetchPanchang(ds){const r=await fetch(`${PUJA_API_BASE}?city=${PUJA_CITY}&date=${ds}`,{cache:"no-store"});if(!r.ok)throw Error("Panchang API "+r.status);return r.json()}
+       function rawTithi(d){return d?.tithi||d?.data?.tithi||d?.panchang?.tithi||""}
+       function sunrise(d){return d?.sunrise||d?.data?.sunrise||d?.panchang?.sunrise||""}
+       async function calculatePujaSchedule(year){const result={},all=[];for(let ds=`${year}-09-20`;ds<=`${year}-11-05`;ds=addDay(ds,1)){try{const d=await fetchPanchang(ds),rt=rawTithi(d),t=normalizeTithi(rt),pk=String(d?.paksha||d?.data?.paksha||d?.panchang?.paksha||rt);if(t&&/shukla|শুক্ল/i.test(pk)){const x={date:ds,tithi:t,rawTithi:rt,sunrise:sunrise(d)};all.push(x);if(!result[t])result[t]=x}}catch(e){console.warn("Panchang failed",ds,e)}}return{result,all}}
+       function renderPujaSchedule(year,c){const box=document.getElementById("pujaScheduleContainer"),src=document.getElementById("pujaScheduleSource");if(!box)return;const items=Object.keys(PUJA_TITHI_META).map(k=>c.result[k]?{key:k,...c.result[k]}:null).filter(Boolean);if(!items.length){box.innerHTML='<div class="puja-loading text-center text-sm text-rose-600 font-bold">এই বছরের নির্ঘণ্টের তথ্য পাওয়া যায়নি। আবার চেষ্টা করুন।</div>';return}let h=`<div class="text-center mb-3"><div class="text-base font-bold text-orange-700">দুর্গাপূজা ${bnDigits(year)} • বাংলা সাল ${bnDigits(banglaYear(items[0].date))}</div><div class="text-[10px] text-gray-500">কলকাতা • IST</div></div>`;items.forEach(x=>{const m=PUJA_TITHI_META[x.key],end=tithiEnd(x.rawTithi);h+=`<div class="puja-day-card bg-white border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center text-xl flex-shrink-0">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-orange-50 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-1 mt-2 text-[10px] text-gray-600"><div class="bg-gray-50 rounded-lg p-2"><b>তিথি:</b> ${x.rawTithi||x.key}</div>${x.sunrise?`<div class="bg-gray-50 rounded-lg p-2"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${end?`<div class="bg-gray-50 rounded-lg p-2"><b>তিথি শেষ:</b> ${end}</div>`:""}</div></div></div></div>`;if(x.key==="Ashtami"&&end){const n=timeMin(end);if(n!=null)h+=`<div class="mb-2.5 bg-rose-50 border border-rose-200 rounded-xl p-3"><div class="text-xs font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[11px] font-bold text-gray-800 mt-1">${formatBnDate(x.date)} • ${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[10px] text-gray-500 mt-1">অষ্টমী-নবমীর সন্ধিক্ষণের ৪৮ মিনিট।</div></div>`}});const extras=c.all.filter(x=>PUJA_TITHI_META[x.tithi]&&!items.some(i=>i.date===x.date&&i.tithi===x.tithi));if(extras.length)h+=`<div class="mt-3 bg-amber-50 border border-amber-200 rounded-xl p-3"><div class="text-xs font-bold text-amber-800">📌 একই তিথি একাধিক দিনে</div>${extras.map(x=>`<div class="text-[10px] mt-1">${PUJA_TITHI_META[x.tithi].bn}: ${formatBnDate(x.date)} — ${x.rawTithi||""}</div>`).join("")}</div>`;box.innerHTML=h;if(src)src.textContent="স্বয়ংক্রিয় পঞ্জিকা: API Mitra • Kolkata • IST"}
+       let pujaInit=false,pujaLoading=null;
+       window.openPujaScheduleModal=()=>{const m=document.getElementById("pujaScheduleModal");if(!m)return;m.classList.remove("hidden");m.classList.add("flex");initializePujaSchedule()};
+       window.closePujaScheduleModal=()=>{const m=document.getElementById("pujaScheduleModal");if(!m)return;m.classList.add("hidden");m.classList.remove("flex")};
+       window.initializePujaSchedule=()=>{const s=document.getElementById("pujaYearSelect");if(!s)return;const y=new Date().getFullYear();if(!pujaInit){for(let n=y-3;n<=y+3;n++){const o=document.createElement("option");o.value=n;o.textContent=`${bnDigits(n)} (${n})`;if(n===y)o.selected=true;s.appendChild(o)}pujaInit=true}loadAutomaticPujaSchedule(s.value||y);const l=document.getElementById("dashPujaYearLabel");if(l)l.textContent=`চলতি বছর ${bnDigits(y)} • স্বয়ংক্রিয়`};
+       window.loadAutomaticPujaSchedule=async year=>{year=+year||new Date().getFullYear();const box=document.getElementById("pujaScheduleContainer");if(!box||pujaLoading===year)return;pujaLoading=year;box.innerHTML=`<div class="puja-loading"><div class="text-center"><div class="text-3xl mb-2 animate-pulse">🪔</div><div class="text-xs font-bold text-orange-700">${bnDigits(year)} সালের পঞ্জিকা হিসাব হচ্ছে...</div><div class="text-[10px] text-gray-500 mt-1">ইন্টারনেট থেকে তিথি যাচাই করা হচ্ছে</div></div></div>`;try{renderPujaSchedule(year,await calculatePujaSchedule(year))}catch(e){console.error(e);box.innerHTML='<div class="puja-loading text-center text-sm text-rose-600 font-bold">নির্ঘণ্ট লোড করা যায়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।</div>'}finally{pujaLoading=null}};
+
