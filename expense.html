@@ -157,7 +157,7 @@
     </div>
 
     <label class="block text-xs font-semibold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
-    <input type="text" id="expenseTreasurer" placeholder="কোষাধ্যক্ষের নাম" class="w-full p-2.5 border rounded-lg mb-4 text-sm">
+    <input type="text" id="expenseTreasurer" placeholder="পূজা কোষাধ্যক্ষের নাম" readonly class="w-full p-2.5 border rounded-lg mb-4 text-sm bg-gray-50">
 
     <div class="flex justify-end gap-2">
       <button onclick="closeExpenseModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
@@ -535,7 +535,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
 
     const headers = dueOnly
       ? ["তারিখ", "নাম", "Due (₹)", "কী বাবদ Due"]
-      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "অগ্রিম ফেরত (₹)", "Due (₹)", "অতিরিক্ত পাওনা (₹)", "অতিরিক্ত ফেরত (₹)", "অবস্থা", "বিবরণ", "কোষাধ্যক্ষ"];
+      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "অগ্রিম ফেরত (₹)", "Due (₹)", "অতিরিক্ত পাওনা (₹)", "অতিরিক্ত ফেরত (₹)", "অবস্থা", "বিবরণ", "পূজা কোষাধ্যক্ষ"];
 
     headers.forEach((h, i) => {
       const cell = ws.getCell(4, i + 1);
@@ -602,19 +602,21 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
 
     const addAdjacentTotal = (label, amount) => {
       const row = ws.addRow([]);
+      const labelEndCol = dueOnly ? 3 : Math.max(1, columnCount - 1);
+      ws.mergeCells(row.number, 1, row.number, labelEndCol);
       row.getCell(1).value = label;
-      row.getCell(2).value = amount;
+      row.getCell(labelEndCol + 1).value = amount;
 
       for (let c = 1; c <= columnCount; c++) {
         const cell = row.getCell(c);
         cell.fill = totalFill;
         cell.border = border;
         cell.font = totalFont;
-        cell.alignment = { horizontal: "center", vertical: "middle" };
+        cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true, shrinkToFit: false };
       }
 
-      row.getCell(2).numFmt = '₹#,##0.00';
-      row.height = 25;
+      row.getCell(labelEndCol + 1).numFmt = '₹#,##0.00';
+      row.height = 30;
     };
 
     if (dueOnly) {
@@ -712,16 +714,30 @@ window.exportDueExpenses = async () => {
   );
 };
 
-async function loadPujaTreasurer(){
+let stopPujaTreasurerSync = null;
+function loadPujaTreasurer(){
  try{
-   const snap=await getDocs(collection(db,"members"));
-   const list=snap.docs.map(d=>d.data());
-   const found=list.find(m=>{
-     const r=String(m.role||m.designation||m.committeeRole||"").trim();
-     return r==="পূজা কোষাধ্যক্ষ";
+   if (typeof stopPujaTreasurerSync === "function") stopPujaTreasurerSync();
+   stopPujaTreasurerSync = onSnapshot(collection(db,"members"), snap => {
+     const list=snap.docs.map(d=>({id:d.id,...d.data()}));
+     const found=list.find(m=>{
+       const r=String(m.role||m.designation||m.committeeRole||"").trim();
+       return r==="পূজা কোষাধ্যক্ষ";
+     });
+     pujaTreasurerName=found?.name||"";
+     const input=document.getElementById("expenseTreasurer");
+     if(input) input.value=pujaTreasurerName;
+     if (window.currentEditingExpenseId) {
+       const saved=document.getElementById("expenseTreasurer");
+       if(saved && !saved.value) saved.value=pujaTreasurerName;
+     }
+   }, err => {
+     console.error("Puja treasurer sync failed:", err);
    });
-   pujaTreasurerName=found?.name||"";
- }catch(e){pujaTreasurerName="";}
+ }catch(e){
+   console.error("Puja treasurer listener failed:",e);
+   pujaTreasurerName="";
+ }
 }
 
 onAuthStateChanged(auth, async user => {
