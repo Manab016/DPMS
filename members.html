@@ -150,6 +150,55 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
+
+  <!-- Image crop/compress editor -->
+  <div id="imageCropModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-3 z-[70]">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden">
+      <div class="bg-orange-600 text-white px-4 py-3 flex items-center justify-between">
+        <div>
+          <div id="cropModalTitle" class="font-bold text-base">ছবি Crop করুন</div>
+          <div class="text-[11px] opacity-90">Crop করে তারপর সেভ করুন</div>
+        </div>
+        <button type="button" onclick="cancelImageCrop()" class="text-white text-xl font-bold">✕</button>
+      </div>
+      <div class="p-3">
+        <div class="relative bg-gray-900 rounded-xl overflow-hidden flex items-center justify-center" style="height:300px">
+          <canvas id="cropCanvas" class="max-w-full max-h-full touch-none"></canvas>
+        </div>
+        <div id="cropHint" class="text-[11px] text-gray-500 text-center mt-2">Crop box টেনে জায়গা বদলান অথবা নিচের slider ব্যবহার করুন।</div>
+
+        <div class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-3 text-xs">
+          <label class="font-bold text-gray-700">Crop</label>
+          <input id="cropSizeRange" type="range" min="35" max="100" value="85" step="1" />
+          <span id="cropSizeValue" class="text-right font-bold">85%</span>
+        </div>
+        <div class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-2 text-xs">
+          <label class="font-bold text-gray-700">ডানে-বামে</label>
+          <input id="cropXRange" type="range" min="0" max="100" value="50" step="1" />
+          <span id="cropXValue" class="text-right font-bold">50%</span>
+        </div>
+        <div class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-2 text-xs">
+          <label class="font-bold text-gray-700">উপরে-নিচে</label>
+          <input id="cropYRange" type="range" min="0" max="100" value="50" step="1" />
+          <span id="cropYValue" class="text-right font-bold">50%</span>
+        </div>
+        <div id="photoQualityRow" class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-2 text-xs">
+          <label class="font-bold text-gray-700">Quality</label>
+          <input id="cropQualityRange" type="range" min="45" max="90" value="68" step="1" />
+          <span id="cropQualityValue" class="text-right font-bold">68%</span>
+        </div>
+
+        <div id="cropOutputInfo" class="mt-3 rounded-lg bg-orange-50 border border-orange-100 px-3 py-2 text-[11px] text-gray-700 text-center">
+          প্রস্তুত হচ্ছে...
+        </div>
+        <div class="flex gap-2 mt-3">
+          <button type="button" onclick="cancelImageCrop()" class="flex-1 bg-gray-200 text-gray-800 py-2.5 rounded-xl font-bold text-sm">বাতিল</button>
+          <button type="button" id="applyCropBtn" onclick="applyImageCrop()" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl font-bold text-sm">✂️ Crop করে ব্যবহার করুন</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
     <div id="idCardBox" class="bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
       <div id="idCardHeader" class="px-2 py-1.5 flex flex-col justify-center items-center relative">
@@ -408,228 +457,344 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       selectAll.checked = boxes.length > 0 && [...boxes].every(cb => cb.checked);
     }
 
-    window.handlePhotoUpload = function(input) {
-      const file = input && input.files ? input.files[0] : null;
-      if (!file) return;
+    // ========================= IMAGE CROP + COMPRESS =========================
+    let cropState = null;
+    let cropDrag = null;
+    let cropRenderTimer = null;
 
-      if (!file.type || !file.type.startsWith("image/")) {
-        alert("দয়া করে একটি ছবি নির্বাচন করুন।");
-        input.value = "";
-        return;
+    function revokePreviewUrl(id) {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const old = el.dataset.objectUrl || "";
+      if (old) { try { URL.revokeObjectURL(old); } catch (_) {} }
+      delete el.dataset.objectUrl;
+    }
+
+    function setPreviewBlob(imgId, blob) {
+      const img = document.getElementById(imgId);
+      if (!img || !blob) return;
+      revokePreviewUrl(imgId);
+      const url = URL.createObjectURL(blob);
+      img.src = url;
+      img.dataset.objectUrl = url;
+    }
+
+    function getCropGeometry() {
+      if (!cropState || !cropState.img) return null;
+      const iw = cropState.img.naturalWidth || cropState.img.width;
+      const ih = cropState.img.naturalHeight || cropState.img.height;
+      const type = cropState.type;
+      const sizePct = Math.max(35, Math.min(100, Number(document.getElementById("cropSizeRange").value || 85))) / 100;
+      let cw, ch;
+
+      if (type === "photo") {
+        const base = Math.min(iw, ih);
+        cw = ch = Math.max(1, Math.round(base * sizePct));
+      } else {
+        // Signature crop is wide (3:1) but never extends outside the source image.
+        const maxW = Math.min(iw, ih * 3);
+        cw = Math.max(1, Math.round(maxW * sizePct));
+        ch = Math.max(1, Math.min(ih, Math.round(cw / 3)));
+        if (ch > ih) { ch = ih; cw = Math.min(iw, Math.round(ch * 3)); }
       }
 
-      photoProcessingPromise = new Promise((resolve, reject) => {
-        const reader = new FileReader();
+      const maxX = Math.max(0, iw - cw);
+      const maxY = Math.max(0, ih - ch);
+      const xPct = Number(document.getElementById("cropXRange").value || 50) / 100;
+      const yPct = Number(document.getElementById("cropYRange").value || 50) / 100;
+      const sx = Math.round(maxX * xPct);
+      const sy = Math.round(maxY * yPct);
+      return { sx, sy, sw: cw, sh: ch, iw, ih };
+    }
 
-        reader.onerror = () => reject(new Error("ছবিটি পড়া যায়নি।"));
+    function drawCropEditor() {
+      if (!cropState?.img) return;
+      const canvas = document.getElementById("cropCanvas");
+      if (!canvas) return;
+      const box = canvas.parentElement;
+      const maxW = Math.max(260, box.clientWidth - 8);
+      const maxH = 292;
+      const iw = cropState.img.naturalWidth || cropState.img.width;
+      const ih = cropState.img.naturalHeight || cropState.img.height;
+      const scale = Math.min(maxW / iw, maxH / ih, 1);
+      canvas.width = Math.max(1, Math.round(iw * scale));
+      canvas.height = Math.max(1, Math.round(ih * scale));
+      canvas.style.width = canvas.width + "px";
+      canvas.style.height = canvas.height + "px";
+      cropState.displayScale = scale;
+
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(cropState.img, 0, 0, canvas.width, canvas.height);
+
+      const g = getCropGeometry();
+      cropState.geometry = g;
+      const x = g.sx * scale, y = g.sy * scale;
+      const w = g.sw * scale, h = g.sh * scale;
+
+      ctx.save();
+      ctx.fillStyle = "rgba(0,0,0,.48)";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.clearRect(x, y, w, h);
+      ctx.drawImage(cropState.img, g.sx, g.sy, g.sw, g.sh, x, y, w, h);
+      ctx.strokeStyle = "#ffffff";
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x, y, w, h);
+      ctx.strokeStyle = "rgba(255,140,0,.95)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + 2, y + 2, Math.max(1,w - 4), Math.max(1,h - 4));
+      ctx.fillStyle = "rgba(255,255,255,.95)";
+      ctx.font = "bold 12px sans-serif";
+      ctx.fillText("CROP", Math.max(5, x + 7), Math.max(15, y + 17));
+      ctx.restore();
+
+      document.getElementById("cropSizeValue").innerText = Math.round(Number(document.getElementById("cropSizeRange").value)) + "%";
+      document.getElementById("cropXValue").innerText = Math.round(Number(document.getElementById("cropXRange").value)) + "%";
+      document.getElementById("cropYValue").innerText = Math.round(Number(document.getElementById("cropYRange").value)) + "%";
+      if (cropState.type === "photo") {
+        document.getElementById("cropQualityValue").innerText = Math.round(Number(document.getElementById("cropQualityRange").value)) + "%";
+      }
+      updateCropOutputInfo();
+    }
+
+    function updateCropOutputInfo() {
+      if (!cropState?.geometry) return;
+      const g = cropState.geometry;
+      const maxW = cropState.type === "photo" ? 420 : 900;
+      const maxH = cropState.type === "photo" ? 420 : 300;
+      const scale = Math.min(1, maxW / g.sw, maxH / g.sh);
+      const ow = Math.max(1, Math.round(g.sw * scale));
+      const oh = Math.max(1, Math.round(g.sh * scale));
+      const quality = Number(document.getElementById("cropQualityRange").value || 68);
+      const text = cropState.type === "photo"
+        ? `Save হবে: ${ow} × ${oh}px • JPEG quality ${quality}% • crop area ${g.sw} × ${g.sh}px`
+        : `Save হবে: ${ow} × ${oh}px • transparent PNG • crop area ${g.sw} × ${g.sh}px`;
+      document.getElementById("cropOutputInfo").innerText = text;
+    }
+
+    function openImageCropEditor(file, type) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error(type === "photo" ? "ছবিটি পড়া যায়নি।" : "স্বাক্ষরের ছবি পড়া যায়নি।"));
         reader.onload = function(e) {
           const img = new Image();
-
-          img.onerror = () => reject(new Error("ছবিটি খোলা যায়নি।"));
           img.onload = function() {
-            try {
-              const canvas = document.createElement("canvas");
-              let width = img.naturalWidth || img.width;
-              let height = img.naturalHeight || img.height;
-              const maxWidth = 420;
-              const maxHeight = 420;
-
-              if (width > height) {
-                if (width > maxWidth) {
-                  height = Math.round(height * (maxWidth / width));
-                  width = maxWidth;
-                }
-              } else {
-                if (height > maxHeight) {
-                  width = Math.round(width * (maxHeight / height));
-                  height = maxHeight;
-                }
-              }
-
-              canvas.width = Math.max(1, width);
-              canvas.height = Math.max(1, height);
-
-              const ctx = canvas.getContext("2d", { alpha: false });
-              ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-              canvas.toBlob((blob) => {
-                if (!blob) {
-                  reject(new Error("ছবির ডাটা প্রস্তুত করা যায়নি।"));
-                  return;
-                }
-
-                const dataUrl = canvas.toDataURL("image/jpeg", 0.68);
-                document.getElementById("photoPreview").src = dataUrl;
-                document.getElementById("photoPreviewBox").classList.remove("hidden");
-
-                processedPhotoBase64 = dataUrl;
-                processedPhotoBlob = blob;
-                resolve();
-              }, "image/jpeg", 0.68);
-            } catch (err) {
-              reject(err);
-            }
+            cropState = { file, type, img, resolve, reject, displayScale: 1, geometry: null };
+            document.getElementById("cropModalTitle").innerText = type === "photo" ? "📷 সদস্যের ছবি Crop করুন" : "✍️ স্বাক্ষর Crop করুন";
+            document.getElementById("cropHint").innerText = type === "photo"
+              ? "ছবির দরকারি অংশ রাখুন। Crop ছোট করলে upload আরও দ্রুত হবে।"
+              : "স্বাক্ষরটি box-এর মধ্যে রাখুন। সাদা background স্বয়ংক্রিয়ভাবে transparent হবে।";
+            document.getElementById("photoQualityRow").classList.toggle("hidden", type !== "photo");
+            document.getElementById("cropSizeRange").value = type === "photo" ? 82 : 88;
+            document.getElementById("cropXRange").value = 50;
+            document.getElementById("cropYRange").value = 50;
+            document.getElementById("cropQualityRange").value = 68;
+            document.getElementById("imageCropModal").classList.remove("hidden");
+            document.getElementById("imageCropModal").classList.add("flex");
+            requestAnimationFrame(drawCropEditor);
           };
-
+          img.onerror = () => reject(new Error(type === "photo" ? "ছবিটি খোলা যায়নি।" : "স্বাক্ষরের ছবি খোলা যায়নি।"));
           img.src = e.target.result;
         };
-
         reader.readAsDataURL(file);
       });
+    }
 
-      photoProcessingPromise.catch((err) => {
-        console.error("Photo processing error:", err);
-        processedPhotoBase64 = "";
-        processedPhotoBlob = null;
-        document.getElementById("photoPreviewBox").classList.add("hidden");
-        alert("ছবি প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
+    async function buildCroppedBlob() {
+      if (!cropState?.img || !cropState.geometry) throw new Error("Crop data পাওয়া যায়নি।");
+      const g = cropState.geometry;
+      const type = cropState.type;
+      const maxW = type === "photo" ? 420 : 900;
+      const maxH = type === "photo" ? 420 : 300;
+      const scale = Math.min(1, maxW / g.sw, maxH / g.sh);
+      const outW = Math.max(1, Math.round(g.sw * scale));
+      const outH = Math.max(1, Math.round(g.sh * scale));
+      const canvas = document.createElement("canvas");
+      canvas.width = outW;
+      canvas.height = outH;
+      const ctx = canvas.getContext("2d", { willReadFrequently: type === "signature" });
+
+      if (type === "photo") {
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = "high";
+        ctx.drawImage(cropState.img, g.sx, g.sy, g.sw, g.sh, 0, 0, outW, outH);
+        const quality = Number(document.getElementById("cropQualityRange").value || 68) / 100;
+        return await new Promise((resolve, reject) => {
+          canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("ছবির compressed data তৈরি হয়নি।")), "image/jpeg", quality);
+        });
+      }
+
+      // Signature: crop first, remove light background, then trim transparent edges.
+      ctx.clearRect(0, 0, outW, outH);
+      ctx.drawImage(cropState.img, g.sx, g.sy, g.sw, g.sh, 0, 0, outW, outH);
+      const imageData = ctx.getImageData(0, 0, outW, outH);
+      const data = imageData.data;
+      let minX = outW, minY = outH, maxX = -1, maxY = -1;
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], gg = data[i + 1], b = data[i + 2], a = data[i + 3];
+        const brightness = (r * 299 + gg * 587 + b * 114) / 1000;
+        if (a === 0 || brightness > 190) {
+          data[i + 3] = 0;
+        } else {
+          data[i] = 0; data[i + 1] = 0; data[i + 2] = 0;
+          const px = (i / 4) % outW;
+          const py = Math.floor((i / 4) / outW);
+          minX = Math.min(minX, px); minY = Math.min(minY, py);
+          maxX = Math.max(maxX, px); maxY = Math.max(maxY, py);
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      if (maxX >= 0) {
+        const pad = Math.max(3, Math.round(Math.min(outW, outH) * 0.03));
+        minX = Math.max(0, minX - pad); minY = Math.max(0, minY - pad);
+        maxX = Math.min(outW - 1, maxX + pad); maxY = Math.min(outH - 1, maxY + pad);
+      } else { minX = 0; minY = 0; maxX = outW - 1; maxY = outH - 1; }
+
+      const cw = Math.max(1, maxX - minX + 1), ch = Math.max(1, maxY - minY + 1);
+      const finalCanvas = document.createElement("canvas");
+      const finalScale = Math.min(1, 900 / cw, 300 / ch);
+      finalCanvas.width = Math.max(1, Math.round(cw * finalScale));
+      finalCanvas.height = Math.max(1, Math.round(ch * finalScale));
+      const fctx = finalCanvas.getContext("2d");
+      fctx.clearRect(0, 0, finalCanvas.width, finalCanvas.height);
+      fctx.drawImage(canvas, minX, minY, cw, ch, 0, 0, finalCanvas.width, finalCanvas.height);
+      return await new Promise((resolve, reject) => {
+        finalCanvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("স্বাক্ষরের compressed data তৈরি হয়নি।")), "image/png");
       });
+    }
+
+    window.applyImageCrop = async function() {
+      if (!cropState) return;
+      const btn = document.getElementById("applyCropBtn");
+      btn.disabled = true;
+      btn.innerText = "⏳ প্রস্তুত হচ্ছে...";
+      try {
+        const state = cropState;
+        const blob = await buildCroppedBlob();
+        const targetImgId = state.type === "photo" ? "photoPreview" : "sigPreview";
+        setPreviewBlob(targetImgId, blob);
+        if (state.type === "photo") {
+          processedPhotoBlob = blob;
+          processedPhotoBase64 = "";
+          document.getElementById("photoPreviewBox").classList.remove("hidden");
+          photoProcessingPromise = Promise.resolve();
+        } else {
+          processedSigBlob = blob;
+          processedSigBase64 = "";
+          document.getElementById("sigPreviewBox").classList.remove("hidden");
+          signatureProcessingPromise = Promise.resolve();
+        }
+        document.getElementById("imageCropModal").classList.add("hidden");
+        document.getElementById("imageCropModal").classList.remove("flex");
+        state.resolve(blob);
+        cropState = null;
+      } catch (err) {
+        console.error("Crop error:", err);
+        alert("Crop/Compress করতে সমস্যা হয়েছে: " + (err?.message || err));
+      } finally {
+        btn.disabled = false;
+        btn.innerText = "✂️ Crop করে ব্যবহার করুন";
+      }
+    };
+
+    window.cancelImageCrop = function() {
+      const state = cropState;
+      cropState = null;
+      document.getElementById("imageCropModal").classList.add("hidden");
+      document.getElementById("imageCropModal").classList.remove("flex");
+      if (state) {
+        try { state.reject(new Error("crop-cancelled")); } catch (_) {}
+        if (state.type === "photo") document.getElementById("photoInput").value = "";
+        else document.getElementById("sigInput").value = "";
+      }
+    };
+
+    function scheduleCropRedraw() {
+      clearTimeout(cropRenderTimer);
+      cropRenderTimer = setTimeout(drawCropEditor, 20);
+    }
+
+    ["cropSizeRange", "cropXRange", "cropYRange", "cropQualityRange"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener("input", scheduleCropRedraw);
+    });
+
+    const cropCanvasEl = document.getElementById("cropCanvas");
+    if (cropCanvasEl) {
+      cropCanvasEl.addEventListener("pointerdown", (ev) => {
+        if (!cropState?.geometry) return;
+        const rect = cropCanvasEl.getBoundingClientRect();
+        const px = ev.clientX - rect.left, py = ev.clientY - rect.top;
+        const s = cropState.displayScale || 1, g = cropState.geometry;
+        const x = g.sx * s, y = g.sy * s, w = g.sw * s, h = g.sh * s;
+        if (px >= x && px <= x+w && py >= y && py <= y+h) {
+          cropDrag = { startX: px, startY: py, startSX: g.sx, startSY: g.sy, pointerId: ev.pointerId };
+          cropCanvasEl.setPointerCapture(ev.pointerId);
+        }
+      });
+      cropCanvasEl.addEventListener("pointermove", (ev) => {
+        if (!cropDrag || !cropState?.geometry) return;
+        const rect = cropCanvasEl.getBoundingClientRect();
+        const px = ev.clientX - rect.left, py = ev.clientY - rect.top;
+        const s = cropState.displayScale || 1, g = cropState.geometry;
+        const dx = Math.round((px - cropDrag.startX) / s), dy = Math.round((py - cropDrag.startY) / s);
+        const maxX = Math.max(0, g.iw - g.sw), maxY = Math.max(0, g.ih - g.sh);
+        const nx = Math.max(0, Math.min(maxX, cropDrag.startSX + dx));
+        const ny = Math.max(0, Math.min(maxY, cropDrag.startSY + dy));
+        document.getElementById("cropXRange").value = maxX ? Math.round((nx/maxX)*100) : 50;
+        document.getElementById("cropYRange").value = maxY ? Math.round((ny/maxY)*100) : 50;
+        drawCropEditor();
+      });
+      const endDrag = () => { cropDrag = null; };
+      cropCanvasEl.addEventListener("pointerup", endDrag);
+      cropCanvasEl.addEventListener("pointercancel", endDrag);
+      cropCanvasEl.addEventListener("pointerleave", endDrag);
+    }
+
+    window.handlePhotoUpload = async function(input) {
+      const file = input && input.files ? input.files[0] : null;
+      if (!file) return;
+      if (!file.type || !file.type.startsWith("image/")) {
+        alert("দয়া করে একটি ছবি নির্বাচন করুন।"); input.value = ""; return;
+      }
+      try {
+        await openImageCropEditor(file, "photo");
+      } catch (err) {
+        if (err?.message !== "crop-cancelled") alert("ছবি প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
+      }
     };
 
     window.processImage = function(input, previewId, maxWidth, maxHeight) {
       window.handlePhotoUpload(input);
     };
 
-    window.processSignatureImage = function(input, previewId) {
+    window.processSignatureImage = async function(input, previewId) {
       const file = input && input.files ? input.files[0] : null;
       if (!file) return;
-
       if (!file.type || !file.type.startsWith("image/")) {
-        alert("দয়া করে একটি স্বাক্ষরের ছবি নির্বাচন করুন।");
-        input.value = "";
-        return;
+        alert("দয়া করে একটি স্বাক্ষরের ছবি নির্বাচন করুন।"); input.value = ""; return;
       }
+      try {
+        await openImageCropEditor(file, "signature");
+      } catch (err) {
+        if (err?.message !== "crop-cancelled") alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
+      }
+    };
 
-      signatureProcessingPromise = new Promise((resolve, reject) => {
-        const reader = new FileReader();
+    window.clearPhoto = function() {
+      processedPhotoBlob = null; processedPhotoBase64 = ""; photoProcessingPromise = Promise.resolve();
+      const input = document.getElementById("photoInput"); if (input) input.value = "";
+      revokePreviewUrl("photoPreview");
+      document.getElementById("photoPreview").removeAttribute("src");
+      document.getElementById("photoPreviewBox").classList.add("hidden");
+    };
 
-        reader.onerror = () => reject(new Error("স্বাক্ষরের ছবি পড়া যায়নি."));
-        reader.onload = function(e) {
-          const img = new Image();
-
-          img.onerror = () => reject(new Error("স্বাক্ষরের ছবি খোলা যায়নি।"));
-          img.onload = function() {
-            try {
-              const canvas = document.createElement("canvas");
-              canvas.width = img.naturalWidth || img.width;
-              canvas.height = img.naturalHeight || img.height;
-
-              const ctx = canvas.getContext("2d", { willReadFrequently: true });
-              ctx.drawImage(img, 0, 0);
-
-              const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-              const data = imageData.data;
-
-              let minX = canvas.width;
-              let minY = canvas.height;
-              let maxX = -1;
-              let maxY = -1;
-
-              for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-
-                if (a === 0 || brightness > 190) {
-                  data[i + 3] = 0;
-                } else {
-                  data[i] = 0;
-                  data[i + 1] = 0;
-                  data[i + 2] = 0;
-
-                  const px = (i / 4) % canvas.width;
-                  const py = Math.floor((i / 4) / canvas.width);
-
-                  if (px < minX) minX = px;
-                  if (py < minY) minY = py;
-                  if (px > maxX) maxX = px;
-                  if (py > maxY) maxY = py;
-                }
-              }
-
-              ctx.putImageData(imageData, 0, 0);
-
-              if (maxX < 0 || maxY < 0) {
-                minX = 0;
-                minY = 0;
-                maxX = canvas.width - 1;
-                maxY = canvas.height - 1;
-              } else {
-                const padding = 10;
-                minX = Math.max(0, minX - padding);
-                minY = Math.max(0, minY - padding);
-                maxX = Math.min(canvas.width - 1, maxX + padding);
-                maxY = Math.min(canvas.height - 1, maxY + padding);
-              }
-
-              const cropWidth = Math.max(1, maxX - minX + 1);
-              const cropHeight = Math.max(1, maxY - minY + 1);
-
-              const cropCanvas = document.createElement("canvas");
-              cropCanvas.width = cropWidth;
-              cropCanvas.height = cropHeight;
-
-              const cropCtx = cropCanvas.getContext("2d");
-              cropCtx.clearRect(0, 0, cropWidth, cropHeight);
-              cropCtx.drawImage(
-                canvas,
-                minX, minY, cropWidth, cropHeight,
-                0, 0, cropWidth, cropHeight
-              );
-
-              // Keep signature files small for fast Android uploads.
-              const maxSigWidth = 900;
-              const maxSigHeight = 300;
-              let outW = cropWidth;
-              let outH = cropHeight;
-              const scale = Math.min(1, maxSigWidth / outW, maxSigHeight / outH);
-              if (scale < 1) {
-                outW = Math.max(1, Math.round(outW * scale));
-                outH = Math.max(1, Math.round(outH * scale));
-              }
-
-              const outputCanvas = document.createElement("canvas");
-              outputCanvas.width = outW;
-              outputCanvas.height = outH;
-              const outputCtx = outputCanvas.getContext("2d");
-              outputCtx.clearRect(0, 0, outW, outH);
-              outputCtx.drawImage(cropCanvas, 0, 0, outW, outH);
-
-              outputCanvas.toBlob((blob) => {
-                if (!blob) {
-                  reject(new Error("স্বাক্ষরের ডাটা প্রস্তুত করা যায়নি।"));
-                  return;
-                }
-
-                const dataUrl = outputCanvas.toDataURL("image/png");
-                const previewElement = document.getElementById(previewId);
-                previewElement.src = dataUrl;
-                document.getElementById("sigPreviewBox").classList.remove("hidden");
-
-                processedSigBase64 = dataUrl;
-                processedSigBlob = blob;
-                resolve();
-              }, "image/png");
-            } catch (err) {
-              reject(err);
-            }
-          };
-
-          img.src = e.target.result;
-        };
-
-        reader.readAsDataURL(file);
-      });
-
-      signatureProcessingPromise.catch((err) => {
-        console.error("Signature processing error:", err);
-        processedSigBase64 = "";
-        processedSigBlob = null;
-        document.getElementById("sigPreviewBox").classList.add("hidden");
-        alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
-      });
+    window.clearSignature = function() {
+      processedSigBlob = null; processedSigBase64 = ""; signatureProcessingPromise = Promise.resolve();
+      const input = document.getElementById("sigInput"); if (input) input.value = "";
+      revokePreviewUrl("sigPreview");
+      document.getElementById("sigPreview").removeAttribute("src");
+      document.getElementById("sigPreviewBox").classList.add("hidden");
     };
 
     function updateRoleOptions(currentDocId = "") {
@@ -1038,6 +1203,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("newMemberMobile").value = "";
       document.getElementById("photoInput").value = "";
       document.getElementById("sigInput").value = "";
+      revokePreviewUrl("photoPreview");
+      revokePreviewUrl("sigPreview");
+      document.getElementById("photoPreview").removeAttribute("src");
+      document.getElementById("sigPreview").removeAttribute("src");
       document.getElementById("photoPreviewBox").classList.add("hidden");
       document.getElementById("sigPreviewBox").classList.add("hidden");
       processedPhotoBase64 = "";
