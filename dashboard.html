@@ -368,32 +368,29 @@
       const db = getFirestore(app);
       const storage = getStorage(app);
 
-      // Dashboard থেকে Back চাপলে আগের পেজে ফিরে যাবে না।
-      // কোনো confirmation ছাড়াই logout করে login page-এ যাবে।
+      // Dashboard navigation guard: refresh করলে logout হবে না; Back চাপলে অন্য page-এ যাবে না।
       let dashboardBackGuardReady = false;
       let dashboardBackConfirming = false;
 
-      // Dashboard-এ REFRESH করলে logout হবে না।
-      // শুধু Browser/Android Back চাপলে logout confirmation দেখাবে।
       function installDashboardBackGuard() {
         if (dashboardBackGuardReady) return;
         dashboardBackGuardReady = true;
 
-        // একই dashboard URL-এর একটি guard history entry রাখা হচ্ছে।
-        // Refresh (F5/Reload) এ popstate হয় না, তাই refresh করলে session ঠিক থাকবে।
+        history.replaceState({ dpmsDashboardBase: true }, "", location.href);
         history.pushState({ dpmsDashboardGuard: true }, "", location.href);
 
         window.addEventListener("popstate", async () => {
           if (dashboardBackConfirming) return;
+
+          // Confirm-এর আগেই guard entry ফিরিয়ে দিই, তাই Back-এ অন্য page খুলবে না।
+          history.pushState({ dpmsDashboardGuard: true }, "", location.href);
           dashboardBackConfirming = true;
 
-          const shouldLogout = confirm(
+          const shouldLogout = window.confirm(
             "আপনি Dashboard থেকে বের হতে যাচ্ছেন।\n\nOK চাপলে Logout হবে এবং Login পেজে চলে যাবেন।\nCancel চাপলে Dashboard-এই থাকবেন।"
           );
 
           if (!shouldLogout) {
-            // Cancel করলে আবার Dashboard history guard বসিয়ে দেওয়া হবে।
-            history.pushState({ dpmsDashboardGuard: true }, "", location.href);
             dashboardBackConfirming = false;
             return;
           }
@@ -1065,6 +1062,8 @@
         return order.map(key=>{
           const x=c.result[key];if(!x)return "";const m=PUJA_TITHI_META[key],end=tithiEnd(x.rawTithi);
           let extra=x.note?`<div class="mt-2 text-[11px] font-semibold text-orange-700">📌 ${x.note}</div>`:"";
+          const start=x.startTime||x.start||""; const finish=x.endTime||x.end||end;
+          if(start||finish) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2 text-[11px]"><b>শুরু:</b> ${start||"—"} &nbsp; <b>শেষ:</b> ${finish||"—"}</div>`;
           if(key==="Ashtami" && end){const n=timeMin(end);if(n!=null)extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[9px] text-gray-500">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}
           return `<div class="puja-day-card bg-gradient-to-r ${m.color} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="mt-2 text-[10px] text-gray-700 bg-white/70 rounded-lg p-2"><b>তিথি:</b> ${x.rawTithi||key}</div>${x.sunrise?`<div class="mt-1 text-[10px] text-gray-600"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${extra}</div></div></div>`;
         }).join("");
@@ -1110,11 +1109,13 @@
         const year=state.year,c=state.computed;
         const exportBox=document.getElementById("pujaJpgExport");
         const source=c.source==="fallback"?"বাংলা পঞ্জিকা ভিত্তিক তথ্য • কলকাতা":"স্বয়ংক্রিয় পঞ্জিকা • কলকাতা • IST";
-        exportBox.innerHTML=`<div style="width:900px;padding:38px;background:linear-gradient(135deg,#fff7ed,#fff,#fffbeb);font-family:Arial,'Noto Sans Bengali',sans-serif;color:#1f2937"><div style="border:4px solid #ea580c;border-radius:28px;padding:30px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08)"><div style="text-align:center;border-bottom:2px solid #fed7aa;padding-bottom:20px"><div style="font-size:44px">🪔</div><div style="font-size:32px;font-weight:900;color:#c2410c">দুর্গাপূজার নির্ঘণ্ট</div><div style="font-size:19px;font-weight:700;margin-top:7px">${bnDigits(year)} • বাংলা সাল ${bnDigits(banglaYear(c.result.Shashthi?.date||`${year}-10-16`))}</div><div style="font-size:14px;color:#6b7280;margin-top:5px">কলকাতা • IST • ${source}</div></div><div style="margin-top:24px">${["Shashthi","Saptami","Ashtami","Navami","Dashami"].map(k=>{const x=c.result[k];if(!x)return '';const m=PUJA_TITHI_META[k],end=tithiEnd(x.rawTithi);let extra=x.note?`<div style="margin-top:8px;font-size:15px;font-weight:700;color:#c2410c">📌 ${x.note}</div>`:'';if(k==='Ashtami'&&end){const n=timeMin(end);if(n!=null)extra+=`<div style="margin-top:10px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:10px"><b style="color:#be123c">🕯️ সন্ধিপূজা:</b> ${fmtMin(n-24)} – ${fmtMin(n+24)}<div style="font-size:12px;color:#6b7280;margin-top:3px">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}return `<div style="margin-bottom:14px;border:1px solid #fed7aa;border-radius:16px;padding:16px;background:#fffaf5"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:30px">${m.icon}</div><div style="flex:1"><div style="font-size:21px;font-weight:900">${m.bn}</div><div style="font-size:16px;font-weight:800;color:#9a3412;margin-top:3px">${formatBnDate(x.date)}</div></div></div><div style="margin-top:10px;background:#fff7ed;border-radius:10px;padding:10px;font-size:14px"><b>তিথি:</b> ${x.rawTithi||k}</div>${extra}</div>`}).join('')}</div><div style="margin-top:16px;padding:12px;border-radius:12px;background:#eff6ff;color:#1e40af;font-size:12px;line-height:1.6">ℹ️ পঞ্জিকা/গণনা পদ্ধতি ও স্থানভেদে তিথির সময় কিছুটা পরিবর্তিত হতে পারে। পূজার চূড়ান্ত আচার সময় স্থানীয় পুরোহিত/পঞ্জিকা অনুযায়ী মিলিয়ে নিন।</div><div style="text-align:center;margin-top:20px;font-size:11px;color:#9ca3af">দুর্গাপূজা ব্যবস্থাপনা • স্বয়ংক্রিয় নির্ঘণ্ট</div></div></div>`;
+        exportBox.innerHTML=`<div style="width:900px;padding:38px;background:linear-gradient(135deg,#fff7ed,#fff,#fffbeb);font-family:Arial,'Noto Sans Bengali',sans-serif;color:#1f2937"><div style="border:4px solid #ea580c;border-radius:28px;padding:30px;background:#fff;box-shadow:0 8px 30px rgba(0,0,0,.08)"><div style="text-align:center;border-bottom:2px solid #fed7aa;padding-bottom:20px"><div style="font-size:44px">🪔</div><div style="font-size:32px;font-weight:900;color:#c2410c">দুর্গাপূজার নির্ঘণ্ট</div><div style="font-size:19px;font-weight:700;margin-top:7px">${bnDigits(year)} • বাংলা সাল ${bnDigits(banglaYear(c.result.Shashthi?.date||`${year}-10-16`))}</div><div style="font-size:14px;color:#6b7280;margin-top:5px">কলকাতা • IST • ${source}</div></div><div style="margin-top:24px">${["Shashthi","Saptami","Ashtami","Navami","Dashami"].map(k=>{const x=c.result[k];if(!x)return '';const m=PUJA_TITHI_META[k],end=tithiEnd(x.rawTithi);let extra=x.note?`<div style="margin-top:8px;font-size:15px;font-weight:700;color:#c2410c">📌 ${x.note}</div>`:'';if(k==='Ashtami'&&end){const n=timeMin(end);if(n!=null)extra+=`<div style="margin-top:10px;background:#fff1f2;border:1px solid #fecdd3;border-radius:12px;padding:10px"><b style="color:#be123c">🕯️ সন্ধিপূজা:</b> ${fmtMin(n-24)} – ${fmtMin(n+24)}<div style="font-size:12px;color:#6b7280;margin-top:3px">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট • ১০৮ প্রদীপ/১০৮ পদ্ম নিবেদন, বলি/ভোগ ও আরতি স্থানীয় রীতি অনুযায়ী</div></div>`}return `<div style="margin-bottom:14px;border:1px solid #fed7aa;border-radius:16px;padding:16px;background:#fffaf5"><div style="display:flex;align-items:center;gap:14px"><div style="font-size:30px">${m.icon}</div><div style="flex:1"><div style="font-size:21px;font-weight:900">${m.bn}</div><div style="font-size:16px;font-weight:800;color:#9a3412;margin-top:3px">${formatBnDate(x.date)}</div></div></div><div style="margin-top:10px;background:#fff7ed;border-radius:10px;padding:10px;font-size:14px"><b>তিথি:</b> ${x.rawTithi||k}</div>${extra}</div>`}).join('')}</div><div style="margin-top:16px;padding:12px;border-radius:12px;background:#eff6ff;color:#1e40af;font-size:12px;line-height:1.6">ℹ️ পঞ্জিকা/গণনা পদ্ধতি ও স্থানভেদে তিথির সময় কিছুটা পরিবর্তিত হতে পারে। পূজার চূড়ান্ত আচার সময় স্থানীয় পুরোহিত/পঞ্জিকা অনুযায়ী মিলিয়ে নিন।</div><div style="text-align:center;margin-top:20px;font-size:11px;color:#9ca3af">দুর্গাপূজা ব্যবস্থাপনা • স্বয়ংক্রিয় নির্ঘণ্ট</div></div></div>`;
         exportBox.style.zIndex="99999";
         try{
           const canvas=await html2canvas(exportBox.firstElementChild,{scale:2,useCORS:true,backgroundColor:"#fff",logging:false});
-          const a=document.createElement("a");a.download=`Durga_Puja_Nirghonto_${year}.jpg`;a.href=canvas.toDataURL("image/jpeg",0.95);a.click();
+          const blob=await new Promise(resolve=>canvas.toBlob(resolve,"image/jpeg",0.95));
+          if(!blob)throw new Error("JPG তৈরি হয়নি");
+          const url=URL.createObjectURL(blob);const a=document.createElement("a");a.download=`Durga_Puja_Nirghonto_${year}.jpg`;a.href=url;a.style.display="none";document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(url);a.remove()},1500);
         }finally{exportBox.style.zIndex="-1";exportBox.innerHTML=""}
       };
     </script>
