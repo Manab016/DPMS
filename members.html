@@ -22,6 +22,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     th, td { text-align: center; vertical-align: middle; white-space: nowrap; }
@@ -111,19 +112,31 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <input type="text" id="newMemberVillage" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
       
       <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্য পদ</label>
-      <select id="newMemberRole" class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white">
-        <option value="সাধারণ সদস্য">সাধারণ সদস্য</option>
-        <option value="সভাপতি">সভাপতি</option>
-        <option value="সহ সভাপতি">সহ সভাপতি</option>
-        <option value="সম্পাদক">সম্পাদক</option>
-        <option value="সহ সম্পাদক">সহ সম্পাদক</option>
-        <option value="কোষাধ্যক্ষ">কোষাধ্যক্ষ</option>
-        <option value="সহ কোষাধ্যক্ষ">সহ কোষাধ্যক্ষ</option>
-        <option value="পূজা কোষাধ্যক্ষ">পূজা কোষাধ্যক্ষ</option>
-      </select>
-      
+      <select id="newMemberRole" onchange="toggleCustomRoleField()" class="w-full p-2.5 border rounded-lg mb-2 text-sm bg-white"></select>
+      <input type="text" id="newMemberCustomRole" placeholder="নিজের সদস্য পদ লিখুন" class="hidden w-full p-2.5 border rounded-lg mb-3 text-sm" />
+
       <label class="block text-xs font-semibold text-gray-600 mb-1">মোবাইল নম্বর</label>
-      <input type="tel" id="newMemberMobile" maxlength="10" inputmode="numeric" oninput="this.value = this.value.replace(/[^0-9]/g, '').slice(0,10)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
+      <input type="tel" id="newMemberMobile" maxlength="21" inputmode="numeric" oninput="formatMobileInput(this)" class="w-full p-2.5 border rounded-lg mb-3 text-sm" />
+
+      <label class="block text-xs font-semibold text-gray-600 mb-1">ঠিকানা</label>
+      <textarea id="newMemberAddress" rows="2" placeholder="সম্পূর্ণ ঠিকানা" class="w-full p-2.5 border rounded-lg mb-3 text-sm resize-none"></textarea>
+
+      <div class="grid grid-cols-2 gap-2 mb-3">
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Blood Group</label>
+          <select id="newMemberBloodGroup" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+            <option value="">নির্বাচন করুন</option><option>O+</option><option>O-</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-600 mb-1">Validity</label>
+          <input type="text" id="newMemberValidity" placeholder="যেমন: 31-12-2026" class="w-full p-2.5 border rounded-lg text-sm" />
+        </div>
+      </div>
+      <label class="flex items-center gap-2 mb-3 text-xs font-semibold text-gray-600 cursor-pointer">
+        <input type="checkbox" id="newMemberShowBloodGroup" class="w-4 h-4" checked />
+        ID Card-এ Blood Group দেখাবেন
+      </label>
       
       <div class="flex items-center justify-between mb-1">
         <label class="block text-xs font-semibold text-gray-600">সদস্যের ছবি</label>
@@ -200,44 +213,71 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <div id="idCardModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
-    <div id="idCardBox" class="bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
-      <div id="idCardHeader" class="px-2 py-1.5 flex flex-col justify-center items-center relative">
-        <h4 class="font-bold text-[13px] leading-tight text-center">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-        <p class="text-[9px] font-medium text-center mt-0.5 opacity-90">এটি কমিটির অফিসিয়াল পরিচয়পত্র</p>
-        <span id="vipBadge" class="hidden absolute right-2 top-1.5 bg-yellow-400 text-black text-[9px] px-2 py-0.5 rounded font-extrabold shadow-sm border border-yellow-500 tracking-wider">VIP</span>
-      </div>
-      <div id="idCardBody" class="px-3 flex items-center gap-3 flex-1">
-        <img id="idCardPhoto" src="" class="w-[70px] h-[70px] object-cover rounded-md border-2" />
-        <div class="text-left flex-1 pl-1">
-          <h3 id="idCardName" class="text-sm font-bold text-gray-800"></h3>
-          <p id="idCardRole" class="text-[10px] font-semibold inline-block px-2 py-0.5 rounded-full mt-0.5"></p>
-          <div class="mt-1 text-[10px] text-gray-700 space-y-0.5">
-            <p><strong>আইডি:</strong> <span id="idCardAutoId"></span></p>
-            <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
-            <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
+  <div id="idCardModal" class="fixed inset-0 bg-black/70 hidden flex items-center justify-center p-4 z-50">
+    <div class="flex flex-col items-center gap-3 w-full max-w-[390px]">
+      <div id="idCardBox" class="bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
+        <div id="idCardHeader" class="px-3 py-2 flex flex-col justify-center items-center relative">
+          <div class="absolute inset-0 opacity-[0.07] pointer-events-none bg-center bg-contain bg-no-repeat" style="background-image:url('Logo.png')"></div>
+          <h4 class="font-black text-[14px] leading-tight text-center relative z-10">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
+          <p class="text-[9px] font-bold text-center mt-0.5 relative z-10">দুর্গাপূজা ২০২৬ • সদস্য পরিচয়পত্র</p>
+          <span id="vipBadge" class="hidden absolute right-2 top-2 bg-yellow-300 text-black text-[9px] px-2.5 py-0.5 rounded-full font-black shadow border border-yellow-500 tracking-wider z-10">VIP</span>
+        </div>
+        <div id="idCardBody" class="px-3 py-2 flex items-center gap-3 flex-1 relative">
+          <div class="shrink-0 text-center">
+            <img id="idCardPhoto" src="" class="w-[82px] h-[92px] object-cover rounded-xl border-2" />
+            <div class="text-[8px] font-bold mt-1 opacity-70">সদস্য</div>
+          </div>
+          <div class="text-left flex-1 min-w-0">
+            <h3 id="idCardName" class="text-[16px] font-black truncate"></h3>
+            <p id="idCardRole" class="text-[10px] font-bold inline-block px-2.5 py-0.5 rounded-full mt-0.5"></p>
+            <div class="mt-1.5 text-[9px] space-y-0.5 leading-tight">
+              <p><strong>আইডি:</strong> <span id="idCardAutoId"></span></p>
+              <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
+              <p><strong>ঠিকানা:</strong> <span id="idCardAddress"></span></p>
+              <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
+              <p id="idCardBloodRow"><strong>Blood:</strong> <span id="idCardBlood"></span></p>
+              <p><strong>Valid:</strong> <span id="idCardValidity"></span></p>
+            </div>
+          </div>
+          <canvas id="idCardQrCode" class="w-12 h-12 shadow-sm bg-white rounded-sm shrink-0"></canvas>
+        </div>
+        <div id="signatureArea" class="px-4 pb-2 pt-1 flex justify-between items-end min-h-[64px] w-full">
+          <div id="memberSigContainer" class="text-center w-[42%] flex flex-col items-center justify-end">
+            <img id="idCardMemberSig" src="" class="h-7 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+            <div class="border-t border-gray-400 text-[8px] pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
+          </div>
+          <div id="presSigContainer" class="text-center w-[42%] flex flex-col items-center justify-end">
+            <img id="idCardPresSig" src="" class="h-7 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
+            <div id="presSigLabel" class="border-t border-gray-400 text-[8px] pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
           </div>
         </div>
       </div>
-      <div class="px-5 pb-2 flex justify-between items-end h-[95px] w-full">
-        <div id="memberSigContainer" class="text-center w-1/3 flex flex-col items-center justify-end">
-          <img id="idCardMemberSig" src="" class="h-6 object-contain mx-auto mb-1" onerror="this.style.display='none'">
-          <div class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
-        </div>
-        <div id="presSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end ml-auto">
-          <canvas id="idCardQrCode" class="w-14 h-14 mb-1.5 shadow-sm mx-auto bg-white rounded-sm"></canvas>
-          <img id="idCardPresSig" src="" class="h-6 object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-          <div id="presSigLabel" class="border-t border-gray-400 text-[9px] text-gray-700 pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
-        </div>
+      <div class="flex gap-2 no-print">
+        <button onclick="downloadIdCard()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">⬇️ Download</button>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
+        <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
       </div>
-    </div>
-    <div class="absolute bottom-5 flex gap-2 no-print">
-      <button onclick="window.print()" class="bg-blue-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
-      <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-5 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
     </div>
   </div>
 
-  <script type="module">
+  <script>
+function formatMobileInput(el) {
+  let value = (el.value || "").replace(/[^0-9\/]/g, "");
+  const slashIndex = value.indexOf("/");
+  if (slashIndex === -1) {
+    el.value = value.slice(0, 10);
+    return;
+  }
+  const first = value.slice(0, slashIndex).replace(/[^0-9]/g, "").slice(0, 10);
+  if (first.length < 10) {
+    el.value = first;
+    return;
+  }
+  const second = value.slice(slashIndex + 1).replace(/[^0-9]/g, "").slice(0, 10);
+  el.value = first + "/" + second;
+}
+</script>
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
@@ -455,7 +495,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         snapshot.forEach((docSnap) => { allMembersData.push({ id: docSnap.id, ...docSnap.data() }); });
         
         allMembersData.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-        allMembersData.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
+        // Existing members from the old M001-style system keep their current serial order during one-time migration.
+        allMembersData.forEach((m, idx) => { if (!m.autoId) m.autoId = "M" + String(idx + 1).padStart(3, "0"); });
+        assignPermanentMemberIds();
         
         try {
           localStorage.setItem("membersData", JSON.stringify(allMembersData));
@@ -468,6 +510,50 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         updateRoleOptions(editId);
         window.filterMembers();
       });
+    }
+
+    function getIdParts(id) {
+      const m = String(id || "").match(/^NSDC\/(\d{2})\/(\d+)$/i);
+      return m ? { year: m[1], serial: Number(m[2]) } : null;
+    }
+
+    function assignPermanentMemberIds() {
+      const usedSerials = new Set();
+      let maxSerial = 0;
+      allMembersData.forEach(m => {
+        const parts = getIdParts(m.autoId);
+        if (parts) { usedSerials.add(parts.serial); maxSerial = Math.max(maxSerial, parts.serial); }
+      });
+
+      let legacySerial = 1;
+      const writes = [];
+      allMembersData.forEach(m => {
+        if (getIdParts(m.autoId)) return;
+        const legacy = String(m.autoId || "").match(/^M(\d+)$/i);
+        let serial = legacy ? Number(legacy[1]) : 0;
+        if (!serial || usedSerials.has(serial)) {
+          serial = Math.max(maxSerial + 1, legacySerial);
+          while (usedSerials.has(serial)) serial++;
+        }
+        while (usedSerials.has(serial)) serial++;
+        usedSerials.add(serial);
+        maxSerial = Math.max(maxSerial, serial);
+        legacySerial = serial + 1;
+        const year = String(m.joiningYear || 2026).slice(-2);
+        const newId = `NSDC/${year}/${String(serial).padStart(3, "0")}`;
+        m.autoId = newId;
+        m.joiningYear = Number(`20${year}`);
+        writes.push(updateDoc(doc(db, "members", m.id), { autoId: newId, joiningYear: m.joiningYear }));
+      });
+
+      allMembersData.forEach(m => {
+        if (!getIdParts(m.autoId)) {
+          const serials = allMembersData.map(x => getIdParts(x.autoId)?.serial || 0);
+          const serial = Math.max(1, ...serials) + 1;
+          m.autoId = `NSDC/26/${String(serial).padStart(3, "0")}`;
+        }
+      });
+      if (writes.length) Promise.allSettled(writes).catch(() => {});
     }
 
     function populateVillageDropdown(data) {
@@ -935,46 +1021,59 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       if (!roleSelect) return;
       const ALL_ROLES = ["সাধারণ সদস্য", "সভাপতি", "সহ সভাপতি", "সম্পাদক", "সহ সম্পাদক", "কোষাধ্যক্ষ", "সহ কোষাধ্যক্ষ", "পূজা কোষাধ্যক্ষ"];
       const normalizeRole = (value) => String(value || "").replace(/\s+/g, " ").trim();
-      const takenRoles = new Set(
-        allMembersData
-          .filter(m => m.id !== currentDocId)
-          .map(m => normalizeRole(m.role))
-          .filter(role => role && role !== "সাধারণ সদস্য")
-      );
-      const currentValue = normalizeRole(roleSelect.value);
+      const takenRoles = new Set(allMembersData.filter(m => m.id !== currentDocId).map(m => normalizeRole(m.role)).filter(role => role && role !== "সাধারণ সদস্য"));
+      const currentMember = allMembersData.find(m => m.id === currentDocId);
+      const currentValue = normalizeRole(currentMember?.role || roleSelect.value);
       roleSelect.innerHTML = "";
       ALL_ROLES.forEach(role => {
-        if (role === "সাধারণ সদস্য" || !takenRoles.has(normalizeRole(role))) {
-          const opt = document.createElement("option");
-          opt.value = role;
-          opt.textContent = role;
-          roleSelect.appendChild(opt);
+        if (role === "সাধারণ সদস্য" || !takenRoles.has(normalizeRole(role)) || role === currentValue) {
+          const opt = document.createElement("option"); opt.value = role; opt.textContent = role; roleSelect.appendChild(opt);
         }
       });
-      if ([...roleSelect.options].some(o => normalizeRole(o.value) === currentValue)) {
-        roleSelect.value = currentValue;
-      } else {
-        roleSelect.value = "সাধারণ সদস্য";
-      }
+      const customOpt = document.createElement("option");
+      customOpt.value = "__custom__"; customOpt.textContent = "✍️ অন্যান্য পদ — নিজে লিখুন"; roleSelect.appendChild(customOpt);
+      if ([...roleSelect.options].some(o => o.value === currentValue)) roleSelect.value = currentValue;
+      else if (currentValue && currentValue !== "সাধারণ সদস্য") roleSelect.value = "__custom__";
+      else roleSelect.value = "সাধারণ সদস্য";
+      toggleCustomRoleField();
     }
+
+    window.toggleCustomRoleField = function() {
+      const sel = document.getElementById("newMemberRole");
+      const input = document.getElementById("newMemberCustomRole");
+      if (!sel || !input) return;
+      const isCustom = sel.value === "__custom__";
+      input.classList.toggle("hidden", !isCustom);
+      if (!isCustom) input.value = "";
+    };
 
     window.saveOrUpdateMember = async function() {
       const saveButton = document.querySelector('#addMemberModal button[onclick="saveOrUpdateMember()"]');
 
       const name = document.getElementById("newMemberName").value.trim();
       const village = document.getElementById("newMemberVillage").value.trim();
-      const role = document.getElementById("newMemberRole").value;
+      const roleChoice = document.getElementById("newMemberRole").value;
+      const customRole = document.getElementById("newMemberCustomRole").value.trim();
+      const role = roleChoice === "__custom__" ? customRole : roleChoice;
       const mobile = document.getElementById("newMemberMobile").value.trim();
+      const address = document.getElementById("newMemberAddress").value.trim();
+      const bloodGroup = document.getElementById("newMemberBloodGroup").value;
+      const showBloodGroup = document.getElementById("newMemberShowBloodGroup").checked;
+      const validity = document.getElementById("newMemberValidity").value.trim();
       const docId = document.getElementById("editMemberDocId").value;
 
-      if (mobile && !/^\d{10}$/.test(mobile)) {
-        alert("মোবাইল নম্বর দিলে অবশ্যই ১০ সংখ্যার দিতে হবে!");
+      if (mobile && !/^(?:\d{10}|\d{10}\/\d{10})$/.test(mobile)) {
+        alert("মোবাইল নম্বর দিলে ১০ সংখ্যা দিন। দুইটি নম্বর দিতে হলে ১০ সংখ্যা/১০ সংখ্যা লিখুন।");
         document.getElementById("newMemberMobile").focus();
         return;
       }
 
       if (!name || !village) {
         alert("নাম এবং গ্রাম অবশ্যই দিতে হবে!");
+        return;
+      }
+      if (!role) {
+        alert("সদস্য পদ অবশ্যই দিতে হবে!");
         return;
       }
 
@@ -1054,6 +1153,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           village,
           role,
           mobile: mobile || "-",
+          address: address || village,
+          bloodGroup: bloodGroup || "",
+          showBloodGroup: !!showBloodGroup,
+          validity: validity || "31-12-2026",
+          joiningYear: existingMember?.joiningYear || new Date().getFullYear(),
           photo: uploadedPhotoUrl,
           signature: uploadedSignatureUrl,
           photoStoragePath: uploadedPhotoPath,
@@ -1081,6 +1185,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
         } else {
           memberData.createdAt = Date.now();
+          const maxSerial = Math.max(0, ...allMembersData.map(m => getIdParts(m.autoId)?.serial || 0));
+          const legacyMax = Math.max(0, ...allMembersData.map(m => { const x = String(m.autoId || "").match(/^M(\d+)$/i); return x ? Number(x[1]) : 0; }));
+          const serial = Math.max(maxSerial, legacyMax) + 1;
+          const joiningYear = new Date().getFullYear();
+          memberData.joiningYear = joiningYear;
+          memberData.autoId = `NSDC/${String(joiningYear).slice(-2)}/${String(serial).padStart(3, "0")}`;
           await addDoc(collection(db, "members"), memberData);
           alert("নতুন সদস্য সফলভাবে যুক্ত হয়েছে!");
         }
@@ -1145,6 +1255,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       updateRoleOptions(member.id);
       document.getElementById("newMemberRole").value = member.role;
       document.getElementById("newMemberMobile").value = member.mobile !== "-" ? member.mobile : "";
+      document.getElementById("newMemberAddress").value = member.address || member.village || "";
+      document.getElementById("newMemberBloodGroup").value = member.bloodGroup || "";
+      document.getElementById("newMemberShowBloodGroup").checked = member.showBloodGroup !== false;
+      document.getElementById("newMemberValidity").value = member.validity || "31-12-2026";
+      if (![...document.getElementById("newMemberRole").options].some(o => o.value === member.role)) {
+        document.getElementById("newMemberRole").value = "__custom__";
+        document.getElementById("newMemberCustomRole").value = member.role || "";
+        toggleCustomRoleField();
+      }
       
       processedPhotoBase64 = member.photo || "";
       processedSigBase64 = member.signature || "";
@@ -1377,6 +1496,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       updateRoleOptions("");
       document.getElementById("newMemberRole").value = "সাধারণ সদস্য";
       document.getElementById("newMemberMobile").value = "";
+      document.getElementById("newMemberAddress").value = "";
+      document.getElementById("newMemberBloodGroup").value = "";
+      document.getElementById("newMemberShowBloodGroup").checked = true;
+      document.getElementById("newMemberValidity").value = "31-12-2026";
+      document.getElementById("newMemberCustomRole").value = "";
+      toggleCustomRoleField();
       document.getElementById("photoInput").value = "";
       document.getElementById("sigInput").value = "";
       revokePreviewUrl("photoPreview");
@@ -1399,13 +1524,19 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       if (!member) return;
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
+      const isPresident = member.role === "সভাপতি";
+      const isVip = isPresident || (member.role && member.role !== "সাধারণ সদস্য");
 
       document.getElementById("idCardName").innerText = member.name || "";
       document.getElementById("idCardRole").innerText = member.role || "";
       document.getElementById("idCardAutoId").innerText = member.autoId || "";
       document.getElementById("idCardVillage").innerText = member.village || "";
-      document.getElementById("idCardMobile").innerText = member.mobile || "";
-      document.getElementById("idCardPhoto").src = member.photo || "https://via.placeholder.com/150";
+      document.getElementById("idCardAddress").innerText = member.address || member.village || "";
+      document.getElementById("idCardMobile").innerText = member.mobile && member.mobile !== "-" ? member.mobile : "";
+      document.getElementById("idCardBlood").innerText = member.bloodGroup || "";
+      document.getElementById("idCardBloodRow").style.display = member.showBloodGroup === false ? "none" : "block";
+      document.getElementById("idCardValidity").innerText = member.validity || "31-12-2026";
+      document.getElementById("idCardPhoto").src = member.photo || "";
 
       const qrData = `ID: ${member.autoId || ""}\nনাম: ${member.name || ""}\nগ্রাম: ${member.village || ""}\nপদ: ${member.role || ""}\nমোবাইল: ${member.mobile || ""}`;
       new QRious({ element: document.getElementById('idCardQrCode'), value: qrData, size: 100, level: 'M' });
@@ -1422,36 +1553,60 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const presSigImg = document.getElementById("idCardPresSig");
       const presSigLabel = document.getElementById("presSigLabel");
 
-      memberSigImg.style.display = 'block';
-      presSigImg.style.display = 'block';
+      memberSigImg.style.display = member.signature ? "block" : "none";
+      presSigImg.style.display = "none";
+      memberSigImg.src = member.signature || "";
+      presSigImg.src = presSignature || "";
 
-      if (member.role === "সভাপতি") {
+      if (isPresident) {
         vipBadge.classList.remove("hidden");
-        cardBox.className = "bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-[3px] border-yellow-500 flex flex-col relative transition-all duration-300";
-        cardHeader.className = "bg-gradient-to-r from-gray-900 via-black to-gray-900 text-yellow-500 px-2 py-1.5 flex flex-col justify-center items-center relative border-b border-yellow-600";
-        cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-gradient-to-br from-yellow-50 to-amber-100";
-        photoImg.className = "w-[75px] h-[75px] object-cover rounded-md border-4 border-yellow-500 shadow-md";
-        roleBadge.className = "text-[11px] font-extrabold text-gray-900 bg-gradient-to-r from-yellow-300 to-yellow-500 shadow border border-yellow-400 inline-block px-3 py-0.5 rounded-full mt-0.5";
-        memberSigContainer.classList.add("hidden"); 
-        presSigContainer.classList.remove("hidden");
-        presSigContainer.className = "text-center w-[45%] flex flex-col items-center justify-end ml-auto"; 
-        presSigImg.src = member.signature || "";
-        presSigLabel.innerText = "নিজস্ব স্বাক্ষর"; 
-      } else {
-        vipBadge.classList.add("hidden");
-        cardBox.className = "bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
-        cardHeader.className = "bg-gradient-to-r from-orange-600 to-red-600 text-white px-2 py-1.5 flex flex-col justify-center items-center relative";
-        cardBody.className = "px-3 flex items-center gap-3 flex-1 bg-amber-50/30";
-        photoImg.className = "w-[70px] h-[70px] object-cover rounded-md border-2 border-orange-500";
-        roleBadge.className = "text-[10px] font-semibold text-white bg-orange-500 inline-block px-2 py-0.5 rounded-full mt-0.5 shadow-sm";
+        vipBadge.innerText = "VIP • সভাপতি";
+        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-[3px] border-yellow-500 flex flex-col relative transition-all duration-300";
+        cardHeader.className = "bg-gradient-to-r from-gray-950 via-gray-900 to-black text-yellow-300 px-3 py-2 flex flex-col justify-center items-center relative border-b border-yellow-600";
+        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-gradient-to-br from-yellow-50 to-amber-100";
+        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-3 border-yellow-500 shadow-md";
+        roleBadge.className = "text-[10px] font-extrabold text-gray-900 bg-yellow-300 border border-yellow-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
+        memberSigContainer.classList.remove("hidden");
+        presSigContainer.classList.add("hidden");
+        presSigLabel.innerText = "নিজস্ব স্বাক্ষর";
+      } else if (isVip) {
+        vipBadge.classList.remove("hidden");
+        vipBadge.innerText = "VIP • প্রধান পদাধিকারী";
+        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-[3px] border-yellow-500 flex flex-col relative transition-all duration-300";
+        cardHeader.className = "bg-gradient-to-r from-indigo-950 via-indigo-900 to-purple-950 text-yellow-200 px-3 py-2 flex flex-col justify-center items-center relative border-b border-yellow-600";
+        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-gradient-to-br from-slate-50 to-indigo-50";
+        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-3 border-yellow-500 shadow-md";
+        roleBadge.className = "text-[10px] font-extrabold text-gray-900 bg-yellow-300 border border-yellow-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
         memberSigContainer.classList.remove("hidden");
         presSigContainer.classList.remove("hidden");
-        presSigContainer.className = "text-center w-[45%] flex flex-col items-center justify-end ml-auto"; 
-        memberSigImg.src = member.signature || ""; 
-        presSigImg.src = presSignature || ""; 
+        presSigLabel.innerText = "সভাপতির স্বাক্ষর";
+      } else {
+        vipBadge.classList.add("hidden");
+        cardBox.className = "bg-white w-[370px] h-[255px] rounded-2xl shadow-2xl overflow-hidden border-2 border-orange-500 flex flex-col relative transition-all duration-300";
+        cardHeader.className = "bg-gradient-to-r from-orange-600 to-red-600 text-white px-3 py-2 flex flex-col justify-center items-center relative";
+        cardBody.className = "px-3 py-2 flex items-center gap-3 flex-1 relative bg-amber-50/40";
+        photoImg.className = "w-[82px] h-[92px] object-cover rounded-xl border-2 border-orange-500 shadow-sm";
+        roleBadge.className = "text-[10px] font-bold text-white bg-orange-500 inline-block px-3 py-0.5 rounded-full mt-0.5";
+        memberSigContainer.classList.remove("hidden");
+        presSigContainer.classList.remove("hidden");
         presSigLabel.innerText = "সভাপতির স্বাক্ষর";
       }
       document.getElementById("idCardModal").classList.remove("hidden");
+    };
+
+    window.downloadIdCard = async function() {
+      const card = document.getElementById("idCardBox");
+      if (!card || typeof html2canvas === "undefined") return alert("ID Card download করা যাচ্ছে না!");
+      try {
+        const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });
+        const link = document.createElement("a");
+        link.download = `${document.getElementById("idCardAutoId").innerText || "Member-ID"}.png`;
+        link.href = canvas.toDataURL("image/png");
+        link.click();
+      } catch (e) {
+        console.error(e);
+        alert("ID Card download করতে সমস্যা হয়েছে!");
+      }
     };
 
     window.closeIdCardModal = function() {
