@@ -165,12 +165,17 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         <div class="relative bg-gray-900 rounded-xl overflow-hidden flex items-center justify-center" style="height:300px">
           <canvas id="cropCanvas" class="max-w-full max-h-full touch-none"></canvas>
         </div>
-        <div id="cropHint" class="text-[11px] text-gray-500 text-center mt-2">Crop box টেনে জায়গা বদলান অথবা নিচের slider ব্যবহার করুন।</div>
+        <div id="cropHint" class="text-[11px] text-gray-500 text-center mt-2">Crop box-এর আকার fixed থাকবে। শুধু Zoom করে ছবি বড়/ছোট করুন এবং ছবির উপর টেনে ঠিক জায়গায় বসান।</div>
 
         <div class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-3 text-xs">
+          <label class="font-bold text-gray-700">Zoom</label>
+          <input id="cropZoomRange" type="range" min="100" max="400" value="100" step="1" />
+          <span id="cropZoomValue" class="text-right font-bold">100%</span>
+        </div>
+        <div id="signatureCropSizeRow" class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-2 text-xs hidden">
           <label class="font-bold text-gray-700">Crop</label>
-          <input id="cropSizeRange" type="range" min="35" max="100" value="85" step="1" />
-          <span id="cropSizeValue" class="text-right font-bold">85%</span>
+          <input id="cropSizeRange" type="range" min="35" max="100" value="88" step="1" />
+          <span id="cropSizeValue" class="text-right font-bold">88%</span>
         </div>
         <div class="grid grid-cols-[72px_1fr_52px] items-center gap-2 mt-2 text-xs">
           <label class="font-bold text-gray-700">ডানে-বামে</label>
@@ -586,14 +591,16 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const iw = cropState.img.naturalWidth || cropState.img.width;
       const ih = cropState.img.naturalHeight || cropState.img.height;
       const type = cropState.type;
-      const sizePct = Math.max(35, Math.min(100, Number(document.getElementById("cropSizeRange").value || 85))) / 100;
       let cw, ch;
 
       if (type === "photo") {
+        // PHOTO: crop box is always a fixed square. The user controls only zoom.
         const base = Math.min(iw, ih);
-        cw = ch = Math.max(1, Math.round(base * sizePct));
+        const zoom = Math.max(100, Math.min(400, Number(document.getElementById("cropZoomRange").value || 100))) / 100;
+        cw = ch = Math.max(1, Math.round(base / zoom));
       } else {
-        // Signature crop is wide (3:1) but never extends outside the source image.
+        // Signature crop remains a wide 3:1 crop.
+        const sizePct = Math.max(35, Math.min(100, Number(document.getElementById("cropSizeRange").value || 88))) / 100;
         const maxW = Math.min(iw, ih * 3);
         cw = Math.max(1, Math.round(maxW * sizePct));
         ch = Math.max(1, Math.min(ih, Math.round(cw / 3)));
@@ -650,7 +657,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       ctx.fillText("CROP", Math.max(5, x + 7), Math.max(15, y + 17));
       ctx.restore();
 
-      document.getElementById("cropSizeValue").innerText = Math.round(Number(document.getElementById("cropSizeRange").value)) + "%";
+      if (cropState.type === "photo") {
+        document.getElementById("cropZoomValue").innerText = Math.round(Number(document.getElementById("cropZoomRange").value || 100)) + "%";
+      } else {
+        document.getElementById("cropSizeValue") && (document.getElementById("cropSizeValue").innerText = Math.round(Number(document.getElementById("cropSizeRange").value)) + "%");
+      }
       document.getElementById("cropXValue").innerText = Math.round(Number(document.getElementById("cropXRange").value)) + "%";
       document.getElementById("cropYValue").innerText = Math.round(Number(document.getElementById("cropYRange").value)) + "%";
       if (cropState.type === "photo") {
@@ -665,11 +676,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const maxW = cropState.type === "photo" ? 420 : 900;
       const maxH = cropState.type === "photo" ? 420 : 300;
       const scale = Math.min(1, maxW / g.sw, maxH / g.sh);
-      const ow = Math.max(1, Math.round(g.sw * scale));
-      const oh = Math.max(1, Math.round(g.sh * scale));
+      const ow = cropState.type === "photo" ? 420 : Math.max(1, Math.round(g.sw * scale));
+      const oh = cropState.type === "photo" ? 420 : Math.max(1, Math.round(g.sh * scale));
       const quality = Number(document.getElementById("cropQualityRange").value || 68);
       const text = cropState.type === "photo"
-        ? `Save হবে: ${ow} × ${oh}px • JPEG quality ${quality}% • crop area ${g.sw} × ${g.sh}px`
+        ? `Save হবে: ${ow} × ${oh}px • JPEG quality ${quality}% • fixed square crop • Zoom ${Math.round(Number(document.getElementById("cropZoomRange").value || 100))}%`
         : `Save হবে: ${ow} × ${oh}px • transparent PNG • crop area ${g.sw} × ${g.sh}px`;
       document.getElementById("cropOutputInfo").innerText = text;
     }
@@ -687,7 +698,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
               ? "ছবির দরকারি অংশ রাখুন। Crop ছোট করলে upload আরও দ্রুত হবে।"
               : "স্বাক্ষরটি box-এর মধ্যে রাখুন। সাদা background স্বয়ংক্রিয়ভাবে transparent হবে।";
             document.getElementById("photoQualityRow").classList.toggle("hidden", type !== "photo");
-            document.getElementById("cropSizeRange").value = type === "photo" ? 82 : 88;
+            document.getElementById("signatureCropSizeRow")?.classList.toggle("hidden", type !== "signature");
+            document.getElementById("cropZoomRange")?.closest("div.grid")?.classList.toggle("hidden", type !== "photo");
+            document.getElementById("cropZoomRange") && (document.getElementById("cropZoomRange").value = 100);
+            if (document.getElementById("cropSizeRange")) document.getElementById("cropSizeRange").value = 88;
             document.getElementById("cropXRange").value = 50;
             document.getElementById("cropYRange").value = 50;
             document.getElementById("cropQualityRange").value = 68;
@@ -709,8 +723,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const maxW = type === "photo" ? 420 : 900;
       const maxH = type === "photo" ? 420 : 300;
       const scale = Math.min(1, maxW / g.sw, maxH / g.sh);
-      const outW = Math.max(1, Math.round(g.sw * scale));
-      const outH = Math.max(1, Math.round(g.sh * scale));
+      const outW = type === "photo" ? 420 : Math.max(1, Math.round(g.sw * scale));
+      const outH = type === "photo" ? 420 : Math.max(1, Math.round(g.sh * scale));
       const canvas = document.createElement("canvas");
       canvas.width = outW;
       canvas.height = outH;
@@ -816,13 +830,21 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       cropRenderTimer = setTimeout(drawCropEditor, 20);
     }
 
-    ["cropSizeRange", "cropXRange", "cropYRange", "cropQualityRange"].forEach(id => {
+    ["cropZoomRange", "cropSizeRange", "cropXRange", "cropYRange", "cropQualityRange"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener("input", scheduleCropRedraw);
     });
 
     const cropCanvasEl = document.getElementById("cropCanvas");
     if (cropCanvasEl) {
+      cropCanvasEl.addEventListener("wheel", (ev) => {
+        if (!cropState || cropState.type !== "photo") return;
+        ev.preventDefault();
+        const z = Number(document.getElementById("cropZoomRange").value || 100);
+        document.getElementById("cropZoomRange").value = Math.max(100, Math.min(400, z + (ev.deltaY < 0 ? 10 : -10)));
+        drawCropEditor();
+      }, { passive: false });
+
       cropCanvasEl.addEventListener("pointerdown", (ev) => {
         if (!cropState?.geometry) return;
         const rect = cropCanvasEl.getBoundingClientRect();
