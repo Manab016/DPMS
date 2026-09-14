@@ -191,7 +191,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getStorage, ref as storageRef, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
+    import { getStorage, ref as storageRef, uploadBytes, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -213,45 +213,23 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     // - Photo and signature binary files are stored ONLY in Firebase Cloud Storage.
     // - Firestore stores only the Storage download URL + Storage path, never the image bytes/base64.
 
-    // Upload a Blob/File directly to Firebase Storage.
-    // This avoids converting the selected image into a huge base64 string before saving.
-    // The real image stays in Storage; Firestore stores only its download URL.
-    function uploadMemberBlob(blob, path, contentType = "image/png", progressCallback) {
-      return new Promise((resolve, reject) => {
-        if (!blob) {
-          resolve("");
-          return;
-        }
-
+    // Fast upload for small, already-compressed member images.
+    // Photo/signature are processed in the browser first, then uploaded directly
+    // to Firebase Cloud Storage. Firestore stores only the URL/path.
+    function uploadMemberBlob(blob, path, contentType = "image/png") {
+      return (async () => {
+        if (!blob) return "";
         const fileRef = storageRef(storage, path);
         const metadata = {
           contentType: contentType || blob.type || "application/octet-stream",
           cacheControl: "public,max-age=31536000"
         };
-
-        const uploadTask = uploadBytesResumable(fileRef, blob, metadata);
-
-        uploadTask.on(
-          "state_changed",
-          (snapshot) => {
-            const progress = snapshot.totalBytes
-              ? Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100)
-              : 0;
-            if (typeof progressCallback === "function") {
-              progressCallback(progress);
-            }
-          },
-          (error) => reject(error),
-          async () => {
-            try {
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(url);
-            } catch (error) {
-              reject(error);
-            }
-          }
-        );
-      });
+        // uploadBytes is intentionally used here because these member images are
+        // compressed to small files. It avoids the extra resumable-upload
+        // negotiation/observer overhead that was making Android WebView feel slow.
+        await uploadBytes(fileRef, blob, metadata);
+        return await getDownloadURL(fileRef);
+      })();
     }
 
     window.uploadMemberBlob = uploadMemberBlob;
@@ -453,8 +431,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
               const canvas = document.createElement("canvas");
               let width = img.naturalWidth || img.width;
               let height = img.naturalHeight || img.height;
-              const maxWidth = 600;
-              const maxHeight = 600;
+              const maxWidth = 420;
+              const maxHeight = 420;
 
               if (width > height) {
                 if (width > maxWidth) {
@@ -480,14 +458,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
                   return;
                 }
 
-                const dataUrl = canvas.toDataURL("image/jpeg", 0.82);
+                const dataUrl = canvas.toDataURL("image/jpeg", 0.68);
                 document.getElementById("photoPreview").src = dataUrl;
                 document.getElementById("photoPreviewBox").classList.remove("hidden");
 
                 processedPhotoBase64 = dataUrl;
                 processedPhotoBlob = blob;
                 resolve();
-              }, "image/jpeg", 0.82);
+              }, "image/jpeg", 0.68);
             } catch (err) {
               reject(err);
             }
@@ -601,13 +579,31 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
                 0, 0, cropWidth, cropHeight
               );
 
-              cropCanvas.toBlob((blob) => {
+              // Keep signature files small for fast Android uploads.
+              const maxSigWidth = 900;
+              const maxSigHeight = 300;
+              let outW = cropWidth;
+              let outH = cropHeight;
+              const scale = Math.min(1, maxSigWidth / outW, maxSigHeight / outH);
+              if (scale < 1) {
+                outW = Math.max(1, Math.round(outW * scale));
+                outH = Math.max(1, Math.round(outH * scale));
+              }
+
+              const outputCanvas = document.createElement("canvas");
+              outputCanvas.width = outW;
+              outputCanvas.height = outH;
+              const outputCtx = outputCanvas.getContext("2d");
+              outputCtx.clearRect(0, 0, outW, outH);
+              outputCtx.drawImage(cropCanvas, 0, 0, outW, outH);
+
+              outputCanvas.toBlob((blob) => {
                 if (!blob) {
                   reject(new Error("স্বাক্ষরের ডাটা প্রস্তুত করা যায়নি।"));
                   return;
                 }
 
-                const dataUrl = cropCanvas.toDataURL("image/png");
+                const dataUrl = outputCanvas.toDataURL("image/png");
                 const previewElement = document.getElementById(previewId);
                 previewElement.src = dataUrl;
                 document.getElementById("sigPreviewBox").classList.remove("hidden");
@@ -705,32 +701,34 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
         const uniqueBase = `${docId || "new"}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-        if (processedPhotoBlob) {
-          const photoPath = `member-media/photos/${uniqueBase}.jpg`;
-          uploadedPhotoUrl = await uploadMemberBlob(
-            processedPhotoBlob,
-            photoPath,
-            "image/jpeg",
-            (p) => {
-              if (saveButton) saveButton.innerText = `📷 ছবি আপলোড ${p}%`;
-            }
-          );
-          newStorageRefs.push(photoPath);
-          uploadedPhotoPath = photoPath;
-        }
+        // Upload photo + signature at the same time instead of one after another.
+        // This roughly halves the waiting time on a normal connection.
+        const photoPath = processedPhotoBlob ? `member-media/photos/${uniqueBase}.jpg` : "";
+        const sigPath = processedSigBlob ? `member-media/signatures/${uniqueBase}.png` : "";
 
-        if (processedSigBlob) {
-          const sigPath = `member-media/signatures/${uniqueBase}.png`;
-          uploadedSignatureUrl = await uploadMemberBlob(
-            processedSigBlob,
-            sigPath,
-            "image/png",
-            (p) => {
-              if (saveButton) saveButton.innerText = `✍️ স্বাক্ষর আপলোড ${p}%`;
-            }
-          );
-          newStorageRefs.push(sigPath);
-          uploadedSignaturePath = sigPath;
+        if (photoPath) newStorageRefs.push(photoPath);
+        if (sigPath) newStorageRefs.push(sigPath);
+
+        if (processedPhotoBlob || processedSigBlob) {
+          if (saveButton) saveButton.innerText = "📤 ছবি ও স্বাক্ষর আপলোড হচ্ছে...";
+
+          const [photoResult, sigResult] = await Promise.all([
+            processedPhotoBlob
+              ? uploadMemberBlob(processedPhotoBlob, photoPath, "image/jpeg")
+              : Promise.resolve(""),
+            processedSigBlob
+              ? uploadMemberBlob(processedSigBlob, sigPath, "image/png")
+              : Promise.resolve("")
+          ]);
+
+          if (photoResult) {
+            uploadedPhotoUrl = photoResult;
+            uploadedPhotoPath = photoPath;
+          }
+          if (sigResult) {
+            uploadedSignatureUrl = sigResult;
+            uploadedSignaturePath = sigPath;
+          }
         }
 
         const memberData = {
