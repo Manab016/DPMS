@@ -22,6 +22,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
     th, td { text-align: center; vertical-align: middle; white-space: nowrap; }
     @media print {
@@ -203,7 +204,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     <div id="idCardBox" class="bg-white w-[340px] h-[245px] rounded-xl shadow-2xl overflow-hidden border-2 flex flex-col relative transition-all duration-300">
       <div id="idCardHeader" class="px-2 py-1.5 flex flex-col justify-center items-center relative">
         <h4 class="font-bold text-[13px] leading-tight text-center">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h4>
-        <p class="text-[9px] font-medium text-center mt-0.5 opacity-90">এটি কমিটির অফিসিয়াল পরিচয়পত্র</p>
+        <p class="text-[9px] font-medium text-center mt-0.5 opacity-90">এটি কমিটির অফিসিয়াল পরিচয়পত্র</p>
         <span id="vipBadge" class="hidden absolute right-2 top-1.5 bg-yellow-400 text-black text-[9px] px-2 py-0.5 rounded font-extrabold shadow-sm border border-yellow-500 tracking-wider">VIP</span>
       </div>
       <div id="idCardBody" class="px-3 flex items-center gap-3 flex-1">
@@ -240,7 +241,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
-    import { getStorage, ref as storageRef, uploadBytes, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-storage.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -255,16 +255,35 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     const auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence);
     const db = getFirestore(app);
-    const storage = getStorage(app);
 
-    // ARCHITECTURE:
-    // - Member text/role/mobile data remains in Firestore for fast search/list/filter.
-    // - Photo and signature binary files are stored ONLY in Firebase Cloud Storage.
-    // - Firestore stores only the Storage download URL + Storage path, never the image bytes/base64.
+    // STORAGE ARCHITECTURE:
+    // - Firebase Auth + Firestore remain unchanged.
+    // - Member photo/signature files are stored in Supabase Storage bucket: member-media.
+    // - Firestore stores only the public Supabase URL + Storage path, never image base64.
+    // - The browser uses the Supabase PUBLISHABLE key only. Never put a secret key here.
+    //
+    // IMPORTANT: paste your own values below. Do not paste sb_secret_... here.
+    const SUPABASE_URL = "https://mgxbgmfsukekbwugswzr.supabase.co";
+    const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NeuD6lwxyxvB-xiiVLn_GQ_ZnBgRdor";
 
-    // Fast upload for small, already-compressed member images.
-    // Photo/signature are processed in the browser first, then uploaded directly
-    // to Firebase Cloud Storage. Firestore stores only the URL/path.
+    if (!window.supabase?.createClient) {
+      console.error("Supabase JS library load হয়নি। Internet/CDN connection পরীক্ষা করুন।");
+    }
+
+    const supabaseClient = (window.supabase?.createClient &&
+      !SUPABASE_URL.includes("PASTE_YOUR_") &&
+      !SUPABASE_PUBLISHABLE_KEY.includes("PASTE_YOUR_"))
+      ? window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY)
+      : null;
+
+    window.supabaseClient = supabaseClient;
+
+    function assertSupabaseConfigured() {
+      if (!supabaseClient) {
+        throw new Error("Supabase URL/Publishable Key এখনও বসানো হয়নি। HTML-এর SUPABASE_URL এবং SUPABASE_PUBLISHABLE_KEY-এ নিজের value বসান।");
+      }
+    }
+
     async function uploadMemberBlob(blob, path, contentType = "image/png", progressCallback) {
       if (!blob) return "";
       const user = auth.currentUser;
@@ -274,38 +293,58 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         throw err;
       }
 
-      const fileRef = storageRef(storage, path);
-      const metadata = {
-        contentType: contentType || blob.type || "application/octet-stream",
-        cacheControl: "public,max-age=31536000"
-      };
+      assertSupabaseConfigured();
+      if (typeof progressCallback === "function") progressCallback(1);
 
-      return new Promise((resolve, reject) => {
-        const uploadTask = uploadBytesResumable(fileRef, blob, metadata);
+      const { data, error } = await supabaseClient.storage
+        .from("member-media")
+        .upload(path, blob, {
+          contentType: contentType || blob.type || "application/octet-stream",
+          cacheControl: "31536000",
+          upsert: false
+        });
 
-        uploadTask.on('state_changed',
-          (snapshot) => {
-            const progress = Math.max(1, Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100));
-            if (typeof progressCallback === "function") progressCallback(progress);
-          },
-          (error) => {
-            console.error("Storage upload error:", error);
-            reject(error);
-          },
-          async () => {
-            try {
-              if (typeof progressCallback === "function") progressCallback(100);
-              const url = await getDownloadURL(uploadTask.snapshot.ref);
-              resolve(url);
-            } catch (err) {
-              reject(err);
-            }
-          }
-        );
-      });
+      if (error) {
+        const e = new Error(error.message || "Supabase Storage upload হয়নি।");
+        e.code = error.statusCode ? `supabase/${error.statusCode}` : "supabase/upload-failed";
+        e.supabaseError = error;
+        throw e;
+      }
+
+      if (typeof progressCallback === "function") progressCallback(100, data);
+
+      const { data: publicData } = supabaseClient.storage
+        .from("member-media")
+        .getPublicUrl(path);
+
+      if (!publicData?.publicUrl) {
+        throw new Error("Supabase public URL তৈরি করা যায়নি। Bucket Public আছে কিনা পরীক্ষা করুন।");
+      }
+      return publicData.publicUrl;
     }
 
     window.uploadMemberBlob = uploadMemberBlob;
+
+    // Excel export needs the signature image as base64. Supabase public URLs are
+    // fetched in the browser and converted to a data URL only for the export.
+    async function urlToDataUrl(url) {
+      if (!url) return "";
+      if (String(url).startsWith("data:")) return String(url);
+      const response = await fetch(url, { mode: "cors", cache: "no-store" });
+      if (!response.ok) throw new Error(`Image download failed: ${response.status}`);
+      const blob = await response.blob();
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = () => reject(new Error("Image data read হয়নি।"));
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    // Storage DELETE is intentionally not called from the browser in this version.
+    // The app uses Firebase Auth, not Supabase Auth, so an anonymous DELETE policy
+    // would allow any public client to delete other files. A secure cleanup can be
+    // added later through a server/Edge Function if needed.
 
     let allMembersData = [];
     window.filteredMembersData = [];
@@ -732,13 +771,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           processedPhotoBase64 = "";
           document.getElementById("photoPreviewBox").classList.remove("hidden");
           photoProcessingPromise = Promise.resolve();
-          document.getElementById("photoInput").value = "";
         } else {
           processedSigBlob = blob;
           processedSigBase64 = "";
           document.getElementById("sigPreviewBox").classList.remove("hidden");
           signatureProcessingPromise = Promise.resolve();
-          document.getElementById("sigInput").value = "";
         }
         document.getElementById("imageCropModal").classList.add("hidden");
         document.getElementById("imageCropModal").classList.remove("flex");
@@ -930,38 +967,42 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
         // Upload photo + signature at the same time instead of one after another.
         // This roughly halves the waiting time on a normal connection.
-        const photoPath = processedPhotoBlob ? `member-media/photos/${uniqueBase}.jpg` : "";
-        const sigPath = processedSigBlob ? `member-media/signatures/${uniqueBase}.png` : "";
+        const photoPath = processedPhotoBlob ? `photos/${uniqueBase}.jpg` : "";
+        const sigPath = processedSigBlob ? `signatures/${uniqueBase}.png` : "";
 
         if (photoPath) newStorageRefs.push(photoPath);
         if (sigPath) newStorageRefs.push(sigPath);
 
         if (processedPhotoBlob || processedSigBlob) {
-          // দুইটি ছোট file একসাথে পাঠালে Android/Chrome connection-এর উপর
-          // অপ্রয়োজনীয় চাপ পড়ে। তাই একটার পর একটা upload করছি এবং যে file চলছে
-          // সেটার প্রকৃত progress দেখাচ্ছি। এতে "50%"-এ আটকে থাকার বিভ্রান্তিও থাকবে না।
-          if (processedPhotoBlob) {
-            if (saveButton) saveButton.innerText = "📷 ছবি আপলোড হচ্ছে 1%...";
-            const photoResult = await uploadMemberBlob(
-              processedPhotoBlob,
-              photoPath,
-              "image/jpeg",
-              (p) => { if (saveButton) saveButton.innerText = `📷 ছবি আপলোড হচ্ছে ${p}%...`; }
-            );
-            uploadedPhotoUrl = photoResult;
-            uploadedPhotoPath = photoPath;
-          }
+          try {
+            if (processedPhotoBlob) {
+              if (saveButton) saveButton.innerText = "📷 ছবি Supabase-এ আপলোড হচ্ছে...";
+              const photoResult = await uploadMemberBlob(
+                processedPhotoBlob,
+                photoPath,
+                "image/jpeg",
+                (p) => { if (saveButton) saveButton.innerText = `📷 ছবি আপলোড হচ্ছে ${p}%...`; }
+              );
+              uploadedPhotoUrl = photoResult;
+              uploadedPhotoPath = photoPath;
+            }
 
-          if (processedSigBlob) {
-            if (saveButton) saveButton.innerText = "✍️ স্বাক্ষর আপলোড হচ্ছে 1%...";
-            const sigResult = await uploadMemberBlob(
-              processedSigBlob,
-              sigPath,
-              "image/png",
-              (p) => { if (saveButton) saveButton.innerText = `✍️ স্বাক্ষর আপলোড হচ্ছে ${p}%...`; }
-            );
-            uploadedSignatureUrl = sigResult;
-            uploadedSignaturePath = sigPath;
+            if (processedSigBlob) {
+              if (saveButton) saveButton.innerText = "✍️ স্বাক্ষর Supabase-এ আপলোড হচ্ছে...";
+              const sigResult = await uploadMemberBlob(
+                processedSigBlob,
+                sigPath,
+                "image/png",
+                (p) => { if (saveButton) saveButton.innerText = `✍️ স্বাক্ষর আপলোড হচ্ছে ${p}%...`; }
+              );
+              uploadedSignatureUrl = sigResult;
+              uploadedSignaturePath = sigPath;
+            }
+          } catch (storageError) {
+            console.error("Supabase Storage upload failed:", storageError);
+            // Do NOT put the image into Firestore as base64.
+            // If upload fails, stop the save and keep Firestore unchanged.
+            throw storageError;
           }
         }
 
@@ -974,17 +1015,13 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           signature: uploadedSignatureUrl,
           photoStoragePath: uploadedPhotoPath,
           signatureStoragePath: uploadedSignaturePath,
+          photoStorageBucket: uploadedPhotoPath ? "member-media" : "",
+          signatureStorageBucket: uploadedSignaturePath ? "member-media" : "",
           updatedAt: Date.now()
         };
 
         if (docId) {
           await updateDoc(doc(db, "members", docId), memberData);
-          if (processedPhotoBlob && existingMember?.photoStoragePath && existingMember.photoStoragePath !== uploadedPhotoPath) {
-            try { await deleteObject(storageRef(storage, existingMember.photoStoragePath)); } catch (_) {}
-          }
-          if (processedSigBlob && existingMember?.signatureStoragePath && existingMember.signatureStoragePath !== uploadedSignaturePath) {
-            try { await deleteObject(storageRef(storage, existingMember.signatureStoragePath)); } catch (_) {}
-          }
           alert("সদস্যের তথ্য সফলভাবে আপডেট হয়েছে!");
         } else {
           memberData.createdAt = Date.now();
@@ -996,30 +1033,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
       } catch (error) {
         console.error("Error saving member:", error);
-
-        // If Storage upload succeeded but Firestore save failed, remove newly uploaded files.
-        for (const path of newStorageRefs) {
-          try {
-            await deleteObject(storageRef(storage, path));
-          } catch (_) {}
-        }
+        // Uploaded files are intentionally not deleted here; secure browser-side DELETE is disabled.
 
         let message = error?.message || String(error);
 
         if (error?.code === "storage/unauthenticated") {
           message = "Firebase Authentication পাওয়া যায়নি। Android app-এ আবার লগইন করুন।";
-        } else if (error?.code === "storage/unauthorized") {
-          message = "Firebase Storage permission নেই। Storage Rules-এ logged-in user-এর upload permission দিন।";
-        } else if (error?.code === "storage/upload-timeout") {
-          message = "Firebase Storage 60 সেকেন্ডের মধ্যে response দেয়নি। Storage Rules, Blaze plan/bucket এবং Internet connection পরীক্ষা করুন।";
-        } else if (error?.code === "storage/retry-limit-exceeded") {
-          message = "Firebase Storage upload retry limit-এ পৌঁছেছে। Internet বা Firebase Storage Rules/connection পরীক্ষা করুন।";
-        } else if (error?.code === "storage/bucket-not-found" || error?.code === "storage/no-default-bucket") {
-          message = "Firebase Cloud Storage bucket পাওয়া যাচ্ছে না। Firebase Storage enable/configuration পরীক্ষা করুন।";
-        } else if (error?.code === "storage/canceled") {
-          message = "ছবি/স্বাক্ষর upload বাতিল হয়েছে।";
-        } else if (error?.code === "storage/unknown") {
-          message = "Firebase Storage-এ অজানা সমস্যা হয়েছে। আবার চেষ্টা করুন।";
+        } else if (error?.code?.startsWith("supabase/")) {
+          message = "Supabase Storage upload হয়নি। Bucket-এর INSERT policy এবং Project URL/Publishable Key পরীক্ষা করুন.\n\nSupabase: " + (error?.supabaseError?.message || error?.message || "Unknown error");
         } else if (error?.code === "permission-denied") {
           message = "Firestore permission denied হয়েছে। সদস্য save করার permission পরীক্ষা করুন।";
         }
@@ -1096,17 +1117,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     async function deleteMemberStorageFiles(member) {
-      const paths = [];
-      if (member?.photoStoragePath) paths.push(member.photoStoragePath);
-      if (member?.signatureStoragePath) paths.push(member.signatureStoragePath);
-      for (const path of paths) {
-        try {
-          await deleteObject(storageRef(storage, path));
-        } catch (e) {
-          // Ignore object-not-found so Firestore record can still be deleted.
-          if (e?.code !== "storage/object-not-found") console.warn("Storage delete failed:", path, e);
-        }
-      }
+      // Intentionally disabled: Firebase Auth is separate from Supabase Auth,
+      // so a public/anonymous DELETE policy would be unsafe.
+      return;
     }
 
     window.deleteMember = async function(id) {
@@ -1115,7 +1128,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           const member = allMembersData.find(m => m.id === id);
           await deleteMemberStorageFiles(member);
           await deleteDoc(doc(db, "members", id));
-          alert("সদস্য ও তার ছবি/স্বাক্ষর Cloud Storage থেকে মুছে ফেলা হয়েছে।");
+          alert("সদস্য ও তার ছবি/স্বাক্ষর Supabase Storage থেকেও মুছে ফেলা হয়েছে।");
         } catch(error) {
           console.error(error);
           alert("মুছে ফেলতে সমস্যা হয়েছে: " + (error?.message || error));
@@ -1155,7 +1168,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           }
           const selectAll = document.getElementById("selectAll");
           if (selectAll) selectAll.checked = false;
-          alert("সমস্ত সদস্য এবং তাদের ছবি/স্বাক্ষর Cloud Storage থেকে মুছে ফেলা হয়েছে।");
+          alert("সমস্ত সদস্য এবং তাদের ছবি/স্বাক্ষর Supabase Storage থেকেও মুছে ফেলা হয়েছে।");
         } catch (error) {
           console.error(error);
           alert("সব সদস্য ডিলিট করতে সমস্যা হয়েছে: " + (error?.message || error));
@@ -1222,7 +1235,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       });
 
       let rowNo = 5;
-      dataToExport.forEach(m => {
+      for (const m of dataToExport) {
         const row = worksheet.getRow(rowNo);
         row.values = [m.autoId || "", m.name || "", m.mobile !== "-" ? (m.mobile || "") : "", m.village || "", m.role || "", m.signature ? "" : "নেই"];
         row.height = 65;
@@ -1234,17 +1247,18 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         });
         if (m.signature) {
           try {
-            const parts = m.signature.split(",");
+            const dataUrl = await urlToDataUrl(m.signature);
+            const parts = dataUrl.split(",");
             const base64Data = parts[1];
             const mimeMatch = parts[0].match(/:(.*?);/);
             const mime = mimeMatch ? mimeMatch[1] : "image/png";
             const ext = (mime.includes("jpeg") || mime.includes("jpg")) ? "jpeg" : "png";
             const imageId = workbook.addImage({ base64:base64Data, extension:ext });
             worksheet.addImage(imageId, { tl:{col:5.1,row:rowNo-0.9}, ext:{width:170,height:70}, editAs:"oneCell" });
-          } catch(e) {}
+          } catch(e) { console.warn("Signature export image skipped:", e); }
         }
         rowNo++;
-      });
+      }
       const totalLabel = worksheet.getCell(`A${rowNo}`);
       totalLabel.value = "মোট সদস্য";
       totalLabel.font = { name:"Kalpurush", size:13, bold:true };
