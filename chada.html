@@ -94,7 +94,7 @@
       <div
         class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"
       >
-        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">
           স্থাপিত:- ২০০৯ |
           <strong>Regd.No.:- S0014684</strong>
@@ -1402,5 +1402,131 @@
         });
       };
     </script>
-  </body>
+  <script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-SxN0qs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
+
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(([appMod, fsMod]) => {
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
+
+    let app;
+    try { app = initializeApp(firebaseConfig, "developerDetailsSync"); }
+    catch (e) {
+      app = initializeApp(firebaseConfig, "developerDetailsSync_" + Math.random().toString(36).slice(2));
+    }
+    const db = getFirestore(app);
+
+    const DEFAULT_DEV = {
+      name: "MANABENDRA NATH SARKAR",
+      mobile: "9002652507",
+      email: "manabendranathsarkar112@gmail.com"
+    };
+
+    function applyDeveloperData(raw) {
+      const d = {
+        name: String(raw?.name || DEFAULT_DEV.name),
+        mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
+        email: String(raw?.email || DEFAULT_DEV.email)
+      };
+      try {
+        localStorage.setItem("pujaDevData", JSON.stringify(d));
+        localStorage.setItem("pujaDevName", d.name);
+        localStorage.setItem("pujaDevMobile", d.mobile);
+        localStorage.setItem("pujaDevEmail", d.email);
+      } catch (_) {}
+
+      const setText = (id, value) => {
+        const el = document.getElementById(id);
+        if (el) el.textContent = value;
+      };
+      setText("popDevName", d.name);
+      setText("popDevMobile", d.mobile);
+      setText("popDevEmail", d.email);
+      setText("devName", d.name);
+      setText("devPhone", d.mobile);
+      setText("devEmail", d.email);
+
+      const mobile = document.getElementById("popDevMobile");
+      if (mobile) mobile.href = "tel:" + d.mobile;
+      const email = document.getElementById("popDevEmail");
+      if (email) email.href = "mailto:" + d.email;
+      const phone = document.getElementById("devPhone");
+      if (phone) phone.href = "tel:" + d.mobile;
+      const devEmail = document.getElementById("devEmail");
+      if (devEmail) devEmail.href = "mailto:" + d.email;
+    }
+
+    onSnapshot(doc(db, "settings", "developerInfo"), snap => {
+      applyDeveloperData(snap.exists() ? snap.data() : DEFAULT_DEV);
+    }, err => {
+      console.warn("Developer details sync failed:", err);
+      let d = DEFAULT_DEV;
+      try { d = JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; } catch (_) {}
+      applyDeveloperData(d);
+    });
+
+    window.__saveDeveloperDetailsToCloud = async function(dev) {
+      await setDoc(doc(db, "settings", "developerInfo"), {
+        name: dev.name || "",
+        mobile: dev.mobile || "",
+        email: dev.email || "",
+        updatedAt: Date.now()
+      }, { merge: true });
+      applyDeveloperData(dev);
+    };
+  }).catch(err => console.error("Developer details sync init failed:", err));
+})();
+</script>
+
+<script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-SxN0q",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
+  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const pageKey = 'chada';
+  const applyCommitteeHeading = (raw) => {
+    const name = String(raw?.[pageKey] || DEFAULT_NAME);
+    const heading = document.getElementById('committeePageHeading');
+    if (heading) heading.textContent = name;
+    try {
+      const old = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+      old[pageKey] = name;
+      localStorage.setItem('pujaCommitteeNames', JSON.stringify(old));
+    } catch (_) {}
+  };
+  try {
+    const local = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
+    applyCommitteeHeading(local);
+  } catch (_) { applyCommitteeHeading({}); }
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(([appMod, fsMod]) => {
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot } = fsMod;
+    let app;
+    try { app=initializeApp(firebaseConfig,'committeeHeadingSync'); } catch(e) { app=initializeApp(firebaseConfig,'committeeHeadingSync_'+Math.random().toString(36).slice(2)); }
+    const db=getFirestore(app);
+    onSnapshot(doc(db,'settings','committeeNames'), snap => applyCommitteeHeading(snap.exists()?snap.data():{}), err => console.warn('Committee heading sync failed:',err));
+  }).catch(err => console.error('Committee heading sync init failed:',err));
+})();
+</script>
+</body>
 </html>
