@@ -244,6 +244,9 @@ function renderExpenses(list=allExpenses){
     const spent = Number(x.spent ?? x.amount ?? 0);
     const due = Number(x.dueAmount ?? 0);
     const ret = Number(x.returned ?? 0);
+    const extraDue = Number(x.extraDueAmount ?? Math.max(0, spent - adv));
+    const extraReturned = Number(x.extraReturned ?? 0);
+    const extraBalance = Math.max(0, extraDue - extraReturned);
     
     let statusBadge = "";
     if (x.returnDue && due > 0) {
@@ -254,7 +257,10 @@ function renderExpenses(list=allExpenses){
     } else if (adv > spent) {
       statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">🟢 ফেরত জমা: ${money(ret)}</span>`;
     } else if (spent > adv) {
-      statusBadge = `<span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold">🟠 অতিরিক্ত খরচ: ${money(spent - adv)}</span>`;
+      statusBadge = `<div class="flex flex-col items-center gap-1">
+        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold">🟠 অতিরিক্ত খরচ: ${money(extraDue)}</span>
+        ${extraBalance > 0 && canManage() ? `<button onclick="clearExtraDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ অতিরিক্ত টাকা পরিশোধ</button>` : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${extraDue > 0 ? 'পরিশোধ হয়েছে' : ''}</span>`}
+      </div>`;
     } else {
       statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-semibold">হিসাব ঠিক আছে</span>`;
     }
@@ -284,6 +290,19 @@ function renderExpenses(list=allExpenses){
  document.getElementById("totalDue").innerText = money(totalDue);
  document.getElementById("totalReturned").innerText = money(totalRet);
 }
+
+window.clearExtraDue = async (id) => {
+  if(!canManage()) return;
+  const x = allExpenses.find(e => e.id === id);
+  if(!x) return;
+  const extraDue = Number(x.extraDueAmount ?? Math.max(0, Number(x.spent ?? x.amount ?? 0) - Number(x.advance ?? x.amount ?? 0)));
+  if(extraDue <= 0) return;
+  if(confirm(`"${x.name || "প্রাপক"}"-কে অতিরিক্ত খরচ বাবদ ${money(extraDue)} ফেরত দিয়েছেন?`)){
+    try {
+      await updateDoc(doc(db, "expenses", id), { extraDueAmount: extraDue, extraReturned: extraDue, extraDueCleared: true, updatedAt: Date.now() });
+    } catch(e) { alert("ত্রুটি: " + e.message); }
+  }
+};
 
 window.clearDue = async (id) => {
   if(!canManage()) return;
@@ -395,6 +414,7 @@ window.saveExpense=async()=>{
  const returnDue=document.getElementById("expenseReturnDue").checked;
  
  const diff = Math.max(0, advance - spent);
+ const extraDueAmount = Math.max(0, spent - advance);
  const dueAmount = returnDue ? diff : 0;
  const returned = returnDue ? 0 : diff;
 
@@ -418,6 +438,9 @@ window.saveExpense=async()=>{
      returned,
      returnDue,
      dueAmount,
+     extraDueAmount,
+     extraReturned: id ? (allExpenses.find(e=>e.id===id)?.extraReturned || 0) : 0,
+     extraDueCleared: id ? !!allExpenses.find(e=>e.id===id)?.extraDueCleared : false,
      description,
      treasurer,
      updatedAt: Date.now()
@@ -491,8 +514,8 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const boldFont = { name: "Noto Sans Bengali", size: 10, bold: true };
     const totalFont = { name: "Noto Sans Bengali", size: 11, bold: true };
 
-    const columnCount = dueOnly ? 4 : 8;
-    const lastCol = dueOnly ? "D" : "H";
+    const columnCount = dueOnly ? 4 : 11;
+    const lastCol = dueOnly ? "D" : "K";
 
     ws.mergeCells(`A1:${lastCol}1`);
     ws.getCell("A1").value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
@@ -512,7 +535,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
 
     const headers = dueOnly
       ? ["তারিখ", "নাম", "Due (₹)", "কী বাবদ Due"]
-      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "ফেরত (₹)", "Due (₹)", "বিবরণ", "কোষাধ্যক্ষ"];
+      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "অগ্রিম ফেরত (₹)", "Due (₹)", "অতিরিক্ত পাওনা (₹)", "অতিরিক্ত ফেরত (₹)", "অবস্থা", "বিবরণ", "কোষাধ্যক্ষ"];
 
     headers.forEach((h, i) => {
       const cell = ws.getCell(4, i + 1);
@@ -524,18 +547,23 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     });
     ws.getRow(4).height = 30;
 
-    let totalAdvance = 0, totalExpense = 0, totalReturned = 0, totalDue = 0;
+    let totalAdvance = 0, totalExpense = 0, totalReturned = 0, totalDue = 0, totalExtraDue = 0, totalExtraReturned = 0;
 
     expenses.forEach(x => {
       const adv = Number(x.advance ?? x.amount ?? 0);
       const spent = Number(x.spent ?? x.amount ?? 0);
       const returned = Number(x.returned ?? 0);
       const due = Number(x.dueAmount ?? 0);
+      const extraDue = Number(x.extraDueAmount ?? Math.max(0, spent - adv));
+      const extraReturned = Number(x.extraReturned ?? 0);
+      const extraBalance = Math.max(0, extraDue - extraReturned);
 
       totalAdvance += adv;
       totalExpense += spent;
       totalReturned += returned;
       totalDue += due;
+      totalExtraDue += extraDue;
+      totalExtraReturned += extraReturned;
 
       const values = dueOnly
         ? [
@@ -551,6 +579,9 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
             spent,
             returned,
             due,
+            extraDue,
+            extraReturned,
+            extraBalance > 0 ? "অতিরিক্ত ₹" + extraBalance.toFixed(2) + " বাকি" : (extraDue > 0 ? "সম্পূর্ণ Clear" : "হিসাব ঠিক আছে"),
             x.description || x.note || "",
             x.treasurer || x.pujaTreasurer || ""
           ];
@@ -563,7 +594,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
         cell.alignment = { horizontal: "center", vertical: "middle", wrapText: true };
       });
 
-      const moneyCols = dueOnly ? [3] : [3, 4, 5, 6];
+      const moneyCols = dueOnly ? [3] : [3, 4, 5, 6, 7, 8];
       moneyCols.forEach(col => {
         row.getCell(col).numFmt = '₹#,##0.00';
       });
@@ -591,13 +622,15 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     } else {
       addAdjacentTotal("সর্বমোট অগ্রিম", totalAdvance);
       addAdjacentTotal("সর্বমোট খরচ", totalExpense);
-      addAdjacentTotal("সর্বমোট ফেরত", totalReturned);
+      addAdjacentTotal("সর্বমোট অগ্রিম ফেরত", totalReturned);
       addAdjacentTotal("সর্বমোট Due", totalDue);
+      addAdjacentTotal("সর্বমোট অতিরিক্ত পাওনা", totalExtraDue);
+      addAdjacentTotal("সর্বমোট অতিরিক্ত ফেরত", totalExtraReturned);
     }
 
     const widths = dueOnly
       ? [15, 25, 17, 42]
-      : [14, 22, 16, 18, 15, 15, 30, 20];
+      : [14, 22, 16, 18, 17, 15, 18, 18, 22, 30, 20];
 
     widths.forEach((w, i) => {
       ws.getColumn(i + 1).width = w;
