@@ -951,7 +951,12 @@ async function saveDevData(e) {
   } catch (err) {
     console.error("Developer details cloud save failed:", err);
     loadDevData();
-    alert("ডেভেলপার তথ্য ক্লাউডে সেভ হয়নি। ইন্টারনেট/Firestore সংযোগ পরীক্ষা করুন।");
+    const code = err?.code || "";
+    if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
+      alert("ডেভেলপার তথ্য সেভ হয়নি: Firestore permission denied। Firebase Rules-এ settings collection-এর Admin write permission দিন।");
+    } else {
+      alert("ডেভেলপার তথ্য ক্লাউডে সেভ হয়নি। Firebase login/internet/Firestore সংযোগ পরীক্ষা করুন।");
+    }
   }
 }
 
@@ -1254,6 +1259,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.__saveDeveloperDetailsToCloud = async function(dev) {
       const ctx = await window.__pujaGlobalReady;
+      if (!ctx || !ctx.user) throw new Error("auth-required: Firebase login session পাওয়া যায়নি");
       await setDoc(doc(ctx.db, "settings", "developerInfo"), {
         name: String(dev?.name || "").trim(),
         mobile: String(dev?.mobile || "").trim(),
@@ -1265,6 +1271,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.__saveCommitteeInfoToCloud = async function(info) {
       const ctx = await window.__pujaGlobalReady;
+      if (!ctx || !ctx.user) throw new Error("auth-required: Firebase login session পাওয়া যায়নি");
       const data = {
         name: String(info?.name || DEFAULT_COMMITTEE.name).trim() || DEFAULT_COMMITTEE.name,
         establishedYear: String(info?.establishedYear || DEFAULT_COMMITTEE.establishedYear).trim() || DEFAULT_COMMITTEE.establishedYear,
@@ -1336,7 +1343,12 @@ document.addEventListener("DOMContentLoaded", () => {
       alert("কমিটির তথ্য সফলভাবে সেভ হয়েছে।");
     } catch (err) {
       console.error("Committee info cloud save failed:", err);
-      alert("কমিটির তথ্য সেভ হয়নি: " + (err?.message || err));
+      const code = err?.code || "";
+      if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
+        alert("কমিটির তথ্য সেভ হয়নি: Firestore permission denied। Firebase Rules-এ settings collection-এর Admin write permission দিন।");
+      } else {
+        alert("কমিটির তথ্য সেভ হয়নি: " + (err?.message || err));
+      }
     }
   };
 })();
