@@ -93,7 +93,7 @@
     <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
     <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">২০০৯</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
     <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮</p>
-    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">৯৯৩৩৩৭১৭০২</span></a></p>
+    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <span id="committeeMobileNumbers"><a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">৯৯৩৩৩৭১৭০২</span></a></span></p>
   </div>
 
   <div id="section-settings">
@@ -174,9 +174,9 @@
 </div>
 </div>
 </div>
-<div class="mt-8 p-4 bg-amber-50/70 rounded-xl border border-amber-200">
+<div class="mt-8 p-4 bg-amber-50/70 rounded-xl border border-amber-200 shadow-sm">
   <h3 class="text-sm font-bold text-orange-900 mb-1">🏛️ কমিটির উপরের তথ্য সেটিংস</h3>
-  <p class="text-[11px] text-gray-600 mb-4">এখানে কমিটির নাম, স্থাপিত সাল, রেজিস্ট্রেশন নম্বর, ঠিকানা ও মোবাইল পরিবর্তন করলে সব পেজের উপরের কমিটি তথ্য একসঙ্গে আপডেট হবে।</p>
+  <p class="text-[11px] text-gray-600 mb-4">এখানে প্রতিটি তথ্য আলাদা করে পরিবর্তন করলে সব পেজের উপরের কমিটি তথ্য একসঙ্গে আপডেট হবে।</p>
   <form class="space-y-3" id="committeeInfoForm" onsubmit="saveCommitteeInfo(event)">
     <div>
       <label class="block text-xs font-bold text-gray-700 mb-1">কমিটির নাম</label>
@@ -191,12 +191,32 @@
       <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoReg" required type="text"/>
     </div>
     <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">ঠিকানা</label>
-      <textarea class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoAddress" required rows="2"></textarea>
+      <label class="block text-xs font-bold text-gray-700 mb-1">সাং</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoVillage" placeholder="যেমন: সহরা" required type="text"/>
     </div>
     <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile" type="text"/>
+      <label class="block text-xs font-bold text-gray-700 mb-1">পোস্ট</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPost" placeholder="যেমন: আদিনা স্টেশন" required type="text"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-700 mb-1">থানা</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPolice" placeholder="যেমন: মালদা" required type="text"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-700 mb-1">জেলা</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoDistrict" placeholder="যেমন: মালদা" required type="text"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-700 mb-1">পিনকোড</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPincode" inputmode="numeric" maxlength="6" placeholder="যেমন: ৭৩২১২৮" required type="text"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ১</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" placeholder="প্রথম মোবাইল নম্বর" type="tel"/>
+    </div>
+    <div>
+      <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ২ <span class="font-normal text-gray-500">(ঐচ্ছিক)</span></label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile2" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" placeholder="দ্বিতীয় মোবাইল নম্বর" type="tel"/>
     </div>
     <button class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition" type="submit">
       💾 কমিটির তথ্য সেভ করুন
@@ -204,73 +224,30 @@
   </form>
 </div>
 
-<div>
-<h3 class="text-sm font-bold text-orange-900 mb-3">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
-<form class="space-y-4" id="devConfigForm" onsubmit="saveDevData(event)">
-<div>
-<label class="block text-xs font-bold text-gray-700 mb-1">ডেভেলপারের নাম</label>
-<input class="w-full p-2.5 border rounded-lg text-sm" id="devNameInput" required="" type="text"/>
-</div>
-<div>
-<label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
-<input class="w-full p-2.5 border rounded-lg text-sm" id="devMobileInput" required="" type="text"/>
-</div>
-<div>
-<label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল এড্রেস</label>
-<input class="w-full p-2.5 border rounded-lg text-sm" id="devEmailInput" required="" type="email"/>
-</div>
-<button class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition" type="submit">
-                💾 ডেভেলপার তথ্য সেভ করুন
-              </button>
-</form>
 </div>
 
-<div class="mt-8 p-4 bg-amber-50/70 rounded-xl border border-amber-200">
-  <h3 class="text-sm font-bold text-orange-900 mb-1">🏷️ প্রতিটি পেজের কমিটির নামের Heading</h3>
-  <p class="text-[11px] text-gray-600 mb-4">এখানে কোনো পেজের নাম পরিবর্তন করলে সেই পেজের উপরের কমিটির Heading সব ডিভাইসে/পেজে ক্লাউড থেকে আপডেট হবে।</p>
-  <form class="space-y-3" id="committeeNamesForm" onsubmit="saveCommitteeNames(event)">
+<div class="mt-8 p-4 bg-orange-50/70 rounded-xl border border-orange-200 shadow-sm">
+  <h3 class="text-sm font-bold text-orange-900 mb-1">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
+  <p class="text-[11px] text-gray-600 mb-4">ডেভেলপার সম্পর্কিত তথ্য এখানে পরিবর্তন ও সংরক্ষণ করতে পারবেন।</p>
+  <form class="space-y-3" id="devConfigForm" onsubmit="saveDevData(event)">
     <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">ড্যাশবোর্ড</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameDashboard" required type="text"/>
+      <label class="block text-xs font-bold text-gray-700 mb-1">ডেভেলপারের নাম</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="devNameInput" required type="text"/>
     </div>
     <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">সদস্য ব্যবস্থাপনা</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameMembers" required type="text"/>
+      <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="devMobileInput" inputmode="numeric" maxlength="10" oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)" required type="tel"/>
     </div>
     <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">চাঁদা ব্যবস্থাপনা</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameChada" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">খরচ ব্যবস্থাপনা</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameExpense" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">টিকিট বুকিং</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameBooking" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">টিকিট বিক্রয়</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameSales" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">কোষাধ্যক্ষ</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameTreasury" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব বণ্টন</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameDaitobonton" required type="text"/>
-    </div>
-    <div>
-      <label class="block text-xs font-bold text-gray-700 mb-1">সেটিংস</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeNameSettings" required type="text"/>
+      <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল এড্রেস</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="devEmailInput" required type="email"/>
     </div>
     <button class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition" type="submit">
-      💾 সব Heading সেভ করুন
+      💾 ডেভেলপার তথ্য সেভ করুন
     </button>
   </form>
 </div>
-</div>
+
 <div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden" id="subSectionUsers">
 <div class="flex justify-between items-center mb-4">
 <h2 class="text-xl font-bold text-gray-900">ব্যবহারকারী ব্যবস্থাপনা</h2>
@@ -1145,7 +1122,8 @@ document.addEventListener("DOMContentLoaded", () => {
     establishedYear: "২০০৯",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
-    mobile: "৯৯৩৩৩৭১৭০২"
+    mobile: "৯৯৩৩৩৭১৭০২",
+     mobile2: ""
   };
   const DEFAULT_DEV = {
     name: "MANABENDRA NATH SARKAR",
@@ -1165,10 +1143,16 @@ document.addEventListener("DOMContentLoaded", () => {
     const name = String(d.name || DEFAULT_COMMITTEE.name);
     const establishedYear = String(d.establishedYear || DEFAULT_COMMITTEE.establishedYear);
     const registrationNo = String(d.registrationNo || DEFAULT_COMMITTEE.registrationNo);
-    const address = String(d.address || DEFAULT_COMMITTEE.address);
     const mobile = String(d.mobile || "");
+     const mobile2 = String(d.mobile2 || "");
+     const village = String(d.village || "");
+     const post = String(d.post || "");
+     const police = String(d.police || "");
+     const district = String(d.district || "");
+     const pincode = String(d.pincode || "");
+     const address = `সাং:- ${village}, পোস্ট:- ${post}, থানা ও জেলা:- ${police}${district && district !== police ? `, ${district}` : ""}, পিন:- ${pincode}`;
 
-    try { localStorage.setItem("pujaCommitteeInfo", JSON.stringify({ name, establishedYear, registrationNo, address, mobile })); } catch (_) {}
+    try { localStorage.setItem("pujaCommitteeInfo", JSON.stringify({ name, establishedYear, registrationNo, address, village, post, police, district, pincode, mobile, mobile2 })); } catch (_) {}
 
     setIfExists("committeePageHeading", name);
     setIfExists("committeeEstablishedYear", establishedYear);
