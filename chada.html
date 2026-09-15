@@ -68,7 +68,12 @@
       .sub-list-card table tbody tr{transition:background .15s}
       .sub-list-card table tbody tr:hover{background:#fff7ed}
     </style>
-  </head>
+  
+<style id="committee-global-sync-style">
+  /* Committee header is revealed only after cached/cloud data has been applied. */
+  #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
+</style>
+</head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
     <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
@@ -1198,7 +1203,7 @@
         // Title Block
         worksheet.mergeCells("A1:H1");
         const title1 = worksheet.getCell("A1");
-        title1.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        title1.value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
         title1.font = { name: "Kalpurush", size: 18, bold: true };
         title1.alignment = { horizontal: "center", vertical: "middle" };
         title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
@@ -1313,7 +1318,7 @@
 
         worksheet.mergeCells("A1:G1");
         const title1 = worksheet.getCell("A1");
-        title1.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        title1.value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
         title1.font = { name: "Kalpurush", size: 18, bold: true };
         title1.alignment = { horizontal: "center", vertical: "middle" };
         title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
@@ -1636,5 +1641,67 @@
 })();
 </script>
 
+<script type="module" id="committee-global-sync">
+(() => {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-Sx0Nqs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+  };
+  const DEFAULT = {
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "২০০৯", registrationNo: "S0014684",
+    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "৭৩২১২৮",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
+    mobile: "৯৯৩৩৩৭১৭০২", mobile2: ""
+  };
+  const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
+  const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
+  const normalize = raw => {
+    const d={...DEFAULT,...(raw||{})};
+    const village=String(d.village||'').trim(), post=String(d.post||'').trim(), police=String(d.policeDistrict||d.police||d.district||'').trim(), pin=String(d.pincode||'').trim();
+    const address=(village||post||police||pin) ? [village?`সাং:- ${village}`:'',post?`পোস্ট:- ${post}`:'',police?`থানা ও জেলা:- ${police}`:'',pin?`পিন:- ${pin}`:''].filter(Boolean).join(', ') : String(d.address||DEFAULT.address);
+    return {name:String(d.name||DEFAULT.name),establishedYear:String(d.establishedYear||DEFAULT.establishedYear),registrationNo:String(d.registrationNo||DEFAULT.registrationNo),village,post,policeDistrict:police,pincode:pin,address,mobile:String(d.mobile||''),mobile2:String(d.mobile2||'')};
+  };
+  function reveal(){
+    const h=document.getElementById('committeePageHeading');
+    if(h){h.style.visibility='visible'; h.parentElement?.querySelectorAll(':scope > p').forEach(x=>x.style.visibility='visible');}
+  }
+  function apply(raw, revealNow=true){
+    const d=normalize(raw);
+    try{localStorage.setItem('pujaCommitteeInfo',JSON.stringify(d));}catch(_){}
+    set('committeePageHeading',d.name);
+    set('committeeEstablishedYear',d.establishedYear);
+    set('committeeRegistrationNo',d.registrationNo);
+    set('committeeAddress',d.address);
+    const wrap=document.getElementById('committeeMobileWrap');
+    if(wrap){wrap.innerHTML=''; [d.mobile,d.mobile2].map(phoneClean).filter(Boolean).forEach((n,i)=>{if(i){const sep=document.createElement('span');sep.textContent=' / ';wrap.appendChild(sep);} const a=document.createElement('a');a.href='tel:'+n;a.className='hover:underline';a.textContent=n;wrap.appendChild(a);});}
+    const mobileEl=document.getElementById('committeeMobile');
+    if(mobileEl) mobileEl.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');
+    const link=document.getElementById('committeeMobileLink');
+    if(link){link.href='tel:'+phoneClean(d.mobile||d.mobile2); if(mobileEl) link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');}
+    try{localStorage.setItem('pujaCommitteeNames',JSON.stringify({dashboard:d.name,members:d.name,chada:d.name,expense:d.name,booking:d.name,sales:d.name,treasury:d.name,daitobonton:d.name,settings:d.name}));}catch(_){}
+    try{localStorage.setItem('pujaCommitteeName',d.name);}catch(_){}
+    window.__getCommitteeNameForOutput = () => { try { return JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null')?.name || d.name; } catch(_) { return d.name; } };
+    if(revealNow) reveal();
+  }
+  let cached=null; try{cached=JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null');}catch(_){}
+  apply(cached || DEFAULT, !!cached);
+  const revealTimer=setTimeout(reveal,7000);
+  Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
+  ]).then(([am,authm,fsm])=>{
+    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
+    let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
+    const auth=getAuth(app), db=getFirestore(app);
+    const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
+    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
+  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
+})();
+</script>
 </body>
 </html>
