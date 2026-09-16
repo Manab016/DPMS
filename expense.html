@@ -49,6 +49,8 @@
       <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ খরচের এনট্রি যোগ</button>
       <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 সব খরচ এক্সেল</button>
       <button onclick="exportDueExpenses()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-amber-700 shadow-sm">📥 Due এক্সেল</button>
+      <button onclick="deleteMarkedExpenses()" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-600 shadow-sm">☑️ নির্বাচিত মুছুন</button>
+      <button onclick="deleteAllExpenses()" class="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-800 shadow-sm">🗑️ সব মুছুন</button>
     </div>
 
     <div class="mb-4">
@@ -61,6 +63,7 @@
         <table id="expenseTable" class="w-full text-left border-collapse text-sm min-w-[780px]">
           <thead>
             <tr class="bg-gray-100 text-gray-700 border-b">
+              <th id="selectHead" class="p-2.5 border-r text-center align-middle hidden"><input type="checkbox" id="selectAllExpenses" onchange="toggleAllExpenses(this.checked)" title="সব নির্বাচন করুন" class="w-4 h-4"></th>
               <th class="p-2.5 border-r text-center align-middle">তারিখ</th>
               <th class="p-2.5 border-r text-center align-middle">প্রাপকের নাম</th>
               <th class="p-2.5 border-r text-center align-middle">বিবরণ</th>
@@ -71,7 +74,7 @@
               <th id="actionHead" class="p-2.5 text-center align-middle hidden">অ্যাকশন</th>
             </tr>
           </thead>
-          <tbody id="expenseTableBody"><tr><td colspan="8" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
+          <tbody id="expenseTableBody"><tr><td colspan="9" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -152,7 +155,7 @@
       </div>
     </div>
 
-    <label class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 cursor-pointer">
+    <label id="expenseReturnDueLabel" class="flex items-center gap-2 mb-4 p-3 rounded-lg bg-red-50 border border-red-200 cursor-pointer">
       <input type="checkbox" id="expenseReturnDue" onchange="updateReturnCalculation()" class="w-4 h-4">
       <span class="text-xs md:text-sm font-semibold text-red-700">টাকা ফেরত পাব কিন্তু পাইনি (Due লিস্টে রাখুন)</span>
     </label>
@@ -174,7 +177,7 @@
 <script type="module">
 import {initializeApp} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
 import {getAuth,setPersistence,browserSessionPersistence,onAuthStateChanged} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc,getDocs} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import {getFirestore,collection,onSnapshot,addDoc,updateDoc,deleteDoc,doc,getDoc,getDocs,writeBatch} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
@@ -240,9 +243,10 @@ function setupUIBasedOnRoleAndPermissions() {
 }
 
 function renderExpenses(list=allExpenses){
- const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead");
+ const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead"),selectHead=document.getElementById("selectHead");
  actionHead.classList.toggle("hidden",!canManage());
- if(!list.length){body.innerHTML='<tr><td colspan="8" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>'; return;}
+ selectHead.classList.toggle("hidden",!canManage());
+ if(!list.length){body.innerHTML='<tr><td colspan="9" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>'; return;}
 
  body.innerHTML=list.map(x=>{
     const adv = Number(x.advance ?? x.amount ?? 0);
@@ -271,6 +275,7 @@ function renderExpenses(list=allExpenses){
     }
 
     return `<tr class="border-b hover:bg-gray-50">
+      <td class="p-2.5 text-center align-middle ${canManage()?"":"hidden"}"><input type="checkbox" class="expense-checkbox w-4 h-4" value="${esc(x.id)}" onchange="syncExpenseSelectAll()"></td>
       <td class="p-2.5 text-center align-middle">${esc(x.date||"-")}</td>
       <td class="p-2.5 text-center align-middle font-medium">${esc(x.name||x.payerName||"-")}</td>
       <td class="p-2.5 text-center align-middle text-gray-600">${esc(x.description||x.note||"-")}</td>
@@ -294,6 +299,7 @@ function renderExpenses(list=allExpenses){
  document.getElementById("totalAdvance").innerText = money(totalAdv);
  document.getElementById("totalDue").innerText = money(totalDue);
  document.getElementById("totalReturned").innerText = money(totalRet);
+ syncExpenseSelectAll();
 }
 
 window.clearExtraDue = async (id) => {
@@ -337,26 +343,36 @@ window.filterExpenses=()=>{
 
 window.updateReturnCalculation=()=>{
  const advance=Number(document.getElementById("expenseAdvance").value||0);
- const spent=Number(document.getElementById("expenseSpent").value||0);
- const isDue=document.getElementById("expenseReturnDue").checked;
- 
+ const spentInput=document.getElementById("expenseSpent").value;
+ const spent=spentInput === "" ? 0 : Number(spentInput);
+ const checkbox=document.getElementById("expenseReturnDue");
+ const label=document.getElementById("expenseReturnDueLabel");
+ const preview=document.getElementById("expenseDuePreview");
+ const returnExpected=document.getElementById("expenseReturnExpected");
+ const returned=document.getElementById("expenseReturned");
+
  if(advance > spent){
    const diff = advance - spent;
-   document.getElementById("expenseReturnExpected").value = diff.toFixed(2);
-   document.getElementById("expenseReturned").value = isDue ? "0.00" : diff.toFixed(2);
-   
-   const preview = document.getElementById("expenseDuePreview");
-   if(isDue){
+   label.classList.remove("hidden");
+   checkbox.disabled=false;
+   returnExpected.value = diff.toFixed(2);
+   returned.value = checkbox.checked ? "0.00" : diff.toFixed(2);
+
+   if(checkbox.checked){
      preview.classList.remove("hidden");
-     document.getElementById("duePersonPreview").innerText = document.getElementById("expenseName").value.trim() || "প্রাপক";
+     document.getElementById("duePersonPreview").innerText =
+       document.getElementById("expenseName").value.trim() || "প্রাপক";
      document.getElementById("dueAmountPreview").innerText = money(diff);
    } else {
      preview.classList.add("hidden");
    }
  } else {
-   document.getElementById("expenseReturnExpected").value = "0.00";
-   document.getElementById("expenseReturned").value = "0.00";
-   document.getElementById("expenseDuePreview").classList.add("hidden");
+   checkbox.checked=false;
+   checkbox.disabled=true;
+   label.classList.add("hidden");
+   returnExpected.value="0.00";
+   returned.value="0.00";
+   preview.classList.add("hidden");
  }
 };
 
@@ -416,7 +432,7 @@ window.saveExpense=async()=>{
  const advance=Number(document.getElementById("expenseAdvance").value || 0);
  const spentInput=document.getElementById("expenseSpent").value;
  const spent=spentInput !== "" ? Number(spentInput) : advance;
- const returnDue=document.getElementById("expenseReturnDue").checked;
+ const returnDue=advance > spent && document.getElementById("expenseReturnDue").checked;
  
  const diff = Math.max(0, advance - spent);
  const extraDueAmount = Math.max(0, spent - advance);
@@ -463,6 +479,77 @@ window.saveExpense=async()=>{
  }finally{
    b.disabled=false;b.innerText="সেভ করুন";
  }
+};
+
+window.toggleAllExpenses = function(checked) {
+  if (!canManage()) return;
+  document.querySelectorAll(".expense-checkbox").forEach(cb => {
+    cb.checked = checked;
+  });
+};
+
+window.syncExpenseSelectAll = function() {
+  const boxes = Array.from(document.querySelectorAll(".expense-checkbox"));
+  const master = document.getElementById("selectAllExpenses");
+  if (!master) return;
+  master.checked = boxes.length > 0 && boxes.every(cb => cb.checked);
+  master.indeterminate = boxes.some(cb => cb.checked) && !master.checked;
+};
+
+async function commitExpenseDeletes(expenses) {
+  if (!expenses || !expenses.length) return;
+  const CHUNK_SIZE = 400;
+  for (let i = 0; i < expenses.length; i += CHUNK_SIZE) {
+    const batch = writeBatch(db);
+    expenses.slice(i, i + CHUNK_SIZE).forEach(x => {
+      if (x && x.id) batch.delete(doc(db, "expenses", x.id));
+    });
+    await batch.commit();
+  }
+}
+
+window.deleteMarkedExpenses = async function() {
+  if (!canManage()) return;
+  const ids = Array.from(document.querySelectorAll(".expense-checkbox:checked"))
+    .map(cb => cb.value);
+  const selected = ids
+    .map(id => allExpenses.find(x => String(x.id) === String(id)))
+    .filter(Boolean);
+
+  if (!selected.length) {
+    alert("ডিলিট করার জন্য কোনো খরচের রেকর্ড নির্বাচন করা হয়নি।");
+    return;
+  }
+
+  if (!confirm(`আপনি কি নির্বাচিত ${selected.length} টি খরচের রেকর্ড মুছে ফেলতে চান?`)) return;
+
+  try {
+    await commitExpenseDeletes(selected);
+    const master = document.getElementById("selectAllExpenses");
+    if (master) { master.checked = false; master.indeterminate = false; }
+    alert(`${selected.length} টি খরচের রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।`);
+  } catch (e) {
+    console.error("Marked expense delete error:", e);
+    alert("নির্বাচিত রেকর্ড মুছতে সমস্যা হয়েছে: " + (e?.message || e));
+  }
+};
+
+window.deleteAllExpenses = async function() {
+  if (!canManage()) return;
+  if (!allExpenses.length) {
+    alert("মুছে ফেলার মতো কোনো খরচের রেকর্ড নেই।");
+    return;
+  }
+
+  if (!confirm(`সতর্কতা! মোট ${allExpenses.length} টি খরচের রেকর্ড মুছে ফেলা হবে। আপনি কি নিশ্চিত?`)) return;
+
+  try {
+    await commitExpenseDeletes([...allExpenses]);
+    alert("সমস্ত খরচের রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।");
+  } catch (e) {
+    console.error("Delete all expenses error:", e);
+    alert("সব খরচ মুছতে সমস্যা হয়েছে: " + (e?.message || e));
+  }
 };
 
 window.deleteExpense=async(id)=>{
@@ -791,7 +878,7 @@ onAuthStateChanged(auth, async user => {
    renderExpenses();
  }, err => {
    console.error(err);
-   document.getElementById("expenseTableBody").innerHTML = '<tr><td colspan="8" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
+   document.getElementById("expenseTableBody").innerHTML = '<tr><td colspan="9" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
  });
 });
 </script>
