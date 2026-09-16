@@ -1467,7 +1467,17 @@
         document.getElementById("cardMemName").innerText = name;
         document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
-        document.getElementById("cardMemAddress").innerText = address || "-";
+
+        // নির্বাচিত সদস্যের কার্ডে মোবাইল + গ্রাম + পূর্ণ ঠিকানা এক লাইনে দেখানো হবে।
+        // মূল address value অপরিবর্তিত রাখা হচ্ছে।
+        const selectedMember = window.selectedLoanMember;
+        const selectedVillage = String(selectedMember?.village || selectedMember?.gram || "").trim();
+        const selectedAddress = String(address || "").trim();
+        const selectedDisplayAddress = selectedVillage && selectedAddress && selectedVillage !== selectedAddress
+          ? `${selectedVillage}, ${selectedAddress}`
+          : (selectedVillage || selectedAddress || "-");
+        document.getElementById("cardMemAddress").innerText =
+          "📞" + (mobile || "N/A") + "🏠" + selectedDisplayAddress;
         document.getElementById("selectedMemberCard").classList.remove("hidden");
         toggleBorrowerSignatureUpload(false);
 
