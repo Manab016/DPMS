@@ -243,7 +243,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           <p id="idCardRole" class="text-[11px] font-extrabold text-red-800 mt-0.5"></p>
           <div class="mt-1.5 text-[10px] font-semibold text-gray-900 leading-[1.45]">
             <p><strong>আইডি নং:</strong> <span id="idCardAutoId"></span></p>
-            <p><strong>গ্রাম:</strong> <span id="idCardVillage"></span></p>
             <p><strong>ঠিকানা:</strong> <span id="idCardAddress"></span></p>
             <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
             <p id="idCardBloodRow"><strong>রক্তের গ্রুপ:</strong> <span id="idCardBlood"></span></p>
@@ -1541,8 +1540,44 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardName").innerText = member.name || "";
       document.getElementById("idCardRole").innerText = member.role || "";
       document.getElementById("idCardAutoId").innerText = member.autoId || "";
-      document.getElementById("idCardVillage").innerText = member.village || "";
-      document.getElementById("idCardAddress").innerText = member.address || member.village || "";
+
+      // ID Card-এ গ্রাম আলাদা করে দেখানো হবে না।
+      // ঠিকানা হবে: গ্রাম, বাকি ঠিকানা
+      // যেমন: সহরা, আদিনা স্টেশন, মালদা, ৭৩২১২৮
+      const formatIdCardAddress = (m) => {
+        const village = String(m.village || "").trim();
+        let address = String(m.address || "").trim();
+
+        // পুরনো address-এর সাং/পোস্ট/থানা/পিন label সরিয়ে clean করা
+        address = address
+          .replace(/সাং\s*:-\s*/g, "")
+          .replace(/সাং\s*:\s*/g, "")
+          .replace(/পোস্ট\s*:-\s*/g, "")
+          .replace(/পোস্ট\s*:\s*/g, "")
+          .replace(/থানা\s*ও\s*জেলা\s*:-\s*/g, "")
+          .replace(/থানা\s*ও\s*জেলা\s*:\s*/g, "")
+          .replace(/থানা\s*:-\s*/g, "")
+          .replace(/থানা\s*:\s*/g, "")
+          .replace(/জেলা\s*:-\s*/g, "")
+          .replace(/জেলা\s*:\s*/g, "")
+          .replace(/পিন\s*:-\s*/g, "")
+          .replace(/পিন\s*:\s*/g, "")
+          .replace(/\s*,\s*/g, ", ")
+          .replace(/^(\s*,\s*)+|(\s*,\s*)+$/g, "")
+          .trim();
+
+        // যদি address-এর শুরুতেই village থেকে থাকে, duplicate হবে না
+        if (village) {
+          const villageEsc = village.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+          const startsWithVillage = new RegExp("^" + villageEsc + "(?:\\s*,|$)", "i").test(address);
+          if (startsWithVillage) return address;
+          return address ? village + ", " + address : village;
+        }
+
+        return address;
+      };
+
+      document.getElementById("idCardAddress").innerText = formatIdCardAddress(member);
       document.getElementById("idCardMobile").innerText = member.mobile && member.mobile !== "-" ? member.mobile : "";
       document.getElementById("idCardBlood").innerText = member.bloodGroup || "";
       document.getElementById("idCardBloodRow").style.display = member.showBloodGroup === false ? "none" : "block";
