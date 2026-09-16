@@ -188,6 +188,23 @@
         .receipt-sheet { width:140mm !important; height:190mm !important; min-height:190mm !important; margin:0 !important; }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
+
+      /* ঋণ রসিদ: A4 Landscape-এর অর্ধেক অংশে compact fit */
+      @media print {
+        @page { size: A4 landscape; margin: 5mm; }
+        .receipt-sheet { width: 140mm !important; height: 190mm !important; min-height: 190mm !important; padding: 5mm !important; box-sizing: border-box !important; overflow: hidden !important; }
+        .receipt-logo { width: 20mm !important; height: 20mm !important; }
+        .receipt-info-box { padding: 2.5mm !important; margin-top: 3mm !important; }
+        .receipt-info-row { padding: 1.5mm 0 !important; font-size: 9.5px !important; }
+        .receipt-section-box { padding: 2.5mm !important; margin-top: 2.5mm !important; }
+        .receipt-section-title { font-size: 11px !important; margin-bottom: 1mm !important; }
+        .receipt-money-row { padding: 1.2mm 0 !important; font-size: 9.5px !important; }
+        .receipt-money-row.total { padding-top: 1.5mm !important; font-size: 11px !important; }
+        .receipt-signatures { margin-top: 3mm !important; padding-top: 2mm !important; gap: 6mm !important; }
+        .receipt-sign-left, .receipt-sign-right { min-height: 25mm !important; }
+        .receipt-sign-box img { width: 28mm !important; height: 9mm !important; }
+        .receipt-footer { margin-top: 2mm !important; font-size: 9px !important; }
+      }
 </style>
   
 <style id="treasury-ui-fixes">
@@ -1406,11 +1423,11 @@
         sugg.innerHTML = filtered.slice(0, 50).map((m, idx) => {
           const name = m.name || "অজানা নাম";
           const mobile = m.mobile || "N/A";
-          const address = m.address || m.village || m.gram || "-";
+          const village = m.village || m.gram || m.address || m.area || "-";
           const memId = m.memberId || m.autoId || m.id || ("M" + String(idx + 1).padStart(3, "0"));
           const esc = v => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
           return `<div onclick="selectMember('${String(name).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(mobile).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(address).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(memId).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
-            <div><div class="font-bold text-gray-800">${esc(name)}</div><div class="text-gray-500">📞 ${esc(mobile)} | 🏠 ${esc(address)}</div></div>
+            <div><div class="font-bold text-gray-800">${esc(name)}</div><div class="text-gray-500">📞 ${esc(mobile)} | 🏠 ${esc(village)}</div></div>
             <div class="bg-orange-100 text-orange-800 font-bold text-xs px-2 py-1 rounded shrink-0 border border-orange-200">ID: ${esc(memId)}</div>
           </div>`;
         }).join("");
@@ -1440,15 +1457,13 @@
 
       window.handleMemberSearch = handleMemberSearch;
 
-      function selectMember(name, mobile, address, id) {
+      function selectMember(name, mobile, village, id) {
         document.getElementById("loanMemberSearch").value = name;
         document.getElementById("loanMemberId").value = id || "";
         document.getElementById("loanMemberName").value = name;
         document.getElementById("loanMemberMobile").value = mobile;
-        document.getElementById("loanMemberAddress").value = address;
-        document.getElementById("memberSuggestions").classList.add("hidden");
 
-        // সদস্য পেজের একই Firestore record ধরে রাখছি—পরবর্তীতে signature sync করার জন্য।
+        // Search list-এ শুধু গ্রাম দেখানো হবে, কিন্তু ঋণের record-এ সম্পূর্ণ ঠিকানা রাখা হবে।
         let allMembers = Array.isArray(window.firebaseMembersCache) ? window.firebaseMembersCache : [];
         if (!allMembers.length) {
           try { allMembers = JSON.parse(localStorage.getItem("membersData") || localStorage.getItem("sodosso_data") || "[]"); } catch(e) { allMembers = []; }
@@ -1458,14 +1473,19 @@
           (String(m.name || "").trim() === String(name || "").trim() && String(m.mobile || m.phone || "") === String(mobile || ""))
         ) || null;
 
+        const member = window.selectedLoanMember || {};
+        const fullAddress = String(member.address || member.fullAddress || village || member.village || member.gram || "-").trim();
+        const memberVillage = String(member.village || member.gram || village || "-").trim();
+        document.getElementById("loanMemberAddress").value = fullAddress;
+        document.getElementById("memberSuggestions").classList.add("hidden");
+
         document.getElementById("cardMemName").innerText = name;
         document.getElementById("cardMemId").innerText = id ? "ID: " + id : "ID: N/A";
         document.getElementById("cardMemMobile").innerText = mobile || "N/A";
-        document.getElementById("cardMemAddress").innerText = address || "-";
+        document.getElementById("cardMemAddress").innerText = memberVillage || "-";
         document.getElementById("selectedMemberCard").classList.remove("hidden");
         toggleBorrowerSignatureUpload(false);
 
-        // সদস্যের signature থাকলে সেটি borrower signature হিসেবে auto-sync হবে।
         if (window.selectedLoanMember?.signature) {
           document.getElementById("borrowerSigData").value = window.selectedLoanMember.signature;
           document.getElementById("borrowerSigPreview").innerHTML = `<div class="w-full h-full flex items-center justify-center p-1"><img src="${window.selectedLoanMember.signature}" class="max-h-12 object-contain" /></div>`;
@@ -1505,18 +1525,20 @@
         e.preventDefault();
         const editId = document.getElementById("loanEditId").value;
         const formType = document.getElementById("loanFormType").value || "member";
-        let name = "", mobile = "", address = "", memberId = "";
+        let name = "", mobile = "", address = "", village = "", memberId = "";
         const isOther = formType === "other" || !document.getElementById("loanOtherFields").classList.contains("hidden");
 
         if (!isOther) {
           name = document.getElementById("loanMemberName").value || document.getElementById("loanMemberSearch").value;
           mobile = document.getElementById("loanMemberMobile").value;
           address = document.getElementById("loanMemberAddress").value;
+          village = String(window.selectedLoanMember?.village || window.selectedLoanMember?.gram || "").trim();
           memberId = document.getElementById("loanMemberId").value;
         } else {
           name = document.getElementById("loanName").value;
           mobile = document.getElementById("loanMobile").value;
           address = document.getElementById("loanAddress").value;
+          village = "";
         }
 
         if (!name) { alert("অনুগ্রহ করে ঋণগ্রহীতার নাম প্রদান করুন"); return; }
@@ -1555,10 +1577,10 @@
         if (editId) {
           const idx = loanData.findIndex(x => String(x.id) === String(editId));
           if (idx !== -1) {
-            loanData[idx] = { ...loanData[idx], name, mobile, address, memberId, amount, rate, date, remarks, borrowerSig, guarantorSig, formType: isOther ? 'other' : 'member' };
+            loanData[idx] = { ...loanData[idx], name, mobile, address, village, memberId, amount, rate, date, remarks, borrowerSig, guarantorSig, formType: isOther ? 'other' : 'member' };
           }
         } else {
-          loanData.push({ id: Date.now(), name, mobile, address, memberId, amount, rate, date, remarks, borrowerSig, guarantorSig, formType: isOther ? 'other' : 'member', payments: [] });
+          loanData.push({ id: Date.now(), name, mobile, address, village, memberId, amount, rate, date, remarks, borrowerSig, guarantorSig, formType: isOther ? 'other' : 'member', payments: [] });
         }
         saveData(); closeLoanModal(); renderLoanTable(); updateBalances();
       }
@@ -1574,7 +1596,7 @@
           document.getElementById("loanAddress").value = item.address || "";
         } else {
           switchLoanTab('all');
-          selectMember(item.name || "", item.mobile || "", item.address || "", item.memberId || "");
+          selectMember(item.name || "", item.mobile || "", item.village || item.address || "", item.memberId || "");
         }
         document.getElementById("loanAmount").value = item.amount;
         document.getElementById("loanInterestRate").value = item.rate || 36;
@@ -1873,6 +1895,30 @@
         return loan?.borrowerSig || "";
       }
 
+      function getLoanReceiptAddress(loan) {
+        const village = String(loan?.village || "").trim();
+        let address = String(loan?.address || "").trim();
+        const clean = value => String(value || "")
+          .replace(/^\s*(সাং\s*[:：-]?\s*)/i, "")
+          .replace(/পোস্ট\s*[:：-]?\s*/gi, "")
+          .replace(/থানা\s*ও\s*জেলা\s*[:：-]?\s*/gi, "")
+          .replace(/থানা\s*[:：-]?\s*/gi, "")
+          .replace(/জেলা\s*[:：-]?\s*/gi, "")
+          .replace(/পিন\s*[:：-]?\s*/gi, "")
+          .replace(/\s*,\s*/g, ", ")
+          .replace(/,{2,}/g, ",")
+          .replace(/^\s*,|,\s*$/g, "")
+          .trim();
+        const v = clean(village);
+        const a = clean(address);
+        if (!v && !a) return "-";
+        if (!v) return a;
+        if (!a) return v;
+        if (a.toLocaleLowerCase("bn-BD") === v.toLocaleLowerCase("bn-BD")) return v;
+        if (a.toLocaleLowerCase("bn-BD").startsWith(v.toLocaleLowerCase("bn-BD") + ",")) return a;
+        return [v, a].filter(Boolean).join(", ");
+      }
+
       function showReceiptModal(loan, payment) {
         currentReceiptLoan = loan;
         currentReceiptPayment = payment;
@@ -1909,7 +1955,7 @@
               <div class="receipt-info-box">
                 <div class="receipt-info-row"><span>নাম:</span><strong>${escapeReceiptHtml(loan?.name || "-")}</strong></div>
                 <div class="receipt-info-row"><span>মোবাইল:</span><strong>${escapeReceiptHtml(loan?.mobile || "-")}</strong></div>
-                <div class="receipt-info-row"><span>ঠিকানা:</span><strong>${escapeReceiptHtml(loan?.address || "-")}</strong></div>
+                <div class="receipt-info-row"><span>ঠিকানা:</span><strong>${escapeReceiptHtml(getLoanReceiptAddress(loan))}</strong></div>
                 <div class="receipt-info-row"><span>মূল ঋণ:</span><strong style="color:#e15d1d">${receiptAmount(balance.origAmt)}</strong></div>
                 <div class="receipt-info-row"><span>সুদের হার:</span><strong style="color:#7c4fc2">${bnDigits(Number(loan?.rate || 0))}%</strong></div>
               </div>
