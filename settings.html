@@ -184,7 +184,7 @@
     <div><label class="block text-xs font-bold text-gray-700 mb-1">থানা ও জেলা</label>
       <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPoliceDistrict" placeholder="যেমন: মালদা" type="text"/></div>
     <div><label class="block text-xs font-bold text-gray-700 mb-1">পিনকোড</label>
-      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPincode" placeholder="যেমন: ৭৩২১২৮" type="text"/></div>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPincode" placeholder="যেমন: 732128" type="text"/></div>
     <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ১</label>
       <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile" placeholder="যেমন: 9002652507" type="tel"/></div>
     <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ২ <span class="font-normal text-gray-500">(ঐচ্ছিক)</span></label>
@@ -1062,14 +1062,14 @@ document.addEventListener("DOMContentLoaded", () => {
   };
   const DEFAULT_COMMITTEE = {
     name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
-    establishedYear: "২০০৯",
+    establishedYear: "2009",
     registrationNo: "S0014684",
     village: "সহরা",
     post: "আদিনা স্টেশন",
     policeDistrict: "মালদা",
-    pincode: "৭৩২১২৮",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা:- মালদা, জেলা:- মালদা, পিন:- ৭৩২১২৮",
-    mobile: "৯৯৩৩৩৭১৭০২",
+    pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা:- মালদা, জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702",
     mobile2: ""
   };
   const DEFAULT_DEV = {
@@ -1328,10 +1328,10 @@ document.addEventListener("DOMContentLoaded", () => {
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "২০০৯", registrationNo: "S0014684",
-    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "৭৩২১২৮",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
-    mobile: "৯৯৩৩৩৭১৭০২", mobile2: ""
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702", mobile2: ""
   };
   const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
   const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
