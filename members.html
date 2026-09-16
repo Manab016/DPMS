@@ -1528,8 +1528,12 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.openIdCard = function(id) {
-      const member = allMembersData.find(m => m.id === id);
-      if (!member) return;
+      const member = allMembersData.find(m => String(m.id) === String(id));
+      if (!member) {
+        console.warn("ID Card: member not found", id);
+        alert("এই সদস্যের তথ্য পাওয়া যায়নি।");
+        return;
+      }
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
       const isPresident = member.role === "সভাপতি";
@@ -1576,7 +1580,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       };
 
       document.getElementById("idCardAddress").innerText = formatIdCardAddress(member);
-      document.getElementById("idCardMobile").innerText = member.mobile && member.mobile !== "-" ? member.mobile : "";
+      const idCardMobileEl = document.getElementById("idCardMobile");
+      if (idCardMobileEl) {
+        idCardMobileEl.innerText = member.mobile && member.mobile !== "-" ? member.mobile : "";
+      }
       document.getElementById("idCardBlood").innerText = member.bloodGroup || "";
       document.getElementById("idCardBloodRow").style.display = member.showBloodGroup === false ? "none" : "block";
       document.getElementById("idCardValidity").innerText = member.validity || "31-12-2026";
@@ -1612,7 +1619,14 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         memberSigContainer.classList.remove("hidden"); presSigContainer.classList.remove("hidden");
         presSigLabel.innerText = "সভাপতির স্বাক্ষর";
       }
-      document.getElementById("idCardModal").classList.remove("hidden");
+      const idCardModal = document.getElementById("idCardModal");
+      if (!idCardModal) {
+        console.error("ID Card modal element not found.");
+        alert("ID Card খুলতে সমস্যা হয়েছে।");
+        return;
+      }
+      idCardModal.classList.remove("hidden");
+      idCardModal.classList.add("flex");
     };
 
     window.downloadIdCard = async function() {
@@ -1631,7 +1645,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     };
 
     window.closeIdCardModal = function() {
-      document.getElementById("idCardModal").classList.add("hidden");
+      const modal = document.getElementById("idCardModal");
+      if (!modal) return;
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
     };
   </script>
 
