@@ -454,7 +454,7 @@
   <!-- Firebase Logic -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, getDoc, writeBatch, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, onSnapshot, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
     import { getAuth, onAuthStateChanged, signOut, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 
     const firebaseConfig = {
@@ -1327,120 +1327,44 @@
       modal.classList.add("flex");
     };
 
-    // =========================
-    // SALES DELETE FUNCTIONS
-    // =========================
-
-    async function deleteRelatedPayments(saleId, batch) {
-      try {
-        const paymentSnap = await getDocs(
-          query(collection(db, "payments"), where("saleId", "==", saleId))
-        );
-        paymentSnap.forEach(paymentDoc => {
-          batch.delete(paymentDoc.ref);
-        });
-      } catch (e) {
-        // Payment deletion is attempted, but a permission/index problem
-        // should not prevent the main sales record from being handled.
-        console.warn("Related payment lookup failed:", e);
-      }
-    }
-
-    async function commitSalesDelete(salesToDelete) {
-      if (!salesToDelete || !salesToDelete.length) return;
-
-      // Firestore batch supports up to 500 write operations. Because a sale
-      // can also have payment records and a booking update, use small batches.
-      const CHUNK_SIZE = 100;
-
-      for (let i = 0; i < salesToDelete.length; i += CHUNK_SIZE) {
-        const chunk = salesToDelete.slice(i, i + CHUNK_SIZE);
-        const batch = writeBatch(db);
-        const decrements = {};
-
-        for (const sale of chunk) {
-          batch.delete(doc(db, "sales", sale.id));
-
-          const key = String(sale.bookNo || "").trim().toLowerCase();
-          const qty = Number(sale.quantity || 0);
-          if (key && qty > 0) {
-            decrements[key] = (decrements[key] || 0) + qty;
-          }
-
-          await deleteRelatedPayments(sale.id, batch);
-        }
-
-        for (const key of Object.keys(decrements)) {
-          const book = bookingsData.find(
-            b => String(b.bookNo || "").trim().toLowerCase() === key
-          );
-
-          if (book) {
-            const newSold = Math.max(
-              0,
-              Number(book.sold || 0) - decrements[key]
-            );
-
-            batch.update(
-              doc(db, "bookings", book.id),
-              { sold: newSold }
-            );
-          }
-        }
-
-        await batch.commit();
-      }
-    }
-
     window.deleteSale = async function(id, qty, bookNo) {
-      const sale = salesData.find(s => s.id === id);
-      if (!sale) {
-        alert("এই বিক্রয় রেকর্ডটি পাওয়া যায়নি।");
-        return;
-      }
-
       if (!confirm("আপনি কি এই বিক্রয় রেকর্ডটি মুছে ফেলতে চান?")) return;
-
       try {
-        await commitSalesDelete([sale]);
-        alert("বিক্রয় রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।");
+        await deleteDoc(doc(db, "sales", id));
+        await decrementBooking(bookNo, qty);
       } catch (e) {
-        console.error("Delete sale error:", e);
-        alert("মুছে ফেলা সম্ভব হয়নি: " + (e?.message || e));
+        alert("মুছে ফেলা সম্ভব হয়নি: " + e.message);
       }
     };
 
     window.deleteMarkedSales = async function() {
-      const checked = Array.from(
-        document.querySelectorAll(".sale-checkbox:checked")
-      );
-
+      const checked = document.querySelectorAll(".sale-checkbox:checked");
       if (!checked.length) {
         alert("ডিলিট করার জন্য কোনো রেকর্ড নির্বাচন করা হয়নি।");
         return;
       }
+      if (!confirm(`আপনি কি নির্বাচিত ${checked.length} টি বিক্রয় রেকর্ড মুছে ফেলতে চান?`)) return;
 
-      const selectedSales = checked
-        .map(cb => salesData.find(s => s.id === cb.value))
-        .filter(Boolean);
-
-      if (!selectedSales.length) {
-        alert("নির্বাচিত রেকর্ড পাওয়া যায়নি।");
-        return;
-      }
-
-      if (!confirm(
-        `আপনি কি নির্বাচিত ${selectedSales.length} টি বিক্রয় রেকর্ড মুছে ফেলতে চান?`
-      )) return;
-
+      const decrements = {};
       try {
-        await commitSalesDelete(selectedSales);
-        alert(
-          `${selectedSales.length} টি বিক্রয় রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।`
-        );
+        for (const cb of checked) {
+          const sale = salesData.find(s => s.id === cb.value);
+          if (!sale) continue;
+          await deleteDoc(doc(db, "sales", sale.id));
+          const key = String(sale.bookNo || "").toLowerCase();
+          if (key && sale.quantity) decrements[key] = (decrements[key] || 0) + Number(sale.quantity || 0);
+        }
+
+        for (const key in decrements) {
+          const book = bookingsData.find(b => String(b.bookNo || "").toLowerCase() === key);
+          if (book) {
+            await updateDoc(doc(db, "bookings", book.id), {
+              sold: Math.max(0, Number(book.sold || 0) - decrements[key])
+            });
+          }
+        }
       } catch (e) {
-        console.error("Marked sales delete error:", e);
-        alert("মুছে ফেলার সময় ত্রুটি হয়েছে: " + (e?.message || e));
+        alert("মুছে ফেলার সময় ত্রুটি হয়েছে: " + e.message);
       }
     };
 
@@ -1449,18 +1373,26 @@
         alert("মুছে ফেলার মতো কোনো বিক্রয় রেকর্ড নেই।");
         return;
       }
+      if (!confirm("সতর্কতা! সমস্ত টিকিট বিক্রয় রেকর্ড মুছে ফেলা হবে। আপনি কি নিশ্চিত?")) return;
 
-      if (!confirm(
-        `সতর্কতা! মোট ${salesData.length} টি টিকিট বিক্রয় রেকর্ড মুছে ফেলা হবে। আপনি কি নিশ্চিত?`
-      )) return;
-
+      const decrements = {};
       try {
-        const allSales = [...salesData];
-        await commitSalesDelete(allSales);
-        alert("সমস্ত টিকিট বিক্রয় রেকর্ড সফলভাবে মুছে ফেলা হয়েছে।");
+        for (const sale of salesData) {
+          await deleteDoc(doc(db, "sales", sale.id));
+          const key = String(sale.bookNo || "").toLowerCase();
+          if (key && sale.quantity) decrements[key] = (decrements[key] || 0) + Number(sale.quantity || 0);
+        }
+
+        for (const key in decrements) {
+          const book = bookingsData.find(b => String(b.bookNo || "").toLowerCase() === key);
+          if (book) {
+            await updateDoc(doc(db, "bookings", book.id), {
+              sold: Math.max(0, Number(book.sold || 0) - decrements[key])
+            });
+          }
+        }
       } catch (e) {
-        console.error("Delete all sales error:", e);
-        alert("সব বিক্রয় মুছতে সমস্যা হয়েছে: " + (e?.message || e));
+        alert("সব বিক্রয় মুছতে সমস্যা হয়েছে: " + e.message);
       }
     };
 
