@@ -1585,9 +1585,6 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardContactLine").innerText = document.getElementById("committeePageHeading")?.innerText || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
       document.getElementById("idCardYear").innerText = String(member.joiningYear || new Date().getFullYear()).replace(/^20/, "");
 
-      const qrData = `ID: ${member.autoId || ""}\nনাম: ${member.name || ""}\nগ্রাম: ${member.village || ""}\nপদ: ${member.role || ""}\nমোবাইল: ${member.mobile || ""}`;
-      new QRious({ element: document.getElementById('idCardQrCode'), value: qrData, size: 100, level: 'M' });
-
       const cardBox = document.getElementById("idCardBox");
       const vipBadge = document.getElementById("vipBadge");
       const memberSigContainer = document.getElementById("memberSigContainer");
@@ -1689,9 +1686,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   };
   const DEFAULT = {
     name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "২০০৯", registrationNo: "S0014684",
-    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "৭৩২১২৮",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
-    mobile: "৯৯৩৩৩৭১৭০২", mobile2: ""
+    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702", mobile2: ""
   };
   const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
   const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
