@@ -218,74 +218,72 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
-  <div id="idCardModal" class="fixed inset-0 bg-black/75 hidden flex items-center justify-center p-3 z-50 overflow-auto">
-    <div class="flex flex-col items-center gap-3 w-full max-w-[360px]">
-      <div id="idCardBox" class="id-card-reference relative w-[330px] h-[520px] overflow-hidden rounded-[18px] shadow-2xl border-[4px] border-yellow-200 flex flex-col text-center">
-        <div class="id-card-top-pattern"></div>
-        <div class="id-card-corner corner-tl">❧</div><div class="id-card-corner corner-tr">❧</div>
-        <div class="id-card-corner corner-bl">❧</div><div class="id-card-corner corner-br">❧</div>
-        <div class="id-card-durga-art"><div class="durga-eyes">◉　◉</div><div class="durga-bindi">◆</div><div class="durga-face"></div></div>
-        <div class="id-card-header-ref relative z-10 px-5 pt-8 pb-2">
-          <div class="text-[17px] font-black leading-tight text-yellow-100 drop-shadow-md" id="idCardCommitteeName">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
-          <div class="text-[19px] font-black text-white mt-1 drop-shadow-md">দুর্গাপূজা <span id="idCardYear">২০২৬</span></div>
-          <div class="text-[20px] font-black text-white mt-0.5">সদস্য পরিচয়পত্র</div>
-          <span id="vipBadge" class="hidden mt-1 bg-yellow-300 text-red-900 text-[10px] px-3 py-0.5 rounded-full font-black shadow border border-yellow-500">VIP</span>
-        </div>
-
-        <div class="relative z-10 flex justify-center -mt-1">
-          <div class="id-card-photo-ring">
-            <img id="idCardPhoto" src="" class="w-[104px] h-[104px] object-cover rounded-full" />
-          </div>
-        </div>
-
-        <div class="relative z-10 mx-5 mt-2 px-3 py-2 rounded-xl bg-white/90 border border-yellow-600/40 shadow-sm">
-          <h3 id="idCardName" class="text-[17px] font-black text-red-900 leading-tight"></h3>
-          <p id="idCardRole" class="text-[11px] font-extrabold text-red-800 mt-0.5"></p>
-          <div class="mt-1.5 text-[10px] font-semibold text-gray-900 leading-[1.45]">
-            <p><strong>আইডি নং:</strong> <span id="idCardAutoId"></span></p>
-            <p><strong>ঠিকানা:</strong> <span id="idCardAddress"></span></p>
-            <p><strong>মোবাইল:</strong> <span id="idCardMobile"></span></p>
-            <p id="idCardBloodRow"><strong>রক্তের গ্রুপ:</strong> <span id="idCardBlood"></span></p>
-            <p><strong>বৈধতা:</strong> <span id="idCardValidity"></span></p>
-          </div>
-        </div>
-
-        <div class="relative z-10 mt-auto mx-0 px-5 pt-2 pb-3 bg-gradient-to-r from-red-900 via-red-800 to-red-900 text-white border-t-2 border-yellow-300 min-h-[82px]">
-          <div id="signatureArea" class="flex justify-between items-end gap-4">
-            <div id="memberSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
-              <img id="idCardMemberSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-              <div class="border-t border-yellow-200 text-[8px] pt-0.5 font-bold w-full">সদস্যের স্বাক্ষর</div>
-            </div>
-            <div id="presSigContainer" class="text-center w-[45%] flex flex-col items-center justify-end">
-              <img id="idCardPresSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-0.5" onerror="this.style.display='none'">
-              <div id="presSigLabel" class="border-t border-yellow-200 text-[8px] pt-0.5 font-bold w-full">সভাপতির স্বাক্ষর</div>
-            </div>
-          </div>
-          <div id="idCardContactLine" class="text-[8px] font-semibold mt-2 text-yellow-100">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
-        </div>
+  <div id="idCardModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-3 z-50 overflow-auto">
+  <div class="flex flex-col items-center gap-3 w-full max-w-[390px]">
+    <div id="idCardBox" class="id-card-reference relative w-[350px] h-[560px] overflow-hidden rounded-[22px] shadow-2xl flex flex-col text-center">
+      <div class="id-card-inner-border"></div>
+      <div class="id-card-ornament ornament-tl">❧</div><div class="id-card-ornament ornament-tr">❧</div>
+      <div class="id-card-ornament ornament-bl">❧</div><div class="id-card-ornament ornament-br">❧</div>
+      <div class="id-card-durga-art" aria-hidden="true">
+        <div class="durga-crown"></div><div class="durga-face"></div><div class="durga-eye eye-left"></div><div class="durga-eye eye-right"></div><div class="durga-bindi">◆</div>
       </div>
-      <div class="flex gap-2 no-print">
-        <button onclick="downloadIdCard()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">⬇️ Download</button>
-        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
-        <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
+      <div class="id-card-mandala mandala-left"></div><div class="id-card-mandala mandala-right"></div>
+      <div class="id-card-header-ref relative z-10 px-5 pt-9 pb-1">
+        <div id="idCardCommitteeName" class="id-card-committee">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
+        <div class="id-card-year">দুর্গাপূজা <span id="idCardYear">২০২৬</span></div>
+        <div class="id-card-title">সদস্য পরিচয়পত্র</div>
+        <span id="vipBadge" class="hidden id-card-vip">VIP</span>
+      </div>
+      <div class="id-card-divider"></div>
+      <div class="relative z-10 flex justify-center mt-1">
+        <div class="id-card-photo-ring"><img id="idCardPhoto" src="" class="w-[124px] h-[124px] object-cover rounded-full" /></div>
+      </div>
+      <div class="id-card-seal" aria-hidden="true"><span>ॐ</span><small>দুর্গোৎসব<br>কমিটি</small></div>
+      <div class="id-card-info relative z-10">
+        <h3 id="idCardName" class="id-card-name"></h3>
+        <p id="idCardAutoIdLine" class="id-card-line"><b>আইডি নং:</b> <span id="idCardAutoId"></span></p>
+        <p id="idCardRoleLine" class="id-card-line"><b>পদবী:</b> <span id="idCardRole"></span></p>
+        <p id="idCardBloodRow" class="id-card-line"><b>রক্তের গ্রুপ:</b> <span id="idCardBlood"></span></p>
+        <p class="id-card-address-line"><b>ঠিকানা:</b> <span id="idCardAddress"></span></p>
+        <p class="id-card-validity"><b>বৈধতা:</b> <span id="idCardValidity"></span></p>
+      </div>
+      <div class="id-card-footer relative z-10">
+        <div id="signatureArea" class="flex justify-between items-end gap-5 px-7">
+          <div id="memberSigContainer" class="text-center w-[44%] flex flex-col items-center justify-end">
+            <img id="idCardMemberSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-1" onerror="this.style.display='none'">
+            <div class="id-card-sign-line">সদস্যের স্বাক্ষর</div>
+          </div>
+          <div id="presSigContainer" class="text-center w-[44%] flex flex-col items-center justify-end">
+            <img id="idCardPresSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-1" onerror="this.style.display='none'">
+            <div id="presSigLabel" class="id-card-sign-line">সভাপতির স্বাক্ষর</div>
+          </div>
+        </div>
+        <div id="idCardContactLine" class="id-card-contact">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
       </div>
     </div>
+    <div class="flex gap-2 no-print">
+      <button onclick="downloadIdCard()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">⬇️ Download</button>
+      <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
+      <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
+    </div>
   </div>
-
-  <style>
-    .id-card-reference{background:linear-gradient(160deg,#7b160d 0%,#a51d0e 25%,#f5bd42 51%,#ffe7a0 69%,#7d140c 100%);font-family:Georgia,'Noto Serif Bengali',serif;box-sizing:border-box}
-    .id-card-reference:before{content:"";position:absolute;inset:7px;border:1px solid rgba(255,224,120,.9);border-radius:12px;pointer-events:none;z-index:2}
-    .id-card-top-pattern{position:absolute;inset:0;background:radial-gradient(circle at 12% 28%,rgba(255,231,153,.22),transparent 24%),radial-gradient(circle at 88% 33%,rgba(255,235,170,.2),transparent 25%),repeating-radial-gradient(circle at 20% 78%,transparent 0 18px,rgba(128,25,10,.11) 19px 20px);opacity:.9}
-    .id-card-durga-art{position:absolute;right:-28px;top:100px;width:165px;height:190px;opacity:.18;transform:rotate(-2deg);z-index:1}
-    .durga-face{position:absolute;left:34px;top:28px;width:100px;height:135px;border-radius:48% 48% 45% 45%;background:linear-gradient(90deg,#e58a54,#ffd18c,#e58a54);border:3px solid #8c250f}
-    .durga-eyes{position:absolute;left:28px;top:78px;z-index:2;color:#6e130b;font-size:22px;letter-spacing:2px}
-    .durga-bindi{position:absolute;left:77px;top:62px;z-index:3;color:#9d1d0d;font-size:18px}
-    .id-card-photo-ring{width:118px;height:118px;padding:5px;border-radius:50%;background:linear-gradient(145deg,#fff3a5,#d98b12,#fff3a5);border:3px solid #fff2a1;box-shadow:0 3px 12px rgba(70,15,5,.35)}
-    .id-card-photo-ring img{border:3px solid #7e210e;background:#eee}
-    .id-card-corner{position:absolute;color:#ffd56b;font-size:35px;line-height:1;z-index:3;opacity:.9}
-    .corner-tl{top:9px;left:11px;transform:rotate(90deg)}.corner-tr{top:9px;right:11px;transform:rotate(180deg)}.corner-bl{bottom:78px;left:11px}.corner-br{bottom:78px;right:11px;transform:rotate(-90deg)}
-    @media print{#idCardBox.id-card-reference{width:330px!important;height:520px!important}}
-  </style>
+</div>
+<style>
+.id-card-reference{background:linear-gradient(180deg,#720700 0%,#9b1208 47%,#f7c83f 47.2%,#ffe69a 78%,#8b0b05 78.2%,#650500 100%);font-family:'Noto Serif Bengali','Nirmala UI',Georgia,serif;box-sizing:border-box;color:#240600;border:4px solid #ffd96a}
+.id-card-inner-border{position:absolute;inset:8px;border:1.5px solid #ffe47a;border-radius:15px;z-index:5;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
+.id-card-inner-border:before,.id-card-inner-border:after{content:'✦';position:absolute;color:#ffe15c;font-size:24px;top:-14px}.id-card-inner-border:before{left:30px}.id-card-inner-border:after{right:30px}
+.id-card-ornament{position:absolute;color:#ffd84e;font-size:38px;line-height:1;z-index:6;text-shadow:0 2px 2px #4d0000}.ornament-tl{top:10px;left:13px;transform:rotate(12deg)}.ornament-tr{top:10px;right:13px;transform:scaleX(-1) rotate(12deg)}.ornament-bl{bottom:70px;left:13px;transform:rotate(-55deg)}.ornament-br{bottom:70px;right:13px;transform:scaleX(-1) rotate(-55deg)}
+.id-card-header-ref{min-height:165px;text-shadow:0 2px 3px #3a0000}.id-card-committee{font-size:21px;font-weight:900;line-height:1.25;color:#ffe86b;letter-spacing:.2px}.id-card-year{font-size:26px;font-weight:900;color:#ffe45e;margin-top:7px}.id-card-title{font-size:24px;font-weight:900;color:#fff;margin-top:4px}.id-card-vip{background:#ffd83d;color:#680500;border:1px solid #fff0a0;border-radius:99px;padding:2px 12px;font-size:10px;font-weight:900;margin-top:3px}
+.id-card-divider{position:absolute;top:166px;left:58px;right:58px;height:2px;background:linear-gradient(90deg,transparent,#ffd84d 18%,#fff2a0 50%,#ffd84d 82%,transparent);z-index:7}.id-card-divider:after{content:'❈';position:absolute;left:50%;top:-11px;transform:translateX(-50%);color:#ffd84d;font-size:18px}
+.id-card-durga-art{position:absolute;right:-8px;top:105px;width:190px;height:190px;opacity:.34;z-index:1;filter:saturate(1.25)}.durga-face{position:absolute;inset:28px 24px 8px;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 50% 42%,#ffbd56 0 12%,transparent 13%),linear-gradient(90deg,#a63b0d,#f08a22 48%,#9b2d0a);clip-path:polygon(18% 12%,82% 12%,100% 44%,82% 92%,50% 100%,18% 92%,0 44%)}.durga-crown{position:absolute;left:32px;top:0;width:130px;height:75px;border-radius:50% 50% 12% 12%;background:repeating-conic-gradient(from 0deg,#ffd66a 0 8deg,#9d310c 8deg 16deg);opacity:.8}.durga-eye{position:absolute;top:82px;width:45px;height:18px;border-top:5px solid #5c0903;border-radius:50%;z-index:2}.eye-left{left:43px;transform:rotate(7deg)}.eye-right{right:43px;transform:rotate(-7deg)}.durga-bindi{position:absolute;top:107px;left:50%;transform:translateX(-50%);color:#7b0702;font-size:18px;z-index:3}
+.id-card-mandala{position:absolute;width:150px;height:150px;border-radius:50%;border:1px solid rgba(255,216,91,.35);background:repeating-radial-gradient(circle,transparent 0 10px,rgba(255,216,91,.2) 11px 12px);z-index:1}.mandala-left{left:-72px;top:210px}.mandala-right{right:-70px;top:270px}
+.id-card-photo-ring{width:142px;height:142px;border-radius:50%;padding:6px;background:linear-gradient(135deg,#fff3a0,#d89b13,#fff1a1,#b87808);box-shadow:0 0 0 3px #ffe36c,0 5px 15px rgba(64,0,0,.5)}
+.id-card-photo-ring img{border:2px solid #fff1a0;width:130px!important;height:130px!important}
+.id-card-seal{position:absolute;left:18px;top:305px;width:66px;height:66px;border:2px solid #8e1008;border-radius:50%;background:#ffe48a;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8e1008;box-shadow:0 2px 8px rgba(60,0,0,.25)}.id-card-seal span{font-size:20px;font-weight:900}.id-card-seal small{font-size:7px;font-weight:900;line-height:1.05}
+.id-card-info{margin:8px 20px 0;padding:7px 14px 5px;background:linear-gradient(180deg,rgba(255,244,182,.98),rgba(255,218,99,.96));border-radius:12px;box-shadow:0 3px 10px rgba(78,0,0,.18);min-height:175px}.id-card-name{font-size:22px;font-weight:900;color:#8b1208;margin:0 0 5px;line-height:1.2}.id-card-line,.id-card-address-line,.id-card-validity{font-size:10.5px;font-weight:700;line-height:1.42;margin:2px 0}.id-card-address-line{font-size:11px}.id-card-line b,.id-card-address-line b,.id-card-validity b{color:#640b05}.id-card-validity{margin-top:4px;color:#8b1208}
+.id-card-footer{margin-top:auto;min-height:76px;padding-top:7px;background:linear-gradient(180deg,#8c0d06,#620400);color:#fff;border-top:2px solid #ffd84e}.id-card-sign-line{border-top:1px solid #ffe28a;color:#ffe8a2;font-size:8px;font-weight:800;padding-top:2px;width:100%}.id-card-contact{font-size:8px;color:#ffe99a;font-weight:800;margin-top:6px}
+@media print{.id-card-reference{box-shadow:none!important}.no-print{display:none!important}body *{visibility:hidden}#idCardModal,#idCardModal *{visibility:visible}#idCardModal{position:static!important;background:#fff!important}.id-card-reference{margin:auto}}
+</style>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
