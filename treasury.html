@@ -1406,11 +1406,17 @@
         sugg.innerHTML = filtered.slice(0, 50).map((m, idx) => {
           const name = m.name || "অজানা নাম";
           const mobile = m.mobile || "N/A";
-          const address = m.address || m.village || m.gram || "-";
+          // সদস্য তালিকায় গ্রাম + পূর্ণ ঠিকানা এক লাইনে দেখানো হবে।
+          // মূল address value অপরিবর্তিত রাখা হচ্ছে, যাতে loan record-এ কোনো পরিবর্তন না আসে।
+          const village = String(m.village || m.gram || "").trim();
+          const fullAddress = String(m.address || "").trim();
+          const displayAddress = village && fullAddress && village !== fullAddress
+            ? `${village}, ${fullAddress}`
+            : (village || fullAddress || "-");
           const memId = m.memberId || m.autoId || m.id || ("M" + String(idx + 1).padStart(3, "0"));
           const esc = v => String(v ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-          return `<div onclick="selectMember('${String(name).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(mobile).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(address).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(memId).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
-            <div><div class="font-bold text-gray-800">${esc(name)}</div><div class="text-gray-500">📞 ${esc(mobile)} | 🏠 ${esc(address)}</div></div>
+          return `<div onclick="selectMember('${String(name).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(mobile).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(fullAddress).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}', '${String(memId).replace(/\\/g,"\\\\").replace(/'/g,"\\'")}')" class="p-2.5 hover:bg-orange-50 cursor-pointer text-xs border-b flex items-center justify-between gap-2">
+            <div><div class="font-bold text-gray-800">${esc(name)}</div><div class="text-gray-500">🏠${esc(displayAddress)}</div></div>
             <div class="bg-orange-100 text-orange-800 font-bold text-xs px-2 py-1 rounded shrink-0 border border-orange-200">ID: ${esc(memId)}</div>
           </div>`;
         }).join("");
