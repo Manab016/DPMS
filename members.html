@@ -1000,9 +1000,72 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       }
       try {
         removeExistingSignature = false;
-        await openImageCropEditor(file, "signature");
+        signatureProcessingPromise = (async () => {
+          const reader = new FileReader();
+          const dataUrl = await new Promise((resolve, reject) => {
+            reader.onerror = () => reject(new Error("স্বাক্ষরের ছবি পড়া যায়নি।"));
+            reader.onload = () => resolve(reader.result);
+            reader.readAsDataURL(file);
+          });
+
+          const img = new Image();
+          await new Promise((resolve, reject) => {
+            img.onload = resolve;
+            img.onerror = () => reject(new Error("স্বাক্ষরের ছবি খোলা যায়নি।"));
+            img.src = dataUrl;
+          });
+
+          // Signature is automatically fitted inside a fixed 420×420 transparent canvas.
+          const canvas = document.createElement("canvas");
+          canvas.width = 420;
+          canvas.height = 420;
+          const ctx = canvas.getContext("2d");
+          ctx.clearRect(0, 0, 420, 420);
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+
+          const scale = Math.min(420 / (img.naturalWidth || img.width), 420 / (img.naturalHeight || img.height));
+          const drawW = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
+          const drawH = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
+          const dx = Math.round((420 - drawW) / 2);
+          const dy = Math.round((420 - drawH) / 2);
+
+          ctx.drawImage(img, dx, dy, drawW, drawH);
+
+          // Make light/white background transparent while keeping the signature dark.
+          const imageData = ctx.getImageData(0, 0, 420, 420);
+          const pixels = imageData.data;
+          for (let i = 0; i < pixels.length; i += 4) {
+            const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
+            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+            if (a === 0 || brightness > 190) {
+              pixels[i + 3] = 0;
+            } else {
+              pixels[i] = 0;
+              pixels[i + 1] = 0;
+              pixels[i + 2] = 0;
+            }
+          }
+          ctx.putImageData(imageData, 0, 0);
+
+          const blob = await new Promise((resolve, reject) => {
+            canvas.toBlob(
+              b => b ? resolve(b) : reject(new Error("স্বাক্ষরের 420×420 data তৈরি হয়নি।")),
+              "image/png"
+            );
+          });
+
+          processedSigBlob = blob;
+          processedSigBase64 = "";
+          setPreviewBlob(previewId || "sigPreview", blob);
+          document.getElementById("sigPreviewBox").classList.remove("hidden");
+        })();
+
+        await signatureProcessingPromise;
       } catch (err) {
-        if (err?.message !== "crop-cancelled") alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
+        signatureProcessingPromise = Promise.resolve();
+        alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
+        input.value = "";
       }
     };
 
