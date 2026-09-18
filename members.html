@@ -4,6 +4,9 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>সদস্য ব্যবস্থাপনা</title>
+  <!-- Google Font for ID Card Bengali Text -->
+  <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
   <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
 <span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span></button>
 <div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
@@ -142,6 +145,10 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
         <input type="checkbox" id="newMemberShowBloodGroup" class="w-4 h-4" checked />
         ID Card-এ Blood Group দেখাবেন
       </label>
+      <label class="flex items-center gap-2 mb-3 text-xs font-semibold text-gray-600 cursor-pointer">
+        <input type="checkbox" id="newMemberShowValidity" class="w-4 h-4" checked />
+        ID Card-এ Validity দেখাবেন
+      </label>
       
       <div class="flex items-center justify-between mb-1">
         <label class="block text-xs font-semibold text-gray-600">সদস্যের ছবি</label>
@@ -158,7 +165,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       <input type="file" id="sigInput" accept="image/png, image/jpeg, image/jpg" onchange="processSignatureImage(this, 'sigPreview')" class="w-full p-2 border rounded-lg mb-2 text-xs bg-gray-50" />
       
       <div id="sigPreviewBox" class="hidden text-center mb-4">
-        <img id="sigPreview" class="h-10 object-contain border border-gray-300 rounded px-2 py-1 mx-auto" />
+        <img id="sigPreview" class="h-16 w-40 object-contain border border-gray-300 rounded px-2 py-1 mx-auto" />
         <button type="button" onclick="clearSignature()" class="text-xs text-red-600 font-bold hover:underline mt-1">❌ স্বাক্ষর রিমুভ করুন</button>
       </div>
       
@@ -218,71 +225,253 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
     </div>
   </div>
 
+  <!-- ==================== FIXED PNG TEMPLATE ID CARD MODAL ==================== -->
   <div id="idCardModal" class="fixed inset-0 bg-black/80 hidden flex items-center justify-center p-3 z-50 overflow-auto">
-  <div class="flex flex-col items-center gap-3 w-full max-w-[390px]">
-    <div id="idCardBox" class="id-card-reference relative w-[350px] h-[560px] overflow-hidden rounded-[22px] shadow-2xl flex flex-col text-center">
-      <div class="id-card-inner-border"></div>
-      <div class="id-card-ornament ornament-tl">❧</div><div class="id-card-ornament ornament-tr">❧</div>
-      <div class="id-card-ornament ornament-bl">❧</div><div class="id-card-ornament ornament-br">❧</div>
-      <div class="id-card-durga-art" aria-hidden="true">
-        <div class="durga-crown"></div><div class="durga-face"></div><div class="durga-eye eye-left"></div><div class="durga-eye eye-right"></div><div class="durga-bindi">◆</div>
-      </div>
-      <div class="id-card-mandala mandala-left"></div><div class="id-card-mandala mandala-right"></div>
-      <div class="id-card-header-ref relative z-10 px-5 pt-9 pb-1">
-        <div id="idCardCommitteeName" class="id-card-committee">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
-        <div class="id-card-year">দুর্গাপূজা <span id="idCardYear">২০২৬</span></div>
-        <div class="id-card-title">সদস্য পরিচয়পত্র</div>
-        <span id="vipBadge" class="hidden id-card-vip">VIP</span>
-      </div>
-      <div class="id-card-divider"></div>
-      <div class="relative z-10 flex justify-center mt-1">
-        <div class="id-card-photo-ring"><img id="idCardPhoto" src="" class="w-[124px] h-[124px] object-cover rounded-full" /></div>
-      </div>
-      <div class="id-card-seal" aria-hidden="true"><span>ॐ</span><small>দুর্গোৎসব<br>কমিটি</small></div>
-      <div class="id-card-info relative z-10">
-        <h3 id="idCardName" class="id-card-name"></h3>
-        <p id="idCardAutoIdLine" class="id-card-line"><b>আইডি নং:</b> <span id="idCardAutoId"></span></p>
-        <p id="idCardRoleLine" class="id-card-line"><b>পদবী:</b> <span id="idCardRole"></span></p>
-        <p id="idCardBloodRow" class="id-card-line"><b>রক্তের গ্রুপ:</b> <span id="idCardBlood"></span></p>
-        <p class="id-card-address-line"><b>ঠিকানা:</b> <span id="idCardAddress"></span></p>
-        <p class="id-card-validity"><b>বৈধতা:</b> <span id="idCardValidity"></span></p>
-      </div>
-      <div class="id-card-footer relative z-10">
-        <div id="signatureArea" class="flex justify-between items-end gap-5 px-7">
-          <div id="memberSigContainer" class="text-center w-[44%] flex flex-col items-center justify-end">
-            <img id="idCardMemberSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-1" onerror="this.style.display='none'">
+    <div class="flex flex-col items-center gap-3 w-full max-w-[390px]">
+      <div id="idCardBox" class="id-card-reference relative shadow-2xl">
+        
+        <!-- Header Text (Top Maroon Area) -->
+        <div class="id-card-header-ref">
+          <div id="idCardCommitteeName" class="id-card-committee">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
+          <div class="id-card-year">দুর্গাপূজা <span id="idCardYear">২০২৬</span></div>
+          <div class="id-card-title">সদস্য পরিচয়পত্র</div>
+          <div style="margin-top: 2px;"><span id="vipBadge" class="hidden id-card-vip">VIP</span></div>
+        </div>
+
+        <!-- Golden Circle Member Photo -->
+        <div class="id-card-photo-wrapper">
+          <img id="idCardPhoto" src="" class="id-card-photo" alt="Member Photo" />
+        </div>
+
+        <!-- Member Information (Middle Yellow/Cream Area) -->
+        <div class="id-card-info">
+          <h3 id="idCardName" class="id-card-name"></h3>
+          <p id="idCardAutoIdLine" class="id-card-line"><b>আইডি নং:</b> <span id="idCardAutoId"></span></p>
+          <p id="idCardRoleLine" class="id-card-line"><b>পদবী:</b> <span id="idCardRole"></span></p>
+          <p id="idCardBloodRow" class="id-card-line"><b>রক্তের গ্রুপ:</b> <span id="idCardBlood"></span></p>
+          <p class="id-card-address-line"><b>ঠিকানা:</b> <span id="idCardAddress"></span></p>
+          <p class="id-card-validity"><b>বৈধতা:</b> <span id="idCardValidity"></span></p>
+        </div>
+
+        <!-- Signatures (Above Bottom Maroon Bar) -->
+        <div id="signatureArea">
+          <div id="memberSigContainer" class="sig-box">
+            <img id="idCardMemberSig" src="" class="sig-img" onerror="this.style.display='none'">
             <div class="id-card-sign-line">সদস্যের স্বাক্ষর</div>
           </div>
-          <div id="presSigContainer" class="text-center w-[44%] flex flex-col items-center justify-end">
-            <img id="idCardPresSig" src="" class="h-8 max-w-[105px] object-contain mx-auto mb-1" onerror="this.style.display='none'">
+          <div id="presSigContainer" class="sig-box">
+            <img id="idCardPresSig" src="" class="sig-img" onerror="this.style.display='none'">
             <div id="presSigLabel" class="id-card-sign-line">সভাপতির স্বাক্ষর</div>
           </div>
         </div>
+
+        <!-- Bottom Footer Text (Bottom Maroon Bar) -->
         <div id="idCardContactLine" class="id-card-contact">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</div>
+
+      </div>
+
+      <!-- Control Buttons -->
+      <div class="flex gap-2 no-print">
+        <button onclick="downloadIdCard()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">⬇️ Download</button>
+        <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
+        <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
       </div>
     </div>
-    <div class="flex gap-2 no-print">
-      <button onclick="downloadIdCard()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">⬇️ Download</button>
-      <button onclick="window.print()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">🖨️ প্রিন্ট</button>
-      <button onclick="closeIdCardModal()" class="bg-gray-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg">বন্ধ</button>
-    </div>
   </div>
-</div>
+
 <style>
-.id-card-reference{background:linear-gradient(180deg,#720700 0%,#9b1208 47%,#f7c83f 47.2%,#ffe69a 78%,#8b0b05 78.2%,#650500 100%);font-family:'Noto Serif Bengali','Nirmala UI',Georgia,serif;box-sizing:border-box;color:#240600;border:4px solid #ffd96a}
-.id-card-inner-border{position:absolute;inset:8px;border:1.5px solid #ffe47a;border-radius:15px;z-index:5;pointer-events:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.2)}
-.id-card-inner-border:before,.id-card-inner-border:after{content:'✦';position:absolute;color:#ffe15c;font-size:24px;top:-14px}.id-card-inner-border:before{left:30px}.id-card-inner-border:after{right:30px}
-.id-card-ornament{position:absolute;color:#ffd84e;font-size:38px;line-height:1;z-index:6;text-shadow:0 2px 2px #4d0000}.ornament-tl{top:10px;left:13px;transform:rotate(12deg)}.ornament-tr{top:10px;right:13px;transform:scaleX(-1) rotate(12deg)}.ornament-bl{bottom:70px;left:13px;transform:rotate(-55deg)}.ornament-br{bottom:70px;right:13px;transform:scaleX(-1) rotate(-55deg)}
-.id-card-header-ref{min-height:165px;text-shadow:0 2px 3px #3a0000}.id-card-committee{font-size:21px;font-weight:900;line-height:1.25;color:#ffe86b;letter-spacing:.2px}.id-card-year{font-size:26px;font-weight:900;color:#ffe45e;margin-top:7px}.id-card-title{font-size:24px;font-weight:900;color:#fff;margin-top:4px}.id-card-vip{background:#ffd83d;color:#680500;border:1px solid #fff0a0;border-radius:99px;padding:2px 12px;font-size:10px;font-weight:900;margin-top:3px}
-.id-card-divider{position:absolute;top:166px;left:58px;right:58px;height:2px;background:linear-gradient(90deg,transparent,#ffd84d 18%,#fff2a0 50%,#ffd84d 82%,transparent);z-index:7}.id-card-divider:after{content:'❈';position:absolute;left:50%;top:-11px;transform:translateX(-50%);color:#ffd84d;font-size:18px}
-.id-card-durga-art{position:absolute;right:-8px;top:105px;width:190px;height:190px;opacity:.34;z-index:1;filter:saturate(1.25)}.durga-face{position:absolute;inset:28px 24px 8px;border-radius:50% 50% 46% 46%;background:radial-gradient(circle at 50% 42%,#ffbd56 0 12%,transparent 13%),linear-gradient(90deg,#a63b0d,#f08a22 48%,#9b2d0a);clip-path:polygon(18% 12%,82% 12%,100% 44%,82% 92%,50% 100%,18% 92%,0 44%)}.durga-crown{position:absolute;left:32px;top:0;width:130px;height:75px;border-radius:50% 50% 12% 12%;background:repeating-conic-gradient(from 0deg,#ffd66a 0 8deg,#9d310c 8deg 16deg);opacity:.8}.durga-eye{position:absolute;top:82px;width:45px;height:18px;border-top:5px solid #5c0903;border-radius:50%;z-index:2}.eye-left{left:43px;transform:rotate(7deg)}.eye-right{right:43px;transform:rotate(-7deg)}.durga-bindi{position:absolute;top:107px;left:50%;transform:translateX(-50%);color:#7b0702;font-size:18px;z-index:3}
-.id-card-mandala{position:absolute;width:150px;height:150px;border-radius:50%;border:1px solid rgba(255,216,91,.35);background:repeating-radial-gradient(circle,transparent 0 10px,rgba(255,216,91,.2) 11px 12px);z-index:1}.mandala-left{left:-72px;top:210px}.mandala-right{right:-70px;top:270px}
-.id-card-photo-ring{width:142px;height:142px;border-radius:50%;padding:6px;background:linear-gradient(135deg,#fff3a0,#d89b13,#fff1a1,#b87808);box-shadow:0 0 0 3px #ffe36c,0 5px 15px rgba(64,0,0,.5)}
-.id-card-photo-ring img{border:2px solid #fff1a0;width:130px!important;height:130px!important}
-.id-card-seal{position:absolute;left:18px;top:305px;width:66px;height:66px;border:2px solid #8e1008;border-radius:50%;background:#ffe48a;z-index:8;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#8e1008;box-shadow:0 2px 8px rgba(60,0,0,.25)}.id-card-seal span{font-size:20px;font-weight:900}.id-card-seal small{font-size:7px;font-weight:900;line-height:1.05}
-.id-card-info{margin:8px 20px 0;padding:7px 14px 5px;background:linear-gradient(180deg,rgba(255,244,182,.98),rgba(255,218,99,.96));border-radius:12px;box-shadow:0 3px 10px rgba(78,0,0,.18);min-height:175px}.id-card-name{font-size:22px;font-weight:900;color:#8b1208;margin:0 0 5px;line-height:1.2}.id-card-line,.id-card-address-line,.id-card-validity{font-size:10.5px;font-weight:700;line-height:1.42;margin:2px 0}.id-card-address-line{font-size:11px}.id-card-line b,.id-card-address-line b,.id-card-validity b{color:#640b05}.id-card-validity{margin-top:4px;color:#8b1208}
-.id-card-footer{margin-top:auto;min-height:76px;padding-top:7px;background:linear-gradient(180deg,#8c0d06,#620400);color:#fff;border-top:2px solid #ffd84e}.id-card-sign-line{border-top:1px solid #ffe28a;color:#ffe8a2;font-size:8px;font-weight:800;padding-top:2px;width:100%}.id-card-contact{font-size:8px;color:#ffe99a;font-weight:800;margin-top:6px}
-@media print{.id-card-reference{box-shadow:none!important}.no-print{display:none!important}body *{visibility:hidden}#idCardModal,#idCardModal *{visibility:visible}#idCardModal{position:static!important;background:#fff!important}.id-card-reference{margin:auto}}
+.id-card-reference {
+  width: 360px !important;
+  height: 500.18px !important;
+  aspect-ratio: 1064 / 1478 !important;
+  position: relative !important;
+  background: url('template.png') no-repeat center center !important;
+  background-size: 100% 100% !important;
+  font-family: 'Hind Siliguri', 'Noto Serif Bengali', sans-serif !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  color: #000000;
+  border: none !important;
+}
+
+/* 1. Header: সামান্য নিচে, উপরের decorative element-এর নিচে */
+.id-card-header-ref {
+  position: absolute;
+  top: 22px;
+  left: 14px;
+  right: 14px;
+  text-align: center;
+  z-index: 10;
+}
+
+.id-card-committee {
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.18;
+  color: #ffe680;
+  text-shadow: 1px 1px 3px #000000;
+  letter-spacing: 0.1px;
+}
+
+.id-card-year {
+  font-size: 13px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000000;
+  margin-top: 3px;
+}
+
+.id-card-title {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000000;
+  margin-top: 2px;
+}
+
+.id-card-vip {
+  display: inline-block;
+  background: #ffd83d;
+  color: #680500;
+  border: 1px solid #fff0a0;
+  border-radius: 99px;
+  padding: 1px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.id-card-vip.hidden { display: none !important; }
+
+/* 2. Photo: golden ring-এর ঠিক ভিতরে */
+.id-card-photo-wrapper {
+  position: absolute;
+  top: 154px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 136px;
+  height: 136px;
+  z-index: 5;
+}
+
+.id-card-photo {
+  width: 136px !important;
+  height: 136px !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+  display: block;
+}
+
+/* 3. Member information: একটু নিচে এবং address দুই লাইনে সুন্দরভাবে */
+.id-card-info {
+  position: absolute;
+  top: 304px;
+  left: 18px;
+  right: 18px;
+  text-align: center;
+  z-index: 10;
+}
+
+.id-card-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #7a0000;
+  margin: 0 0 3px 0;
+  line-height: 1.18;
+}
+
+.id-card-line, .id-card-address-line, .id-card-validity {
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.28;
+  margin: 2px 0;
+  color: #1a0000;
+}
+
+.id-card-line b, .id-card-address-line b, .id-card-validity b {
+  color: #520000;
+}
+
+.id-card-address-line {
+  max-width: 320px;
+  margin-left: auto;
+  margin-right: auto;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.id-card-validity {
+  color: #7a0000;
+  margin-top: 3px;
+}
+
+/* 4. Signatures: maroon bottom area-এর ভিতরে, একটু উপরে এবং সাদা */
+#signatureArea {
+  position: absolute;
+  top: 390px;
+  left: 24px;
+  right: 24px;
+  height: 66px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  z-index: 10;
+}
+
+#signatureArea.pres-only {
+  justify-content: center;
+}
+
+.sig-box {
+  width: 44%;
+  min-height: 60px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+#signatureArea.pres-only .sig-box {
+  width: 48%;
+}
+
+.sig-img {
+  display: block;
+  width: auto !important;
+  height: 38px !important;
+  max-width: 125px !important;
+  object-fit: contain !important;
+  object-position: center center !important;
+  margin: 0 auto 2px auto !important;
+  filter: brightness(0) invert(1) !important;
+}
+
+.id-card-sign-line {
+  border-top: 1px solid #ffffff;
+  color: #ffffff;
+  font-size: 8px;
+  font-weight: 800;
+  padding-top: 2px;
+  width: 78%;
+  line-height: 1.1;
+}
+
+/* 5. Bottom maroon footer text: card-এর design-এর উপর কোনো extra committee name নয় */
+.id-card-contact {
+  display: none !important;
+}
+
+@media print {
+  .id-card-reference { box-shadow: none !important; }
+  .no-print { display: none !important; }
+  body * { visibility: hidden; }
+  #idCardModal, #idCardModal * { visibility: visible; }
+  #idCardModal { position: static !important; background: #fff !important; }
+  .id-card-reference { margin: auto; }
+}
 </style>
 
 <script type="module">
@@ -1000,72 +1189,9 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       }
       try {
         removeExistingSignature = false;
-        signatureProcessingPromise = (async () => {
-          const reader = new FileReader();
-          const dataUrl = await new Promise((resolve, reject) => {
-            reader.onerror = () => reject(new Error("স্বাক্ষরের ছবি পড়া যায়নি।"));
-            reader.onload = () => resolve(reader.result);
-            reader.readAsDataURL(file);
-          });
-
-          const img = new Image();
-          await new Promise((resolve, reject) => {
-            img.onload = resolve;
-            img.onerror = () => reject(new Error("স্বাক্ষরের ছবি খোলা যায়নি।"));
-            img.src = dataUrl;
-          });
-
-          // Signature is automatically fitted inside a fixed 420×420 transparent canvas.
-          const canvas = document.createElement("canvas");
-          canvas.width = 420;
-          canvas.height = 420;
-          const ctx = canvas.getContext("2d");
-          ctx.clearRect(0, 0, 420, 420);
-          ctx.imageSmoothingEnabled = true;
-          ctx.imageSmoothingQuality = "high";
-
-          const scale = Math.min(420 / (img.naturalWidth || img.width), 420 / (img.naturalHeight || img.height));
-          const drawW = Math.max(1, Math.round((img.naturalWidth || img.width) * scale));
-          const drawH = Math.max(1, Math.round((img.naturalHeight || img.height) * scale));
-          const dx = Math.round((420 - drawW) / 2);
-          const dy = Math.round((420 - drawH) / 2);
-
-          ctx.drawImage(img, dx, dy, drawW, drawH);
-
-          // Make light/white background transparent while keeping the signature dark.
-          const imageData = ctx.getImageData(0, 0, 420, 420);
-          const pixels = imageData.data;
-          for (let i = 0; i < pixels.length; i += 4) {
-            const r = pixels[i], g = pixels[i + 1], b = pixels[i + 2], a = pixels[i + 3];
-            const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-            if (a === 0 || brightness > 190) {
-              pixels[i + 3] = 0;
-            } else {
-              pixels[i] = 0;
-              pixels[i + 1] = 0;
-              pixels[i + 2] = 0;
-            }
-          }
-          ctx.putImageData(imageData, 0, 0);
-
-          const blob = await new Promise((resolve, reject) => {
-            canvas.toBlob(
-              b => b ? resolve(b) : reject(new Error("স্বাক্ষরের 420×420 data তৈরি হয়নি।")),
-              "image/png"
-            );
-          });
-
-          processedSigBlob = blob;
-          processedSigBase64 = "";
-          setPreviewBlob(previewId || "sigPreview", blob);
-          document.getElementById("sigPreviewBox").classList.remove("hidden");
-        })();
-
-        await signatureProcessingPromise;
+        await openImageCropEditor(file, "signature");
       } catch (err) {
-        signatureProcessingPromise = Promise.resolve();
-        alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
-        input.value = "";
+        if (err?.message !== "crop-cancelled") alert("স্বাক্ষর প্রস্তুত করতে সমস্যা হয়েছে: " + (err?.message || err));
       }
     };
 
@@ -1130,6 +1256,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const address = document.getElementById("newMemberAddress").value.trim();
       const bloodGroup = document.getElementById("newMemberBloodGroup").value;
       const showBloodGroup = document.getElementById("newMemberShowBloodGroup").checked;
+      const showValidity = document.getElementById("newMemberShowValidity").checked;
       const validity = document.getElementById("newMemberValidity").value.trim();
       const docId = document.getElementById("editMemberDocId").value;
 
@@ -1227,6 +1354,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
           address: address || village,
           bloodGroup: bloodGroup || "",
           showBloodGroup: !!showBloodGroup,
+          showValidity: !!showValidity,
           validity: validity || "31-12-2026",
           joiningYear: existingMember?.joiningYear || new Date().getFullYear(),
           photo: uploadedPhotoUrl,
@@ -1329,6 +1457,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("newMemberAddress").value = member.address || member.village || "";
       document.getElementById("newMemberBloodGroup").value = member.bloodGroup || "";
       document.getElementById("newMemberShowBloodGroup").checked = member.showBloodGroup !== false;
+      document.getElementById("newMemberShowValidity").checked = member.showValidity !== false;
       document.getElementById("newMemberValidity").value = member.validity || "31-12-2026";
       if (![...document.getElementById("newMemberRole").options].some(o => o.value === member.role)) {
         document.getElementById("newMemberRole").value = "__custom__";
@@ -1570,6 +1699,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("newMemberAddress").value = "";
       document.getElementById("newMemberBloodGroup").value = "";
       document.getElementById("newMemberShowBloodGroup").checked = true;
+      document.getElementById("newMemberShowValidity").checked = true;
       document.getElementById("newMemberValidity").value = "31-12-2026";
       document.getElementById("newMemberCustomRole").value = "";
       toggleCustomRoleField();
@@ -1600,7 +1730,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const president = allMembersData.find(m => m.role === "সভাপতি");
       const presSignature = president ? president.signature : "";
       const isPresident = member.role === "সভাপতি";
-      const isVip = isPresident || (member.role && member.role !== "সাধারণ সদস্য");
+      const isVip = !isPresident && String(member.role || "").trim() !== "" && String(member.role || "").trim() !== "সাধারণ সদস্য";
 
       document.getElementById("idCardName").innerText = member.name || "";
       document.getElementById("idCardRole").innerText = member.role || "";
@@ -1650,13 +1780,15 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       document.getElementById("idCardBlood").innerText = member.bloodGroup || "";
       document.getElementById("idCardBloodRow").style.display = member.showBloodGroup === false ? "none" : "block";
       document.getElementById("idCardValidity").innerText = member.validity || "31-12-2026";
+      document.getElementById("idCardValidity").style.display = member.showValidity === false ? "none" : "block";
       document.getElementById("idCardPhoto").src = member.photo || "";
       document.getElementById("idCardCommitteeName").innerText = localStorage.getItem("pujaCommitteeName") || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
       document.getElementById("idCardContactLine").innerText = document.getElementById("committeePageHeading")?.innerText || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
-      document.getElementById("idCardYear").innerText = String(member.joiningYear || new Date().getFullYear()).replace(/^20/, "");
+      document.getElementById("idCardYear").innerText = String(member.joiningYear || new Date().getFullYear());
 
       const cardBox = document.getElementById("idCardBox");
       const vipBadge = document.getElementById("vipBadge");
+      const signatureArea = document.getElementById("signatureArea");
       const memberSigContainer = document.getElementById("memberSigContainer");
       const presSigContainer = document.getElementById("presSigContainer");
       const memberSigImg = document.getElementById("idCardMemberSig");
@@ -1668,19 +1800,30 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       memberSigImg.src = member.signature || "";
       presSigImg.src = presSignature || "";
 
-      cardBox.className = "id-card-reference relative w-[330px] h-[520px] overflow-hidden rounded-[18px] shadow-2xl border-[4px] border-yellow-200 flex flex-col text-center";
+      cardBox.className = "id-card-reference relative shadow-2xl";
+      // Reset visibility before applying card-specific signature layout.
+      vipBadge.classList.add("hidden");
+      memberSigContainer.classList.remove("hidden");
+      presSigContainer.classList.remove("hidden");
+      presSigLabel.innerText = "সভাপতির স্বাক্ষর";
+
       if (isPresident) {
-        vipBadge.classList.remove("hidden"); vipBadge.innerText = "VIP • সভাপতি";
-        cardBox.style.filter = "saturate(1.08)";
-        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.add("hidden");
-      } else if (isVip) {
-        vipBadge.classList.remove("hidden"); vipBadge.innerText = "VIP • প্রধান পদাধিকারী";
-        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.remove("hidden");
-        presSigLabel.innerText = "সভাপতির স্বাক্ষর";
+        // সভাপতির card: VIP + শুধু সভাপতির নিজের signature, মাঝখানে।
+        vipBadge.classList.remove("hidden");
+        vipBadge.innerText = "VIP • সভাপতি";
+        memberSigContainer.classList.add("hidden");
+        presSigContainer.classList.remove("hidden");
+        signatureArea.classList.add("pres-only");
       } else {
-        vipBadge.classList.add("hidden");
-        memberSigContainer.classList.remove("hidden"); presSigContainer.classList.remove("hidden");
-        presSigLabel.innerText = "সভাপতির স্বাক্ষর";
+        signatureArea.classList.remove("pres-only");
+        // শুধু প্রধান পদাধিকারীদের card-এ VIP থাকবে।
+        if (isVip) {
+          vipBadge.classList.remove("hidden");
+          vipBadge.innerText = "VIP • " + member.role;
+        }
+        // সভাপতির card ছাড়া বাকি সকল card-এ সদস্য + সভাপতির signature থাকবে।
+        memberSigContainer.classList.remove("hidden");
+        presSigContainer.classList.remove("hidden");
       }
       const idCardModal = document.getElementById("idCardModal");
       if (!idCardModal) {
@@ -1696,7 +1839,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       const card = document.getElementById("idCardBox");
       if (!card || typeof html2canvas === "undefined") return alert("ID Card download করা যাচ্ছে না!");
       try {
-        const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: "#ffffff", logging: false });
+        const canvas = await html2canvas(card, { scale: 3, useCORS: true, backgroundColor: null, logging: false });
         const link = document.createElement("a");
         link.download = `${document.getElementById("idCardAutoId").innerText || "Member-ID"}.png`;
         link.href = canvas.toDataURL("image/png");
@@ -1718,7 +1861,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 <script type="module">
 (() => {
   const firebaseConfig = {
-    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-SxN0q",
+    apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-SxN0q",
     authDomain: "durgapuja-2026.firebaseapp.com",
     projectId: "durgapuja-2026",
     storageBucket: "durgapuja-2026.firebasestorage.app",
@@ -1757,7 +1900,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 <script type="module" id="committee-global-sync">
 (() => {
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-Sx0Nqs",
+    apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-Sx0Nqs",
     authDomain: "durgapuja-2026.firebaseapp.com",
     projectId: "durgapuja-2026",
     storageBucket: "durgapuja-2026.firebasestorage.app",
