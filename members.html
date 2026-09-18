@@ -381,8 +381,114 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   margin: 0 0 3px 0;
   line-height: 1.18;
 }
+id-card-reference {
+  width: 360px !important;
+  height: 500.18px !important;
+  aspect-ratio: 1064 / 1478 !important;
+  position: relative !important;
+  background: url('template.png') no-repeat center center !important;
+  background-size: 100% 100% !important;
+  font-family: 'Hind Siliguri', 'Noto Serif Bengali', sans-serif !important;
+  box-sizing: border-box !important;
+  border-radius: 12px !important;
+  overflow: hidden !important;
+  color: #000000;
+  border: none !important;
+}
 
-.id-card-line, .id-card-address-line, .id-card-validity {
+/* 1. Header: সামান্য নিচে, উপরের decorative element-এর নিচে */
+.id-card-header-ref {
+  position: absolute;
+  top: 45px;
+  left: 14px;
+  right: 14px;
+  text-align: center;
+  z-index: 10;
+}
+
+.id-card-committee {
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1.18;
+  color: #ffe680;
+  text-shadow: 1px 1px 3px #000000;
+  letter-spacing: 0.1px;
+}
+
+.id-card-year {
+  font-size: 16px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000000;
+  margin-top: 2px;
+}
+
+.id-card-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px #000000;
+  margin-top: 1px;
+}
+.id-card-vip {
+  display: inline-block;
+  background: #ffd83d;
+  color: #680500;
+  border: 1px solid #fff0a0;
+  border-radius: 99px;
+  padding: 1px 8px;
+  font-size: 9px;
+  font-weight: 800;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.4);
+}
+
+.id-card-vip.hidden { display: none !important; }
+
+/* 2. Photo: golden ring-এর ঠিক ভিতরে */
+.id-card-photo-wrapper {
+  position: absolute;
+  top: 154.5px;
+  left: 49.8%;
+  transform: translateX(-50%);
+  width: 142px;
+  height: 142px;
+  z-index: 5;
+  border-radius: 100%;
+  overflow: hidden;
+  background-color: transparent;
+}
+
+.id-card-photo {
+  width: 100% !important;
+  height: 100% !important;
+  border-radius: 50% !important;
+  object-fit: cover !important;
+  object-position: center top !important;
+  display: block;
+  margin: 0 !important;
+  padding: 0 !important;
+  transform: scale(1.02); /* Slight scale to fix sub-pixel gaps in the ring */
+}
+
+/* 3. Member information: একটু নিচে এবং address দুই লাইনে সুন্দরভাবে */
+.id-card-info {
+  position: absolute;
+  top: 310px;
+  left: 18px;
+  right: 18px;
+  text-align: center;
+  z-index: 10;
+}
+
+.id-card-name {
+  font-size: 17px;
+  font-weight: 800;
+  color: #7a0000;
+  margin: 0 0 3px 0;
+  line-height: 1.18;
+}
+
+.id-card-line, .id-card-validity {
   font-size: 11px;
   font-weight: 700;
   line-height: 1.28;
@@ -395,22 +501,29 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 }
 
 .id-card-address-line {
-  max-width: 320px;
-  margin-left: auto;
-  margin-right: auto;
-  overflow-wrap: anywhere;
-  word-break: normal;
+  font-size: 10px;
+  font-weight: 700;
+  color: #1a0000;
+  max-width: 310px;
+  margin: 1px auto;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.28;
+  height: 27px; /* Fixed height so it doesn't push the validity line */
 }
 
 .id-card-validity {
   color: #7a0000;
-  margin-top: 3px;
+  margin-top: 1px;
+  display: block; /* Keep validity fixed below address */
 }
 
 /* 4. Signatures: maroon bottom area-এর ভিতরে, একটু উপরে এবং সাদা */
 #signatureArea {
   position: absolute;
-  top: 390px;
+  top: 415px;
   left: 24px;
   right: 24px;
   height: 66px;
@@ -441,8 +554,8 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 .sig-img {
   display: block;
   width: auto !important;
-  height: 38px !important;
-  max-width: 125px !important;
+  height: 16px !important; /* Reduced height */
+  max-width: 75px !important; /* Reduced max-width */
   object-fit: contain !important;
   object-position: center center !important;
   margin: 0 auto 2px auto !important;
