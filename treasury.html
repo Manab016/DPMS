@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>প্রধান কোষাধ্যক্ষ - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+    <title>প্রধান কোষাধ্যক্ষ - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- ExcelJS for Advanced Excel Export -->
@@ -269,7 +269,7 @@
     <div class="max-w-4xl mx-auto">
       <!-- কমিটি হেডিং সেকশন -->
       <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
         <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
         <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p>
@@ -1968,7 +1968,7 @@
 
               <div class="receipt-footer">
                 <div>ধন্যবাদ!</div>
-                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি")}</div>
+                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি")}</div>
               </div>
             </div>
           </div>
@@ -2045,7 +2045,7 @@
 
         // WhatsApp formatting: *bold* + পরিষ্কার separator ব্যবহার করা হয়েছে।
         const message =
-`🪷 *নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি*
+`🪷 *নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি*
 ━━━━━━━━━━━━━━━━━━━━
           *ঋণ পরিশোধের রসিদ*
 ━━━━━━━━━━━━━━━━━━━━
@@ -2081,7 +2081,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
 ━━━━━━━━━━━━━━━━━━━━
 🙏 *ধন্যবাদ!*
-*নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি*`;
+*নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি*`;
 
         try {
           // WhatsApp chat-এ text আগে থেকেই বসে যাবে; ব্যবহারকারী শুধু Send চাপবেন।
@@ -2228,7 +2228,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
         // Committee Title
         worksheet.mergeCells('A1:' + String.fromCharCode(64 + columns.length) + '1');
         const titleRow = worksheet.getCell('A1');
-        titleRow.value = "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        titleRow.value = "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
         titleRow.font = { name: 'Arial', size: 16, bold: true, color: { argb: 'FFFF6600' } };
         titleRow.alignment = { vertical: 'middle', horizontal: 'center' };
 
@@ -2621,7 +2621,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
     messagingSenderId: "625976130920",
     appId: "1:625976130920:web:60190b21f1c7563cdd2add",
   };
-  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
   const pageKey = 'treasury';
   const applyCommitteeHeading = (raw) => {
     const name = String(raw?.[pageKey] || DEFAULT_NAME);
@@ -2662,7 +2662,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
     establishedYear: "2009",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
@@ -2855,7 +2855,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
     village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
     mobile: "9933371702", mobile2: ""
