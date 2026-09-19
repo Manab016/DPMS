@@ -31,9 +31,11 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  body>*{display:none!important}
  #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden}
  #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden}
-#printAll{position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
-#printAll .all-pad-item{margin-bottom:2px}
-#printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
+ #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
+ #printAll .all-pad-item{margin-bottom:2px}
+ #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
+ #printSheet.printing-all #printContent{display:none!important}
+ #printSheet.printing-all #printAll{display:block!important}
  #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
  #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
  #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
@@ -266,6 +268,7 @@ onAuthStateChanged(dpmsAuth, async user => {
   <div id="printText"></div>
   <div id="printSign"></div>
  </div>
+ <div id="printAll"></div>
 </div>
 
 <script>
@@ -421,6 +424,9 @@ function buildForm(){
   </div>
 
   <div class="flex justify-end gap-2 pt-3">
+   <button onclick="openPreview()" class="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">👁️ Preview</button>
+   <button onclick="printCurrent()" class="px-3 py-2 bg-gray-800 text-white rounded-lg text-xs font-black">🖨️ Print</button>
+   <button onclick="openAllPreview()" class="px-3 py-2 bg-amber-700 text-white rounded-lg text-xs font-black">📄 সব এক প্যাডে</button>
    <button onclick="saveCurrent()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">💾 Save</button>
   </div>`;
 
@@ -564,7 +570,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -607,6 +613,7 @@ async function togglePad(id){
 
 function printCurrent(){
  const d=collect(current);
+ const sheet=document.getElementById("printSheet"); if(sheet) sheet.classList.remove("printing-all");
  localStorage.setItem(key(current),JSON.stringify(d));
  const f=forms.find(x=>x.id===current);
  const visible=d.padVisible!==false;
@@ -618,6 +625,7 @@ function printCurrent(){
 }
 
 function printOneSaved(index){
+ const sheet=document.getElementById("printSheet"); if(sheet) sheet.classList.remove("printing-all");
  const f=forms[index];
  if(!f) return;
  const d=get(f.id);
@@ -633,14 +641,18 @@ function printAllSaved(){
  const d=collect(current);
  localStorage.setItem(key(current),JSON.stringify(d));
  const items=allSavedItems();
+ const sheet=document.getElementById("printSheet");
+ const box=document.getElementById("printAll");
+ if(!sheet || !box) return;
  document.getElementById("printHeading").textContent="";
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
- const box=document.getElementById("printAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
- window.print();
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ sheet.classList.add("printing-all");
+ const cleanup=()=>{ sheet.classList.remove("printing-all"); box.innerHTML=""; window.removeEventListener("afterprint",cleanup); };
+ window.addEventListener("afterprint",cleanup);
+ setTimeout(()=>window.print(),100);
 }
-
 
 
 loadCommittee();buildTabs();buildForm();
