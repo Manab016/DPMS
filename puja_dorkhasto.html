@@ -14,7 +14,7 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .pad-date{position:absolute;top:62.8mm;right:16mm;font-size:16px;font-weight:700;color:#111;white-space:nowrap}
 .pad-content{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
 .heading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm;color:#111}
-.bodytext{font-size:18px;font-weight:700;line-height:1.9;white-space:pre-wrap;color:#111}\n.data-highlight{font-weight:900;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
+.bodytext{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;color:#111;letter-spacing:0}\n.data-highlight{font-weight:900;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
 .signature{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
 .signbox{min-width:55mm}
 .tab{border:1px solid #d1d5db;background:#f9fafb;color:#374151;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:800;text-align:left;cursor:pointer;width:100%}
@@ -30,12 +30,12 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
  #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden}
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
+ #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden}
 #printAll{position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
 #printAll .all-pad-item{margin-bottom:2px}
 #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
  #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
- #printText{font-size:18px;font-weight:700;line-height:1.9;white-space:pre-wrap}
+ #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
  #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
 }
 
@@ -44,21 +44,26 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 #previewModal.hidden{display:none}
 #previewModal > div{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
 #previewModal .preview-box{
-  width:min(96vw,980px);
+  width:min(900px,96vw);
   max-width:96vw;
+  height:min(96vh,900px);
   max-height:96vh;
   overflow:hidden;
+  display:flex;
+  flex-direction:column;
 }
 #previewModal .preview-scroll{
   width:100%;
-  max-height:calc(96vh - 48px);
+  flex:1 1 auto;
+  min-height:0;
   overflow:auto;
   display:flex;
+  align-items:flex-start;
   justify-content:center;
-  padding:4px;
+  padding:6px 10px 12px;
 }
 #previewModal .a4{
-  width:min(100%,210mm);
+  width:min(794px,100%);
   height:auto;
   aspect-ratio:210 / 297;
   flex:0 0 auto;
@@ -87,8 +92,8 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
   margin-bottom:2%;
 }
 #previewModal .bodytext{
-  font-size:clamp(9px,1.75vw,18px);
-  line-height:1.9;
+  font-size:clamp(8px,1.55vw,16px);
+  line-height:1.45;
 }
 #previewModal .signature{
   margin-top:4.38%;
@@ -99,7 +104,8 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
   #previewModal .preview-box{
     width:100%;
     max-width:100%;
-    max-height:100%;
+    height:calc(100vh - 8px);
+    max-height:calc(100vh - 8px);
     border-radius:10px;
   }
   #previewModal .preview-scroll{
@@ -113,8 +119,14 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
   }
 }
 @media(min-width:601px){
-  #previewModal .a4{width:min(88vw,210mm)}
+  #previewModal .a4{width:min(794px,100%)}
 }
+
+/* ===== Exact manual text + tighter document spacing ===== */
+#pvText,#printText{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+#pvText{margin:0}
+.all-text{white-space:pre-wrap}
+.manual-write-hidden{display:none!important}
 
 /* Writing mode */
 .manual-write-hidden{display:none!important}
@@ -122,7 +134,7 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 
 .all-pad-content{position:absolute;top:27%;left:6%;right:6%;bottom:5%;overflow:hidden;font-size:clamp(8px,1.35vw,13px);line-height:1.35;font-weight:600;background:transparent}
 .all-pad-item{margin-bottom:3px}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:clamp(8px,1.2vw,12px);font-weight:800;line-height:1.25}
-@media(max-width:600px){.all-pad-content{font-size:8.5px;line-height:1.28;top:27%;left:5.5%;right:5.5%;bottom:4.5%}.all-pad-item{margin-bottom:2px}.all-pad-sign{font-size:8px}}
+@media(max-width:600px){.all-pad-content{font-size:8px;line-height:1.18;top:27%;left:5.5%;right:5.5%;bottom:4.5%;overflow:hidden}.all-pad-item{margin-bottom:1px}.all-pad-sign{font-size:7.5px}}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -207,7 +219,7 @@ onAuthStateChanged(dpmsAuth, async user => {
   <div class="bg-white border rounded-xl shadow-sm p-3 h-fit">
    <div class="flex items-center justify-between mb-2">
     <b class="text-sm text-gray-800">📋 দরখাস্তের তালিকা</b>
-    <span class="text-[10px] text-gray-500">১০টি</span>
+    <span class="text-[10px] text-gray-500">১১টি</span>
    </div>
    <div id="tabs" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-1.5"></div>
   </div>
@@ -218,7 +230,7 @@ onAuthStateChanged(dpmsAuth, async user => {
   <div id="previewModal" class="hidden fixed inset-0 z-50 bg-black/70 p-2 md:p-5 overflow-auto">
    <div class="min-h-full flex items-center justify-center">
     <div class="preview-box bg-white rounded-xl shadow-2xl p-2">
-     <div class="flex items-center justify-between gap-2 px-1 pb-2">
+     <div class="flex flex-wrap items-center justify-between gap-2 px-1 pb-2 shrink-0">
       <div class="text-xs font-black text-gray-700">🖨️ প্যাড অনুযায়ী Live Preview</div>
       <div class="flex gap-1.5">
        <button onclick="printCurrent()" class="px-3 py-1.5 bg-gray-800 text-white rounded-lg text-xs font-black">🖨️ এই দরখাস্ত Print</button>
@@ -292,7 +304,10 @@ make:d=>`আমাদের কমিটি এই বছর সরকারি 
 
 {id:"unwilling",title:"১০. টাকা নিতে ইচ্ছুক নন",heading:"সরকারি অনুদান গ্রহণে অনিচ্ছুকতার লিখিত আবেদন",
 fields:[["reason","টাকা গ্রহণ না করার কারণ","textarea","কারণ লিখুন..."]],
-make:d=>`আমাদের কমিটি এই বছর সরকারি অনুদানের টাকা গ্রহণ করতে ইচ্ছুক নয়। তাই সরকারি অনুদান গ্রহণ না করার বিষয়ে এই লিখিত আবেদন প্রদান করা হলো।${d.reason?"\n\nকারণ: "+d.reason:""}`}
+make:d=>`আমাদের কমিটি এই বছর সরকারি অনুদানের টাকা গ্রহণ করতে ইচ্ছুক নয়। তাই সরকারি অনুদান গ্রহণ না করার বিষয়ে এই লিখিত আবেদন প্রদান করা হলো।${d.reason?"\n\nকারণ: "+d.reason:""}`},
+{id:"manual",title:"১১. নিজের মতো দরখাস্ত",heading:"",
+fields:[],
+make:d=>d.manualText||""}
 ];
 
 let current="age", committee={};
@@ -318,9 +333,9 @@ function collect(id){
  const f=forms.find(x=>x.id===id),d={};
  f.fields.forEach(x=>{const e=document.getElementById(id+"_"+x[0]);d[x[0]]=e?e.value.trim():""});
  const mv=document.getElementById(id+"_manualText");
- d.manualText=mv?mv.value.trim():"";
+ d.manualText=mv?mv.value:"";
  const modes=document.querySelectorAll('input[name="writeMode_'+id+'"]');
- d.writeMode=[...modes].find(x=>x.checked)?.value || get(id).writeMode || "auto";
+ d.writeMode = id==="manual" ? "manual" : ([...modes].find(x=>x.checked)?.value || get(id).writeMode || "auto");
  const pv=document.getElementById(id+"_padVisible");
  d.padVisible=pv?pv.checked:(get(id).padVisible!==false);
  return d;
@@ -328,13 +343,33 @@ function collect(id){
 
 function buildForm(){
  const f=forms.find(x=>x.id===current),d=get(current),area=document.getElementById("formArea");
+
+ // ===== ১১ নম্বর: সম্পূর্ণ Blank Manual Pad =====
+ if(f.id==="manual"){
+  const h=`<div class="bg-white border-2 border-orange-200 rounded-xl p-3">
+   <textarea id="${f.id}_manualText" rows="24" spellcheck="false"
+    placeholder=""
+    class="w-full min-h-[650px] p-4 border rounded-lg text-sm leading-6 resize-y">${esc(d.manualText||"")}</textarea>
+  </div>
+
+  <div class="flex justify-end gap-2 pt-3">
+   <button onclick="saveCurrent()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">💾 Save</button>
+  </div>`;
+
+  area.innerHTML=h;
+  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+  const tab=document.getElementById("tab_"+current);
+  if(tab) tab.classList.add("active");
+  return;
+}
+
+ // ===== Existing 1–10 forms =====
  let h=`<div class="flex items-center justify-between gap-2 mb-3">
  <div><h2 class="font-black text-orange-700">${f.title}</h2><p class="text-[11px] text-gray-500 mt-1">এই দরখাস্তের তথ্য পূরণ করুন</p></div>
  <div class="flex gap-2">
   <button onclick="openAllPreview()" class="px-3 py-2 bg-amber-700 text-white rounded-lg text-xs font-black">📄 সব এক প্যাডে</button>
   <button onclick="openPreview()" class="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">👁️ Preview</button>
   <button onclick="printCurrent()" class="px-3 py-2 bg-gray-800 text-white rounded-lg text-xs font-black">🖨️ Print</button>
-  
  </div></div>
  <div class="flex items-center justify-between bg-amber-50 border border-amber-200 rounded-lg p-2 mb-3">
   <label class="flex items-center gap-2 text-xs font-black text-gray-700">
@@ -349,11 +384,12 @@ function buildForm(){
   <div class="flex flex-wrap gap-3 text-xs font-bold">
    <label class="flex items-center gap-2"><input type="radio" name="writeMode_${f.id}" value="auto" ${d.writeMode!=="manual"?"checked":""} onchange="setWriteMode('${f.id}','auto')" class="w-4 h-4"> Automatic দরখাস্ত</label>
    <label class="flex items-center gap-2"><input type="radio" name="writeMode_${f.id}" value="manual" ${d.writeMode==="manual"?"checked":""} onchange="setWriteMode('${f.id}','manual')" class="w-4 h-4"> Manual দরখাস্ত</label>
+   <button type="button" onclick="setWriteMode('${f.id}','manual');document.getElementById('${f.id}_manualText')?.focus()" class="px-2.5 py-1 bg-white border border-orange-300 text-orange-700 rounded-md text-[11px] font-black">✍️ নিজের মতো লিখুন</button>
   </div>
   <div id="${f.id}_manualWrap" class="${d.writeMode==="manual"?"":"hidden"} mt-3">
    <label class="block text-xs font-bold mb-1">নিজের দরখাস্ত লিখুন</label>
-   <textarea id="${f.id}_manualText" rows="10" placeholder="এখানে নিজের দরখাস্ত লিখুন..." class="w-full p-2.5 border rounded-lg text-sm">${esc(d.manualText || (d.writeMode==="manual" ? f.make(d) : ""))}</textarea>
-   <p class="text-[10px] text-gray-500 mt-1">Manual নির্বাচন করলে Automatic লেখা Preview/Print-এ দেখাবে না।</p>
+   <textarea id="${f.id}_manualText" rows="14" spellcheck="false" placeholder="এখানে নিজের দরখাস্ত যেভাবে লিখবেন, Preview/Print-এ ঠিক সেভাবেই থাকবে..." class="w-full p-3 border rounded-lg text-sm leading-5 resize-y">${esc(d.manualText ?? (d.writeMode==="manual" ? f.make(d) : ""))}</textarea>
+   <p class="text-[10px] text-gray-500 mt-1">Manual নির্বাচন করলে আপনি যে শব্দ, লাইন, ফাঁকা লাইন ও paragraph লিখবেন—সেটাই Preview/Print-এ রাখা হবে।</p>
   </div>
  </div>`;
  f.fields.forEach(x=>{
@@ -364,16 +400,16 @@ function buildForm(){
  h+=`<div class="flex justify-end gap-2 pt-1"><button onclick="saveCurrent()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">💾 Save</button></div>`;
  area.innerHTML=h;
  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
- document.getElementById("tab_"+current).classList.add("active");
+ const tab=document.getElementById("tab_"+current);
+ if(tab) tab.classList.add("active");
 }
-
 function setWriteMode(id,mode){
  const f=forms.find(x=>x.id===id);
  const d=get(id);
- if(mode==="manual" && !d.manualText){
+ if(id!=="manual" && mode==="manual" && !d.manualText){
    d.manualText=f.make(d);
  }
- d.writeMode=mode;
+ d.writeMode=(id==="manual" ? "manual" : mode);
  localStorage.setItem(key(id),JSON.stringify(d));
  buildForm();
 }
@@ -410,6 +446,8 @@ async function selectForm(id){
 }
 
 function getDisplayText(f,d){
+ if(f && f.id==="manual") return d.manualText||"";
+
  return d.writeMode==="manual" ? (d.manualText||"") : f.make(d);
 }
 
@@ -434,8 +472,8 @@ function renderPreview(){
  const f=forms.find(x=>x.id===current),d=get(current);
  const visible=d.padVisible!==false;
  const text=getDisplayText(f,d);
- document.getElementById("pvHeading").textContent=visible?f.heading:"";
- document.getElementById("pvText").innerHTML=visible?highlightDataText(text,f,d):"";
+ document.getElementById("pvHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
+ document.getElementById("pvText").innerHTML=visible?(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d)):"";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
@@ -456,7 +494,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -503,7 +541,8 @@ function printCurrent(){
  const f=forms.find(x=>x.id===current);
  const visible=d.padVisible!==false;
  document.getElementById("printHeading").textContent=visible?f.heading:"";
- document.getElementById("printText").innerHTML=visible?highlightDataText(getDisplayText(f,d),f,d):"";
+ const printText=getDisplayText(f,d);
+ document.getElementById("printText").innerHTML=visible?(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d)):"";
  document.getElementById("printSign").innerHTML=visible?`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:"";
  setTimeout(()=>window.print(),100);
 }
@@ -514,7 +553,8 @@ function printOneSaved(index){
  const d=get(f.id);
  if(d.padVisible===false) return;
  document.getElementById("printHeading").textContent=f.heading;
- document.getElementById("printText").innerHTML=highlightDataText(getDisplayText(f,d),f,d);
+ const oneText=getDisplayText(f,d);
+ document.getElementById("printText").innerHTML=d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d);
  document.getElementById("printSign").innerHTML=`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`;
  setTimeout(()=>window.print(),100);
 }
@@ -527,7 +567,7 @@ function printAllSaved(){
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
  const box=document.getElementById("printAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
  window.print();
 }
 
