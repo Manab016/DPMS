@@ -29,14 +29,18 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  @page{size:A4;margin:0}
  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
- #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden}
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden}
-#printAll{position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
-#printAll .all-pad-item{margin-bottom:2px}
-#printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
+ #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff!important}
+ #printPadImage{display:none!important}
+ #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden;z-index:1}
+ #printAll{display:none;position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
+ #printAll .all-pad-item{margin-bottom:2px}
+ #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
  #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
- #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
+ #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
  #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
+ #printSheet.print-all-mode #printContent{top:83mm;left:14mm;right:14mm;bottom:12mm}
+ #printSheet.print-all-mode #printHeading,#printSheet.print-all-mode #printText,#printSheet.print-all-mode #printSign{display:none}
+ #printSheet.print-all-mode #printAll{display:block!important}
 }
 
 /* ===== Responsive Live Pad Preview ===== */
@@ -257,10 +261,12 @@ onAuthStateChanged(dpmsAuth, async user => {
 </div>
 
 <div id="printSheet" style="display:none">
+ <img id="printPadImage" class="print-pad-image" alt="Pad">
  <div id="printContent">
   <div id="printHeading"></div>
   <div id="printText"></div>
   <div id="printSign"></div>
+  <div id="printAll"></div>
  </div>
 </div>
 
@@ -494,7 +500,8 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
-box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual" ? "" : `<b>${x.no}. ${esc(x.title)}:</b>`} <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
  document.getElementById("pvHeading").parentElement.classList.add("hidden");
@@ -534,16 +541,36 @@ async function togglePad(id){
  }
 }
 
+function preparePrintSheet(allMode=false){
+ const sheet=document.getElementById("printSheet");
+ // Print only the typed/generated letter content on a clean A4 page.
+ // The original physical pad already contains the header/design, so its image
+ // must never be printed over the real pad.
+ const pad=document.getElementById("printPadImage");
+ pad.removeAttribute("src");
+ sheet.classList.toggle("print-all-mode",!!allMode);
+ return sheet;
+}
+
+function runPrint(allMode=false){
+ preparePrintSheet(allMode);
+ // No background/pad image is printed. Keep the existing print logic and
+ // print the saved/generated content on a clean A4 sheet.
+ setTimeout(()=>window.print(),120);
+}
+
 function printCurrent(){
  const d=collect(current);
  localStorage.setItem(key(current),JSON.stringify(d));
  const f=forms.find(x=>x.id===current);
+ if(!f) return;
  const visible=d.padVisible!==false;
- document.getElementById("printHeading").textContent=visible?f.heading:"";
+ document.getElementById("printHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
  const printText=getDisplayText(f,d);
  document.getElementById("printText").innerHTML=visible?(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d)):"";
  document.getElementById("printSign").innerHTML=visible?`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:"";
- setTimeout(()=>window.print(),100);
+ document.getElementById("printAll").innerHTML="";
+ runPrint(false);
 }
 
 function printOneSaved(index){
@@ -551,11 +578,12 @@ function printOneSaved(index){
  if(!f) return;
  const d=get(f.id);
  if(d.padVisible===false) return;
- document.getElementById("printHeading").textContent=f.heading;
+ document.getElementById("printHeading").textContent=f.id==="manual"?"":f.heading;
  const oneText=getDisplayText(f,d);
  document.getElementById("printText").innerHTML=d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d);
  document.getElementById("printSign").innerHTML=`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`;
- setTimeout(()=>window.print(),100);
+ document.getElementById("printAll").innerHTML="";
+ runPrint(false);
 }
 
 function printAllSaved(){
@@ -566,8 +594,8 @@ function printAllSaved(){
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
  const box=document.getElementById("printAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual" ? "" : `<b>${x.no}. ${esc(x.title)}:</b>`} <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
- window.print();
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ runPrint(true);
 }
 
 
