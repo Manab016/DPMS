@@ -22,7 +22,7 @@
 <div class="max-w-4xl mx-auto relative">
   <!-- হেডার -->
   <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
-    <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+    <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
     <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
     <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
     <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702"> <span id="committeeMobile">9933371702</span></a></p>
@@ -610,7 +610,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const lastCol = dueOnly ? "D" : "K";
 
     ws.mergeCells(`A1:${lastCol}1`);
-    ws.getCell("A1").value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+    ws.getCell("A1").value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
     ws.getCell("A1").font = { name: "Noto Sans Bengali", size: 18, bold: true };
     ws.getCell("A1").alignment = { horizontal: "center", vertical: "middle" };
     ws.getCell("A1").fill = titleFill;
@@ -893,7 +893,7 @@ onAuthStateChanged(auth, async user => {
     messagingSenderId: "625976130920",
     appId: "1:625976130920:web:60190b21f1c7563cdd2add",
   };
-  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
   const pageKey = 'expense';
   const applyCommitteeHeading = (raw) => {
     const name = String(raw?.[pageKey] || DEFAULT_NAME);
@@ -934,7 +934,7 @@ onAuthStateChanged(auth, async user => {
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
     establishedYear: "2009",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
@@ -1127,7 +1127,7 @@ onAuthStateChanged(auth, async user => {
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
     village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
     mobile: "9933371702", mobile2: ""
