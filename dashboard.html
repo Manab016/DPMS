@@ -467,6 +467,7 @@
         setupUIBasedOnRoleAndPermissions(user);
 
         logUserLogin(user);
+        loadDaitobontonTotalForDashboard();
         loadSubscriptions();
         loadTotalMembersCount();
         loadTotalExpenseCount();
@@ -679,6 +680,21 @@
         }
       }
 
+      // --- দায়িত্ব বণ্টন থেকে সংগৃহীত চাঁদা Dashboard-এর মোট চাঁদায় যোগ হবে ---
+      let daitobontonCollectedTotal = 0;
+
+      function loadDaitobontonTotalForDashboard() {
+        onSnapshot(collection(db, "daitobonton"), (snapshot) => {
+          daitobontonCollectedTotal = 0;
+          snapshot.forEach((docSnap) => {
+            daitobontonCollectedTotal += Number(docSnap.data()?.amount) || 0;
+          });
+          if (typeof allSubscriptionsData !== "undefined") {
+            calculateSubTotals(allSubscriptionsData);
+          }
+        }, (err) => console.warn("Daitobonton total load failed:", err));
+      }
+
       function loadSubscriptions() {
         onSnapshot(collection(db, "subscriptions"), (snapshot) => {
           allSubscriptionsData = [];
@@ -695,7 +711,7 @@
           if (item.donorType === "member") membersAmt += amt;
           else othersAmt += amt;
         });
-        const grandTotal = membersAmt + othersAmt;
+        const grandTotal = membersAmt + othersAmt + daitobontonCollectedTotal;
         const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
         if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
       }
