@@ -494,7 +494,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.id==="manual" ? "" : `<b>${x.no}. ${esc(x.title)}:</b>`} <span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
