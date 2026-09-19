@@ -10,11 +10,11 @@
 body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .a4{width:210mm;height:297mm;background:#fff;position:relative;overflow:hidden;margin:auto;box-shadow:0 3px 20px rgba(0,0,0,.15)}
 .pad-image{position:absolute;inset:0;width:100%;height:100%;object-fit:fill}
-.pad-letter{position:absolute;top:62.8mm;left:25mm;font-size:16px;font-weight:700;color:#111;white-space:nowrap}
-.pad-date{position:absolute;top:62.8mm;right:16mm;font-size:16px;font-weight:700;color:#111;white-space:nowrap}
+.pad-letter{position:absolute;top:62.8mm;left:25mm;font-size:16px;font-weight:400;color:#111;white-space:nowrap}
+.pad-date{position:absolute;top:62.8mm;right:16mm;font-size:16px;font-weight:400;color:#111;white-space:nowrap}
 .pad-content{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
 .heading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm;color:#111}
-.bodytext{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;color:#111;letter-spacing:0}\n.data-highlight{font-weight:900;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
+.bodytext{font-size:16px;font-weight:400;line-height:1.45;white-space:pre-wrap;color:#111;letter-spacing:0}\n.data-highlight{font-weight:900;text-decoration:underline;text-decoration-thickness:1px;text-underline-offset:2px;}
 .signature{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
 .signbox{min-width:55mm}
 .tab{border:1px solid #d1d5db;background:#f9fafb;color:#374151;border-radius:8px;padding:7px 9px;font-size:11px;font-weight:800;text-align:left;cursor:pointer;width:100%}
@@ -29,103 +29,62 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  @page{size:A4;margin:0}
  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
- #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden};margin:0!important;padding:0!important;box-sizing:border-box
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
- #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
- #printAll .all-pad-item{margin-bottom:2px}
- #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
+ #printSheet{display:block!important;width:210mm!important;height:297mm!important;position:relative;overflow:hidden!important;margin:0!important;padding:0!important;box-sizing:border-box!important;transform:none!important;zoom:1!important}
+ #printSheet *{box-sizing:border-box!important}
+ #printContent{box-sizing:border-box!important;width:auto!important}
+ #printText{transform:none!important;zoom:1!important}
+ /* Same 794x1123 A4 coordinate system as Live Preview (96 CSS px/in). */
+ #printContent{position:absolute;top:313px;left:53px;right:53px;bottom:57px;overflow:hidden}
+ #printAll{position:absolute;top:313px;left:53px;right:53px;bottom:57px;overflow:hidden;font-size:16px!important;line-height:1.45!important;font-weight:400;display:none}
+ #printAll .all-pad-item{margin-bottom:6px;font-weight:400;font-size:16px!important;line-height:1.45!important}
+ #printAll .all-text{font-weight:400!important;font-size:16px!important;line-height:1.45!important}
+ #printAll .all-pad-item b{font-weight:900!important}
+ #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:16px!important;line-height:1.45!important}
  #printSheet.printing-all #printContent{display:none!important}
  #printSheet.printing-all #printAll{display:block!important}
- #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
- #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+ #printHeading{text-align:center;font-size:21px!important;font-weight:900;line-height:1.5;margin:0 0 23px}
+ #printText{font-size:16px!important;font-weight:400;line-height:1.45;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
  #printText.manual-rich{font-weight:400}
  #printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0}
  #printText.manual-rich b,#printText.manual-rich strong{font-weight:800}
- #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
+ #printText.manual-rich span,#printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich li{box-sizing:border-box!important}
+ #printText,.bodytext,#printText *{text-size-adjust:none!important;-webkit-text-size-adjust:none!important}
+ #printSign{margin-top:52px;display:flex;justify-content:flex-end;text-align:center;font-size:16px!important;font-weight:800;line-height:1.75}
 }
 
-/* ===== Responsive Live Pad Preview ===== */
+/* ===== Unified A4 Preview Geometry =====
+   The page is always 794x1123 CSS px (A4 at 96dpi).
+   Mobile/desktop only scale this same page visually; text metrics never change.
+*/
 #previewModal{display:flex;align-items:center;justify-content:center}
 #previewModal.hidden{display:none}
 #previewModal > div{width:100%;height:100%;display:flex;align-items:center;justify-content:center}
-#previewModal .preview-box{
-  width:min(900px,96vw);
-  max-width:96vw;
-  height:min(96vh,900px);
-  max-height:96vh;
-  overflow:hidden;
-  display:flex;
-  flex-direction:column;
-}
-#previewModal .preview-scroll{
-  width:100%;
-  flex:1 1 auto;
-  min-height:0;
-  overflow:auto;
-  display:flex;
-  align-items:flex-start;
-  justify-content:center;
-  padding:6px 10px 12px;
-}
-#previewModal .a4{
-  width:min(794px,100%);
-  height:auto;
-  aspect-ratio:210 / 297;
-  flex:0 0 auto;
-  margin:0 auto;
-  box-shadow:0 2px 14px rgba(0,0,0,.2);
-}
+#previewModal .preview-box{width:min(900px,96vw);max-width:96vw;height:min(96vh,900px);max-height:96vh;overflow:hidden;display:flex;flex-direction:column}
+#previewModal .preview-scroll{width:100%;flex:1 1 auto;min-height:0;overflow:auto;display:flex;align-items:flex-start;justify-content:center;padding:6px 10px 12px}
+#previewModal .a4{width:794px;height:1123px;min-width:794px;min-height:1123px;flex:0 0 794px;margin:0 auto;box-shadow:0 2px 14px rgba(0,0,0,.2);transform-origin:top center}
 #previewModal .pad-image{width:100%;height:100%;object-fit:fill}
-#previewModal .pad-letter{
-  top:21.14%;
-  left:11.90%;
-  font-size:clamp(9px,1.65vw,16px);
-}
-#previewModal .pad-date{
-  top:21.14%;
-  right:7.62%;
-  font-size:clamp(9px,1.65vw,16px);
-}
-#previewModal .pad-content{
-  top:27.95%;
-  left:6.67%;
-  right:6.67%;
-  bottom:5.05%;
-}
-#previewModal .heading{
-  font-size:clamp(11px,2.1vw,21px);
-  margin-bottom:2%;
-}
-#previewModal .bodytext{
-  font-size:clamp(8px,1.55vw,16px);
-  line-height:1.45;
-}
-#previewModal .signature{
-  margin-top:4.38%;
-  font-size:clamp(9px,1.55vw,16px);
-}
+#previewModal .pad-letter{top:237px;left:94px;font-size:16px}
+#previewModal .pad-date{top:237px;right:60px;font-size:16px}
+#previewModal .pad-content{top:313px;left:53px;right:53px;bottom:57px}
+#previewModal .heading{font-size:21px;margin-bottom:23px}
+#previewModal .bodytext{font-size:16px;line-height:1.45}
+#previewModal .signature{margin-top:52px;font-size:16px}
 @media(max-width:600px){
-  #previewModal{padding:4px!important}
-  #previewModal .preview-box{
-    width:100%;
-    max-width:100%;
-    height:calc(100vh - 8px);
-    max-height:calc(100vh - 8px);
-    border-radius:10px;
-  }
-  #previewModal .preview-scroll{
-    max-height:calc(100vh - 55px);
-    overflow:hidden;
-    padding:2px;
-  }
-  #previewModal .a4{
-    width:100%;
-    max-width:100%;
-  }
+ #previewModal{padding:4px!important}
+ #previewModal .preview-box{width:100%;max-width:100%;height:calc(100vh - 8px);max-height:calc(100vh - 8px);border-radius:10px}
+ #previewModal .preview-scroll{max-height:calc(100vh - 55px);overflow:auto;padding:2px}
 }
-@media(min-width:601px){
-  #previewModal .a4{width:min(794px,100%)}
-}
+
+/* ===== Preserve real bold/normal formatting in Live Preview + Print =====
+   Normal document text is regular weight. Only semantic <b>/<strong> text,
+   or explicitly bold editor spans, is rendered bold. ===== */
+#pvText, #printText, #pvText *, #printText *{font-weight:400;}
+#pvText b, #pvText strong, #printText b, #printText strong{font-weight:700;}
+#pvText [style*="font-weight:700"], #pvText [style*="font-weight:bold"],
+#printText [style*="font-weight:700"], #printText [style*="font-weight:bold"]{font-weight:700;}
+#pvText [style*="font-weight:800"], #pvText [style*="font-weight:900"],
+#printText [style*="font-weight:800"], #printText [style*="font-weight:900"]{font-weight:800;}
+#pvText .data-highlight, #printText .data-highlight{font-weight:400;}
 
 /* ===== Exact manual text + tighter document spacing ===== */
 #pvText,#printText{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
@@ -147,13 +106,28 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .manual-write-hidden{display:none!important}
 
 
-.all-pad-content{position:absolute;top:27%;left:6%;right:6%;bottom:5%;overflow:hidden;font-size:clamp(8px,1.35vw,13px);line-height:1.35;font-weight:600;background:transparent}
-.all-pad-item{margin-bottom:3px}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap}.manual-rich-text{font-weight:400}.manual-rich-text b,.manual-rich-text strong{font-weight:800}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:clamp(8px,1.2vw,12px);font-weight:800;line-height:1.25}
-@media(max-width:600px){.all-pad-content{font-size:8px;line-height:1.18;top:27%;left:5.5%;right:5.5%;bottom:4.5%;overflow:hidden}.all-pad-item{margin-bottom:1px}.all-pad-sign{font-size:7.5px}}
+.all-pad-content{position:absolute;top:313px;left:53px;right:53px;bottom:57px;overflow:hidden;font-size:16px!important;line-height:1.45!important;font-weight:400;background:transparent}
+.all-pad-item{margin-bottom:6px;font-size:16px!important;line-height:1.45!important;font-weight:400}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap;font-weight:400!important;font-size:16px!important;line-height:1.45!important}.manual-rich-text{font-weight:400}.manual-rich-text b,.manual-rich-text strong{font-weight:800}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:16px!important;font-weight:800;line-height:1.45!important}
+@media(max-width:600px){.all-pad-content{top:313px;left:53px;right:53px;bottom:57px;font-size:16px!important;line-height:1.45!important}.all-pad-item{margin-bottom:6px;font-size:16px!important;line-height:1.45!important}.all-pad-item .all-text{font-size:16px!important;line-height:1.45!important;font-weight:400!important}.all-pad-sign{font-size:16px!important;line-height:1.45!important}}
 
 .manual-editor{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.35;outline:none;background:#fff;}
 .manual-editor:empty:before{content:attr(data-placeholder);color:#9ca3af;}
 .manual-editor b,.manual-editor strong{font-weight:800;}
+
+/* ===== Unified editor controls for every application ===== */
+.manual-toolbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:10px;margin:0 0 10px;background:#fff7ed;border:1px solid #fed7aa;border-radius:10px}
+.manual-toolbar label{font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px}
+.manual-toolbar select,.manual-toolbar button{border:1px solid #d1d5db;border-radius:6px;background:#fff;padding:5px 8px;font-size:11px;font-weight:800}
+.manual-toolbar button{cursor:pointer}
+.manual-editor p,.manual-editor div,.manual-editor h1,.manual-editor h2,.manual-editor h3,.manual-editor h4,.manual-editor h5,.manual-editor h6{margin:0;padding:0}
+.manual-editor [style*="line-height"]{line-height:inherit}
+
+
+/* Same rule for the combined "সব এক প্যাডে" view. */
+#pvAll, #pvAll *, #printAll, #printAll *{font-weight:400;}
+#pvAll b, #pvAll strong, #printAll b, #printAll strong{font-weight:700;}
+#pvAll .data-highlight, #printAll .data-highlight{font-weight:400;}
+#pvAll .all-pad-sign, #printAll .all-pad-sign{font-weight:400;}
 
 /* ===== PRINT/PREVIEW ALIGNMENT FIX =====
    Preview and print now use the same A4 physical coordinates.
@@ -242,6 +216,7 @@ onAuthStateChanged(dpmsAuth, async user => {
    </div>
    <div class="flex gap-2">
     <button onclick="location.href='dashboard.html'" class="px-3 py-2 bg-gray-100 border rounded-lg text-xs font-bold">← Dashboard</button>
+    <button id="savedAppsManagerBtn" type="button" class="px-3 py-2 bg-white border border-amber-300 text-amber-800 rounded-lg text-xs font-black">📂 সংরক্ষিত দরখাস্ত</button>
     <button onclick="openAllPreview()" class="px-3 py-2 bg-amber-700 text-white rounded-lg text-xs font-black">📄 সব এক প্যাডে</button><button onclick="openPreview()" class="px-3 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">👁️ Preview</button>
    </div>
   </div>
@@ -375,7 +350,7 @@ function collect(id){
  d.writeMode = id==="manual" ? "manual" : ([...modes].find(x=>x.checked)?.value || old.writeMode || "auto");
  const pv=document.getElementById(id+"_padVisible");
  d.padVisible=pv?pv.checked:(old.padVisible!==false);
- if(id==="manual") { d.manualLineHeight=old.manualLineHeight||"1"; d.manualFontSize=old.manualFontSize||"16px"; d.manualAlign=old.manualAlign||"left"; d.showPresident=old.showPresident!==false; d.showSignature=old.showSignature!==false; d.showCommittee=old.showCommittee!==false; }
+ d.manualLineHeight=old.manualLineHeight||"1.35"; d.manualFontSize=old.manualFontSize||"16px"; d.manualAlign=old.manualAlign||"left"; d.signatureFontSize=old.signatureFontSize||"16px"; d.signatureLineHeight=old.signatureLineHeight||"1.75"; d.showPresident=old.showPresident!==false; d.showSignature=old.showSignature!==false; d.showCommittee=old.showCommittee!==false;
  return d;
 }
 
@@ -463,6 +438,14 @@ function setManualAlign(value){
  applySelectedBlockStyle("textAlign",value);
  const d=get(current); d.manualAlign=value; localStorage.setItem(key(current),JSON.stringify(d));
 }
+function setSignatureFontSize(px){
+ const d=get(current); d.signatureFontSize=px; localStorage.setItem(key(current),JSON.stringify(d));
+ const pv=document.getElementById("pvSign"); if(pv) pv.innerHTML=`<div class="signbox">${signHtml(d)}</div>`;
+}
+function setSignatureLineSpace(value){
+ const d=get(current); d.signatureLineHeight=value; localStorage.setItem(key(current),JSON.stringify(d));
+ const pv=document.getElementById("pvSign"); if(pv) pv.innerHTML=`<div class="signbox">${signHtml(d)}</div>`;
+}
 function saveManualDisplayOptions(){
  const d=get(current);
  d.showPresident=document.getElementById("showPresident")?.checked!==false;
@@ -475,7 +458,9 @@ function signHtml(d){
  if(d.showPresident!==false) parts.push("সভাপতি / সম্পাদক");
  if(d.showSignature!==false) parts.push("স্বাক্ষর: ____________________");
  if(d.showCommittee!==false) parts.push(esc(cname()));
- return parts.join("<br>");
+ const fs=d.signatureFontSize||"16px";
+ const lh=d.signatureLineHeight||"1.75";
+ return `<span style="font-size:${fs};line-height:${lh};display:inline-block">${parts.join("<br>")}</span>`;
 }
 function setManualLineSpace(value){
  const ed=getManualEditor(); if(!ed) return;
@@ -518,46 +503,35 @@ function prepareManualToolbar(){
  ed.addEventListener("blur",()=>rememberSelection(ed));
 }
 
+function manualToolbarHtml(d, id){
+ const fs=d.manualFontSize||"16px", lh=d.manualLineHeight||"1.35";
+ return `<div class="manual-toolbar no-print">
+  <label>Text Size <select onchange="setManualFontSize(this.value)">
+   <option value="12px" ${fs==="12px"?"selected":""}>12</option><option value="14px" ${fs==="14px"?"selected":""}>14</option><option value="16px" ${fs==="16px"?"selected":""}>16</option><option value="18px" ${fs==="18px"?"selected":""}>18</option><option value="20px" ${fs==="20px"?"selected":""}>20</option><option value="22px" ${fs==="22px"?"selected":""}>22</option><option value="24px" ${fs==="24px"?"selected":""}>24</option>
+  </select></label>
+  <label>Line Space <select onchange="setManualLineSpace(this.value)">
+   <option value="1" ${lh==="1"?"selected":""}>খুব কম</option><option value="1.18" ${lh==="1.18"?"selected":""}>কম</option><option value="1.35" ${lh==="1.35"?"selected":""}>স্বাভাবিক</option><option value="1.6" ${lh==="1.6"?"selected":""}>বেশি</option><option value="2" ${lh==="2"?"selected":""}>অনেক বেশি</option>
+  </select></label>
+  <button type="button" onclick="formatManual('bold')">B Bold</button><button type="button" onclick="formatManual('italic')"><i>I</i></button><button type="button" onclick="formatManual('underline')"><u>U</u></button>
+  <label>Align <select onchange="setManualAlign(this.value)"><option value="left">বাম</option><option value="center">মাঝে</option><option value="right">ডান</option><option value="justify">দুই পাশে</option></select></label>
+  <label>Signature <select onchange="setSignatureFontSize(this.value)"><option value="12px">12</option><option value="14px">14</option><option value="16px">16</option><option value="18px">18</option><option value="20px">20</option><option value="22px">22</option></select></label>
+  <label>Signature Space <select onchange="setSignatureLineSpace(this.value)"><option value="1">কম</option><option value="1.35">স্বাভাবিক</option><option value="1.75">বেশি</option></select></label>
+ </div>`;
+}
 function buildForm(){
  const f=forms.find(x=>x.id===current),d=get(current),area=document.getElementById("formArea");
 
  // ===== ১১ নম্বর: সম্পূর্ণ Blank Manual Pad =====
  if(f.id==="manual"){
   const h=`<div class="bg-white border-2 border-orange-200 rounded-xl p-3">
-   <div class="flex flex-wrap items-center gap-2 mb-3 p-2 bg-orange-50 border border-orange-200 rounded-lg">
-    <span class="text-xs font-black text-orange-800">✍️ দরখাস্তের Format</span>
-    <label class="text-xs font-bold">Text Size
-      <select id="manualFontSize" onchange="setManualFontSize(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
-       <option value="12px" ${d.manualFontSize==="12px"?"selected":""}>12px</option>
-       <option value="14px" ${d.manualFontSize==="14px"?"selected":""}>14px</option>
-       <option value="16px" ${(!d.manualFontSize||d.manualFontSize==="16px")?"selected":""}>16px</option>
-       <option value="18px" ${d.manualFontSize==="18px"?"selected":""}>18px</option>
-       <option value="20px" ${d.manualFontSize==="20px"?"selected":""}>20px</option>
-       <option value="22px" ${d.manualFontSize==="22px"?"selected":""}>22px</option>
-      </select>
-    </label>
-    <label class="flex items-center gap-1 text-xs font-bold"><input id="manualBoldToggle" type="checkbox" onchange="formatManual('bold')" class="w-4 h-4"> Bold</label>
-    <label class="text-xs font-bold">Line Space
-      <select id="manualLineSpace" onchange="setManualLineSpace(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
-       <option value="1" ${(!d.manualLineHeight||d.manualLineHeight==="1")?"selected":""}>খুব কম</option><option value="1.18" ${d.manualLineHeight==="1.18"?"selected":""}>কম</option><option value="1.35" ${d.manualLineHeight==="1.35"?"selected":""}>স্বাভাবিক</option><option value="1.6" ${d.manualLineHeight==="1.6"?"selected":""}>বেশি</option><option value="2" ${d.manualLineHeight==="2"?"selected":""}>অনেক বেশি</option>
-      </select>
-    </label>
-    <label class="text-xs font-bold">Align
-      <select id="manualAlign" onchange="setManualAlign(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
-       <option value="left" ${(!d.manualAlign||d.manualAlign==="left")?"selected":""}>বাম</option>
-       <option value="center" ${d.manualAlign==="center"?"selected":""}>মাঝে</option>
-       <option value="right" ${d.manualAlign==="right"?"selected":""}>ডান</option>
-       <option value="justify" ${d.manualAlign==="justify"?"selected":""}>দুই পাশে</option>
-      </select>
-    </label>
-    <div class="w-full flex flex-wrap gap-4 pt-2 border-t border-orange-200">
-      <label class="flex items-center gap-2 text-xs font-bold"><input id="showPresident" type="checkbox" ${d.showPresident!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> সভাপতি / সম্পাদক</label>
-      <label class="flex items-center gap-2 text-xs font-bold"><input id="showSignature" type="checkbox" ${d.showSignature!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> স্বাক্ষর: ____________________</label>
-      <label class="flex items-center gap-2 text-xs font-bold"><input id="showCommittee" type="checkbox" ${d.showCommittee!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> কমিটির নাম</label>
-    </div>
+   ${manualToolbarHtml(d,f.id)}
+   <div class="w-full flex flex-wrap gap-4 pt-2 pb-2 border-b border-orange-200 mb-2 no-print">
+    <label class="flex items-center gap-2 text-xs font-bold"><input id="showPresident" type="checkbox" ${d.showPresident!==false?"checked":""} onchange="saveManualDisplayOptions()" class="w-4 h-4"> সভাপতি / সম্পাদক</label>
+    <label class="flex items-center gap-2 text-xs font-bold"><input id="showSignature" type="checkbox" ${d.showSignature!==false?"checked":""} onchange="saveManualDisplayOptions()" class="w-4 h-4"> স্বাক্ষর</label>
+    <label class="flex items-center gap-2 text-xs font-bold"><input id="showCommittee" type="checkbox" ${d.showCommittee!==false?"checked":""} onchange="saveManualDisplayOptions()" class="w-4 h-4"> কমিটির নাম</label>
    </div>
    <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="নিজের মতো দরখাস্ত লিখুন..."
-    class="manual-editor w-full min-h-[650px] p-4 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText||'')}</div>
+    class="manual-editor w-full min-h-[650px] p-4 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText||'')}</div>
   </div>
 
   <div class="flex justify-end gap-2 pt-3">
@@ -601,8 +575,9 @@ function buildForm(){
   </div>
   <div id="${f.id}_manualWrap" class="${d.writeMode==="manual"?"":"hidden"} mt-3">
    <label class="block text-xs font-bold mb-1">নিজের দরখাস্ত লিখুন</label>
-   <textarea id="${f.id}_manualText" rows="14" spellcheck="false" placeholder="এখানে নিজের দরখাস্ত যেভাবে লিখবেন, Preview/Print-এ ঠিক সেভাবেই থাকবে..." class="w-full p-3 border rounded-lg text-sm leading-5 resize-y">${esc(d.manualText ?? (d.writeMode==="manual" ? f.make(d) : ""))}</textarea>
-   <p class="text-[10px] text-gray-500 mt-1">Manual নির্বাচন করলে আপনি যে শব্দ, লাইন, ফাঁকা লাইন ও paragraph লিখবেন—সেটাই Preview/Print-এ রাখা হবে।</p>
+   ${manualToolbarHtml(d,f.id)}
+   <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="এখানে নিজের দরখাস্ত যেভাবে লিখবেন..." class="manual-editor w-full min-h-[420px] p-3 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText ?? (d.writeMode==="manual" ? f.make(d) : ""))}</div>
+   <p class="text-[10px] text-gray-500 mt-1">লেখার অংশ select করে Text Size বা Line Space বদলালে শুধু নির্বাচিত অংশ/লাইন বদলাবে। কিছু select না থাকলে পুরো লেখা বদলাবে।</p>
   </div>
  </div>`;
  f.fields.forEach(x=>{
@@ -612,6 +587,7 @@ function buildForm(){
  });
  h+=`<div class="flex justify-end gap-2 pt-1"><button onclick="saveCurrent()" class="px-4 py-2 bg-orange-600 text-white rounded-lg text-xs font-black">💾 Save</button></div>`;
  area.innerHTML=h;
+ const med=document.getElementById(f.id+"_manualText"); if(med){ med.addEventListener("input",syncManualFromEditor); prepareManualToolbar(); }
  document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
  const tab=document.getElementById("tab_"+current);
  if(tab) tab.classList.add("active");
@@ -634,8 +610,17 @@ async function saveCurrent(){
  try{
    const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
    const f=forms.find(x=>x.id===current);
-   const savedPayload={...d,__formId:current,__formTitle:f?.title||"দরখাস্ত"};
-   const savedItem=window.saveApplicationCopy ? window.saveApplicationCopy(savedPayload,d.__savedApplicationId||null) : null;
+   let savedTitle=d.__savedApplicationTitle||"";
+   if(!d.__savedApplicationId){
+     const suggested=(f?.title||"দরখাস্ত")+" — "+new Date().toLocaleString("bn-BD",{dateStyle:"short",timeStyle:"short"});
+     savedTitle=prompt("এই দরখাস্তের একটি পরিচিত নাম দিন:", suggested);
+     if(savedTitle===null) return;
+     savedTitle=String(savedTitle).trim()||suggested;
+     d.__savedApplicationTitle=savedTitle;
+     localStorage.setItem(key(current),JSON.stringify(d));
+   }
+   const savedPayload={...d,__formId:current,__formTitle:f?.title||"দরখাস্ত",__savedApplicationTitle:savedTitle};
+   const savedItem=window.saveApplicationCopy ? window.saveApplicationCopy(savedPayload,d.__savedApplicationId||null,savedTitle) : null;
    if(savedItem && savedItem.id){
      d.__savedApplicationId=savedItem.id;
      localStorage.setItem(key(current),JSON.stringify(d));
@@ -686,6 +671,19 @@ function highlightDataText(text,f,d){
  return html;
 }
 
+function fitA4Preview(){
+ const scroll=document.querySelector("#previewModal .preview-scroll");
+ const page=document.querySelector("#previewModal .a4");
+ if(!scroll||!page) return;
+ const available=Math.max(120,scroll.clientWidth-4);
+ const scale=Math.min(1,available/794);
+ page.style.transform=`scale(${scale})`;
+ page.style.marginLeft=`${(794*(1-scale))/2}px`;
+ page.style.marginRight=`${(794*(1-scale))/2}px`;
+ page.style.marginBottom=`${1123*(1-scale)}px`;
+}
+window.addEventListener("resize",fitA4Preview);
+
 function renderPreview(){
  const f=forms.find(x=>x.id===current),d=get(current);
  const visible=d.padVisible!==false;
@@ -693,15 +691,15 @@ function renderPreview(){
  document.getElementById("pvHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
  const pvTextEl=document.getElementById("pvText");
  pvTextEl.classList.toggle("manual-rich", f.id==="manual");
- if(f.id==="manual"){
-   pvTextEl.style.lineHeight = d.manualLineHeight || "1";
-   pvTextEl.style.fontSize = d.manualFontSize || "16px";
+ const isRich=(f.id==="manual" || d.writeMode==="manual");
+ if(isRich){
+   pvTextEl.style.lineHeight=d.manualLineHeight||"1.35";
+   pvTextEl.style.fontSize=d.manualFontSize||"16px";
  }else{
    pvTextEl.style.removeProperty("line-height");
    pvTextEl.style.removeProperty("font-size");
  }
- pvTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
- if(f.id==="manual") pvTextEl.style.lineHeight=d.manualLineHeight||"1.35";
+ pvTextEl.innerHTML=visible?(isRich?(d.manualHtml||esc(text)):highlightDataText(text,f,d)):"";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
@@ -722,7 +720,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${x.form.id==="manual"?"manual-rich-text":""}">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(x.data.manualHtml||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -736,6 +734,7 @@ function openPreview(){
  buildTabs();
  renderPreview();
  document.getElementById("previewModal").classList.remove("hidden");
+ requestAnimationFrame(fitA4Preview);
 }
 
 function openAllPreview(){
@@ -744,6 +743,7 @@ function openAllPreview(){
  buildTabs();
  renderAllPreview();
  document.getElementById("previewModal").classList.remove("hidden");
+ requestAnimationFrame(fitA4Preview);
 }
 
 function closePreview(){
@@ -772,9 +772,10 @@ function printCurrent(){
  document.getElementById("printHeading").textContent=visible?f.heading:"";
  const printText=getDisplayText(f,d);
  const printTextEl=document.getElementById("printText");
- printTextEl.classList.toggle("manual-rich", f.id==="manual");
- printTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(printText)):(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d))):"";
- if(f.id==="manual"){
+ const isRich=(f.id==="manual"||d.writeMode==="manual");
+ printTextEl.classList.toggle("manual-rich", isRich);
+ printTextEl.innerHTML=visible?(isRich?(d.manualHtml||esc(printText)):highlightDataText(printText,f,d)):"";
+ if(isRich){
    printTextEl.style.lineHeight=d.manualLineHeight||"1.35";
    printTextEl.style.fontSize=d.manualFontSize||"16px";
  }
@@ -791,9 +792,10 @@ function printOneSaved(index){
  document.getElementById("printHeading").textContent=f.heading;
  const oneText=getDisplayText(f,d);
  const onePrintText=document.getElementById("printText");
- onePrintText.classList.toggle("manual-rich", f.id==="manual");
- onePrintText.innerHTML=f.id==="manual"?(d.manualHtml||esc(oneText)):(d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d));
- if(f.id==="manual"){
+ const isRich=(f.id==="manual"||d.writeMode==="manual");
+ onePrintText.classList.toggle("manual-rich", isRich);
+ onePrintText.innerHTML=isRich?(d.manualHtml||esc(oneText)):highlightDataText(oneText,f,d);
+ if(isRich){
    onePrintText.style.lineHeight=d.manualLineHeight||"1.35";
    onePrintText.style.fontSize=d.manualFontSize||"16px";
  }
@@ -811,7 +813,7 @@ function printAllSaved(){
  document.getElementById("printHeading").textContent="";
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${x.form.id==="manual"?"manual-rich-text":""}">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(x.data.manualHtml||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
  sheet.classList.add("printing-all");
  const cleanup=()=>{ sheet.classList.remove("printing-all"); box.innerHTML=""; window.removeEventListener("afterprint",cleanup); };
  window.addEventListener("afterprint",cleanup);
@@ -834,7 +836,34 @@ window.addEventListener("pujaFirestoreReady",()=>{
   function readSavedApplications(){
     try{
       const x = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
-      return Array.isArray(x) ? x : [];
+      if(!Array.isArray(x)) return [];
+      let changed=false;
+      const counts={};
+      x.forEach(item=>{
+        if(!item || typeof item!=="object") return;
+        const generic=!item.title || item.title==="দরখাস্ত" || item.title==="নতুন দরখাস্ত";
+        if(generic){
+          const base=item.data?.__savedApplicationTitle || item.data?.__formTitle || "দরখাস্ত";
+          const stamp=item.createdAt ? new Date(item.createdAt).toLocaleString("bn-BD",{dateStyle:"short",timeStyle:"short"}) : "";
+          item.title=stamp ? `${base} — ${stamp}` : base;
+          changed=true;
+        }
+        counts[item.title]=(counts[item.title]||0)+1;
+      });
+      // If older records still have duplicate names, make them distinguishable once.
+      const seen={};
+      x.forEach(item=>{
+        if(!item || !item.title) return;
+        seen[item.title]=(seen[item.title]||0)+1;
+        if(counts[item.title]>1){
+          const stamp=item.createdAt ? new Date(item.createdAt).toLocaleString("bn-BD",{dateStyle:"short",timeStyle:"short"}) : String(item.id||"");
+          let next=`${item.title} — ${stamp}`;
+          if(next===item.title || x.filter(y=>y && y!==item && y.title===next).length){ next+=` — ${String(item.id||"").slice(-5)}`; }
+          if(item.title!==next){ item.title=next; if(item.data) item.data.__savedApplicationTitle=item.title; changed=true; }
+        }
+      });
+      if(changed) localStorage.setItem(STORE_KEY,JSON.stringify(x));
+      return x;
     }catch(e){ return []; }
   }
   function writeSavedApplications(list){
@@ -852,26 +881,27 @@ window.addEventListener("pujaFirestoreReady",()=>{
     all: readSavedApplications,
     get: function(id){ return readSavedApplications().find(x=>x.id===id) || null; },
 
-    save: function(data, id){
+    save: function(data, id, title){
       const list = readSavedApplications();
       const now = new Date().toISOString();
       let item = id ? list.find(x=>x.id===id) : null;
+      const cleanTitle=String(title || data?.__savedApplicationTitle || data?.subject || data?.title || data?.applicationTitle || "দরখাস্ত").trim() || "দরখাস্ত";
 
       if(item){
         item.data = cloneData(data);
+        item.title = item.title || cleanTitle;
+        item.data.__savedApplicationTitle=item.title;
         item.updatedAt = now;
       }else{
         item = {
           id: makeId(),
-          title: (data && (data.subject || data.title || data.applicationTitle)) || "নতুন দরখাস্ত",
+          title: cleanTitle,
           data: cloneData(data),
           createdAt: now,
           updatedAt: now
         };
+        item.data.__savedApplicationTitle=item.title;
         list.unshift(item);
-      }
-      if(!item.title || item.title==="নতুন দরখাস্ত"){
-        item.title = (data && (data.subject || data.title || data.applicationTitle)) || "দরখাস্ত";
       }
       writeSavedApplications(list);
       return item;
@@ -886,7 +916,7 @@ window.addEventListener("pujaFirestoreReady",()=>{
     rename: function(id,title){
       const list = readSavedApplications();
       const item = list.find(x=>x.id===id);
-      if(item){ item.title = title || "দরখাস্ত"; item.updatedAt = new Date().toISOString(); }
+      if(item){ item.title = title || "দরখাস্ত"; if(item.data) item.data.__savedApplicationTitle=item.title; item.updatedAt = new Date().toISOString(); }
       writeSavedApplications(list);
       return item || null;
     }
@@ -905,6 +935,7 @@ window.addEventListener("pujaFirestoreReady",()=>{
       const formId = data.__formId || "manual";
       delete data.__formId; delete data.__formTitle;
       if(item?.id) data.__savedApplicationId = item.id;
+      if(item?.title) data.__savedApplicationTitle = item.title;
       localStorage.setItem(key(formId), JSON.stringify(data));
       current = formId;
       buildTabs();
@@ -916,15 +947,9 @@ window.addEventListener("pujaFirestoreReady",()=>{
   // It is intentionally hidden until the user clicks the "Saved Applications"
   // button created below.
   function addManagerButton(){
-    if(document.getElementById("savedAppsManagerBtn")) return;
-    const b=document.createElement("button");
-    b.id="savedAppsManagerBtn";
-    b.type="button";
-    b.className="no-print";
-    b.textContent="📂 সংরক্ষিত দরখাস্ত";
-    b.style.cssText="position:fixed;right:18px;bottom:18px;z-index:99999;background:#d97706;color:#fff;border:0;border-radius:12px;padding:11px 15px;font-weight:800;box-shadow:0 8px 25px #0002;cursor:pointer";
+    const b=document.getElementById("savedAppsManagerBtn");
+    if(!b) return;
     b.onclick=showSavedApps;
-    document.body.appendChild(b);
   }
 
   function showSavedApps(){
@@ -947,10 +972,10 @@ window.addEventListener("pujaFirestoreReady",()=>{
     }else{
       list.forEach(item=>{
         const row=document.createElement("div");
-        row.style.cssText="border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:9px 0;display:flex;align-items:center;gap:10px";
+        row.style.cssText="border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:9px 0;display:flex;align-items:flex-start;gap:10px;flex-wrap:wrap";
         const title=document.createElement("div");
-        title.style.cssText="flex:1;min-width:0";
-        title.innerHTML='<div style="font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div><small style="color:#777"></small>';
+        title.style.cssText="flex:1 1 260px;min-width:220px;max-width:100%;overflow:visible";
+        title.innerHTML='<div class="saved-app-title-full" style="font-weight:800;white-space:normal;overflow:visible;text-overflow:clip;word-break:break-word;overflow-wrap:anywhere;line-height:1.35"></div><small style="color:#777;display:block;line-height:1.3;margin-top:3px"></small>';
         title.firstChild.textContent=item.title || "দরখাস্ত";
         title.lastChild.textContent="শেষ পরিবর্তন: "+new Date(item.updatedAt||item.createdAt).toLocaleString("bn-BD");
         const edit=document.createElement("button");
@@ -962,6 +987,21 @@ window.addEventListener("pujaFirestoreReady",()=>{
             overlay.remove();
           }else{
             alert("এই পেজের বর্তমান editor-এ saved application loader এখনো সংযুক্ত হয়নি।");
+          }
+        };
+        const rename=document.createElement("button");
+        rename.textContent="✏️ নাম";
+        rename.style.cssText="border:0;background:#f59e0b;color:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer";
+        rename.onclick=function(){
+          const next=prompt("দরখাস্তের নাম পরিবর্তন করুন:",item.title||"দরখাস্ত");
+          if(next!==null && String(next).trim()){
+            const updated=savedApplications.rename(item.id,String(next).trim());
+            if(updated?.data) updated.data.__savedApplicationTitle=updated.title;
+            if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
+              const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
+              window.firestoreSavePujaDorkhasto(formsData,savedApplications.all()).catch(e=>console.warn("Saved application cloud rename failed:",e));
+            }
+            showSavedApps();
           }
         };
         const del=document.createElement("button");
@@ -977,7 +1017,7 @@ window.addEventListener("pujaFirestoreReady",()=>{
             showSavedApps();
           }
         };
-        row.append(title,edit,del);
+        row.append(title,edit,rename,del);
         box.appendChild(row);
       });
     }
