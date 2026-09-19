@@ -29,18 +29,14 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  @page{size:A4;margin:0}
  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
- #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden;background:#fff!important}
- #printPadImage{display:none!important}
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden;z-index:1}
- #printAll{display:none;position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
- #printAll .all-pad-item{margin-bottom:2px}
- #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
+ #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden}
+ #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden}
+#printAll{position:absolute;inset:0;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600}
+#printAll .all-pad-item{margin-bottom:2px}
+#printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
  #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
- #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+ #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
  #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
- #printSheet.print-all-mode #printContent{top:83mm;left:14mm;right:14mm;bottom:12mm}
- #printSheet.print-all-mode #printHeading,#printSheet.print-all-mode #printText,#printSheet.print-all-mode #printSign{display:none}
- #printSheet.print-all-mode #printAll{display:block!important}
 }
 
 /* ===== Responsive Live Pad Preview ===== */
@@ -139,6 +135,10 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .all-pad-content{position:absolute;top:27%;left:6%;right:6%;bottom:5%;overflow:hidden;font-size:clamp(8px,1.35vw,13px);line-height:1.35;font-weight:600;background:transparent}
 .all-pad-item{margin-bottom:3px}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:clamp(8px,1.2vw,12px);font-weight:800;line-height:1.25}
 @media(max-width:600px){.all-pad-content{font-size:8px;line-height:1.18;top:27%;left:5.5%;right:5.5%;bottom:4.5%;overflow:hidden}.all-pad-item{margin-bottom:1px}.all-pad-sign{font-size:7.5px}}
+
+.manual-editor{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.35;outline:none;background:#fff;}
+.manual-editor:empty:before{content:attr(data-placeholder);color:#9ca3af;}
+.manual-editor b,.manual-editor strong{font-weight:800;}
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -261,12 +261,10 @@ onAuthStateChanged(dpmsAuth, async user => {
 </div>
 
 <div id="printSheet" style="display:none">
- <img id="printPadImage" class="print-pad-image" alt="Pad">
  <div id="printContent">
   <div id="printHeading"></div>
   <div id="printText"></div>
   <div id="printSign"></div>
-  <div id="printAll"></div>
  </div>
 </div>
 
@@ -337,14 +335,47 @@ function buildTabs(){
 
 function collect(id){
  const f=forms.find(x=>x.id===id),d={};
+ if(!f) return d;
  f.fields.forEach(x=>{const e=document.getElementById(id+"_"+x[0]);d[x[0]]=e?e.value.trim():""});
  const mv=document.getElementById(id+"_manualText");
- d.manualText=mv?mv.value:"";
+ if(mv && mv.isContentEditable){ d.manualHtml=mv.innerHTML; d.manualText=mv.innerText; } else { d.manualText=mv?mv.value:""; }
+ const old=get(id);
+ d.manualHtml=d.manualHtml || old.manualHtml || "";
+ d.manualText=d.manualText ?? old.manualText ?? "";
  const modes=document.querySelectorAll('input[name="writeMode_'+id+'"]');
- d.writeMode = id==="manual" ? "manual" : ([...modes].find(x=>x.checked)?.value || get(id).writeMode || "auto");
+ d.writeMode = id==="manual" ? "manual" : ([...modes].find(x=>x.checked)?.value || old.writeMode || "auto");
  const pv=document.getElementById(id+"_padVisible");
- d.padVisible=pv?pv.checked:(get(id).padVisible!==false);
+ d.padVisible=pv?pv.checked:(old.padVisible!==false);
+ if(id==="manual") { d.manualLineHeight=old.manualLineHeight||"1"; d.manualFontSize=old.manualFontSize||"16px"; d.manualAlign=old.manualAlign||"left"; d.showPresident=old.showPresident!==false; d.showSignature=old.showSignature!==false; d.showCommittee=old.showCommittee!==false; }
  return d;
+}
+
+function formatManual(cmd,value){
+ const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
+ try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
+ document.execCommand(cmd,false,value||null); syncManualFromEditor();
+}
+function setManualFontSize(px){
+ const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
+ try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
+ document.execCommand("fontSize",false,"7");
+ ed.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute("size");el.style.fontSize=px;});
+ const d=get(current); d.manualFontSize=px; localStorage.setItem(key(current),JSON.stringify(d)); syncManualFromEditor();
+}
+function setManualAlign(value){
+ const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
+ const cmd=value==="center"?"justifyCenter":value==="right"?"justifyRight":value==="justify"?"justifyFull":"justifyLeft";
+ document.execCommand(cmd,false,null);
+ const d=get(current); d.manualAlign=value; localStorage.setItem(key(current),JSON.stringify(d)); syncManualFromEditor();
+}
+function saveManualDisplayOptions(){ const d=get(current); d.showPresident=document.getElementById("showPresident")?.checked!==false; d.showSignature=document.getElementById("showSignature")?.checked!==false; d.showCommittee=document.getElementById("showCommittee")?.checked!==false; localStorage.setItem(key(current),JSON.stringify(d)); }
+function signHtml(d){ const parts=[]; if(d.showPresident!==false) parts.push("সভাপতি / সম্পাদক"); if(d.showSignature!==false) parts.push("স্বাক্ষর: ____________________"); if(d.showCommittee!==false) parts.push(esc(cname())); return parts.join("<br>"); }
+
+function setManualLineSpace(value){
+ const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.style.lineHeight=value; const d=get(current); d.manualLineHeight=value; localStorage.setItem(key(current),JSON.stringify(d));
+}
+function syncManualFromEditor(){
+ const ed=document.getElementById(current+"_manualText"); if(!ed) return; const d=get(current); d.manualHtml=ed.innerHTML; d.manualText=ed.innerText; localStorage.setItem(key(current),JSON.stringify(d));
 }
 
 function buildForm(){
@@ -353,9 +384,40 @@ function buildForm(){
  // ===== ১১ নম্বর: সম্পূর্ণ Blank Manual Pad =====
  if(f.id==="manual"){
   const h=`<div class="bg-white border-2 border-orange-200 rounded-xl p-3">
-   <textarea id="${f.id}_manualText" rows="24" spellcheck="false"
-    placeholder=""
-    class="w-full min-h-[650px] p-4 border rounded-lg text-sm leading-6 resize-y">${esc(d.manualText||"")}</textarea>
+   <div class="flex flex-wrap items-center gap-2 mb-3 p-2 bg-orange-50 border border-orange-200 rounded-lg">
+    <span class="text-xs font-black text-orange-800">✍️ দরখাস্তের Format</span>
+    <label class="text-xs font-bold">Text Size
+      <select id="manualFontSize" onchange="setManualFontSize(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
+       <option value="12px" ${d.manualFontSize==="12px"?"selected":""}>12px</option>
+       <option value="14px" ${d.manualFontSize==="14px"?"selected":""}>14px</option>
+       <option value="16px" ${(!d.manualFontSize||d.manualFontSize==="16px")?"selected":""}>16px</option>
+       <option value="18px" ${d.manualFontSize==="18px"?"selected":""}>18px</option>
+       <option value="20px" ${d.manualFontSize==="20px"?"selected":""}>20px</option>
+       <option value="22px" ${d.manualFontSize==="22px"?"selected":""}>22px</option>
+      </select>
+    </label>
+    <label class="flex items-center gap-1 text-xs font-bold"><input id="manualBoldToggle" type="checkbox" onchange="formatManual('bold')" class="w-4 h-4"> Bold</label>
+    <label class="text-xs font-bold">Line Space
+      <select id="manualLineSpace" onchange="setManualLineSpace(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
+       <option value="1" ${(!d.manualLineHeight||d.manualLineHeight==="1")?"selected":""}>খুব কম</option><option value="1.18" ${d.manualLineHeight==="1.18"?"selected":""}>কম</option><option value="1.35" ${d.manualLineHeight==="1.35"?"selected":""}>স্বাভাবিক</option><option value="1.6" ${d.manualLineHeight==="1.6"?"selected":""}>বেশি</option><option value="2" ${d.manualLineHeight==="2"?"selected":""}>অনেক বেশি</option>
+      </select>
+    </label>
+    <label class="text-xs font-bold">Align
+      <select id="manualAlign" onchange="setManualAlign(this.value)" class="border rounded px-2 py-1 text-xs font-bold">
+       <option value="left" ${(!d.manualAlign||d.manualAlign==="left")?"selected":""}>বাম</option>
+       <option value="center" ${d.manualAlign==="center"?"selected":""}>মাঝে</option>
+       <option value="right" ${d.manualAlign==="right"?"selected":""}>ডান</option>
+       <option value="justify" ${d.manualAlign==="justify"?"selected":""}>দুই পাশে</option>
+      </select>
+    </label>
+    <div class="w-full flex flex-wrap gap-4 pt-2 border-t border-orange-200">
+      <label class="flex items-center gap-2 text-xs font-bold"><input id="showPresident" type="checkbox" ${d.showPresident!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> সভাপতি / সম্পাদক</label>
+      <label class="flex items-center gap-2 text-xs font-bold"><input id="showSignature" type="checkbox" ${d.showSignature!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> স্বাক্ষর: ____________________</label>
+      <label class="flex items-center gap-2 text-xs font-bold"><input id="showCommittee" type="checkbox" ${d.showCommittee!==false?'checked':''} onchange="saveManualDisplayOptions()" class="w-4 h-4"> কমিটির নাম</label>
+    </div>
+   </div>
+   <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="নিজের মতো দরখাস্ত লিখুন..."
+    class="manual-editor w-full min-h-[650px] p-4 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText||'')}</div>
   </div>
 
   <div class="flex justify-end gap-2 pt-3">
@@ -363,6 +425,8 @@ function buildForm(){
   </div>`;
 
   area.innerHTML=h;
+  const med=document.getElementById(f.id+"_manualText"); if(med){ med.addEventListener("input",syncManualFromEditor); }
+  const ls=document.getElementById("manualLineSpace"); if(ls) ls.value=d.manualLineHeight||"1.35";
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   const tab=document.getElementById("tab_"+current);
   if(tab) tab.classList.add("active");
@@ -479,8 +543,8 @@ function renderPreview(){
  const visible=d.padVisible!==false;
  const text=getDisplayText(f,d);
  document.getElementById("pvHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
- document.getElementById("pvText").innerHTML=visible?(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d)):"";
- document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:"";
+ document.getElementById("pvText").innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
+ document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
 }
@@ -500,7 +564,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -541,36 +605,16 @@ async function togglePad(id){
  }
 }
 
-function preparePrintSheet(allMode=false){
- const sheet=document.getElementById("printSheet");
- // Print only the typed/generated letter content on a clean A4 page.
- // The original physical pad already contains the header/design, so its image
- // must never be printed over the real pad.
- const pad=document.getElementById("printPadImage");
- pad.removeAttribute("src");
- sheet.classList.toggle("print-all-mode",!!allMode);
- return sheet;
-}
-
-function runPrint(allMode=false){
- preparePrintSheet(allMode);
- // No background/pad image is printed. Keep the existing print logic and
- // print the saved/generated content on a clean A4 sheet.
- setTimeout(()=>window.print(),120);
-}
-
 function printCurrent(){
  const d=collect(current);
  localStorage.setItem(key(current),JSON.stringify(d));
  const f=forms.find(x=>x.id===current);
- if(!f) return;
  const visible=d.padVisible!==false;
- document.getElementById("printHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
+ document.getElementById("printHeading").textContent=visible?f.heading:"";
  const printText=getDisplayText(f,d);
- document.getElementById("printText").innerHTML=visible?(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d)):"";
- document.getElementById("printSign").innerHTML=visible?`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:"";
- document.getElementById("printAll").innerHTML="";
- runPrint(false);
+ document.getElementById("printText").innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(printText)):(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d))):"";
+ document.getElementById("printSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
+ setTimeout(()=>window.print(),100);
 }
 
 function printOneSaved(index){
@@ -578,12 +622,11 @@ function printOneSaved(index){
  if(!f) return;
  const d=get(f.id);
  if(d.padVisible===false) return;
- document.getElementById("printHeading").textContent=f.id==="manual"?"":f.heading;
+ document.getElementById("printHeading").textContent=f.heading;
  const oneText=getDisplayText(f,d);
- document.getElementById("printText").innerHTML=d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d);
- document.getElementById("printSign").innerHTML=`<div class="signbox">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`;
- document.getElementById("printAll").innerHTML="";
- runPrint(false);
+ document.getElementById("printText").innerHTML=f.id==="manual"?(d.manualHtml||esc(oneText)):(d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d));
+ document.getElementById("printSign").innerHTML=`<div class="signbox">${signHtml(d)}</div>`;
+ setTimeout(()=>window.print(),100);
 }
 
 function printAllSaved(){
@@ -594,8 +637,8 @@ function printAllSaved(){
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
  const box=document.getElementById("printAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">সভাপতি / সম্পাদক<br>স্বাক্ষর: ____________________<br>${esc(cname())}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
- runPrint(true);
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><b>${x.no}. ${esc(x.title)}:</b> <span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ window.print();
 }
 
 
