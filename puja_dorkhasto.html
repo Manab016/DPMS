@@ -26,40 +26,11 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .form-panel.active{display:block}
 @media print{
  .no-print{display:none!important}
- @page{size:A4 portrait;margin:0!important}
- html,body{
-   width:210mm!important;
-   height:297mm!important;
-   margin:0!important;
-   padding:0!important;
-   background:#fff!important;
- }
+ @page{size:A4;margin:0}
+ html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
- #printSheet{
-   display:block!important;
-   width:210mm!important;
-   height:297mm!important;
-   position:relative!important;
-   overflow:hidden!important;
-   margin:0!important;
-   padding:0!important;
-   box-sizing:border-box!important;
-   background:#fff!important;
- }
- /* Keep the exact same vertical starting point as the live A4 pad preview.
-    The original pad/header is intentionally NOT printed; this blank top area
-    is reserved for the user's physical letterhead/pad. */
- #printContent{
-   position:absolute!important;
-   top:83mm!important;
-   left:14mm!important;
-   right:14mm!important;
-   bottom:15mm!important;
-   margin:0!important;
-   padding:0!important;
-   overflow:hidden!important;
-   box-sizing:border-box!important;
- }
+ #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden};margin:0!important;padding:0!important;box-sizing:border-box
+ #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
  #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
  #printAll .all-pad-item{margin-bottom:2px}
  #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
@@ -210,15 +181,17 @@ const dpmsAuth = getAuth(dpmsFirebaseApp);
 const dpmsDb = getFirestore(dpmsFirebaseApp);
 window.dpmsFirebase = { auth: dpmsAuth, db: dpmsDb, ready: false, user: null };
 
-window.firestoreSavePujaDorkhasto = async function(formsData) {
+window.firestoreSavePujaDorkhasto = async function(formsData, savedApplications) {
   const user = window.dpmsFirebase.user;
   if (!user) throw new Error("Firebase লগইন পাওয়া যায়নি। আগে Dashboard-এ লগইন করুন।");
-  await setDoc(doc(dpmsDb, "puja_dorkhasto", "main"), {
+  const payload = {
     forms: formsData,
     updatedAt: Date.now(),
     updatedBy: user.uid,
     updatedByEmail: user.email || ""
-  }, { merge: true });
+  };
+  if (Array.isArray(savedApplications)) payload.savedApplications = savedApplications;
+  await setDoc(doc(dpmsDb, "puja_dorkhasto", "main"), payload, { merge: true });
 };
 
 async function loadFromFirestore() {
@@ -227,6 +200,10 @@ async function loadFromFirestore() {
   try {
     const snap = await getDoc(doc(dpmsDb, "puja_dorkhasto", "main"));
     if (snap.exists()) {
+      const cloudSavedApplications = snap.data().savedApplications;
+      if (Array.isArray(cloudSavedApplications)) {
+        localStorage.setItem("puja_saved_applications_v2", JSON.stringify(cloudSavedApplications));
+      }
       const formsData = snap.data().forms || {};
       Object.keys(formsData).forEach(id => {
         localStorage.setItem("puja_dorkhasto_" + id, JSON.stringify(formsData[id] || {}));
@@ -653,20 +630,25 @@ function setWriteMode(id,mode){
 async function saveCurrent(){
  const d=collect(current);
  localStorage.setItem(key(current),JSON.stringify(d));
- buildTabs();
- buildForm();
+ buildTabs(); buildForm();
  try{
-   const formsData={};
-   forms.forEach(f=>{formsData[f.id]=get(f.id)});
-   if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
-     await window.firestoreSavePujaDorkhasto(formsData);
-     alert("এই দরখাস্তের তথ্য Firebase Firestore-এ সেভ হয়েছে।");
-   }else{
-     alert("এই Browser-এ Local Storage-এ সেভ হয়েছে। Firebase লগইন পাওয়া যায়নি।");
+   const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
+   const f=forms.find(x=>x.id===current);
+   const savedPayload={...d,__formId:current,__formTitle:f?.title||"দরখাস্ত"};
+   const savedItem=window.saveApplicationCopy ? window.saveApplicationCopy(savedPayload,d.__savedApplicationId||null) : null;
+   if(savedItem && savedItem.id){
+     d.__savedApplicationId=savedItem.id;
+     localStorage.setItem(key(current),JSON.stringify(d));
+     formsData[current]=get(current);
    }
+   const list=window.getSavedApplications ? window.getSavedApplications() : [];
+   if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
+     await window.firestoreSavePujaDorkhasto(formsData,list);
+   }
+   alert("এই দরখাস্তটি সংরক্ষিত দরখাস্তে সেভ হয়েছে।");
  }catch(e){
    console.error(e);
-   alert("Firestore-এ সেভ করা যায়নি। Local Storage-এ তথ্য রাখা হয়েছে।\n\n"+e.message);
+   alert("দরখাস্ত সেভ করা যায়নি। Local Storage-এ তথ্য রাখা হয়েছে।\n\n"+e.message);
  }
 }
 
@@ -916,6 +898,20 @@ window.addEventListener("pujaFirestoreReady",()=>{
   window.saveApplicationCopy = savedApplications.save;
   window.deleteSavedApplication = savedApplications.remove;
 
+  // Load a saved application back into the existing editor without changing the design.
+  window.loadSavedApplicationIntoEditor = function(item){
+    try{
+      const data = cloneData(item?.data || {});
+      const formId = data.__formId || "manual";
+      delete data.__formId; delete data.__formTitle;
+      if(item?.id) data.__savedApplicationId = item.id;
+      localStorage.setItem(key(formId), JSON.stringify(data));
+      current = formId;
+      buildTabs();
+      buildForm();
+    }catch(e){ console.error(e); alert("সংরক্ষিত দরখাস্ত খোলা যায়নি।"); }
+  };
+
   // Expose a small manager panel only if the page does not already have one.
   // It is intentionally hidden until the user clicks the "Saved Applications"
   // button created below.
@@ -973,7 +969,11 @@ window.addEventListener("pujaFirestoreReady",()=>{
         del.style.cssText="border:0;background:#dc2626;color:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer";
         del.onclick=function(){
           if(confirm("এই দরখাস্তটি স্থায়ীভাবে মুছে ফেলবেন?")){
-            savedApplications.remove(item.id);
+            const remaining=savedApplications.remove(item.id);
+            if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
+              const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
+              window.firestoreSavePujaDorkhasto(formsData, remaining).catch(e=>console.warn("Saved application cloud delete failed:",e));
+            }
             showSavedApps();
           }
         };
