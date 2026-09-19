@@ -129,6 +129,7 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 #pvText{margin:0}
 /* Manual rich-text must keep each selected part's own formatting. */
 #pvText.manual-rich,#printText.manual-rich{font-weight:400}
+#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6,#printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0}
 #pvText.manual-rich b,#pvText.manual-rich strong,#printText.manual-rich b,#printText.manual-rich strong{font-weight:800}
 #pvText.manual-rich [style*="font-weight:700"],#pvText.manual-rich [style*="font-weight:800"],#pvText.manual-rich [style*="font-weight:bold"],#printText.manual-rich [style*="font-weight:700"],#printText.manual-rich [style*="font-weight:800"],#printText.manual-rich [style*="font-weight:bold"]{font-weight:700}
 #pvText.manual-rich [style*="font-weight:400"],#printText.manual-rich [style*="font-weight:400"]{font-weight:400}
@@ -414,10 +415,18 @@ function formatManual(cmd,value){
 }
 function setManualFontSize(px){
  const ed=getManualEditor(); if(!ed) return;
- restoreSelection(ed);
+ const restored=restoreSelection(ed);
+ const sel=window.getSelection();
+ const hasRange=restored && sel && sel.rangeCount && !sel.getRangeAt(0).collapsed && ed.contains(sel.getRangeAt(0).commonAncestorContainer);
  try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
- document.execCommand("fontSize",false,"7");
- ed.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute("size");el.style.fontSize=px;});
+ if(hasRange){
+   document.execCommand("fontSize",false,"7");
+   ed.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute("size");el.style.fontSize=px;});
+   const r=sel.getRangeAt(0);
+   ed.querySelectorAll('[style*="font-size"]').forEach(el=>{try{if(r.intersectsNode(el)&&el!==ed)el.style.fontSize=px;}catch(e){}});
+ }else{
+   ed.style.fontSize=px;
+ }
  const d=get(current); d.manualFontSize=px; localStorage.setItem(key(current),JSON.stringify(d));
  syncManualFromEditor(); rememberSelection(ed);
 }
@@ -635,6 +644,13 @@ function renderPreview(){
  document.getElementById("pvHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
  const pvTextEl=document.getElementById("pvText");
  pvTextEl.classList.toggle("manual-rich", f.id==="manual");
+ if(f.id==="manual"){
+   pvTextEl.style.lineHeight = d.manualLineHeight || "1";
+   pvTextEl.style.fontSize = d.manualFontSize || "16px";
+ }else{
+   pvTextEl.style.removeProperty("line-height");
+   pvTextEl.style.removeProperty("font-size");
+ }
  pvTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
