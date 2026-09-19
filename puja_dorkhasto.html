@@ -127,7 +127,12 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 /* ===== Exact manual text + tighter document spacing ===== */
 #pvText,#printText{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 #pvText{margin:0}
-.all-text{white-space:pre-wrap}
+/* Manual rich-text must keep each selected part's own formatting. */
+#pvText.manual-rich,#printText.manual-rich{font-weight:400}
+#pvText.manual-rich b,#pvText.manual-rich strong,#printText.manual-rich b,#printText.manual-rich strong{font-weight:800}
+#pvText.manual-rich [style*="font-weight:700"],#pvText.manual-rich [style*="font-weight:800"],#pvText.manual-rich [style*="font-weight:bold"],#printText.manual-rich [style*="font-weight:700"],#printText.manual-rich [style*="font-weight:800"],#printText.manual-rich [style*="font-weight:bold"]{font-weight:700}
+#pvText.manual-rich [style*="font-weight:400"],#printText.manual-rich [style*="font-weight:400"]{font-weight:400}
+.all-text{white-space:pre-wrap}.manual-rich-text{font-weight:400}.manual-rich-text b,.manual-rich-text strong{font-weight:800}
 .manual-write-hidden{display:none!important}
 
 /* Writing mode */
@@ -135,7 +140,7 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 
 
 .all-pad-content{position:absolute;top:27%;left:6%;right:6%;bottom:5%;overflow:hidden;font-size:clamp(8px,1.35vw,13px);line-height:1.35;font-weight:600;background:transparent}
-.all-pad-item{margin-bottom:3px}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:clamp(8px,1.2vw,12px);font-weight:800;line-height:1.25}
+.all-pad-item{margin-bottom:3px}.all-pad-item b{font-weight:900}.all-pad-item .all-text{white-space:pre-wrap}.manual-rich-text{font-weight:400}.manual-rich-text b,.manual-rich-text strong{font-weight:800}.all-pad-sign{position:absolute;right:0;bottom:0;text-align:center;font-size:clamp(8px,1.2vw,12px);font-weight:800;line-height:1.25}
 @media(max-width:600px){.all-pad-content{font-size:8px;line-height:1.18;top:27%;left:5.5%;right:5.5%;bottom:4.5%;overflow:hidden}.all-pad-item{margin-bottom:1px}.all-pad-sign{font-size:7.5px}}
 
 .manual-editor{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.35;outline:none;background:#fff;}
@@ -353,32 +358,111 @@ function collect(id){
  return d;
 }
 
+function getManualEditor(){ return document.getElementById(current + "_manualText"); }
+function selectionInsideEditor(ed){
+ const sel=window.getSelection();
+ if(!ed || !sel || !sel.rangeCount) return null;
+ const r=sel.getRangeAt(0);
+ if(!ed.contains(r.startContainer) || !ed.contains(r.endContainer)) return null;
+ return {sel,range:r};
+}
+function blockOf(node,ed){
+ if(node && node.nodeType===3) node=node.parentElement;
+ let el=node;
+ while(el && el!==ed){
+   if(/^(DIV|P|LI|BLOCKQUOTE|H1|H2|H3|H4|H5|H6)$/.test(el.tagName)) return el;
+   el=el.parentElement;
+ }
+ return ed;
+}
+function selectedBlocks(ed){
+ const info=selectionInsideEditor(ed);
+ if(!info) return [];
+ const {range}=info;
+ const blocks=[];
+ const candidates=[...ed.querySelectorAll("div,p,li,blockquote,h1,h2,h3,h4,h5,h6")];
+ candidates.forEach(el=>{
+   try{
+     if(range.intersectsNode(el) && ![...el.children].some(ch=>/^(DIV|P|LI|BLOCKQUOTE|H1|H2|H3|H4|H5|H6)$/.test(ch.tagName) && range.intersectsNode(ch))) blocks.push(el);
+   }catch(e){}
+ });
+ if(!blocks.length){
+   const a=blockOf(range.startContainer,ed), b=blockOf(range.endContainer,ed);
+   if(a!==ed) blocks.push(a);
+   if(b!==ed && b!==a) blocks.push(b);
+ }
+ return [...new Set(blocks)];
+}
+function rememberSelection(ed){
+ const info=selectionInsideEditor(ed);
+ if(!info) return;
+ try{ ed._savedRange=info.range.cloneRange(); }catch(e){}
+}
+function restoreSelection(ed){
+ if(!ed || !ed._savedRange) return false;
+ try{
+   const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(ed._savedRange); ed.focus(); return true;
+ }catch(e){ return false; }
+}
 function formatManual(cmd,value){
- const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
+ const ed=getManualEditor(); if(!ed) return;
+ restoreSelection(ed);
  try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
- document.execCommand(cmd,false,value||null); syncManualFromEditor();
+ document.execCommand(cmd,false,value||null);
+ syncManualFromEditor();
+ rememberSelection(ed);
 }
 function setManualFontSize(px){
- const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
+ const ed=getManualEditor(); if(!ed) return;
+ restoreSelection(ed);
  try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
  document.execCommand("fontSize",false,"7");
  ed.querySelectorAll('font[size="7"]').forEach(el=>{el.removeAttribute("size");el.style.fontSize=px;});
- const d=get(current); d.manualFontSize=px; localStorage.setItem(key(current),JSON.stringify(d)); syncManualFromEditor();
+ const d=get(current); d.manualFontSize=px; localStorage.setItem(key(current),JSON.stringify(d));
+ syncManualFromEditor(); rememberSelection(ed);
+}
+function applySelectedBlockStyle(style,value){
+ const ed=getManualEditor(); if(!ed) return;
+ restoreSelection(ed);
+ const blocks=selectedBlocks(ed);
+ if(blocks.length){ blocks.forEach(b=>b.style[style]=value); }
+ else { ed.style[style]=value; }
+ syncManualFromEditor(); rememberSelection(ed);
 }
 function setManualAlign(value){
- const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.focus();
- const cmd=value==="center"?"justifyCenter":value==="right"?"justifyRight":value==="justify"?"justifyFull":"justifyLeft";
- document.execCommand(cmd,false,null);
- const d=get(current); d.manualAlign=value; localStorage.setItem(key(current),JSON.stringify(d)); syncManualFromEditor();
+ const ed=getManualEditor(); if(!ed) return;
+ applySelectedBlockStyle("textAlign",value);
+ const d=get(current); d.manualAlign=value; localStorage.setItem(key(current),JSON.stringify(d));
 }
-function saveManualDisplayOptions(){ const d=get(current); d.showPresident=document.getElementById("showPresident")?.checked!==false; d.showSignature=document.getElementById("showSignature")?.checked!==false; d.showCommittee=document.getElementById("showCommittee")?.checked!==false; localStorage.setItem(key(current),JSON.stringify(d)); }
-function signHtml(d){ const parts=[]; if(d.showPresident!==false) parts.push("সভাপতি / সম্পাদক"); if(d.showSignature!==false) parts.push("স্বাক্ষর: ____________________"); if(d.showCommittee!==false) parts.push(esc(cname())); return parts.join("<br>"); }
-
+function saveManualDisplayOptions(){
+ const d=get(current);
+ d.showPresident=document.getElementById("showPresident")?.checked!==false;
+ d.showSignature=document.getElementById("showSignature")?.checked!==false;
+ d.showCommittee=document.getElementById("showCommittee")?.checked!==false;
+ localStorage.setItem(key(current),JSON.stringify(d));
+}
+function signHtml(d){
+ const parts=[];
+ if(d.showPresident!==false) parts.push("সভাপতি / সম্পাদক");
+ if(d.showSignature!==false) parts.push("স্বাক্ষর: ____________________");
+ if(d.showCommittee!==false) parts.push(esc(cname()));
+ return parts.join("<br>");
+}
 function setManualLineSpace(value){
- const ed=document.getElementById(current+"_manualText"); if(!ed) return; ed.style.lineHeight=value; const d=get(current); d.manualLineHeight=value; localStorage.setItem(key(current),JSON.stringify(d));
+ const ed=getManualEditor(); if(!ed) return;
+ applySelectedBlockStyle("lineHeight",value);
+ const d=get(current); d.manualLineHeight=value; localStorage.setItem(key(current),JSON.stringify(d));
 }
 function syncManualFromEditor(){
- const ed=document.getElementById(current+"_manualText"); if(!ed) return; const d=get(current); d.manualHtml=ed.innerHTML; d.manualText=ed.innerText; localStorage.setItem(key(current),JSON.stringify(d));
+ const ed=getManualEditor(); if(!ed) return;
+ const d=get(current); d.manualHtml=ed.innerHTML; d.manualText=ed.innerText;
+ localStorage.setItem(key(current),JSON.stringify(d));
+ rememberSelection(ed);
+}
+function prepareManualToolbar(){
+ const ed=getManualEditor(); if(!ed) return;
+ ["mouseup","keyup","selectstart","input"].forEach(ev=>ed.addEventListener(ev,()=>rememberSelection(ed)));
+ ed.addEventListener("blur",()=>rememberSelection(ed));
 }
 
 function buildForm(){
@@ -431,7 +515,7 @@ function buildForm(){
   </div>`;
 
   area.innerHTML=h;
-  const med=document.getElementById(f.id+"_manualText"); if(med){ med.addEventListener("input",syncManualFromEditor); }
+  const med=document.getElementById(f.id+"_manualText"); if(med){ med.addEventListener("input",syncManualFromEditor); prepareManualToolbar(); }
   const ls=document.getElementById("manualLineSpace"); if(ls) ls.value=d.manualLineHeight||"1.35";
   document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
   const tab=document.getElementById("tab_"+current);
@@ -549,7 +633,9 @@ function renderPreview(){
  const visible=d.padVisible!==false;
  const text=getDisplayText(f,d);
  document.getElementById("pvHeading").textContent=visible?(f.id==="manual"?"":f.heading):"";
- document.getElementById("pvText").innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
+ const pvTextEl=document.getElementById("pvText");
+ pvTextEl.classList.toggle("manual-rich", f.id==="manual");
+ pvTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
@@ -570,7 +656,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${x.form.id==="manual"?"manual-rich-text":""}">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -619,7 +705,9 @@ function printCurrent(){
  const visible=d.padVisible!==false;
  document.getElementById("printHeading").textContent=visible?f.heading:"";
  const printText=getDisplayText(f,d);
- document.getElementById("printText").innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(printText)):(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d))):"";
+ const printTextEl=document.getElementById("printText");
+ printTextEl.classList.toggle("manual-rich", f.id==="manual");
+ printTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(printText)):(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d))):"";
  document.getElementById("printSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  setTimeout(()=>window.print(),100);
 }
@@ -632,7 +720,9 @@ function printOneSaved(index){
  if(d.padVisible===false) return;
  document.getElementById("printHeading").textContent=f.heading;
  const oneText=getDisplayText(f,d);
- document.getElementById("printText").innerHTML=f.id==="manual"?(d.manualHtml||esc(oneText)):(d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d));
+ const onePrintText=document.getElementById("printText");
+ onePrintText.classList.toggle("manual-rich", f.id==="manual");
+ onePrintText.innerHTML=f.id==="manual"?(d.manualHtml||esc(oneText)):(d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d));
  document.getElementById("printSign").innerHTML=`<div class="signbox">${signHtml(d)}</div>`;
  setTimeout(()=>window.print(),100);
 }
@@ -647,7 +737,7 @@ function printAllSaved(){
  document.getElementById("printHeading").textContent="";
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${x.form.id==="manual"?"manual-rich-text":""}">${x.form.id==="manual"?(x.data.manualHtml||esc(x.text)):(x.data.writeMode==="manual"?esc(x.text):highlightDataText(x.text,x.form,x.data))}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
  sheet.classList.add("printing-all");
  const cleanup=()=>{ sheet.classList.remove("printing-all"); box.innerHTML=""; window.removeEventListener("afterprint",cleanup); };
  window.addEventListener("afterprint",cleanup);
