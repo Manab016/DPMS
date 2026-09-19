@@ -29,15 +29,18 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
  @page{size:A4;margin:0}
  html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
  body>*{display:none!important}
- #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden}
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden}
- #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:12mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
+ #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden};margin:0!important;padding:0!important;box-sizing:border-box
+ #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
+ #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
  #printAll .all-pad-item{margin-bottom:2px}
  #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
  #printSheet.printing-all #printContent{display:none!important}
  #printSheet.printing-all #printAll{display:block!important}
  #printHeading{text-align:center;font-size:21px;font-weight:900;line-height:1.5;margin:0 0 6mm}
- #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap}
+ #printText{font-size:16px;font-weight:700;line-height:1.45;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+ #printText.manual-rich{font-weight:400}
+ #printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0}
+ #printText.manual-rich b,#printText.manual-rich strong{font-weight:800}
  #printSign{margin-top:13mm;display:flex;justify-content:flex-end;text-align:center;font-size:16px;font-weight:800;line-height:1.75}
 }
 
@@ -126,7 +129,11 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 
 /* ===== Exact manual text + tighter document spacing ===== */
 #pvText,#printText{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
-#pvText{margin:0}
+#pvText{margin:0} 
+#pvText.manual-rich{font-weight:400;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
+#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6{margin:0;padding:0}
+#pvText.manual-rich b,#pvText.manual-rich strong{font-weight:800}
+
 /* Manual rich-text must keep each selected part's own formatting. */
 #pvText.manual-rich,#printText.manual-rich{font-weight:400}
 #pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6,#printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0}
@@ -147,6 +154,13 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .manual-editor{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere;line-height:1.35;outline:none;background:#fff;}
 .manual-editor:empty:before{content:attr(data-placeholder);color:#9ca3af;}
 .manual-editor b,.manual-editor strong{font-weight:800;}
+
+/* ===== PRINT/PREVIEW ALIGNMENT FIX =====
+   Preview and print now use the same A4 physical coordinates.
+   Manual line-spacing is applied to selected paragraphs, or the whole editor
+   when no paragraph is selected, and the saved value is reused by Preview/Print.
+   Browser print dialog should use A4, Scale=100%/Actual Size, Headers/Footers=Off.
+*/
 </style>
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
@@ -459,8 +473,32 @@ function signHtml(d){
 }
 function setManualLineSpace(value){
  const ed=getManualEditor(); if(!ed) return;
- applySelectedBlockStyle("lineHeight",value);
- const d=get(current); d.manualLineHeight=value; localStorage.setItem(key(current),JSON.stringify(d));
+ restoreSelection(ed);
+ const blocks=selectedBlocks(ed);
+
+ // If paragraphs/blocks are selected, change only those blocks.
+ // If no block is selected, change the whole document so the control
+ // always has a visible effect.
+ if(blocks.length){
+   blocks.forEach(b=>b.style.lineHeight=value);
+ }else{
+   ed.style.lineHeight=value;
+   ed.querySelectorAll("p,div,li,blockquote,h1,h2,h3,h4,h5,h6").forEach(b=>{
+     if(b!==ed) b.style.lineHeight=value;
+   });
+ }
+
+ const d=get(current);
+ d.manualLineHeight=value;
+ d.manualHtml=ed.innerHTML;
+ d.manualText=ed.innerText;
+ localStorage.setItem(key(current),JSON.stringify(d));
+ syncManualFromEditor();
+ rememberSelection(ed);
+
+ // Immediately reflect the same value in the live preview.
+ const pv=document.getElementById("pvText");
+ if(pv) pv.style.lineHeight=value;
 }
 function syncManualFromEditor(){
  const ed=getManualEditor(); if(!ed) return;
@@ -652,6 +690,7 @@ function renderPreview(){
    pvTextEl.style.removeProperty("font-size");
  }
  pvTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(text)):(d.writeMode==="manual"?esc(text):highlightDataText(text,f,d))):"";
+ if(f.id==="manual") pvTextEl.style.lineHeight=d.manualLineHeight||"1.35";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
@@ -724,6 +763,10 @@ function printCurrent(){
  const printTextEl=document.getElementById("printText");
  printTextEl.classList.toggle("manual-rich", f.id==="manual");
  printTextEl.innerHTML=visible?(f.id==="manual"?(d.manualHtml||esc(printText)):(d.writeMode==="manual"?esc(printText):highlightDataText(printText,f,d))):"";
+ if(f.id==="manual"){
+   printTextEl.style.lineHeight=d.manualLineHeight||"1.35";
+   printTextEl.style.fontSize=d.manualFontSize||"16px";
+ }
  document.getElementById("printSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  setTimeout(()=>window.print(),100);
 }
@@ -739,6 +782,10 @@ function printOneSaved(index){
  const onePrintText=document.getElementById("printText");
  onePrintText.classList.toggle("manual-rich", f.id==="manual");
  onePrintText.innerHTML=f.id==="manual"?(d.manualHtml||esc(oneText)):(d.writeMode==="manual"?esc(oneText):highlightDataText(oneText,f,d));
+ if(f.id==="manual"){
+   onePrintText.style.lineHeight=d.manualLineHeight||"1.35";
+   onePrintText.style.fontSize=d.manualFontSize||"16px";
+ }
  document.getElementById("printSign").innerHTML=`<div class="signbox">${signHtml(d)}</div>`;
  setTimeout(()=>window.print(),100);
 }
