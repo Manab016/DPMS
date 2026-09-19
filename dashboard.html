@@ -344,6 +344,13 @@
              <div class="text-2xl mb-1">🪔</div><div class="text-xs font-bold">পূজার নির্ঘণ্ট</div><div id="dashPujaYearLabel" class="text-[10px] opacity-90 mt-1">চলতি বছরের স্বয়ংক্রিয় নির্ঘণ্ট</div>
            </div>
 
+          <!-- পূজার দরখাস্ত — নির্ঘণ্টের পাশেই -->
+           <div id="dash-card-pujaDorkhasto" onclick="window.location.href='puja_dorkhasto.html'" class="bg-rose-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-rose-700 transition flex flex-col items-center justify-center text-center">
+             <div class="text-2xl mb-1">📝</div>
+             <div class="text-xs font-bold">পূজার দরখাস্ত</div>
+             <div class="text-[10px] opacity-90 mt-1">পূজার আবেদন ও ব্যবস্থাপনা</div>
+           </div>
+
           <!-- ব্যাকআপ ও রিস্টোর ড্যাশবোর্ড কার্ড -->
           <div id="dash-card-backup" onclick="openBackupRestoreModal()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2">
             <div class="text-2xl mb-1">📦</div>
@@ -799,15 +806,21 @@
             <div class="bg-white p-3 rounded-xl border shadow-sm flex items-center justify-between gap-2">
               <div class="flex items-center gap-2.5 overflow-hidden min-w-0">
                 <div class="w-9 h-9 bg-teal-50 text-teal-700 rounded-lg flex items-center justify-center text-lg flex-shrink-0">${icon}</div>
-                <div class="truncate min-w-0">
-                  <h5 class="text-xs font-bold text-gray-800 truncate">${safeTitle}</h5>
-                  <p class="text-[10px] text-gray-500 truncate">${safeFileName} • ${dateStr}</p>
+                <div class="truncate min-w-0 flex-1">
+                  <h5 class="text-xs font-bold text-gray-800 truncate" title="${safeTitle}">${safeTitle}</h5>
+                  <p class="text-[10px] text-gray-500 truncate" title="${safeFileName}">${safeFileName} • ${dateStr}</p>
                 </div>
               </div>
               <div class="flex items-center gap-1.5 flex-shrink-0">
-                <a href="${safeUrl}" target="_blank" rel="noopener" class="bg-blue-50 hover:bg-blue-100 text-blue-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="প্রিভিউ">👁️ প্রিভিউ</a>
-                <a href="${safeUrl}" download="${safeFileName}" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 px-2.5 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1 transition" title="ডাউনলোড">⬇️ ডাউনলোড</a>
-                ${window.currentUserRole === "admin" ? `<button onclick="deletePastDocument('${d.id}')" class="bg-rose-50 hover:bg-rose-100 text-rose-700 px-2 py-1.5 rounded-lg text-xs font-semibold transition" title="ডিলিট">❌</button>` : ""}
+                <a href="${safeUrl}" target="_blank" rel="noopener"
+                   aria-label="প্রিভিউ" title="প্রিভিউ"
+                   class="w-9 h-9 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded-lg flex items-center justify-center text-base transition border border-blue-100">👁️</a>
+                <a href="${safeUrl}" download="${safeFileName}"
+                   aria-label="ডাউনলোড" title="ডাউনলোড"
+                   class="w-9 h-9 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 rounded-lg flex items-center justify-center text-base transition border border-emerald-100">⬇️</a>
+                ${window.currentUserRole === "admin" ? `<button onclick="deletePastDocument('${d.id}')"
+                   aria-label="ডিলিট" title="ডিলিট"
+                   class="w-9 h-9 bg-rose-50 hover:bg-rose-100 text-rose-700 rounded-lg flex items-center justify-center text-base transition border border-rose-100">🗑️</button>` : ""}
               </div>
             </div>
           `;
@@ -957,137 +970,15 @@
       };
 
       // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত
-      const COLLECTIONS = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents", "puja_schedules"];
+      const COLLECTIONS = ["members","subscriptions","expenses","bookings","sales","treasurer","committee","app_users","past_documents","puja_schedules","puja_dorkhasto"];
 
-      window.exportFullBackup = async function() {
-        try {
-          const backupData = {
-            version: "1.0",
-            timestamp: new Date().toISOString(),
-            collections: {}
-          };
+      function dataUrlFromBlob(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=reject;r.readAsDataURL(blob);});}
+      async function downloadSupabaseFileAsDataUrl(item){if(!item?.storagePath)return null;const bucket=item.storageBucket||DOCUMENTS_BUCKET;const path=String(item.storagePath).replace(/^\/+/,"").replace(/^documents\//i,"");const {data,error}=await supabaseClient.storage.from(bucket).download(path);if(error||!data)throw error||new Error("Supabase file download failed");return await dataUrlFromBlob(data);}
+      function dataUrlToBlob(dataUrl){const m=String(dataUrl||"").match(/^data:([^;,]+)?(;base64)?,(.*)$/s);if(!m)throw new Error("Invalid file backup data");const mime=m[1]||"application/octet-stream",bytes=atob(m[3]),arr=new Uint8Array(bytes.length);for(let i=0;i<bytes.length;i++)arr[i]=bytes.charCodeAt(i);return new Blob([arr],{type:mime});}
 
-          for (const colName of COLLECTIONS) {
-            try {
-              const querySnapshot = await getDocs(collection(db, colName));
-              backupData.collections[colName] = [];
-              querySnapshot.forEach((docSnap) => {
-                backupData.collections[colName].push({
-                  id: docSnap.id,
-                  ...docSnap.data()
-                });
-              });
-            } catch (err) {
-              console.warn(`Skipping collection ${colName} due to permission error:`, err);
-            }
-          }
+      window.exportFullBackup=async function(){try{if(!auth.currentUser){alert("আপনার লগইন সেশন পাওয়া যাচ্ছে না। আবার লগইন করুন।");return;}const backupData={version:"2.0",backupType:"DPMS_FULL_BACKUP",timestamp:new Date().toISOString(),firebaseProject:firebaseConfig.projectId,supabase:{url:SUPABASE_URL,bucket:DOCUMENTS_BUCKET},collections:{},supabaseFiles:[]};for(const colName of COLLECTIONS){const snap=await getDocs(collection(db,colName));backupData.collections[colName]=[];snap.forEach(d=>backupData.collections[colName].push({id:d.id,...d.data()}));}for(const item of (backupData.collections.past_documents||[])){if(!item.storagePath)continue;try{const dataUrl=await downloadSupabaseFileAsDataUrl(item);if(dataUrl)backupData.supabaseFiles.push({collection:"past_documents",documentId:item.id,storageBucket:item.storageBucket||DOCUMENTS_BUCKET,storagePath:item.storagePath,fileName:item.fileName||"document",dataUrl});}catch(e){console.warn("Backup file skipped",item.storagePath,e);}}const blob=new Blob([JSON.stringify(backupData,null,2)],{type:"application/json;charset=utf-8"}),dateStr=new Date().toISOString().replace(/[:.]/g,"-").slice(0,19);saveAs(blob,`DurgaPuja_FULL_Backup_${dateStr}.json`);alert("সম্পূর্ণ Backup তৈরি হয়েছে।\nFirestore-এর ডাটা + Supabase-এর document files একই ফাইলে রাখা হয়েছে।");closeBackupRestoreModal();}catch(e){console.error(e);alert("সম্পূর্ণ Backup তৈরি করতে সমস্যা হয়েছে: "+(e?.message||e));}};
 
-          const dataStr = JSON.stringify(backupData, null, 2);
-          const blob = new Blob([dataStr], { type: "application/json;charset=utf-8" });
-          const dateStr = new Date().toISOString().split("T")[0];
-          saveAs(blob, `DurgaPuja_Backup_${dateStr}.json`);
-          alert("ব্যাকআপ ফাইল সফলভাবে ডাউনলোড হয়েছে!");
-          closeBackupRestoreModal();
-        } catch (e) {
-          console.error(e);
-          alert("ব্যাকআপ তৈরি করতে সমস্যা হয়েছে: " + e.message);
-        }
-      };
-
-      window.importFullBackup = async function(input) {
-        const file = input.files[0];
-        if (!file) return;
-
-        if (!confirm("সতর্কতা! রিস্টোর করলে বর্তমান ডাটার সাথে নতুন ডাটা যুক্ত বা ওভাররাইট হতে পারে। আপনি কি নিশ্চিত?")) {
-          input.value = "";
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = async function(e) {
-          try {
-            const parsed = JSON.parse(e.target.result);
-            
-            // Fix: পার্ট বাই পার্ট কাস্টম JSON আপলোডের সাপোর্ট
-            let collectionsData = parsed.collections || parsed.data;
-            if (!collectionsData) {
-              if (typeof parsed === 'object' && !Array.isArray(parsed)) {
-                collectionsData = parsed;
-              } else if (Array.isArray(parsed)) {
-                // Fix: যখন JSON ফাইলে সরাসরি Array থাকে (যেমন members_backup_restore.json)
-                let defaultCol = "members";
-                const possibleCollections = ["members", "subscriptions", "expenses", "bookings", "sales", "treasurer", "committee", "app_users", "past_documents", "puja_schedules"];
-                for (let pc of possibleCollections) {
-                  if (file.name.toLowerCase().includes(pc)) {
-                    defaultCol = pc;
-                    break;
-                  }
-                }
-                const selectedCol = prompt("এই ফাইলে ডাটা লিস্ট (Array) পাওয়া গেছে। আপনি এটি কোন কালেকশনে রিস্টোর করবেন তা নিচে ইংরেজিতে লিখুন:", defaultCol);
-                
-                if (!selectedCol) {
-                   input.value = "";
-                   return; // ইউজার ক্যানসেল করলে বাতিল হবে
-                }
-                collectionsData = {};
-                collectionsData[selectedCol] = parsed;
-              } else {
-                alert("ব্যাকআপ ফাইল সঠিক নয়।");
-                input.value = "";
-                return;
-              }
-            }
-
-            const collectionMapping = {
-              "users": "app_users",
-              "members": "members",
-              "subscriptions": "subscriptions",
-              "expenses": "expenses",
-              "bookings": "bookings",
-              "sales": "sales",
-              "treasurer": "treasurer",
-              "committee": "committee",
-              "past_documents": "past_documents",
-              "puja_schedules": "puja_schedules"
-            };
-
-            for (const rawColName of Object.keys(collectionsData)) {
-              const colName = collectionMapping[rawColName] || rawColName;
-              const items = collectionsData[rawColName];
-
-              if (Array.isArray(items)) {
-                for (const item of items) {
-                  const { id, ...itemData } = item;
-                  if (id !== undefined && id !== null && String(id).trim() !== "") {
-                    try {
-                      // Fix: merge: true যুক্ত করা হয়েছে যাতে অন্য ফিল্ড ডিলিট না হয়
-                      await setDoc(doc(db, colName, String(id)), itemData, { merge: true });
-                    } catch (itemErr) {
-                      console.warn(`Could not restore item in ${colName}:`, itemErr);
-                    }
-                  } else {
-                     // Fix: যদি কাস্টম ফাইলে ID না থাকে তবে নতুন করে যুক্ত হবে
-                     try {
-                      await addDoc(collection(db, colName), itemData);
-                    } catch (addErr) {
-                      console.warn(`Could not add item in ${colName}:`, addErr);
-                    }
-                  }
-                }
-              }
-            }
-
-            alert("ডাটা সফলভাবে রিস্টোর করা হয়েছে!");
-            window.location.reload();
-          } catch (err) {
-            console.error(err);
-            alert("ফাইল পড়তে বা রিস্টোর করতে সমস্যা হয়েছে: " + err.message);
-          }
-          input.value = "";
-        };
-        reader.readAsText(file);
-      };
-    
+      window.importFullBackup=async function(input){const file=input?.files?.[0];if(!file)return;if(!confirm("রিস্টোর করলে Backup ফাইলের ডাটা দিয়ে Firestore-এর পুরনো ডাটা একই ID-তে পুনরায় বসানো হবে এবং Backup-এ থাকা Supabase document file-ও পুনরায় আপলোড হবে। চালিয়ে যাবেন?")){input.value="";return;}try{if(!auth.currentUser)throw new Error("লগইন সেশন পাওয়া যাচ্ছে না।");const parsed=JSON.parse(await file.text());if(parsed?.backupType!=="DPMS_FULL_BACKUP")throw new Error("এটি DPMS-এর সম্পূর্ণ Backup ফাইল নয়।");const collectionsData=parsed.collections||{},mapping={users:"app_users"};for(const rawName of Object.keys(collectionsData)){const colName=mapping[rawName]||rawName,items=collectionsData[rawName];if(!Array.isArray(items))continue;for(const item of items){const id=item?.id;if(id===undefined||id===null||String(id).trim()==="")continue;const {id:ignored,...data}=item;await setDoc(doc(db,colName,String(id)),data,{merge:false});}}for(const f of (Array.isArray(parsed.supabaseFiles)?parsed.supabaseFiles:[])){if(!f?.dataUrl||!f?.storagePath)continue;const blob=dataUrlToBlob(f.dataUrl),bucket=f.storageBucket||DOCUMENTS_BUCKET,path=String(f.storagePath).replace(/^\/+/,"").replace(/^documents\//i,"");const upload=await supabaseClient.storage.from(bucket).upload(path,blob,{contentType:blob.type||"application/octet-stream",upsert:true});if(upload.error)throw upload.error;const {data:publicData}=supabaseClient.storage.from(bucket).getPublicUrl(path);if(f.documentId)await setDoc(doc(db,"past_documents",String(f.documentId)),{fileUrl:publicData?.publicUrl||"",storagePath:path,storageBucket:bucket,fileName:f.fileName||"document"},{merge:true});}alert("সম্পূর্ণ Restore সফল হয়েছে। Firestore-এর ডাটা এবং Supabase-এর Backup করা ফাইলগুলোও Restore হয়েছে।");input.value="";window.location.reload();}catch(e){console.error(e);alert("Restore সম্পূর্ণ হয়নি: "+(e?.message||e));input.value="";}};
 
       // 🪔 স্বয়ংক্রিয় দুর্গাপূজা নির্ঘণ্ট — Kolkata/IST বাংলা পঞ্জিকা
       const PUJA_API_BASE = "https://api.apimitra.in/panchang";
