@@ -26,11 +26,40 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .form-panel.active{display:block}
 @media print{
  .no-print{display:none!important}
- @page{size:A4;margin:0}
- html,body{width:210mm;height:297mm;margin:0!important;padding:0!important;background:#fff!important}
+ @page{size:A4 portrait;margin:0!important}
+ html,body{
+   width:210mm!important;
+   height:297mm!important;
+   margin:0!important;
+   padding:0!important;
+   background:#fff!important;
+ }
  body>*{display:none!important}
- #printSheet{display:block!important;width:210mm;height:297mm;position:relative;overflow:hidden};margin:0!important;padding:0!important;box-sizing:border-box
- #printContent{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden}
+ #printSheet{
+   display:block!important;
+   width:210mm!important;
+   height:297mm!important;
+   position:relative!important;
+   overflow:hidden!important;
+   margin:0!important;
+   padding:0!important;
+   box-sizing:border-box!important;
+   background:#fff!important;
+ }
+ /* Keep the exact same vertical starting point as the live A4 pad preview.
+    The original pad/header is intentionally NOT printed; this blank top area
+    is reserved for the user's physical letterhead/pad. */
+ #printContent{
+   position:absolute!important;
+   top:83mm!important;
+   left:14mm!important;
+   right:14mm!important;
+   bottom:15mm!important;
+   margin:0!important;
+   padding:0!important;
+   overflow:hidden!important;
+   box-sizing:border-box!important;
+ }
  #printAll{position:absolute;top:83mm;left:14mm;right:14mm;bottom:15mm;overflow:hidden;font-size:10px;line-height:1.25;font-weight:600;display:none}
  #printAll .all-pad-item{margin-bottom:2px}
  #printAll .all-pad-sign{position:absolute;right:0;bottom:0;font-size:10px}
