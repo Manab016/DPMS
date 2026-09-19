@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>টিকিট বুকিং ব্যবস্থাপনা - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+    <title>টিকিট বুকিং ব্যবস্থাপনা - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -93,7 +93,7 @@
 
     <div class="max-w-4xl mx-auto">
       <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
         <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
         <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">৯৯৩৩৩৭১৭০২</span></a></p>
@@ -959,7 +959,7 @@
         const totalSold = rows.reduce((s, r) => s + (Number(r[6]) || 0), 0);
 
         ws.mergeCells(1, 1, 1, headers.length);
-        ws.getCell(1, 1).value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
+        ws.getCell(1, 1).value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
         ws.mergeCells(2, 1, 2, headers.length);
         ws.getCell(2, 1).value = titleName;
 
@@ -1069,7 +1069,7 @@
     messagingSenderId: "625976130920",
     appId: "1:625976130920:web:60190b21f1c7563cdd2add",
   };
-  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
   const pageKey = 'booking';
   const applyCommitteeHeading = (raw) => {
     const name = String(raw?.[pageKey] || DEFAULT_NAME);
@@ -1110,7 +1110,7 @@
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
     establishedYear: "2009",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
@@ -1303,7 +1303,7 @@
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
     village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
     mobile: "৯৯৩৩৩৭১৭০২", mobile2: ""
