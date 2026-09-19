@@ -2,7 +2,7 @@
 <html lang="bn">
 <head>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>দায়িত্ব বণ্টন - নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</title>
+<title>দায়িত্ব বণ্টন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -22,7 +22,7 @@
 <div class="space-y-2.5 text-xs border-t pt-3"><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a></div></div>
 <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button></div></div>
 <div class="max-w-4xl mx-auto">
-<div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
+<div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
 <div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
@@ -46,7 +46,7 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারি","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
 function getVillage(m){return m.village||m.gram||m.address||""}
@@ -180,7 +180,7 @@ async function exportDutiesAsExcel(list){
   list.forEach((x,index)=>{
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[];
     const leaders=getRowLeaders(x); const villages=getRowVillages(x);
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি"; ws.getCell(r,1).font={name:"Calibri",size:16,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=35; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি"; ws.getCell(r,1).font={name:"Calibri",size:16,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=35; r++;
     ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`; ws.getCell(r,1).font={name:"Calibri",size:14,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=30; r++;
     ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`; ws.getCell(r,1).font={name:"Calibri",size:14,bold:true}; ws.getCell(r,1).alignment={horizontal:"center",vertical:"center"}; ws.getRow(r).height=28; r++;
     ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}     তারিখ :- ${x.date||"-"}`; ws.getCell(r,1).font={name:"Calibri",size:12,bold:true}; ws.getCell(r,1).alignment={horizontal:"left",vertical:"center"}; ws.getRow(r).height=25; r++;
@@ -206,7 +206,7 @@ async function exportDutiesAsExcel(list){
     messagingSenderId: "625976130920",
     appId: "1:625976130920:web:60190b21f1c7563cdd2add",
   };
-  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
+  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
   const pageKey = 'daitobonton';
   const applyCommitteeHeading = (raw) => {
     const name = String(raw?.[pageKey] || DEFAULT_NAME);
@@ -247,7 +247,7 @@ async function exportDutiesAsExcel(list){
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
     establishedYear: "2009",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
@@ -440,7 +440,7 @@ async function exportDutiesAsExcel(list){
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
     village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
     mobile: "9933371702", mobile2: ""
