@@ -815,5 +815,167 @@ window.addEventListener("pujaFirestoreReady",()=>{
 });
 
 </script>
+
+<script id="saved-application-manager">
+(function(){
+  const STORE_KEY = "puja_saved_applications_v2";
+
+  function readSavedApplications(){
+    try{
+      const x = JSON.parse(localStorage.getItem(STORE_KEY) || "[]");
+      return Array.isArray(x) ? x : [];
+    }catch(e){ return []; }
+  }
+  function writeSavedApplications(list){
+    localStorage.setItem(STORE_KEY, JSON.stringify(list));
+  }
+  function cloneData(d){
+    try { return JSON.parse(JSON.stringify(d)); } catch(e){ return {...d}; }
+  }
+  function makeId(){
+    return "app_" + Date.now().toString(36) + "_" + Math.random().toString(36).slice(2,8);
+  }
+
+  // Public API used by the existing page.
+  window.savedApplications = {
+    all: readSavedApplications,
+    get: function(id){ return readSavedApplications().find(x=>x.id===id) || null; },
+
+    save: function(data, id){
+      const list = readSavedApplications();
+      const now = new Date().toISOString();
+      let item = id ? list.find(x=>x.id===id) : null;
+
+      if(item){
+        item.data = cloneData(data);
+        item.updatedAt = now;
+      }else{
+        item = {
+          id: makeId(),
+          title: (data && (data.subject || data.title || data.applicationTitle)) || "নতুন দরখাস্ত",
+          data: cloneData(data),
+          createdAt: now,
+          updatedAt: now
+        };
+        list.unshift(item);
+      }
+      if(!item.title || item.title==="নতুন দরখাস্ত"){
+        item.title = (data && (data.subject || data.title || data.applicationTitle)) || "দরখাস্ত";
+      }
+      writeSavedApplications(list);
+      return item;
+    },
+
+    remove: function(id){
+      const list = readSavedApplications().filter(x=>x.id!==id);
+      writeSavedApplications(list);
+      return list;
+    },
+
+    rename: function(id,title){
+      const list = readSavedApplications();
+      const item = list.find(x=>x.id===id);
+      if(item){ item.title = title || "দরখাস্ত"; item.updatedAt = new Date().toISOString(); }
+      writeSavedApplications(list);
+      return item || null;
+    }
+  };
+
+  // A safe, non-destructive hook: keep the page's current data separate from
+  // saved records. Existing save functions can call this helper.
+  window.getSavedApplications = savedApplications.all;
+  window.saveApplicationCopy = savedApplications.save;
+  window.deleteSavedApplication = savedApplications.remove;
+
+  // Expose a small manager panel only if the page does not already have one.
+  // It is intentionally hidden until the user clicks the "Saved Applications"
+  // button created below.
+  function addManagerButton(){
+    if(document.getElementById("savedAppsManagerBtn")) return;
+    const b=document.createElement("button");
+    b.id="savedAppsManagerBtn";
+    b.type="button";
+    b.className="no-print";
+    b.textContent="📂 সংরক্ষিত দরখাস্ত";
+    b.style.cssText="position:fixed;right:18px;bottom:18px;z-index:99999;background:#d97706;color:#fff;border:0;border-radius:12px;padding:11px 15px;font-weight:800;box-shadow:0 8px 25px #0002;cursor:pointer";
+    b.onclick=showSavedApps;
+    document.body.appendChild(b);
+  }
+
+  function showSavedApps(){
+    let old=document.getElementById("savedAppsOverlay");
+    if(old) old.remove();
+
+    const overlay=document.createElement("div");
+    overlay.id="savedAppsOverlay";
+    overlay.className="no-print";
+    overlay.style.cssText="position:fixed;inset:0;background:#0008;z-index:100000;display:flex;align-items:center;justify-content:center;padding:18px";
+
+    const box=document.createElement("div");
+    box.style.cssText="width:min(760px,96vw);max-height:88vh;overflow:auto;background:#fff;border-radius:18px;padding:20px;box-shadow:0 20px 60px #0005";
+    const list=savedApplications.all();
+
+    box.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px"><h2 style="margin:0;color:#92400e">📂 সংরক্ষিত দরখাস্ত</h2><button id="closeSavedApps" style="border:0;background:#eee;border-radius:10px;padding:8px 12px;cursor:pointer">✕</button></div>';
+
+    if(!list.length){
+      box.innerHTML+='<div style="padding:28px;text-align:center;color:#666">এখনও কোনো দরখাস্ত সংরক্ষণ করা হয়নি।</div>';
+    }else{
+      list.forEach(item=>{
+        const row=document.createElement("div");
+        row.style.cssText="border:1px solid #e5e7eb;border-radius:12px;padding:12px;margin:9px 0;display:flex;align-items:center;gap:10px";
+        const title=document.createElement("div");
+        title.style.cssText="flex:1;min-width:0";
+        title.innerHTML='<div style="font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></div><small style="color:#777"></small>';
+        title.firstChild.textContent=item.title || "দরখাস্ত";
+        title.lastChild.textContent="শেষ পরিবর্তন: "+new Date(item.updatedAt||item.createdAt).toLocaleString("bn-BD");
+        const edit=document.createElement("button");
+        edit.textContent="✏️ Edit";
+        edit.style.cssText="border:0;background:#2563eb;color:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer";
+        edit.onclick=function(){
+          if(typeof window.loadSavedApplicationIntoEditor==="function"){
+            window.loadSavedApplicationIntoEditor(item);
+            overlay.remove();
+          }else{
+            alert("এই পেজের বর্তমান editor-এ saved application loader এখনো সংযুক্ত হয়নি।");
+          }
+        };
+        const del=document.createElement("button");
+        del.textContent="🗑️ Delete";
+        del.style.cssText="border:0;background:#dc2626;color:#fff;border-radius:9px;padding:8px 12px;font-weight:700;cursor:pointer";
+        del.onclick=function(){
+          if(confirm("এই দরখাস্তটি স্থায়ীভাবে মুছে ফেলবেন?")){
+            savedApplications.remove(item.id);
+            showSavedApps();
+          }
+        };
+        row.append(title,edit,del);
+        box.appendChild(row);
+      });
+    }
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    document.getElementById("closeSavedApps").onclick=()=>overlay.remove();
+  }
+
+  // Make the manager available after the page is ready.
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addManagerButton);
+  else addManagerButton();
+})();
+</script>
+
+
+<script id="new-application-helper">
+window.startNewApplicationWithoutDeletingSaved = function(){
+  try{
+    // Preserve every saved record. Only clear transient/current editing state.
+    const keep = {};
+    Object.keys(localStorage).forEach(k=>{
+      if(k==="puja_saved_applications_v2") keep[k]=localStorage.getItem(k);
+    });
+    location.reload();
+  }catch(e){ location.reload(); }
+};
+</script>
+
 </body>
 </html>
