@@ -551,6 +551,11 @@ id-card-reference {
   width: 48%;
 }
 
+/* সভাপতির ID card-এ সদস্যের signature box সম্পূর্ণ hide থাকবে */
+#signatureArea .sig-box.hidden {
+  display: none !important;
+}
+
 .sig-img {
   display: block;
   width: auto !important;
@@ -1306,17 +1311,34 @@ id-card-reference {
       if (!file) return;
       try {
         removeExistingPhoto = false;
-        // সদস্যের ছবি upload-এর আগে crop editor চালু হবে
+        // শুধু সদস্যের ছবির জন্য file choose করার পর crop editor খুলবে।
+        // স্বাক্ষরের upload flow এখানে কোনোভাবেই পরিবর্তন করা হচ্ছে না।
+        if (!document.getElementById("imageCropModal") || !document.getElementById("cropCanvas")) {
+          throw new Error("Crop editor পাওয়া যায়নি।");
+        }
         processedPhotoBlob = await openImageCropEditor(file, "photo");
-        setPreviewBlob("photoPreview", processedPhotoBlob);
-        document.getElementById("photoPreviewBox").classList.remove("hidden");
+        if (processedPhotoBlob) {
+          setPreviewBlob("photoPreview", processedPhotoBlob);
+          document.getElementById("photoPreviewBox").classList.remove("hidden");
+        }
       } catch(e) {
-        console.warn(e);
-        alert("ছবি crop/প্রস্তুত করা যায়নি");
+        if (e?.message !== "crop-cancelled") {
+          console.warn(e);
+          alert("ছবি crop/প্রস্তুত করা যায়নি");
+        }
       }
     };
 
     window.processImage = function(input) { window.handlePhotoUpload(input); };
+
+    // Photo input: explicitly bind the change event so the crop editor opens
+    // immediately after a photo is selected. Signature upload flow is untouched.
+    const memberPhotoInput = document.getElementById("photoInput");
+    if (memberPhotoInput) {
+      memberPhotoInput.addEventListener("change", function() {
+        window.handlePhotoUpload(this);
+      });
+    }
 
     window.processSignatureImage = async function(input) {
       const file = input?.files?.[0];
@@ -1942,11 +1964,15 @@ id-card-reference {
       presSigLabel.innerText = "সভাপতির স্বাক্ষর";
 
       if (isPresident) {
-        // সভাপতির card: VIP + শুধু সভাপতির নিজের signature, মাঝখানে।
+        // সভাপতির card: শুধু সভাপতির নিজের signature, একটিই এবং একদম centre-এ।
+        // সদস্যের signature box সম্পূর্ণ hide করা হচ্ছে।
         vipBadge.classList.remove("hidden");
         vipBadge.innerText = "VIP • সভাপতি";
         memberSigContainer.classList.add("hidden");
+        memberSigContainer.style.display = "none";
         presSigContainer.classList.remove("hidden");
+        presSigContainer.style.display = "flex";
+        presSigLabel.innerText = "নিজস্ব স্বাক্ষর";
         signatureArea.classList.add("pres-only");
       } else {
         signatureArea.classList.remove("pres-only");
@@ -1957,7 +1983,9 @@ id-card-reference {
         }
         // সভাপতির card ছাড়া বাকি সকল card-এ সদস্য + সভাপতির signature থাকবে।
         memberSigContainer.classList.remove("hidden");
+        memberSigContainer.style.display = "flex";
         presSigContainer.classList.remove("hidden");
+        presSigContainer.style.display = "flex";
       }
       const idCardModal = document.getElementById("idCardModal");
       if (!idCardModal) {
@@ -2095,9 +2123,6 @@ id-card-reference {
 </script>
 
 <style id="final-member-fixes">
-/* signature/photo upload keeps original size ratio; no crop UI */
-#imageCropModal { display:none !important; }
-
 /* ID card spacing fix: only address can wrap */
 .id-card-address-line {
   height:auto !important;
