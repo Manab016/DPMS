@@ -196,11 +196,16 @@ async function loadFromFirestore() {
 
 onAuthStateChanged(dpmsAuth, async user => {
   window.dpmsFirebase.user = user || null;
-  if (user) await loadFromFirestore();
-  else {
-    window.dpmsFirebase.ready = true;
-    window.dispatchEvent(new CustomEvent("pujaFirestoreReady"));
+
+  // এই পেজে সরাসরি URL দিয়ে ঢুকলেও লগইন ছাড়া কোনো কনটেন্ট দেখানো হবে না।
+  // Firebase Auth session না থাকলে সঙ্গে সঙ্গে মূল login page (index.html)-এ পাঠানো হবে।
+  if (!user) {
+    window.dpmsFirebase.ready = false;
+    try { window.location.replace("index.html"); } catch (e) { window.location.href = "index.html"; }
+    return;
   }
+
+  await loadFromFirestore();
 });
 </script>
 </head>
