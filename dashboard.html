@@ -250,7 +250,7 @@
 
     <div class="max-w-4xl mx-auto">
       <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
-        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
         <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
         <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p>
@@ -440,7 +440,7 @@
 
         window.currentUserRole = isAdmin ? "admin" : "user";
         window.userPermissions = isAdmin
-          ? ["chada","expense","booking","sales","treasury","members","backup","documents","daitobonton"]
+          ? ["chada","expense","booking","sales","treasury","members","backup","documents","daitobonton","puja_dorkhasto"]
           : [];
 
         // Fetch user permissions from Firestore for non-admin users
@@ -467,7 +467,6 @@
         setupUIBasedOnRoleAndPermissions(user);
 
         logUserLogin(user);
-        loadDaitobontonTotalForDashboard();
         loadSubscriptions();
         loadTotalMembersCount();
         loadTotalExpenseCount();
@@ -649,7 +648,8 @@
           "sales": "sales",
           "treasury": "treasury",
           "settings": "settings",
-          "daitobonton": "daitobonton"
+          "daitobonton": "daitobonton",
+          "puja_dorkhasto": "puja_dorkhasto"
         };
 
         const isAdmin = window.currentUserRole === "admin";
@@ -669,6 +669,15 @@
           }
         });
 
+        // পূজা দরখাস্ত কার্ডের ID বিদ্যমান কোডে dash-card-pujaDorkhasto,
+        // তাই permission map-এর বাইরে থাকা এই card-টিকেও একই permission দিয়ে নিয়ন্ত্রণ করতে হবে।
+        const pujaDorkhastoCard = document.getElementById("dash-card-pujaDorkhasto");
+        if (pujaDorkhastoCard) {
+          const hasPujaDorkhastoAccess =
+            isAdmin || window.userPermissions.includes("puja_dorkhasto");
+          pujaDorkhastoCard.style.display = hasPujaDorkhastoAccess ? "flex" : "none";
+        }
+
         const backupCard = document.getElementById("dash-card-backup");
         if (backupCard) {
           backupCard.style.display = isAdmin ? "flex" : "none";
@@ -678,21 +687,6 @@
         if (documentsCard) {
           documentsCard.style.display = isAdmin ? "flex" : "none";
         }
-      }
-
-      // --- দায়িত্ব বণ্টন থেকে সংগৃহীত চাঁদা Dashboard-এর মোট চাঁদায় যোগ হবে ---
-      let daitobontonCollectedTotal = 0;
-
-      function loadDaitobontonTotalForDashboard() {
-        onSnapshot(collection(db, "daitobonton"), (snapshot) => {
-          daitobontonCollectedTotal = 0;
-          snapshot.forEach((docSnap) => {
-            daitobontonCollectedTotal += Number(docSnap.data()?.amount) || 0;
-          });
-          if (typeof allSubscriptionsData !== "undefined") {
-            calculateSubTotals(allSubscriptionsData);
-          }
-        }, (err) => console.warn("Daitobonton total load failed:", err));
       }
 
       function loadSubscriptions() {
@@ -711,7 +705,7 @@
           if (item.donorType === "member") membersAmt += amt;
           else othersAmt += amt;
         });
-        const grandTotal = membersAmt + othersAmt + daitobontonCollectedTotal;
+        const grandTotal = membersAmt + othersAmt;
         const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
         if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
       }
@@ -1135,7 +1129,7 @@
         const btn=document.getElementById("pujaJpgBtn"),oldText=btn?btn.innerText:"";
         if(btn){btn.disabled=true;btn.innerText="⏳ JPG তৈরি হচ্ছে..."}
 
-        const committeeName=window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
+        const committeeName=window.__getCommitteeNameForOutput?.() || "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি";
         const ritual=PUJA_RITUAL_TIMES[year]||{};
         const filename=`Durga_Puja_Nirghonto_${year}.jpg`;
         const safeText=v=>String(v??"").replace(/[<>]/g,"");
@@ -1237,7 +1231,7 @@
     messagingSenderId: "625976130920",
     appId: "1:625976130920:web:60190b21f1c7563cdd2add",
   };
-  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
+  const DEFAULT_NAME = 'নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি';
   const pageKey = 'dashboard';
   const applyCommitteeHeading = (raw) => {
     const name = String(raw?.[pageKey] || DEFAULT_NAME);
@@ -1278,7 +1272,7 @@
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
     establishedYear: "২০০৯",
     registrationNo: "S0014684",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮",
@@ -1471,7 +1465,7 @@
     appId: "1:625976130920:web:60190b21f1c7563cdd2add"
   };
   const DEFAULT = {
-    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
     village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
     address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
     mobile: "9933371702", mobile2: ""

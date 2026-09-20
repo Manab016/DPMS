@@ -213,6 +213,7 @@
               </button>
 </form>
 </div>
+</div>
 
 <div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden" id="subSectionUsers">
 <div class="flex justify-between items-center mb-4">
@@ -260,7 +261,6 @@
 </thead>
 <tbody id="historyTableBody"></tbody>
 </table>
-</div>
 </div>
 </div>
 </div>
@@ -348,6 +348,7 @@
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_sales" type="checkbox"/> বিক্রয়</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasury" type="checkbox"/> কোষাধ্যক্ষ</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_daitobonton" type="checkbox"/> দায়িত্ব বণ্টন</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_puja_dorkhasto" type="checkbox"/> পূজা দরখাস্ত</label>
 </div>
 </div>
 <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
@@ -442,7 +443,8 @@ const PERMISSION_NAMES = {
   booking: "বুকিং",
   sales: "বিক্রয়",
   treasury: "কোষাধ্যক্ষ",
-  daitobonton: "দায়িত্ব বণ্টন"
+  daitobonton: "দায়িত্ব বণ্টন",
+  puja_dorkhasto: "পূজা দরখাস্ত"
 };
 let allUsersData = [];
 let allLoginHistory = [];
@@ -463,7 +465,7 @@ onAuthStateChanged(auth, async (user) => {
   // Show the role immediately, then refine it from Firestore.
   window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
   window.userPermissions = window.isMasterAdmin
-    ? ["members","chada","expense","booking","sales","treasury","daitobonton"]
+    ? ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"]
     : [];
 
   const settingsRoleBadge = document.getElementById("settingsUserRoleBadge");
@@ -526,6 +528,14 @@ onAuthStateChanged(auth, async (user) => {
       if (el) el.classList.add("hidden");
     });
   } else {
+    ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "";
+    });
+    ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove("hidden");
+    });
     loadAppUsers();
     loadLoginHistory();
     loadDevData();
@@ -643,7 +653,7 @@ window.handleSaveUser = async function(event) {
   const name = document.getElementById("uNameInput").value.trim();
   const email = document.getElementById("uEmailInput").value.trim().toLowerCase();
   const role = document.getElementById("uRoleInput").value;
-  const selectedPerms = ["members","chada","expense","booking","sales","treasury","daitobonton"]
+  const selectedPerms = ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"]
     .filter(p => document.getElementById("perm_" + p)?.checked);
 
   try {
@@ -690,7 +700,7 @@ window.openCreateUserModal = function() {
   document.getElementById("uPassInput").value = "";
   document.getElementById("uRoleInput").value = "member";
   document.getElementById("passInputContainer").style.display = "block";
-  ["members","chada","expense","booking","sales","treasury","daitobonton"].forEach(p => document.getElementById("perm_" + p).checked = false);
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"].forEach(p => document.getElementById("perm_" + p).checked = false);
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
@@ -706,7 +716,7 @@ window.editUserPermissions = function(uId) {
   document.getElementById("uRoleInput").value = user.role || "member";
   document.getElementById("passInputContainer").style.display = "none";
   const perms = user.permissions || [];
-  ["members","chada","expense","booking","sales","treasury","daitobonton"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
