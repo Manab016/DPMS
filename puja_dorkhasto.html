@@ -121,6 +121,7 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .manual-toolbar button{cursor:pointer}
 .manual-editor p,.manual-editor div,.manual-editor h1,.manual-editor h2,.manual-editor h3,.manual-editor h4,.manual-editor h5,.manual-editor h6{margin:0;padding:0}
 .manual-editor [style*="line-height"]{line-height:inherit}
+.manual-editor span[style*="line-height"]{display:inline-block;}
 
 
 /* Same rule for the combined "সব এক প্যাডে" view. */
@@ -392,12 +393,25 @@ function selectedBlocks(ed){
 function rememberSelection(ed){
  const info=selectionInsideEditor(ed);
  if(!info) return;
- try{ ed._savedRange=info.range.cloneRange(); }catch(e){}
+ try{
+   const r=info.range.cloneRange();
+   // Ignore a collapsed caret when the user actually has text selected.
+   // This prevents the toolbar itself from replacing the saved selection.
+   if(!r.collapsed || !ed._savedRange || !ed._savedRange.collapsed){
+     ed._savedRange=r;
+   }
+ }catch(e){}
 }
 function restoreSelection(ed){
  if(!ed || !ed._savedRange) return false;
  try{
-   const sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(ed._savedRange); ed.focus(); return true;
+   const r=ed._savedRange.cloneRange();
+   if(!ed.contains(r.startContainer) || !ed.contains(r.endContainer)) return false;
+   const sel=window.getSelection();
+   sel.removeAllRanges();
+   sel.addRange(r);
+   ed.focus({preventScroll:true});
+   return true;
  }catch(e){ return false; }
 }
 function formatManual(cmd,value){
@@ -464,15 +478,39 @@ function signHtml(d){
 }
 function setManualLineSpace(value){
  const ed=getManualEditor(); if(!ed) return;
- restoreSelection(ed);
- const blocks=selectedBlocks(ed);
 
- // If paragraphs/blocks are selected, change only those blocks.
- // If no block is selected, change the whole document so the control
- // always has a visible effect.
+ // IMPORTANT: restore the exact text selection before reading blocks.
+ // On Android Chrome, changing a toolbar <select> moves focus away from
+ // contenteditable and the native selection can otherwise be lost.
+ const restored=restoreSelection(ed);
+ const blocks=restored ? selectedBlocks(ed) : [];
+
  if(blocks.length){
-   blocks.forEach(b=>b.style.lineHeight=value);
+   // Apply only to the selected paragraph/line blocks.
+   blocks.forEach(b=>{
+     if(b && b!==ed) b.style.lineHeight=value;
+   });
+ }else if(restored){
+   // A selection exists but it did not contain a block element.
+   // Wrap the selected text in an inline-block span so ONLY the selected
+   // part gets the requested line-height instead of changing the editor.
+   const sel=window.getSelection();
+   if(sel && sel.rangeCount && !sel.getRangeAt(0).collapsed){
+     const range=sel.getRangeAt(0);
+     if(ed.contains(range.commonAncestorContainer)){
+       try{
+         const span=document.createElement("span");
+         span.style.lineHeight=value;
+         span.style.display="inline-block";
+         range.surroundContents(span);
+       }catch(e){
+         // If the range crosses elements, use the selected blocks instead.
+         ed.style.lineHeight=ed.style.lineHeight;
+       }
+     }
+   }
  }else{
+   // No saved selection: intentionally change the whole editor.
    ed.style.lineHeight=value;
    ed.querySelectorAll("p,div,li,blockquote,h1,h2,h3,h4,h5,h6").forEach(b=>{
      if(b!==ed) b.style.lineHeight=value;
@@ -487,7 +525,6 @@ function setManualLineSpace(value){
  syncManualFromEditor();
  rememberSelection(ed);
 
- // Immediately reflect the same value in the live preview.
  const pv=document.getElementById("pvText");
  if(pv) pv.style.lineHeight=value;
 }
@@ -499,8 +536,22 @@ function syncManualFromEditor(){
 }
 function prepareManualToolbar(){
  const ed=getManualEditor(); if(!ed) return;
- ["mouseup","keyup","selectstart","input"].forEach(ev=>ed.addEventListener(ev,()=>rememberSelection(ed)));
- ed.addEventListener("blur",()=>rememberSelection(ed));
+ ["mouseup","keyup","selectstart","input","touchend"].forEach(ev=>{
+   ed.addEventListener(ev,()=>requestAnimationFrame(()=>rememberSelection(ed)));
+ });
+ ed.addEventListener("blur",()=>{
+   // Do not overwrite a real saved range with the toolbar's collapsed caret.
+   setTimeout(()=>rememberSelection(ed),0);
+ });
+ if(!window._manualSelectionWatcher){
+   window._manualSelectionWatcher=true;
+   document.addEventListener("selectionchange",()=>{
+     const e=getManualEditor();
+     if(!e) return;
+     const info=selectionInsideEditor(e);
+     if(info && !info.range.collapsed) rememberSelection(e);
+   });
+ }
 }
 
 function manualToolbarHtml(d, id){
