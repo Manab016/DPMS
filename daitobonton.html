@@ -63,7 +63,9 @@ function renderMembersUI(){
    : `<span class="text-[11px] text-gray-500">নির্বাচিত গ্রুপ লিডার: ০ জন (সর্বোচ্চ ৩ জন)</span>`;
  renderVillages();
 }
-function renderVillages(){villageGrid.innerHTML=villages.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("")}
+function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
+function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(values)?values:[]).map(v=>String(v).trim()));document.querySelectorAll(".village-check").forEach(x=>x.checked=wanted.has(String(x.value)));}
+function renderVillages(selected=[]){const keep=selected.length?selected:getSelectedVillages();villageGrid.innerHTML=villages.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
 function addNewVillage(){const v=newVillageInput.value.trim();if(v&&!villages.includes(v)){villages.push(v);renderVillages();document.querySelectorAll(".village-check")[villages.length-1].checked=true;newVillageInput.value=""}}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
 function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);renderMembersUI()}
@@ -80,7 +82,14 @@ function removeSelectedLeader(id){
  renderMembersUI();
 }
 function toggleLeader(id){id=String(id);const i=selectedLeaderIds.indexOf(id);if(i>=0)selectedLeaderIds.splice(i,1);else if(selectedLeaderIds.length<3)selectedLeaderIds.push(id);else{alert("সর্বোচ্চ ৩ জন গ্রুপ লিডার নির্বাচন করা যাবে।");renderMembersUI();return}renderMembersUI()}
-function resetForm(){entryForm.reset();editId.value="";name.value="";date.value=new Date().toISOString().slice(0,10);dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];memberSearch.value="";leaderSearch.value="";renderMembersUI()}
+function resetForm(){entryForm.reset();editId.value="";name.value="";date.value=new Date().toISOString().slice(0,10);dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];memberSearch.value="";leaderSearch.value="";renderMembersUI();renderVillages([])}
+function syncCollectedAmountLimit(){
+ const limit=Math.max(0,Number(dutyAmount?.value)||0);
+ if(amount){ amount.max=String(limit); if(Number(amount.value)>limit) amount.value=String(limit); }
+}
+dutyAmount?.addEventListener("input",syncCollectedAmountLimit);
+amount?.addEventListener("input",syncCollectedAmountLimit);
+syncCollectedAmountLimit();
 function openAddModal(){modalTitle.textContent="নতুন দায়িত্ব যোগ";resetForm();entryModal.classList.remove("hidden");entryModal.classList.add("flex")}
 function closeModal(){entryModal.classList.add("hidden");entryModal.classList.remove("flex")}
 function esc(v){return String(v??"").replace(/[&<>'"]/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[m]))}
@@ -219,8 +228,13 @@ async function saveEntry(e){
  let remarks=(remarksEl?.value||"").trim();
  remarks+=` [গ্রাম: ${vs.join(", ")}]`;
  if(ls.length)remarks+=` [লিডার: ${ls.map(x=>x.name||"").join(", ")}]`;
- const dutyAmountValue=Number(dutyAmountEl?.value)||0;
- const amountValue=Math.max(0,Number(amountEl?.value)||0);
+ const dutyAmountValue=Math.max(0,Number(dutyAmountEl?.value)||0);
+ const rawAmount=Math.max(0,Number(amountEl?.value)||0);
+ if(rawAmount>dutyAmountValue){
+   amountEl.value=String(dutyAmountValue);
+   return alert(`সংগৃহীত টাকা দায়িত্বের টাকার বেশি হতে পারবে না। সর্বোচ্চ ${money(dutyAmountValue)} লেখা/সংরক্ষণ করা যাবে।`);
+ }
+ const amountValue=rawAmount;
  const id=editIdEl?.value||"";
  const old=id?rows.find(x=>String(x.id)===String(id)):null;
  const treasurer=getPujaTreasurer();
@@ -230,16 +244,21 @@ async function saveEntry(e){
    if(id){
      await updateDoc(doc(db,"daitobonton",id),{...data,createdBy:old?.createdBy||currentUser?.uid||""});
      if(treasurer && old?.treasurerTransactionId){
-       await updateDoc(doc(db,"treasurer",String(old.treasurerTransactionId)),{kind:"transactions",data:{id:Number(old.treasurerTransactionDataId)||Date.now(),date:data.date||today(),type:"income",amount:amountValue,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
+       if(Number(data.deposited)>0){
+         await updateDoc(doc(db,"treasurer",String(old.treasurerTransactionId)),{kind:"transactions",data:{id:Number(old.treasurerTransactionDataId)||Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
+       }else{
+         try{await deleteDoc(doc(db,"treasurer",String(old.treasurerTransactionId)))}catch(_){ }
+         await updateDoc(doc(db,"daitobonton",id),{treasurerTransactionId:"",treasurerTransactionDataId:0});
+       }
      }else if(treasurer && !old?.treasurerTransactionId && amountValue>0){
-       const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:amountValue,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
+       const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
        await updateDoc(doc(db,"daitobonton",id),{treasurerTransactionId:tr.id,treasurerTransactionDataId:Date.now()});
      }
    }else{
      const ref=await addDoc(collection(db,"daitobonton"),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||""});
      savedId=ref.id;
-     if(treasurer && amountValue>0){
-       const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:amountValue,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(savedId),sourceType:"daitobonton_collection"}});
+     if(treasurer && Number(data.deposited)>0){
+       const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(savedId),sourceType:"daitobonton_collection"}});
        await updateDoc(doc(db,"daitobonton",savedId),{treasurerTransactionId:tr.id,treasurerTransactionDataId:Date.now(),depositedToTreasurerAt:Date.now()});
      }
    }
@@ -247,7 +266,7 @@ async function saveEntry(e){
  }catch(err){console.error("Daitobonton save error:",err);alert("সংরক্ষণ করা যায়নি: "+(err?.message||err))}
 }
 window.saveEntry=saveEntry;
-window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent="দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;deposited.value=x.deposited||0;remarks.value=x.remarks||"";selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));renderMembersUI();entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
+window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent="দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=x.remarks||"";selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));renderMembersUI();renderVillages(getRowVillages(x));entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
 window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?"))try{const x=rows.find(r=>String(r.id)===String(id));if(x?.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",id));await loadDaitobontonFromCloud()}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(async x=>{if(x.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",x.id));}));await loadDaitobontonFromCloud()}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{
