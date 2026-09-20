@@ -90,12 +90,12 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 #pvText,#printText{white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
 #pvText{margin:0} 
 #pvText.manual-rich{font-weight:400;white-space:pre-wrap;word-break:break-word;overflow-wrap:anywhere}
-#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6{margin:0;padding:0}
+#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6{margin:0;padding:0;line-height:inherit}
 #pvText.manual-rich b,#pvText.manual-rich strong{font-weight:800}
 
 /* Manual rich-text must keep each selected part's own formatting. */
 #pvText.manual-rich,#printText.manual-rich{font-weight:400}
-#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6,#printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0}
+#pvText.manual-rich p,#pvText.manual-rich div,#pvText.manual-rich h1,#pvText.manual-rich h2,#pvText.manual-rich h3,#pvText.manual-rich h4,#pvText.manual-rich h5,#pvText.manual-rich h6,#printText.manual-rich p,#printText.manual-rich div,#printText.manual-rich h1,#printText.manual-rich h2,#printText.manual-rich h3,#printText.manual-rich h4,#printText.manual-rich h5,#printText.manual-rich h6{margin:0;padding:0;line-height:inherit}
 #pvText.manual-rich b,#pvText.manual-rich strong,#printText.manual-rich b,#printText.manual-rich strong{font-weight:800}
 #pvText.manual-rich [style*="font-weight:700"],#pvText.manual-rich [style*="font-weight:800"],#pvText.manual-rich [style*="font-weight:bold"],#printText.manual-rich [style*="font-weight:700"],#printText.manual-rich [style*="font-weight:800"],#printText.manual-rich [style*="font-weight:bold"]{font-weight:700}
 #pvText.manual-rich [style*="font-weight:400"],#printText.manual-rich [style*="font-weight:400"]{font-weight:400}
@@ -119,9 +119,8 @@ body{font-family:"Noto Sans Bengali","Nirmala UI","Vrinda",sans-serif}
 .manual-toolbar label{font-size:12px;font-weight:800;display:flex;align-items:center;gap:4px}
 .manual-toolbar select,.manual-toolbar button{border:1px solid #d1d5db;border-radius:6px;background:#fff;padding:5px 8px;font-size:11px;font-weight:800}
 .manual-toolbar button{cursor:pointer}
-.manual-editor p,.manual-editor div,.manual-editor h1,.manual-editor h2,.manual-editor h3,.manual-editor h4,.manual-editor h5,.manual-editor h6{margin:0;padding:0}
+.manual-editor p,.manual-editor div,.manual-editor h1,.manual-editor h2,.manual-editor h3,.manual-editor h4,.manual-editor h5,.manual-editor h6{margin:0;padding:0;line-height:inherit}
 .manual-editor [style*="line-height"]{line-height:inherit}
-.manual-editor span[style*="line-height"]{display:inline-block;}
 
 
 /* Same rule for the combined "সব এক প্যাডে" view. */
@@ -476,47 +475,71 @@ function signHtml(d){
  const lh=d.signatureLineHeight||"1.75";
  return `<span style="font-size:${fs};line-height:${lh};display:inline-block">${parts.join("<br>")}</span>`;
 }
+function normalizeManualLineHeightSpans(ed){
+ if(!ed) return;
+ // Older versions wrapped selected text in inline-block spans with their own
+ // line-height. That creates exactly the uneven gaps seen in the preview:
+ // a selected point gets a large gap, while wrapped lines stay tight.
+ // Move that line-height to the containing block and remove the span's
+ // line-height/display effect, preserving other formatting such as font-size.
+ ed.querySelectorAll('span[style*="line-height"]').forEach(sp=>{
+   const lh=sp.style.lineHeight;
+   if(!lh) return;
+   let p=sp.parentElement;
+   while(p && p!==ed && !/^(DIV|P|LI|BLOCKQUOTE|H1|H2|H3|H4|H5|H6)$/.test(p.tagName)) p=p.parentElement;
+   if(p && p!==ed) p.style.lineHeight=lh;
+   sp.style.removeProperty('line-height');
+   sp.style.removeProperty('display');
+ });
+}
+function normalizeManualHtmlString(html){
+ const box=document.createElement('div');
+ box.innerHTML=html||'';
+ normalizeManualLineHeightSpans(box);
+ return box.innerHTML;
+}
+
 function setManualLineSpace(value){
  const ed=getManualEditor(); if(!ed) return;
 
- // IMPORTANT: restore the exact text selection before reading blocks.
- // On Android Chrome, changing a toolbar <select> moves focus away from
- // contenteditable and the native selection can otherwise be lost.
+ // Restore the exact selection saved before the toolbar took focus.
  const restored=restoreSelection(ed);
+ normalizeManualLineHeightSpans(ed);
  const blocks=restored ? selectedBlocks(ed) : [];
 
  if(blocks.length){
-   // Apply only to the selected paragraph/line blocks.
+   // line-height is a block-level property. Apply it to the complete
+   // paragraph/point containing the selected text, never to an inline span.
    blocks.forEach(b=>{
      if(b && b!==ed) b.style.lineHeight=value;
    });
  }else if(restored){
-   // A selection exists but it did not contain a block element.
-   // Wrap the selected text in an inline-block span so ONLY the selected
-   // part gets the requested line-height instead of changing the editor.
+   // Plain text directly inside the editor has no block of its own.
+   // Use the nearest containing line/block. This keeps wrapped 2-3 visual
+   // lines at the same spacing instead of creating an oversized inline gap.
    const sel=window.getSelection();
    if(sel && sel.rangeCount && !sel.getRangeAt(0).collapsed){
-     const range=sel.getRangeAt(0);
-     if(ed.contains(range.commonAncestorContainer)){
-       try{
-         const span=document.createElement("span");
-         span.style.lineHeight=value;
-         span.style.display="inline-block";
-         range.surroundContents(span);
-       }catch(e){
-         // If the range crosses elements, use the selected blocks instead.
-         ed.style.lineHeight=ed.style.lineHeight;
-       }
+     const r=sel.getRangeAt(0);
+     const a=blockOf(r.startContainer,ed);
+     const b=blockOf(r.endContainer,ed);
+     const targets=[a,b].filter(x=>x && x!==ed);
+     if(targets.length){
+       [...new Set(targets)].forEach(x=>x.style.lineHeight=value);
+     }else{
+       ed.style.lineHeight=value;
      }
+   }else{
+     ed.style.lineHeight=value;
    }
  }else{
-   // No saved selection: intentionally change the whole editor.
+   // No saved selection: change the whole editor.
    ed.style.lineHeight=value;
    ed.querySelectorAll("p,div,li,blockquote,h1,h2,h3,h4,h5,h6").forEach(b=>{
      if(b!==ed) b.style.lineHeight=value;
    });
  }
 
+ normalizeManualLineHeightSpans(ed);
  const d=get(current);
  d.manualLineHeight=value;
  d.manualHtml=ed.innerHTML;
@@ -530,6 +553,7 @@ function setManualLineSpace(value){
 }
 function syncManualFromEditor(){
  const ed=getManualEditor(); if(!ed) return;
+ normalizeManualLineHeightSpans(ed);
  const d=get(current); d.manualHtml=ed.innerHTML; d.manualText=ed.innerText;
  localStorage.setItem(key(current),JSON.stringify(d));
  rememberSelection(ed);
@@ -582,7 +606,7 @@ function buildForm(){
     <label class="flex items-center gap-2 text-xs font-bold"><input id="showCommittee" type="checkbox" ${d.showCommittee!==false?"checked":""} onchange="saveManualDisplayOptions()" class="w-4 h-4"> কমিটির নাম</label>
    </div>
    <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="নিজের মতো দরখাস্ত লিখুন..."
-    class="manual-editor w-full min-h-[650px] p-4 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText||'')}</div>
+    class="manual-editor w-full min-h-[650px] p-4 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${normalizeManualHtmlString(d.manualHtml) || esc(d.manualText||'')}</div>
   </div>
 
   <div class="flex justify-end gap-2 pt-3">
@@ -627,7 +651,7 @@ function buildForm(){
   <div id="${f.id}_manualWrap" class="${d.writeMode==="manual"?"":"hidden"} mt-3">
    <label class="block text-xs font-bold mb-1">নিজের দরখাস্ত লিখুন</label>
    ${manualToolbarHtml(d,f.id)}
-   <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="এখানে নিজের দরখাস্ত যেভাবে লিখবেন..." class="manual-editor w-full min-h-[420px] p-3 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${d.manualHtml || esc(d.manualText ?? (d.writeMode==="manual" ? f.make(d) : ""))}</div>
+   <div id="${f.id}_manualText" contenteditable="true" spellcheck="false" data-placeholder="এখানে নিজের দরখাস্ত যেভাবে লিখবেন..." class="manual-editor w-full min-h-[420px] p-3 border rounded-lg resize-y" style="font-size:${d.manualFontSize||"16px"};line-height:${d.manualLineHeight||"1.35"};text-align:${d.manualAlign||"left"}">${normalizeManualHtmlString(d.manualHtml) || esc(d.manualText ?? (d.writeMode==="manual" ? f.make(d) : ""))}</div>
    <p class="text-[10px] text-gray-500 mt-1">লেখার অংশ select করে Text Size বা Line Space বদলালে শুধু নির্বাচিত অংশ/লাইন বদলাবে। কিছু select না থাকলে পুরো লেখা বদলাবে।</p>
   </div>
  </div>`;
@@ -750,7 +774,7 @@ function renderPreview(){
    pvTextEl.style.removeProperty("line-height");
    pvTextEl.style.removeProperty("font-size");
  }
- pvTextEl.innerHTML=visible?(isRich?(d.manualHtml||esc(text)):highlightDataText(text,f,d)):"";
+ pvTextEl.innerHTML=visible?(isRich?(normalizeManualHtmlString(d.manualHtml)||esc(text)):highlightDataText(text,f,d)):"";
  document.getElementById("pvSign").innerHTML=visible?`<div class="signbox">${signHtml(d)}</div>`:"";
  document.getElementById("pvAll").classList.add("hidden");
  document.getElementById("pvHeading").parentElement.classList.remove("hidden");
@@ -771,7 +795,7 @@ function allSavedItems(){
 function renderAllPreview(){
  const items=allSavedItems();
  const box=document.getElementById("pvAll");
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(x.data.manualHtml||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item"><div class="flex items-start gap-1"><div class="flex-1">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(normalizeManualHtmlString(x.data.manualHtml)||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div></div></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div class="text-center font-bold text-gray-700">এখনও কোনো দরখাস্ত Save করা হয়নি।</div>`;
  document.getElementById("pvHeading").textContent="";
  document.getElementById("pvText").textContent="";
  document.getElementById("pvSign").innerHTML="";
@@ -825,7 +849,7 @@ function printCurrent(){
  const printTextEl=document.getElementById("printText");
  const isRich=(f.id==="manual"||d.writeMode==="manual");
  printTextEl.classList.toggle("manual-rich", isRich);
- printTextEl.innerHTML=visible?(isRich?(d.manualHtml||esc(printText)):highlightDataText(printText,f,d)):"";
+ printTextEl.innerHTML=visible?(isRich?(normalizeManualHtmlString(d.manualHtml)||esc(printText)):highlightDataText(printText,f,d)):"";
  if(isRich){
    printTextEl.style.lineHeight=d.manualLineHeight||"1.35";
    printTextEl.style.fontSize=d.manualFontSize||"16px";
@@ -845,7 +869,7 @@ function printOneSaved(index){
  const onePrintText=document.getElementById("printText");
  const isRich=(f.id==="manual"||d.writeMode==="manual");
  onePrintText.classList.toggle("manual-rich", isRich);
- onePrintText.innerHTML=isRich?(d.manualHtml||esc(oneText)):highlightDataText(oneText,f,d);
+ onePrintText.innerHTML=isRich?(normalizeManualHtmlString(d.manualHtml)||esc(oneText)):highlightDataText(oneText,f,d);
  if(isRich){
    onePrintText.style.lineHeight=d.manualLineHeight||"1.35";
    onePrintText.style.fontSize=d.manualFontSize||"16px";
@@ -864,7 +888,7 @@ function printAllSaved(){
  document.getElementById("printHeading").textContent="";
  document.getElementById("printText").textContent="";
  document.getElementById("printSign").innerHTML="";
- box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(x.data.manualHtml||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
+ box.innerHTML=items.length?items.map(x=>`<div class="all-pad-item">${x.form.id==="manual"?"":`<b>${x.no}. ${esc(x.title)}:</b> `}<span class="all-text ${(x.form.id==="manual"||x.data.writeMode==="manual")?"manual-rich-text":""}">${(x.form.id==="manual"||x.data.writeMode==="manual")?(normalizeManualHtmlString(x.data.manualHtml)||esc(x.text)):highlightDataText(x.text,x.form,x.data)}</span></div>`).join("")+`<div class="all-pad-sign">${signHtml(get("manual"))}</div>`:`<div>কোনো দরখাস্ত Save করা হয়নি।</div>`;
  sheet.classList.add("printing-all");
  const cleanup=()=>{ sheet.classList.remove("printing-all"); box.innerHTML=""; window.removeEventListener("afterprint",cleanup); };
  window.addEventListener("afterprint",cleanup);
