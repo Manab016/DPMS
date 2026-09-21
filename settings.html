@@ -532,9 +532,10 @@ onAuthStateChanged(auth, async (user) => {
       const el = document.getElementById(id);
       if (el) el.style.display = "";
     });
+    // আলাদা tab-এর content একসাথে দেখাবে না; tab click করলে শুধু সেটিই দেখাবে।
     ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.classList.remove("hidden");
+      if (el) el.classList.add("hidden");
     });
     loadAppUsers();
     loadLoginHistory();
