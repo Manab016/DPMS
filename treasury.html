@@ -185,7 +185,14 @@
         #receiptModal .receipt-close, #receiptModal .receipt-actions { display:none !important; }
         #receiptContent { display:block !important; width:297mm !important; height:200mm !important; }
         #receiptPrintStage { display:flex !important; width:297mm !important; height:200mm !important; align-items:flex-start !important; justify-content:flex-start !important; }
-        .receipt-sheet { width:140mm !important; height:190mm !important; min-height:190mm !important; margin:0 !important; }
+        .receipt-sheet {
+          width:152mm !important;
+          height:206mm !important;
+          min-height:206mm !important;
+          margin:0 !important;
+          transform:scale(0.92) !important;
+          transform-origin:top left !important;
+        }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
       }
 </style>
@@ -255,6 +262,26 @@
   /* Committee header is revealed only after cached/cloud data has been applied. */
   #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
 </style>
+
+<style id="treasuryAuthGateStyle">
+  body.treasury-auth-wait > * {
+    visibility: hidden !important;
+  }
+  body.treasury-auth-wait::before {
+    content: "লগইন যাচাই করা হচ্ছে...";
+    position: fixed;
+    inset: 0;
+    z-index: 2147483647;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #fff;
+    color: #374151;
+    font-weight: 700;
+    font-size: 16px;
+  }
+</style>
+
 </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
@@ -265,6 +292,32 @@
       <span class="text-base">👨‍💻</span>
       <span class="hidden md:inline">ডেভেলপার</span>
     </button>
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+        <div class="text-center mb-4">
+          <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
+          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+        </div>
+        <div class="space-y-2.5 text-xs border-t pt-3">
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">নাম:</span>
+            <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">মোবাইল:</span>
+            <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">ইমেইল:</span>
+            <a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a>
+          </div>
+        </div>
+        <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+      </div>
+    </div>
+
 
     <div class="max-w-4xl mx-auto">
       <!-- কমিটি হেডিং সেকশন -->
@@ -794,9 +847,9 @@
             <input type="text" id="repayRemarks" placeholder="মন্তব্য (ঐচ্ছিক)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
           </div>
 
-          <div class="grid grid-cols-2 gap-2 pt-3 border-t">
-            <button type="submit" class="w-full bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-orange-700 shadow-sm">পরিশোধ করুন</button>
-            <button type="button" onclick="closeLoanRepayModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50">বাতিল</button>
+          <div class="flex items-center justify-between gap-2 pt-3 border-t">
+            <button type="button" onclick="closeLoanRepayModal()" class="flex-1 bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50">বাতিল</button>
+            <button type="submit" class="flex-1 bg-orange-600 text-white py-2.5 rounded-xl text-sm font-bold hover:bg-orange-700 shadow-sm">পরিশোধ করুন</button>
           </div>
         </form>
       </div>
@@ -949,12 +1002,37 @@
       }
       
       function toggleDevModal() {
-        let d = {};
-        try { d = JSON.parse(localStorage.getItem("pujaDevData") || "{}"); } catch (_) {}
-        d.name = d.name || "MANABENDRA NATH SARKAR";
-        d.mobile = d.mobile || "9002652507";
-        d.email = d.email || "manabendranathsarkar112@gmail.com";
-        alert("ডেভেলপার\nনাম: " + d.name + "\nমোবাইল: " + d.mobile + "\nইমেইল: " + d.email);
+        const m = document.getElementById("devModal");
+        if (!m) return;
+
+        const open = m.classList.contains("hidden");
+        m.classList.toggle("hidden");
+        m.classList.toggle("flex");
+
+        if (open) {
+          let d = {};
+          try {
+            d = JSON.parse(localStorage.getItem("pujaDevData") || "{}");
+          } catch (_) {}
+
+          d.name = d.name || localStorage.getItem("pujaDevName") || "Manabendra Nath Sarkar";
+          d.mobile = d.mobile || localStorage.getItem("pujaDevMobile") || "9002652507";
+          d.email = d.email || localStorage.getItem("pujaDevEmail") || "manabendranathsarkar112@gmail.com";
+
+          const nameEl = document.getElementById("popDevName");
+          const mobileEl = document.getElementById("popDevMobile");
+          const emailEl = document.getElementById("popDevEmail");
+
+          if (nameEl) nameEl.textContent = d.name;
+          if (mobileEl) {
+            mobileEl.textContent = d.mobile;
+            mobileEl.href = "tel:" + d.mobile;
+          }
+          if (emailEl) {
+            emailEl.textContent = d.email;
+            emailEl.href = "mailto:" + d.email;
+          }
+        }
       }
 
       // ----------------------------------------------------
@@ -1476,8 +1554,9 @@
         const selectedDisplayAddress = selectedVillage && selectedAddress && selectedVillage !== selectedAddress
           ? `${selectedVillage}, ${selectedAddress}`
           : (selectedVillage || selectedAddress || "-");
+        // 🏠 icon is already present in the card HTML; do not add a second one here.
         document.getElementById("cardMemAddress").innerText =
-          "📞" + (mobile || "N/A") + "🏠" + selectedDisplayAddress;
+          selectedDisplayAddress;
         document.getElementById("selectedMemberCard").classList.remove("hidden");
         toggleBorrowerSignatureUpload(false);
 
@@ -2356,17 +2435,19 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
               if (memberUnsubscribe) { memberUnsubscribe(); memberUnsubscribe = null; }
               window.firebaseMembersCache = [];
               console.warn("Treasury: Firebase login session পাওয়া যায়নি।");
-              // Treasury must use the same normal Firebase login as the rest of the app.
-              // Do not create a separate anonymous account, otherwise this device can
-              // write/read a different auth context from the logged-in app.
+
+              // Never reveal Treasury before authentication is confirmed.
+              // Redirect immediately so a logged-out user cannot open the page UI.
+              document.body.classList.add("treasury-auth-wait");
               const here = location.pathname.split("/").pop() || "treasury.html";
               if (here === "treasury.html") {
-                setTimeout(() => {
-                  if (!treasuryUserReady) location.href = "index.html";
-                }, 1200);
+                location.replace("index.html");
               }
               return;
             }
+
+            // Authentication is confirmed: only now reveal the Treasury UI.
+            document.body.classList.remove("treasury-auth-wait");
 
             // Start the members listener ONLY after authentication is confirmed.
             // Firestore rules require request.auth != null.
