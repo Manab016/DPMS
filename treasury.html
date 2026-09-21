@@ -2067,12 +2067,12 @@
       }
 
       function getReceiptLogoSource() {
-        // Dashboard settings-এর logo key + index.html-এর Logo.png—দুটোই সমর্থিত।
+        // Dashboard settings-এর logo key + index.html-এর Logo.webp—দুটোই সমর্থিত।
         return localStorage.getItem("pujaClubLogo") ||
                localStorage.getItem("committee_logo") ||
                localStorage.getItem("committeeLogo") ||
                localStorage.getItem("logo") ||
-               "Logo.png";
+               "Logo.webp";
       }
 
       function calculateLoanReceiptBalance(loan) {
@@ -2138,7 +2138,7 @@
             <div id="receiptSheet" class="receipt-sheet">
               <div style="text-align:center">
                 <img id="receiptLogoImage" src="${logoSrc}" alt="Committee Logo" class="receipt-logo"
-                     onerror="this.onerror=null; this.src='Logo.png';" />
+                     onerror="this.onerror=null; this.src='Logo.webp';" />
                 <div style="font-size:19px;font-weight:800;color:#187f67;margin-top:2mm">ঋণ পরিশোধের রসিদ</div>
                 <div style="font-size:11px;color:#2c7f6d;font-weight:700;margin-top:2mm">রসিদ নম্বর: ${escapeReceiptHtml(receiptNo)}</div>
                 <div style="font-size:11px;color:#2c7f6d;margin-top:1.5mm">তারিখ: ${formatReceiptDate(payment?.date)}</div>
