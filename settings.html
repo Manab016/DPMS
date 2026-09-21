@@ -411,7 +411,6 @@ import {
   doc,
   updateDoc,
   deleteDoc,
-  setDoc,
   getDoc
 } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -448,6 +447,7 @@ const PERMISSION_NAMES = {
 };
 let allUsersData = [];
 let allLoginHistory = [];
+let loginHistoryCutoff = 0;
 
 window.currentUserRole = "member";
 window.userPermissions = [];
@@ -528,20 +528,22 @@ onAuthStateChanged(auth, async (user) => {
       if (el) el.classList.add("hidden");
     });
   } else {
+    // Admin/Master Admin-এর জন্য আলাদা System, Users ও Login History tab দেখাবে।
+    // গুরুত্বপূর্ণ: এখানে section-গুলোর "hidden" class সরানো যাবে না।
+    // switchSettingsSubTab() নিজেই নির্বাচিত tab ছাড়া বাকি সব section hide করে।
     ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.style.display = "";
     });
-    ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
-      const el = document.getElementById(id);
-      if (el) el.classList.remove("hidden");
-    });
+
     loadAppUsers();
     loadLoginHistory();
     loadDevData();
     loadClubLogo();
   }
 
+  // Settings page খুললেই শুধু Profile tab visible থাকবে।
+  // System/Users/Login History আলাদা tab-এ click করলে তবেই খুলবে।
   switchSettingsSubTab("profile");
   window.__finishAuthRender();
 });
@@ -753,19 +755,37 @@ window.deleteUserAccount = async function(uId) {
   } catch (e) { alert("ডিলিট করা যায়নি: " + e.message); }
 };
 
-function loadLoginHistory() {
-  onSnapshot(collection(db, "login_history"), (snapshot) => {
-    allLoginHistory = [];
-    snapshot.forEach((docSnap) => {
-      allLoginHistory.push({ id: docSnap.id, ...docSnap.data() });
-    });
-    allLoginHistory.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-    filterLoginHistory();
-  }, (error) => {
-    console.error("Login history load failed:", error);
-    const tbody = document.getElementById("historyTableBody");
-    if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-red-600 font-semibold">লগইন ইতিহাস লোড করা যায়নি।</td></tr>';
-  });
+async function loadLoginHistory() {
+  try {
+    onSnapshot(
+      collection(db, "login_history"),
+      (snapshot) => {
+        allLoginHistory = [];
+        snapshot.forEach((docSnap) => {
+          allLoginHistory.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
+        allLoginHistory.sort(
+          (a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0)
+        );
+
+        filterLoginHistory();
+      },
+      (error) => {
+        console.error("Login history load failed:", error);
+        const tbody = document.getElementById("historyTableBody");
+        if (tbody) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-red-600 font-semibold">লগইন ইতিহাস লোড করা যায়নি।</td></tr>';
+        }
+      }
+    );
+  } catch (error) {
+    console.error("Login history setup failed:", error);
+  }
 }
 
 function escHtml(value) {
@@ -839,24 +859,71 @@ window.toggleSelectAllHistory = function() {
 };
 
 window.deleteOneHistory = async function(id) {
-  if (!id || !confirm("এই লগইন ইতিহাসটি ডিলিট করতে চান?")) return;
+  if (!id || !confirm("এই লগইন ইতিহাসটি Firestore থেকে স্থায়ীভাবে ডিলিট করতে চান?")) {
+    return;
+  }
+
   try {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error("আপনি লগইন করা নেই।");
+    }
+
+    // Force-refresh the ID token so the latest Firestore Rules are used.
+    await currentUser.getIdToken(true);
+
     await deleteDoc(doc(db, "login_history", id));
+
+    allLoginHistory = allLoginHistory.filter(item => item.id !== id);
+    filterLoginHistory();
   } catch (e) {
+    console.error("Login history delete failed:", e);
     alert("ডিলিট করা যায়নি: " + (e?.message || e));
   }
 };
 
 window.deleteSelectedHistory = async function() {
-  const selected = Array.from(document.querySelectorAll(".history-checkbox:checked")).map(cb => cb.value);
+  const selected = Array.from(
+    document.querySelectorAll(".history-checkbox:checked")
+  ).map(cb => cb.value);
+
   if (!selected.length) return;
-  if (!confirm(`নির্বাচিত ${selected.length}টি লগইন ইতিহাস ডিলিট করতে চান?`)) return;
+
+  if (!confirm(
+    `নির্বাচিত ${selected.length}টি লগইন ইতিহাস Firestore থেকে স্থায়ীভাবে ডিলিট করতে চান?`
+  )) {
+    return;
+  }
+
   try {
-    await Promise.all(selected.map(id => deleteDoc(doc(db, "login_history", id))));
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error("আপনি লগইন করা নেই।");
+    }
+
+    // Force-refresh the ID token before the delete request.
+    await currentUser.getIdToken(true);
+
+    const deletePromises = selected.map(id =>
+      deleteDoc(doc(db, "login_history", id))
+    );
+
+    await Promise.all(deletePromises);
+
+    allLoginHistory = allLoginHistory.filter(
+      item => !selected.includes(item.id)
+    );
+
+    filterLoginHistory();
+
     const selectAll = document.getElementById("selectAllHistory");
     if (selectAll) selectAll.checked = false;
+
     updateHistoryDeleteButton();
   } catch (e) {
+    console.error("Selected login history delete failed:", e);
     alert("ডিলিট করা যায়নি: " + (e?.message || e));
   }
 };
