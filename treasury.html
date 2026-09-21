@@ -255,235 +255,6 @@
   /* Committee header is revealed only after cached/cloud data has been applied. */
   #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
 </style>
-
-<script>
-(function () {
-  'use strict';
-
-  var path = (location.pathname.split('/').pop() || '').toLowerCase();
-  if (!path || path === 'index.html') return;
-
-  var PERMISSION = {
-    'members.html': ['members'],
-    'chada.html': ['chada', 'subscription'],
-    'expense.html': ['expense'],
-    'booking.html': ['booking'],
-    'sales.html': ['sales'],
-    'treasury.html': ['treasury', 'treasurer'],
-    'daitobonton.html': ['daitobonton'],
-    'puja_dorkhasto.html': ['puja_dorkhasto'],
-    'settings.html': ['settings']
-  };
-  var ADMIN_EMAIL = 'bappasarkar1173@gmail.com';
-  var CONFIG = {
-    apiKey: 'AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs',
-    authDomain: 'durgapuja-2026.firebaseapp.com',
-    projectId: 'durgapuja-2026',
-    storageBucket: 'durgapuja-2026.firebasestorage.app',
-    messagingSenderId: '625976130920',
-    appId: '1:625976130920:web:60190b21f1c7563cdd2add'
-  };
-
-  // IMPORTANT: Keep the entire protected page hidden until Auth + Permission
-  // is verified. This prevents a logged-out visitor from seeing the target page
-  // for a moment before being sent to the login page.
-  document.documentElement.classList.add('dpms-auth-pending');
-
-  var style = document.createElement('style');
-  style.id = 'dpms-auth-guard-style';
-  style.textContent = 'html.dpms-auth-pending body{visibility:hidden!important}';
-  (document.head || document.documentElement).appendChild(style);
-
-  function reveal() {
-    document.documentElement.classList.remove('dpms-auth-pending');
-    var s = document.getElementById('dpms-auth-guard-style');
-    if (s) s.remove();
-  }
-
-  function go(url) {
-    try { location.replace(url); } catch (_) { location.href = url; }
-  }
-
-  function isAdmin(user, data) {
-    var email = String(user && user.email || '').toLowerCase();
-    return email === ADMIN_EMAIL.toLowerCase() || String(data && data.role || '').toLowerCase() === 'admin' || data && data.isAdmin === true || data && data.masterAdmin === true;
-  }
-
-  function allowedForPage(user, data) {
-    return allowedForTarget(user, data, path);
-  }
-
-  function allowedForTarget(user, data, targetPath) {
-    if (!user) return false;
-    if (isAdmin(user, data)) return true;
-    if (!PERMISSION[targetPath]) return true; // dashboard.html
-    if (!data || data.disabled === true || data.deleted === true) return false;
-    var perms = Array.isArray(data.permissions) ? data.permissions : [];
-    return PERMISSION[targetPath].some(function (p) { return perms.includes(p); });
-  }
-
-  function applyDashboardAccess(user, data) {
-    if (path !== 'dashboard.html') return;
-    var admin = isAdmin(user, data);
-    var perms = Array.isArray(data && data.permissions) ? data.permissions : [];
-    var map = {
-      members: 'members',
-      chada: 'chada',
-      expense: 'expense',
-      booking: 'booking',
-      sales: 'sales',
-      treasury: 'treasury',
-      daitobonton: 'daitobonton',
-      settings: 'settings',
-      puja_dorkhasto: 'puja_dorkhasto'
-    };
-    Object.keys(map).forEach(function (key) {
-      var ok = admin || perms.includes(map[key]);
-      var btn = document.getElementById('menu-btn-' + key);
-      var card = document.getElementById('dash-card-' + key);
-      if (btn) btn.style.display = ok ? 'flex' : 'none';
-      if (card) card.style.display = ok ? 'flex' : 'none';
-    });
-    var pujaCard = document.getElementById('dash-card-pujaDorkhasto');
-    if (pujaCard) pujaCard.style.display = (admin || perms.includes('puja_dorkhasto')) ? 'flex' : 'none';
-    var backup = document.getElementById('dash-card-backup');
-    if (backup) backup.style.display = admin ? 'flex' : 'none';
-    var docs = document.getElementById('dash-card-documents');
-    if (docs) docs.style.display = admin ? 'flex' : 'none';
-  }
-
-  var readyResolve, readyReject;
-  window.__dpmsRouteGuardReady = new Promise(function (resolve, reject) { readyResolve = resolve; readyReject = reject; });
-
-  async function start() {
-    try {
-      // Use the page's own Firebase Auth/Firestore instance. This is important:
-      // creating another Firebase app here could use a different persistence store
-      // and would make a valid login look logged-out in some WebViews.
-      function waitForPrimary(timeoutMs) {
-        return new Promise(function (resolve, reject) {
-          var started = Date.now();
-          (function poll() {
-            var auth = window.__dpmsPrimaryAuth || window.treasuryAuth || window.dpmsFirebase?.auth;
-            var db = window.__dpmsPrimaryDb || window.treasuryDb || window.dpmsFirebase?.db;
-            if (auth && db) return resolve({ auth: auth, db: db });
-            if (Date.now() - started > timeoutMs) return reject(new Error('Firebase Auth instance was not ready'));
-            setTimeout(poll, 25);
-          })();
-        });
-      }
-
-      var ctx = await waitForPrimary(15000);
-      var auth = ctx.auth;
-      var db = ctx.db;
-      // Wait until Firebase has restored the persisted session before the guard decides
-      // that the user is logged out. This prevents false redirects during page/theme reloads.
-      if (auth && typeof auth.authStateReady === 'function') {
-        await auth.authStateReady();
-      }
-      var authMod = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
-      var fsMod = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
-      var finished = false;
-
-      authMod.onAuthStateChanged(auth, async function (user) {
-        if (!user) {
-          finished = true;
-          readyResolve({ user: null, data: null, allowed: false });
-          go('index.html');
-          return;
-        }
-
-        var data = {};
-        try {
-          var snap = await fsMod.getDoc(fsMod.doc(db, 'app_users', user.uid));
-          data = snap.exists() ? (snap.data() || {}) : {};
-        } catch (e) {
-          // The configured master admin is allowed even if this profile read is temporarily unavailable.
-          if (String(user.email || '').toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
-            finished = true;
-            readyResolve({ user: user, data: {}, allowed: false, error: e });
-            go('dashboard.html');
-            return;
-          }
-        }
-
-        if (data.disabled === true || data.deleted === true) {
-          try { await authMod.signOut(auth); } catch (_) {}
-          finished = true;
-          readyResolve({ user: null, data: null, allowed: false });
-          go('index.html');
-          return;
-        }
-
-        var allowed = allowedForPage(user, data);
-        var state = {
-          user: user,
-          data: data,
-          allowed: allowed,
-          isAdmin: isAdmin(user, data),
-          permissions: Array.isArray(data.permissions) ? data.permissions : []
-        };
-        window.__dpmsRouteGuardState = state;
-        finished = true;
-
-        if (!allowed) {
-          readyResolve(state);
-          go('dashboard.html');
-          return;
-        }
-
-        // Apply the correct dashboard visibility BEFORE revealing the page.
-        applyDashboardAccess(user, data);
-        readyResolve(state);
-        reveal();
-      });
-    } catch (e) {
-      console.error('DPMS auth guard failed:', e);
-      readyReject(e);
-      // Fail closed: never show a protected page when its auth state cannot be verified.
-      go('index.html');
-    }
-  }
-
-  // Intercept navigation buttons/links before their inline onclick executes.
-  // If the session is absent, the user goes straight to index.html instead of
-  // briefly loading the requested protected page.
-  document.addEventListener('click', function (event) {
-    var node = event.target && event.target.closest ? event.target.closest('a,button,[onclick]') : null;
-    if (!node) return;
-    if (node.hasAttribute('data-dpms-bypass')) return;
-
-    var url = null;
-    if (node.tagName === 'A') {
-      var href = node.getAttribute('href');
-      if (href && !href.startsWith('#') && !href.startsWith('javascript:') && !href.startsWith('tel:') && !href.startsWith('mailto:')) url = href;
-    }
-    var oc = node.getAttribute('onclick') || '';
-    if (!url) {
-      var m = oc.match(/(?:window\.)?location(?:\.href|\.assign|\.replace)\s*(?:=\s*|\(\s*)["']([^"']+)["']/i);
-      if (m) url = m[1];
-    }
-    if (!url || /^https?:\/\//i.test(url) || url.startsWith('tel:') || url.startsWith('mailto:')) return;
-    var target = url.split('?')[0].split('#')[0].split('/').pop().toLowerCase();
-    if (!/^(members|chada|expense|booking|sales|treasury|daitobonton|puja_dorkhasto|settings|dashboard)\.html$/.test(target)) return;
-
-    event.preventDefault();
-    event.stopImmediatePropagation();
-    window.__dpmsRouteGuardReady.then(function (state) {
-      if (!state || !state.user) return go('index.html');
-      var data = state.data || {};
-      if (target === 'dashboard.html' || allowedForTarget(state.user, data, target)) {
-        location.href = url;
-      } else {
-        go('dashboard.html');
-      }
-    }).catch(function () { go('index.html'); });
-  }, true);
-
-  start();
-})();
-
-</script>
 </head>
   <body class="bg-amber-50/40 p-3 font-sans pb-20">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
@@ -2072,12 +1843,12 @@
       }
 
       function getReceiptLogoSource() {
-        // Dashboard settings-এর logo key + index.html-এর Logo.webp—দুটোই সমর্থিত।
+        // Dashboard settings-এর logo key + index.html-এর Logo.png—দুটোই সমর্থিত।
         return localStorage.getItem("pujaClubLogo") ||
                localStorage.getItem("committee_logo") ||
                localStorage.getItem("committeeLogo") ||
                localStorage.getItem("logo") ||
-               "Logo.webp";
+               "Logo.png";
       }
 
       function calculateLoanReceiptBalance(loan) {
@@ -2143,7 +1914,7 @@
             <div id="receiptSheet" class="receipt-sheet">
               <div style="text-align:center">
                 <img id="receiptLogoImage" src="${logoSrc}" alt="Committee Logo" class="receipt-logo"
-                     onerror="this.onerror=null; this.src='Logo.webp';" />
+                     onerror="this.onerror=null; this.src='Logo.png';" />
                 <div style="font-size:19px;font-weight:800;color:#187f67;margin-top:2mm">ঋণ পরিশোধের রসিদ</div>
                 <div style="font-size:11px;color:#2c7f6d;font-weight:700;margin-top:2mm">রসিদ নম্বর: ${escapeReceiptHtml(receiptNo)}</div>
                 <div style="font-size:11px;color:#2c7f6d;margin-top:1.5mm">তারিখ: ${formatReceiptDate(payment?.date)}</div>
@@ -2574,8 +2345,6 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           const app = initializeApp(window.treasuryFirebaseConfig);
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
-          window.__dpmsPrimaryAuth = window.treasuryAuth;
-          window.__dpmsPrimaryDb = window.treasuryDb;
           window.treasuryStorage = null;
           try { await setPersistence(window.treasuryAuth, browserLocalPersistence); } catch(e) {}
           let memberUnsubscribe = null;

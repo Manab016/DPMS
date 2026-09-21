@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>লগইন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-<script>
+    <script src="https://cdn.tailwindcss.com">
+
 (() => {
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -206,7 +206,7 @@
         <div id="logoContainer" class="flex justify-center mb-3">
             <div class="w-36 h-36 rounded-full border-4 border-amber-100 shadow-md bg-white flex items-center justify-center overflow-hidden relative">
                 <!-- লোগো ইমেজ (পাথ এবং লোডিং এরর ফিক্স করা হয়েছে) -->
-                <img src="Logo.webp" alt="Committee Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');">
+                <img src="Logo.png" alt="Committee Logo" class="w-full h-full object-cover" onerror="this.onerror=null; this.style.display='none'; document.getElementById('fallbackLogo').classList.remove('hidden');">
                 <!-- ফলব্যাক আইকন -->
                 <div id="fallbackLogo" class="hidden absolute inset-0 flex items-center justify-center bg-amber-50 text-amber-600">
                     <i class="fa-solid fa-place-of-worship text-3xl"></i>
@@ -254,7 +254,7 @@
     <!-- Firebase ও স্ক্রিপ্ট লজিক -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         window.togglePassword = function() {
@@ -296,32 +296,27 @@
             errorMsg.classList.add('hidden');
 
             try {
-                await setPersistence(auth, browserLocalPersistence);
+                await setPersistence(auth, browserSessionPersistence);
                 const credential = await signInWithEmailAndPassword(auth, email, password);
-                // Login সফল হলেই Dashboard খুলবে। Login history background-এ save হবে,
-                // তাই Firestore response-এর জন্য Login আটকে থাকবে না।
-                const signedUser = credential.user;
-                window.location.replace("dashboard.html");
-
-                Promise.resolve().then(async () => {
+                // প্রকৃত লগইন-টাইমে সব ব্যবহারকারীর ইতিহাস একবারই সংরক্ষণ করা হবে।
+                try {
+                    const signedUser = credential.user;
+                    let profile = {};
                     try {
-                        let profile = {};
-                        try {
-                            const snap = await getDoc(doc(db, "app_users", signedUser.uid));
-                            if (snap.exists()) profile = snap.data() || {};
-                        } catch (_) {}
-
-                        await addDoc(collection(db, "login_history"), {
-                            userId: signedUser.uid,
-                            email: signedUser.email || email,
-                            name: String(profile.name || "নাম দেওয়া নেই").trim(),
-                            timestamp: Date.now(),
-                            device: navigator.userAgent
-                        });
-                    } catch (historyError) {
-                        console.warn("Login history save failed:", historyError);
-                    }
-                });
+                        const snap = await getDoc(doc(db, "app_users", signedUser.uid));
+                        if (snap.exists()) profile = snap.data() || {};
+                    } catch (_) {}
+                    await addDoc(collection(db, "login_history"), {
+                        userId: signedUser.uid,
+                        email: signedUser.email || email,
+                        name: (profile.name || "নাম দেওয়া নেই").trim(),
+                        timestamp: Date.now(),
+                        device: navigator.userAgent
+                    });
+                } catch (historyError) {
+                    console.warn("Login history save failed:", historyError);
+                }
+                window.location.replace("dashboard.html");
             } catch (error) {
                 errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে!";
                 errorMsg.classList.remove('hidden');
