@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>লগইন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
-    <script src="https://cdn.tailwindcss.com">
-
+    <script src="https://cdn.tailwindcss.com"></script>
+<script>
 (() => {
   const FIREBASE_CONFIG = {
     apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -298,25 +298,30 @@
             try {
                 await setPersistence(auth, browserSessionPersistence);
                 const credential = await signInWithEmailAndPassword(auth, email, password);
-                // প্রকৃত লগইন-টাইমে সব ব্যবহারকারীর ইতিহাস একবারই সংরক্ষণ করা হবে।
-                try {
-                    const signedUser = credential.user;
-                    let profile = {};
-                    try {
-                        const snap = await getDoc(doc(db, "app_users", signedUser.uid));
-                        if (snap.exists()) profile = snap.data() || {};
-                    } catch (_) {}
-                    await addDoc(collection(db, "login_history"), {
-                        userId: signedUser.uid,
-                        email: signedUser.email || email,
-                        name: (profile.name || "নাম দেওয়া নেই").trim(),
-                        timestamp: Date.now(),
-                        device: navigator.userAgent
-                    });
-                } catch (historyError) {
-                    console.warn("Login history save failed:", historyError);
-                }
+                // Login সফল হলেই Dashboard খুলবে। Login history background-এ save হবে,
+                // তাই Firestore response-এর জন্য Login আটকে থাকবে না।
+                const signedUser = credential.user;
                 window.location.replace("dashboard.html");
+
+                Promise.resolve().then(async () => {
+                    try {
+                        let profile = {};
+                        try {
+                            const snap = await getDoc(doc(db, "app_users", signedUser.uid));
+                            if (snap.exists()) profile = snap.data() || {};
+                        } catch (_) {}
+
+                        await addDoc(collection(db, "login_history"), {
+                            userId: signedUser.uid,
+                            email: signedUser.email || email,
+                            name: String(profile.name || "নাম দেওয়া নেই").trim(),
+                            timestamp: Date.now(),
+                            device: navigator.userAgent
+                        });
+                    } catch (historyError) {
+                        console.warn("Login history save failed:", historyError);
+                    }
+                });
             } catch (error) {
                 errorMsg.innerText = "ভুল ইমেইল বা পাসওয়ার্ড দেওয়া হয়েছে!";
                 errorMsg.classList.remove('hidden');
