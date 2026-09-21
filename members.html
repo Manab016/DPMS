@@ -78,7 +78,7 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
 
   var style = document.createElement('style');
   style.id = 'dpms-auth-guard-style';
-  style.textContent = 'html.dpms-auth-pending body{visibility:hidden!important}html.dpms-auth-pending::before{content:"লগইন যাচাই হচ্ছে...";position:fixed;inset:0;z-index:2147483647;display:flex;align-items:center;justify-content:center;background:#fdfbf7;color:#9a3412;font:700 16px sans-serif}';
+  style.textContent = 'html.dpms-auth-pending body{visibility:hidden!important}';
   (document.head || document.documentElement).appendChild(style);
 
   function reveal() {
@@ -163,6 +163,11 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
       var ctx = await waitForPrimary(15000);
       var auth = ctx.auth;
       var db = ctx.db;
+      // Wait until Firebase has restored the persisted session before the guard decides
+      // that the user is logged out. This prevents false redirects during page/theme reloads.
+      if (auth && typeof auth.authStateReady === 'function') {
+        await auth.authStateReady();
+      }
       var authMod = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js');
       var fsMod = await import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js');
       var finished = false;
