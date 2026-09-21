@@ -254,7 +254,7 @@
     <!-- Firebase ও স্ক্রিপ্ট লজিক -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, setPersistence, browserSessionPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, setPersistence, browserLocalPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         window.togglePassword = function() {
@@ -296,7 +296,7 @@
             errorMsg.classList.add('hidden');
 
             try {
-                await setPersistence(auth, browserSessionPersistence);
+                await setPersistence(auth, browserLocalPersistence);
                 const credential = await signInWithEmailAndPassword(auth, email, password);
                 // Login সফল হলেই Dashboard খুলবে। Login history background-এ save হবে,
                 // তাই Firestore response-এর জন্য Login আটকে থাকবে না।

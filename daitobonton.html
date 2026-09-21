@@ -321,10 +321,10 @@ document.addEventListener("DOMContentLoaded",()=>{renderMembersUI()});
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,signOut,browserSessionPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import{getAuth,onAuthStateChanged,signOut,browserLocalPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import{getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,getDocs}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);setPersistence(auth,browserSessionPersistence).catch(()=>{});
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);setPersistence(auth,browserLocalPersistence).catch(()=>{});
 let rows=[],currentUser=null,subscriptionTotal=0;
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const ROW_CACHE_KEY="daitobonton_rows_cache_v4";
