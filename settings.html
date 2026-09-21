@@ -532,10 +532,9 @@ onAuthStateChanged(auth, async (user) => {
       const el = document.getElementById(id);
       if (el) el.style.display = "";
     });
-    // আলাদা tab-এর content একসাথে দেখাবে না; tab click করলে শুধু সেটিই দেখাবে।
     ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
       const el = document.getElementById(id);
-      if (el) el.classList.add("hidden");
+      if (el) el.classList.remove("hidden");
     });
     loadAppUsers();
     loadLoginHistory();
@@ -613,12 +612,20 @@ function permissionText(perms) {
   return (perms || []).map(p => PERMISSION_NAMES[p] || p).join(", ") || "কোনো Permission নেই";
 }
 
+function isMasterAdminUser(user) {
+  return (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
 function loadAppUsers() {
   onSnapshot(collection(db, "app_users"), (snapshot) => {
     allUsersData = [];
     snapshot.forEach((docSnap) => {
       const data = docSnap.data();
-      if (data.deleted !== true && data.disabled !== true) {
+      if (
+        data.deleted !== true &&
+        data.disabled !== true &&
+        (window.isMasterAdmin || !isMasterAdminUser(data))
+      ) {
         allUsersData.push({ id: docSnap.id, ...data });
       }
     });
@@ -659,6 +666,11 @@ window.handleSaveUser = async function(event) {
 
   try {
     if (editId) {
+      const existingUser = allUsersData.find(u => u.id === editId);
+      if (existingUser && !window.isMasterAdmin && isMasterAdminUser(existingUser)) {
+        alert("এই Master Admin-কে কোনো Admin এডিট করতে পারবেন না।");
+        return;
+      }
       await updateDoc(doc(db, "app_users", editId), {
         name, email, role, permissions: selectedPerms, updatedAt: Date.now(), disabled: false, deleted: false
       });
@@ -710,6 +722,10 @@ window.closeCreateUserModal = function() { document.getElementById("createUserMo
 window.editUserPermissions = function(uId) {
   const user = allUsersData.find(u => u.id === uId);
   if (!user) return;
+  if (!window.isMasterAdmin && isMasterAdminUser(user)) {
+    alert("এই Master Admin-কে কোনো Admin এডিট করতে পারবেন না।");
+    return;
+  }
   document.getElementById("userModalTitle").innerText = "✏️ ব্যবহারকারী এডিট করুন";
   document.getElementById("editUserId").value = user.id;
   document.getElementById("uNameInput").value = user.name || "";
@@ -724,6 +740,10 @@ window.editUserPermissions = function(uId) {
 window.deleteUserAccount = async function(uId) {
   const user = allUsersData.find(u => u.id === uId);
   if (!user) return;
+  if (!window.isMasterAdmin && isMasterAdminUser(user)) {
+    alert("এই Master Admin-কে কোনো Admin ডিলিট করতে পারবেন না।");
+    return;
+  }
   if (!confirm(`"${user.name || user.email}"-কে নিষ্ক্রিয়/ডিলিট করতে চান?`)) return;
   try {
     await updateDoc(doc(db, "app_users", uId), {
