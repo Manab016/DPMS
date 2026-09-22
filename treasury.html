@@ -194,6 +194,50 @@
           transform-origin:top left !important;
         }
         * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+
+        /* A4 LANDSCAPE — SINGLE PAGE FIT */
+        @page {
+          size: A4 landscape;
+          margin: 0;
+        }
+
+        html, body {
+          width: 297mm !important;
+          height: 210mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+        }
+
+        #receiptModal,
+        #receiptPrintArea {
+          width: 297mm !important;
+          height: 210mm !important;
+          max-width: 297mm !important;
+          max-height: 210mm !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+
+        #receiptPrintArea .receipt-sheet {
+          width: 145mm !important;
+          height: 195mm !important;
+          min-height: 195mm !important;
+          max-height: 195mm !important;
+          margin: 0 !important;
+          padding: 4mm !important;
+          transform: none !important;
+          transform-origin: top left !important;
+          box-sizing: border-box !important;
+          overflow: hidden !important;
+        }
+
+        #receiptPrintArea * {
+          box-sizing: border-box !important;
+        }
+
       }
 </style>
   
@@ -2047,7 +2091,7 @@
 
               <div class="receipt-footer">
                 <div>ধন্যবাদ!</div>
-                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি")}</div>
+                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "<div class="receipt-thanks-mark" style="text-align:center; margin-top:2px; margin-bottom:2px;">🙏🏻</div>নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি")}</div>
               </div>
             </div>
           </div>
