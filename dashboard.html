@@ -669,6 +669,13 @@
           }
         });
 
+        // সদস্য তালিকা সকল সক্রিয় লগইন করা user দেখতে পারবে।
+        // Edit/Add/Delete permission আলাদা; শুধু view-এর জন্য "members" permission প্রয়োজন নেই।
+        const membersMenu = document.getElementById("menu-btn-members");
+        const membersCard = document.getElementById("dash-card-members");
+        if (membersMenu) membersMenu.style.display = "flex";
+        if (membersCard) membersCard.style.display = "flex";
+
         const settingsBtn = document.getElementById("quickSettingsBtn");
         if (settingsBtn) {
           const hasSettingsAccess =

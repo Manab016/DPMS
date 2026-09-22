@@ -503,6 +503,12 @@ onAuthStateChanged(auth, async (user) => {
     ? Object.keys(PERMISSION_NAMES)
     : (Array.isArray(userDocData.permissions) ? userDocData.permissions : []);
 
+  // Settings is Master Admin only. A normal user cannot open it by direct URL.
+  if (!window.isMasterAdmin) {
+    window.location.replace("dashboard.html");
+    return;
+  }
+
   window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
   
   const displayName = (userDocData.name || "").trim();

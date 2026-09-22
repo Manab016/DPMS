@@ -789,18 +789,19 @@ id-card-reference {
         window.currentUserRole = userDocData?.role || "member";
         window.userPermissions = Array.isArray(userDocData?.permissions) ? userDocData.permissions : [];
 
-        // Non-admin user-এর members permission না থাকলে dashboard-এ ফেরত যাবে।
-        if (!window.userPermissions.includes("members")) {
-          window.location.href = "dashboard.html";
-          return;
-        }
+        // সদস্য তালিকা সকল সক্রিয় user দেখতে পারবে।
+        // "members" permission থাকলে Edit/Add/Delete controls-ও ব্যবহার করতে পারবে।
       }
 
-      if (window.isMasterAdmin) {
+      const canManageMembers =
+        window.isMasterAdmin || window.userPermissions.includes("members");
+
+      if (canManageMembers) {
         document.getElementById("adminMemberControls")?.classList.remove("hidden");
         document.querySelectorAll(".admin-only-col").forEach(col => col.classList.remove("hidden"));
       }
 
+      window.canManageMembers = canManageMembers;
       loadMembers();
     });
 
@@ -903,12 +904,12 @@ id-card-reference {
         const tr = document.createElement("tr");
         tr.className = "border-b hover:bg-gray-50";
         let actionButtons = `<button onclick="openIdCard('${member.id}')" class="bg-indigo-100 text-indigo-700 px-2 py-1 rounded text-xs">🪪</button>`;
-        if (window.isMasterAdmin) {
+        if (window.canManageMembers) {
           actionButtons += `<button onclick="openEditModal('${member.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs ml-1">✏️</button>
                             <button onclick="deleteMember('${member.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1">🗑️</button>`;
         }
         tr.innerHTML = `
-          ${window.currentUserRole === "admin" ? `<td class="p-2.5 border-r text-center admin-only-col"><input type="checkbox" class="member-checkbox" value="${member.id}"></td>` : ""}
+          ${window.canManageMembers ? `<td class="p-2.5 border-r text-center admin-only-col"><input type="checkbox" class="member-checkbox" value="${member.id}"></td>` : ""}
           <td class="p-2.5 border-r font-bold text-orange-600 text-center">${member.autoId}</td>
           <td class="p-2.5 border-r text-center"><img src="${member.photo || ''}" class="w-9 h-9 object-cover rounded-md mx-auto border" onerror="this.style.display='none'"></td>
           <td class="p-2.5 border-r font-medium text-gray-800 text-center">${member.name || ''}</td>
@@ -2145,5 +2146,66 @@ id-card-reference {
   margin:1px 0 !important;
 }
 </style>
+</body>
+</html>tant;
+  line-height:1.2 !important;
+  margin-top:0 !important;
+}
+.id-card-info .id-card-line,
+.id-card-info .id-card-validity {
+  margin:1px 0 !important;
+}
+</style>
+</body>
+</html>ngs','committeeInfo'), snap=>{apply(snap.exists()?snap.data():DEFAULT); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
+    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
+  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
+})();
+</script>
+
+<style id="final-member-fixes">
+/* ID card spacing fix: only address can wrap */
+.id-card-address-line {
+  height:auto !important;
+  min-height:13px !important;
+  display:block !important;
+  -webkit-line-clamp:unset !important;
+  overflow:visible !important;
+  max-width:300px !important;
+  line-height:1.25 !important;
+  margin:2px auto !important;
+}
+.id-card-validity {
+  white-space:nowrap !important;
+  height:14px !important;
+  line-height:1.2 !important;
+  margin-top:0 !important;
+}
+.id-card-info .id-card-line,
+.id-card-info .id-card-validity {
+  margin:1px 0 !important;
+}
+</style>
+<script id="dpms-page-back-guard">
+(function(){
+  if (window.__dpmsBackGuardInstalled) return;
+  window.__dpmsBackGuardInstalled = true;
+
+  function install(){
+    try{
+      history.replaceState({dpmsPageBase:true}, "", location.href);
+      history.pushState({dpmsPageGuard:true}, "", location.href);
+      window.addEventListener("popstate", function(){
+        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
+        window.location.replace("dashboard.html");
+      }, {once:false});
+    }catch(e){ console.warn("DPMS back guard failed:", e); }
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
+  else install();
+})();
+</script>
+
 </body>
 </html>
