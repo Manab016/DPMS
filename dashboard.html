@@ -701,6 +701,30 @@
         if (documentsCard) {
           documentsCard.style.display = isAdmin ? "flex" : "none";
         }
+
+        // সাধারণ user-এর visible dashboard cards-কে একটি মাত্র 2-column
+        // grid-এ একত্রে রাখা হবে, যাতে hidden card-এর কারণে কোনো ফাঁকা
+        // জায়গা না থাকে। Admin-এর existing layout অপরিবর্তিত।
+        if (!isAdmin) {
+          const dashboardSection = document.getElementById("section-dashboard");
+          if (dashboardSection) {
+            const grids = Array.from(
+              dashboardSection.querySelectorAll(":scope > .grid.grid-cols-2.gap-3")
+            );
+
+            if (grids.length > 1) {
+              const mainGrid = grids[0];
+
+              for (let i = 1; i < grids.length; i++) {
+                const grid = grids[i];
+                while (grid.firstElementChild) {
+                  mainGrid.appendChild(grid.firstElementChild);
+                }
+                grid.remove();
+              }
+            }
+          }
+        }
       }
 
       function loadSubscriptions() {
