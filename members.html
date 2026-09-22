@@ -7,20 +7,7 @@
   <!-- Google Font for ID Card Bengali Text -->
   <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@500;600;700;800&display=swap" rel="stylesheet">
   
-  <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
-<span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span></button>
-<div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-<div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
-<button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-<div class="text-center mb-4"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div><h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3></div>
-<div class="space-y-2.5 text-xs border-t pt-3">
-<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div>
-<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div>
-<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
-</div><button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
-</div></div>
-<script>
-window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
+  
 <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
@@ -42,8 +29,112 @@ window.toggleDevModal=function(){const m=document.getElementById("devModal");if(
   /* Committee header is revealed only after cached/cloud data has been applied. */
   #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
 </style>
+
+<style id="final-member-fixes">
+/* ID card spacing fix: only address can wrap */
+.id-card-address-line {
+  height:auto !important;
+  min-height:13px !important;
+  display:block !important;
+  -webkit-line-clamp:unset !important;
+  overflow:visible !important;
+  max-width:300px !important;
+  line-height:1.25 !important;
+  margin:2px auto !important;
+}
+.id-card-validity {
+  white-space:nowrap !important;
+  height:14px !important;
+  line-height:1.2 !important;
+  margin-top:0 !important;
+}
+.id-card-info .id-card-line,
+.id-card-info .id-card-validity {
+  margin:1px 0 !important;
+}
+</style>
+<script type="module" id="committee-global-sync">
+(() => {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-Sx0Nqs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+  };
+  const DEFAULT = {
+    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702", mobile2: ""
+  };
+  const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
+  const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
+  const normalize = raw => {
+    const d={...DEFAULT,...(raw||{})};
+    const village=String(d.village||'').trim(), post=String(d.post||'').trim(), police=String(d.policeDistrict||d.police||d.district||'').trim(), pin=String(d.pincode||'').trim();
+    const address=(village||post||police||pin) ? [village?`সাং:- ${village}`:'',post?`পোস্ট:- ${post}`:'',police?`থানা ও জেলা:- ${police}`:'',pin?`পিন:- ${pin}`:''].filter(Boolean).join(', ') : String(d.address||DEFAULT.address);
+    return {name:String(d.name||DEFAULT.name),establishedYear:String(d.establishedYear||DEFAULT.establishedYear),registrationNo:String(d.registrationNo||DEFAULT.registrationNo),village,post,policeDistrict:police,pincode:pin,address,mobile:String(d.mobile||''),mobile2:String(d.mobile2||'')};
+  };
+  function reveal(){
+    const h=document.getElementById('committeePageHeading');
+    if(h){h.style.visibility='visible'; h.parentElement?.querySelectorAll(':scope > p').forEach(x=>x.style.visibility='visible');}
+  }
+  function apply(raw, revealNow=true){
+    const d=normalize(raw);
+    try{localStorage.setItem('pujaCommitteeInfo',JSON.stringify(d));}catch(_){}
+    set('committeePageHeading',d.name);
+    set('committeeEstablishedYear',d.establishedYear);
+    set('committeeRegistrationNo',d.registrationNo);
+    set('committeeAddress',d.address);
+    const wrap=document.getElementById('committeeMobileWrap');
+    if(wrap){wrap.innerHTML=''; [d.mobile,d.mobile2].map(phoneClean).filter(Boolean).forEach((n,i)=>{if(i){const sep=document.createElement('span');sep.textContent=' / ';wrap.appendChild(sep);} const a=document.createElement('a');a.href='tel:'+n;a.className='hover:underline';a.textContent=n;wrap.appendChild(a);});}
+    const mobileEl=document.getElementById('committeeMobile');
+    if(mobileEl) mobileEl.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');
+    const link=document.getElementById('committeeMobileLink');
+    if(link){link.href='tel:'+phoneClean(d.mobile||d.mobile2); if(mobileEl) link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');}
+    try{localStorage.setItem('pujaCommitteeNames',JSON.stringify({dashboard:d.name,members:d.name,chada:d.name,expense:d.name,booking:d.name,sales:d.name,treasury:d.name,daitobonton:d.name,settings:d.name}));}catch(_){}
+    try{localStorage.setItem('pujaCommitteeName',d.name);}catch(_){}
+    window.__getCommitteeNameForOutput = () => { try { return JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null')?.name || d.name; } catch(_) { return d.name; } };
+    if(revealNow) reveal();
+  }
+  let cached=null; try{cached=JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null');}catch(_){}
+  apply(cached || DEFAULT, !!cached);
+  const revealTimer=setTimeout(reveal,7000);
+  Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
+  ]).then(([am,authm,fsm])=>{
+    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
+    let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
+    const auth=getAuth(app), db=getFirestore(app);
+    const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
+    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
+  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
+})();
+</script>
+<style id="developer-no-flicker">
+#devFloatingButton{position:fixed!important;right:20px!important;bottom:20px!important;z-index:40!important;}
+</style>
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20">
+<button id="devFloatingButton" onclick="toggleDevModal()" style="position:fixed;right:20px;bottom:20px;z-index:40;" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
+<span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span></button>
+<div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+<div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+<button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+<div class="text-center mb-4"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div><h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3></div>
+<div class="space-y-2.5 text-xs border-t pt-3">
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
+</div><button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
+</div></div>
+<script>
+window.toggleDevModal=function(){const m=document.getElementById("devModal");if(!m)return;const open=m.classList.contains("hidden");m.classList.toggle("hidden");m.classList.toggle("flex");if(open){let d={};try{d=JSON.parse(localStorage.getItem("pujaDevData")||"{}")}catch(e){}d.name=d.name||localStorage.getItem("pujaDevName")||"Manabendra Nath Sarkar";d.mobile=d.mobile||localStorage.getItem("pujaDevMobile")||"9002652507";d.email=d.email||localStorage.getItem("pujaDevEmail")||"manabendranathsarkar112@gmail.com";document.getElementById("popDevName").textContent=d.name;document.getElementById("popDevMobile").textContent=d.mobile;document.getElementById("popDevMobile").href="tel:"+d.mobile;document.getElementById("popDevEmail").textContent=d.email;document.getElementById("popDevEmail").href="mailto:"+d.email;}};</script>
+
   <div class="max-w-4xl mx-auto">
     
     <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
@@ -2060,152 +2151,8 @@ id-card-reference {
   }).catch(err => console.error('Committee heading sync init failed:',err));
 })();
 </script>
-<script type="module" id="committee-global-sync">
-(() => {
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-Sx0Nqs",
-    authDomain: "durgapuja-2026.firebaseapp.com",
-    projectId: "durgapuja-2026",
-    storageBucket: "durgapuja-2026.firebasestorage.app",
-    messagingSenderId: "625976130920",
-    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
-  };
-  const DEFAULT = {
-    name: "নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
-    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
-    mobile: "9933371702", mobile2: ""
-  };
-  const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
-  const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
-  const normalize = raw => {
-    const d={...DEFAULT,...(raw||{})};
-    const village=String(d.village||'').trim(), post=String(d.post||'').trim(), police=String(d.policeDistrict||d.police||d.district||'').trim(), pin=String(d.pincode||'').trim();
-    const address=(village||post||police||pin) ? [village?`সাং:- ${village}`:'',post?`পোস্ট:- ${post}`:'',police?`থানা ও জেলা:- ${police}`:'',pin?`পিন:- ${pin}`:''].filter(Boolean).join(', ') : String(d.address||DEFAULT.address);
-    return {name:String(d.name||DEFAULT.name),establishedYear:String(d.establishedYear||DEFAULT.establishedYear),registrationNo:String(d.registrationNo||DEFAULT.registrationNo),village,post,policeDistrict:police,pincode:pin,address,mobile:String(d.mobile||''),mobile2:String(d.mobile2||'')};
-  };
-  function reveal(){
-    const h=document.getElementById('committeePageHeading');
-    if(h){h.style.visibility='visible'; h.parentElement?.querySelectorAll(':scope > p').forEach(x=>x.style.visibility='visible');}
-  }
-  function apply(raw, revealNow=true){
-    const d=normalize(raw);
-    try{localStorage.setItem('pujaCommitteeInfo',JSON.stringify(d));}catch(_){}
-    set('committeePageHeading',d.name);
-    set('committeeEstablishedYear',d.establishedYear);
-    set('committeeRegistrationNo',d.registrationNo);
-    set('committeeAddress',d.address);
-    const wrap=document.getElementById('committeeMobileWrap');
-    if(wrap){wrap.innerHTML=''; [d.mobile,d.mobile2].map(phoneClean).filter(Boolean).forEach((n,i)=>{if(i){const sep=document.createElement('span');sep.textContent=' / ';wrap.appendChild(sep);} const a=document.createElement('a');a.href='tel:'+n;a.className='hover:underline';a.textContent=n;wrap.appendChild(a);});}
-    const mobileEl=document.getElementById('committeeMobile');
-    if(mobileEl) mobileEl.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');
-    const link=document.getElementById('committeeMobileLink');
-    if(link){link.href='tel:'+phoneClean(d.mobile||d.mobile2); if(mobileEl) link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');}
-    try{localStorage.setItem('pujaCommitteeNames',JSON.stringify({dashboard:d.name,members:d.name,chada:d.name,expense:d.name,booking:d.name,sales:d.name,treasury:d.name,daitobonton:d.name,settings:d.name}));}catch(_){}
-    try{localStorage.setItem('pujaCommitteeName',d.name);}catch(_){}
-    window.__getCommitteeNameForOutput = () => { try { return JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null')?.name || d.name; } catch(_) { return d.name; } };
-    if(revealNow) reveal();
-  }
-  let cached=null; try{cached=JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null');}catch(_){}
-  apply(cached || DEFAULT, !!cached);
-  const revealTimer=setTimeout(reveal,7000);
-  Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
-  ]).then(([am,authm,fsm])=>{
-    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
-    let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
-    const auth=getAuth(app), db=getFirestore(app);
-    const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
-    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
-  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
-})();
-</script>
 
-<style id="final-member-fixes">
-/* ID card spacing fix: only address can wrap */
-.id-card-address-line {
-  height:auto !important;
-  min-height:13px !important;
-  display:block !important;
-  -webkit-line-clamp:unset !important;
-  overflow:visible !important;
-  max-width:300px !important;
-  line-height:1.25 !important;
-  margin:2px auto !important;
-}
-.id-card-validity {
-  white-space:nowrap !important;
-  height:14px !important;
-  line-height:1.2 !important;
-  margin-top:0 !important;
-}
-.id-card-info .id-card-line,
-.id-card-info .id-card-validity {
-  margin:1px 0 !important;
-}
-</style>
-</body>
-</html>tant;
-  line-height:1.2 !important;
-  margin-top:0 !important;
-}
-.id-card-info .id-card-line,
-.id-card-info .id-card-validity {
-  margin:1px 0 !important;
-}
-</style>
-</body>
-</html>ngs','committeeInfo'), snap=>{apply(snap.exists()?snap.data():DEFAULT); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
-    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
-  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
-})();
-</script>
 
-<style id="final-member-fixes">
-/* ID card spacing fix: only address can wrap */
-.id-card-address-line {
-  height:auto !important;
-  min-height:13px !important;
-  display:block !important;
-  -webkit-line-clamp:unset !important;
-  overflow:visible !important;
-  max-width:300px !important;
-  line-height:1.25 !important;
-  margin:2px auto !important;
-}
-.id-card-validity {
-  white-space:nowrap !important;
-  height:14px !important;
-  line-height:1.2 !important;
-  margin-top:0 !important;
-}
-.id-card-info .id-card-line,
-.id-card-info .id-card-validity {
-  margin:1px 0 !important;
-}
-</style>
-<script id="dpms-page-back-guard">
-(function(){
-  if (window.__dpmsBackGuardInstalled) return;
-  window.__dpmsBackGuardInstalled = true;
-
-  function install(){
-    try{
-      history.replaceState({dpmsPageBase:true}, "", location.href);
-      history.pushState({dpmsPageGuard:true}, "", location.href);
-      window.addEventListener("popstate", function(){
-        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
-        window.location.replace("dashboard.html");
-      }, {once:false});
-    }catch(e){ console.warn("DPMS back guard failed:", e); }
-  }
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
-  else install();
-})();
-</script>
 
 </body>
 </html>
