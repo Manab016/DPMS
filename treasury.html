@@ -2091,7 +2091,8 @@
 
               <div class="receipt-footer">
                 <div>ধন্যবাদ!</div>
-                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "<div class="receipt-thanks-mark" style="text-align:center; margin-top:2px; margin-bottom:2px;">🙏🏻</div>নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি")}</div>
+                <div class="receipt-thanks-mark" style="text-align:center; margin-top:2px; margin-bottom:2px;">🙏🏻</div>
+                <div class="thanks">${escapeReceiptHtml(window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি")}</div>
               </div>
             </div>
           </div>
@@ -2483,10 +2484,9 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
               // Never reveal Treasury before authentication is confirmed.
               // Redirect immediately so a logged-out user cannot open the page UI.
               document.body.classList.add("treasury-auth-wait");
-              const here = location.pathname.split("/").pop() || "treasury.html";
-              if (here === "treasury.html") {
-                location.replace("index.html");
-              }
+              // Block every direct Treasury URL when the user is not logged in.
+              // Do not check the filename, because renamed/copy URLs must be protected too.
+              location.replace("index.html");
               return;
             }
 
