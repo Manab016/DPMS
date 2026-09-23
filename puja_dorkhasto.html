@@ -1127,4 +1127,97 @@ window.startNewApplicationWithoutDeletingSaved = function(){
 </script>
 
 </body>
+</html>n cloud delete failed:",e));
+            }
+            showSavedApps();
+          }
+        };
+        row.append(title,edit,rename,del);
+        box.appendChild(row);
+      });
+    }
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    document.getElementById("closeSavedApps").onclick=()=>overlay.remove();
+  }
+
+  // Make the manager available after the page is ready.
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addManagerButton);
+  else addManagerButton();
+})();
+</script>
+
+
+<script id="new-application-helper">
+window.startNewApplicationWithoutDeletingSaved = function(){
+  try{
+    // Preserve every saved record. Only clear transient/current editing state.
+    const keep = {};
+    Object.keys(localStorage).forEach(k=>{
+      if(k==="puja_saved_applications_v2") keep[k]=localStorage.getItem(k);
+    });
+    location.reload();
+  }catch(e){ location.reload(); }
+};
+</script>
+
+</body>
+</html>   if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
+              const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
+              window.firestoreSavePujaDorkhasto(formsData, remaining).catch(e=>console.warn("Saved application cloud delete failed:",e));
+            }
+            showSavedApps();
+          }
+        };
+        row.append(title,edit,rename,del);
+        box.appendChild(row);
+      });
+    }
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+    document.getElementById("closeSavedApps").onclick=()=>overlay.remove();
+  }
+
+  // Make the manager available after the page is ready.
+  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addManagerButton);
+  else addManagerButton();
+})();
+</script>
+
+
+<script id="new-application-helper">
+window.startNewApplicationWithoutDeletingSaved = function(){
+  try{
+    // Preserve every saved record. Only clear transient/current editing state.
+    const keep = {};
+    Object.keys(localStorage).forEach(k=>{
+      if(k==="puja_saved_applications_v2") keep[k]=localStorage.getItem(k);
+    });
+    location.reload();
+  }catch(e){ location.reload(); }
+};
+</script>
+
+<script id="dpms-page-back-guard">
+(function(){
+  if (window.__dpmsBackGuardInstalled) return;
+  window.__dpmsBackGuardInstalled = true;
+
+  function install(){
+    try{
+      history.replaceState({dpmsPageBase:true}, "", location.href);
+      history.pushState({dpmsPageGuard:true}, "", location.href);
+      window.addEventListener("popstate", function(){
+        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
+        window.location.replace("dashboard.html");
+      }, {once:false});
+    }catch(e){ console.warn("DPMS back guard failed:", e); }
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
+  else install();
+})();
+</script>
+
+</body>
 </html>

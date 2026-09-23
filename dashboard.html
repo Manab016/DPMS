@@ -362,8 +362,8 @@
 
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-      import { getAuth, setPersistence, browserSessionPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs, setDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+      import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc, getDocs, setDoc, enableIndexedDbPersistence } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
       
 
       const firebaseConfig = {
@@ -377,8 +377,38 @@
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
-      setPersistence(auth, browserSessionPersistence).catch(() => {});
+      setPersistence(auth, browserLocalPersistence).catch(() => {});
       const db = getFirestore(app);
+      // Login splash-এ warm করা Firestore data IndexedDB cache থেকেই প্রথমে আসবে।
+      try { enableIndexedDbPersistence(db).catch(() => {}); } catch (_) {}
+
+      function applyDashboardBootCache() {
+        try {
+          const raw = localStorage.getItem("dpmsDashboardCache");
+          if (!raw) return;
+          const c = JSON.parse(raw);
+          const setText = (id, value) => { const el=document.getElementById(id); if(el) el.innerText=value; };
+          if (Number.isFinite(Number(c.membersCount))) setText("dashTotalMembersCount", Number(c.membersCount).toLocaleString("en-IN"));
+          if (Number.isFinite(Number(c.expenseTotal))) setText("dashTotalExpenseAmount", `₹${Number(c.expenseTotal).toLocaleString("en-IN")}`);
+          if (Number.isFinite(Number(c.bookingTotal))) setText("dashTotalBookingCount", Number(c.bookingTotal).toLocaleString("en-IN"));
+          if (Number.isFinite(Number(c.salesTotal))) setText("dashTotalSalesCount", Number(c.salesTotal).toLocaleString("en-IN"));
+          const sub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
+          if (sub && Number.isFinite(Number(c.subscriptionTotal))) sub.innerText = `₹${Number(c.subscriptionTotal).toLocaleString("en-IN")}`;
+        } catch (_) {}
+
+        try {
+          const p = JSON.parse(localStorage.getItem("dpmsCurrentProfile") || "null");
+          if (p) {
+            window.currentUserRole = p.role || window.currentUserRole || "user";
+            window.userPermissions = Array.isArray(p.permissions) ? p.permissions : (window.userPermissions || []);
+          }
+        } catch (_) {}
+      }
+
+      // Cached dashboard values are painted immediately; live listeners below continue
+      // syncing changes without showing another full loading cycle to the user.
+      applyDashboardBootCache();
+
       const SUPABASE_URL = "https://mgxbgmfsukekbwugswzr.supabase.co";
       const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_NeuD6lwxyxvB-xiiVLn_GQ_ZnBgRdor";
       const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
@@ -427,11 +457,26 @@
       window.currentUserRole = "user";
       window.userPermissions = [];
 
-      onAuthStateChanged(auth, async (user) => {
+      let dpmsDashboardAuthHandled = false;
+
+      // Wait until Firebase has completely restored the local login session before
+      // deciding whether Dashboard may open. This prevents Splash -> Login flicker.
+      async function dpmsBootDashboardAuth() {
+        try {
+          if (typeof auth.authStateReady === "function") {
+            await auth.authStateReady();
+          }
+        } catch (_) {}
+
+        const user = auth.currentUser;
         if (!user) {
+          try { sessionStorage.removeItem("dpmsLoginHandoff"); } catch (_) {}
           window.location.replace("index.html");
           return;
         }
+
+        dpmsDashboardAuthHandled = true;
+        try { sessionStorage.removeItem("dpmsLoginHandoff"); } catch (_) {}
 
         installDashboardBackGuard();
 
@@ -474,7 +519,9 @@
         loadTotalSalesCount();
         loadCommitteeExecutives();
         loadPastDocuments();
-      });
+      }
+
+      dpmsBootDashboardAuth();
 
       function loadCommitteeExecutives() {
         let committeeList = [];

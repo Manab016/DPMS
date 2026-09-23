@@ -2891,6 +2891,9 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });

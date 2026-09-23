@@ -23,7 +23,7 @@
 <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">পূজা কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
-<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
+<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
 <div class="relative flex-1"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span><input id="listSearch" oninput="render()" type="text" placeholder="সদস্য, দায়িত্ব, গ্রুপ লিডার বা গ্রামের নাম লিখে খুঁজুন..." class="w-full p-2.5 pl-9 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"></div>
 <select id="villageFilter" onchange="render()" class="w-full md:w-52 p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><option value="">সব গ্রাম</option></select>
@@ -31,7 +31,9 @@
 <div class="mb-2 text-xs text-gray-500" id="dutyCount">মোট: ০ টি</div><div id="tableBody" class="space-y-3"><div class="p-5 text-center text-gray-500 border rounded-lg">কোনো দায়িত্ব বণ্টনের তথ্য নেই</div></div></div></div>
 <div id="entryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
 <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-0 relative flex flex-col max-h-[90vh]"><div class="flex justify-between items-center p-4 border-b"><h3 id="modalTitle" class="text-base font-bold text-gray-900">নতুন দায়িত্ব যোগ</h3><button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button></div>
-<div class="overflow-y-auto p-4 custom-scroll space-y-5"><form id="entryForm" onsubmit="saveEntry(event)"><input type="hidden" id="editId"><input type="hidden" id="name">
+<div class="overflow-y-auto p-4 custom-scroll space-y-5"><form id="entryForm" onsubmit="saveEntry(event)"><input type="hidden" id="editId"><input type="hidden" id="name"><input type="hidden" id="otherMode" value="0">
+<div class="flex gap-2 border-b pb-2"><button type="button" id="memberTabBtn" onclick="setDutyFormMode('member')" class="px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white">সদস্য নির্বাচন</button><button type="button" id="otherTabBtn" onclick="setDutyFormMode('other')" class="px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border">অন্যান্য</button></div>
+<div id="otherPersonFields" class="hidden space-y-2"><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-gray-700 mb-1">নাম *</label><input id="otherName" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="নাম লিখুন"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর *</label><input id="otherMobile" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="মোবাইল নম্বর লিখুন"></div></div><div class="flex justify-end"><button type="button" onclick="addOtherPerson()" class="bg-orange-100 text-orange-700 px-3 py-2 rounded-lg text-xs font-bold border border-orange-200 hover:bg-orange-200">➕ আরও একজন যোগ করুন</button></div><div id="otherPeopleList" class="space-y-2"></div></div>
 <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য নির্বাচন *</label><input type="text" id="memberSearch" oninput="filterMembers()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="memberList" class="max-h-40 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedMemberSummary" class="text-[11px] text-orange-700 font-bold mt-1 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"></div></div>
 <div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব *</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="যেমন: চাঁদা সংগ্রহ, টিকিট বিতরণ"></div>
 <div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রাম নির্বাচন *</label><div id="villageGrid" class="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-3 rounded-lg border"></div><div class="flex gap-2"><input type="text" id="newVillageInput" placeholder="অন্য গ্রাম যোগ করুন" class="flex-1 p-2 border rounded-lg text-sm"><button type="button" onclick="addNewVillage()" class="bg-gray-100 px-4 py-2 rounded-lg text-sm border font-semibold hover:bg-gray-200">যোগ করুন</button></div></div>
@@ -44,7 +46,8 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"],currentFormExtraVillages=[];
+let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
 function getVillage(m){return m.village||m.gram||m.address||""}
@@ -55,18 +58,32 @@ function renderMembersUI(){
  const q=(memberSearch.value||"").toLowerCase();
  memberList.innerHTML=allMembers.filter(m=>(`${m.name||""} ${getVillage(m)} ${getPhone(m)} ${m.memberId||""}`).toLowerCase().includes(q)).map(m=>`<label class="flex items-center gap-3 p-2 hover:bg-orange-50 rounded cursor-pointer border-b last:border-0"><input type="checkbox" value="${memberKey(m)}" class="member-check w-4 h-4 text-orange-600 rounded" ${selectedMemberIds.includes(memberKey(m))?"checked":""} onchange="toggleMember('${memberKey(m)}')"><div><p class="text-sm font-semibold text-gray-800">${esc(m.name||"নামহীন")}</p><p class="text-xs text-gray-500">${esc(getVillage(m))} • ${esc(getPhone(m))}</p></div></label>`).join("")||`<div class="p-3 text-center text-xs text-gray-500">কোনো সদস্য পাওয়া যায়নি</div>`;
  selectedMemberSummary.innerHTML = `<div class="flex flex-wrap gap-1.5 items-center"><span class="text-[11px] text-orange-700 font-extrabold">নির্বাচিত সদস্য: ${selectedMemberIds.length} জন</span>${selectedMemberIds.length ? `<span class="text-[10px] text-gray-500">নাম:</span>` : ``}</div>${selectedMemberIds.length ? `<div class="flex flex-wrap gap-1.5 mt-1">${selectedMemberIds.map(id=>{const m=allMembers.find(x=>memberKey(x)===String(id));return m?`<span class="inline-flex items-center gap-1 bg-orange-50 border border-orange-200 text-orange-800 px-2 py-1 rounded-full text-[10px] font-bold">${esc(m.name||"নামহীন")}<button type="button" onclick="removeSelectedMember('${memberKey(m)}')" class="text-red-500 hover:text-red-700 font-black ml-0.5" title="সরান">✕</button></span>`:""}).join("")}</div>` : ``}`;
- const leaders=allMembers.filter(m=>selectedMemberIds.includes(memberKey(m)));
- const lq=(leaderSearch.value||"").toLowerCase();
- leaderList.innerHTML=leaders.filter(m=>(`${m.name||""} ${getVillage(m)} ${getPhone(m)}`).toLowerCase().includes(lq)).map(m=>`<label class="flex items-center gap-3 p-2 hover:bg-blue-50 rounded cursor-pointer border-b last:border-0"><input type="checkbox" class="leader-check w-4 h-4 text-orange-600 rounded" ${selectedLeaderIds.includes(memberKey(m))?"checked":""} onchange="toggleLeader('${memberKey(m)}')"><div><p class="text-sm font-semibold text-gray-800">${esc(m.name||"নামহীন")}</p><p class="text-xs text-gray-500">${esc(getVillage(m))} • ${esc(getPhone(m))}</p></div></label>`).join("")||`<div class="p-3 text-center text-xs text-gray-500">কোনো গ্রুপ লিডার পাওয়া যায়নি</div>`;
- selectedLeaderSummary.innerHTML = selectedLeaderIds.length
-   ? `<div class="flex flex-wrap gap-1.5 mt-2"><span class="text-[10px] text-gray-500 self-center mr-1">নির্বাচিত গ্রুপ লিডার:</span>${selectedLeaderIds.map(id=>{const m=allMembers.find(x=>memberKey(x)===String(id));return m?`<span class="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 rounded-full text-[10px] font-bold">${esc(m.name||"নামহীন")}<button type="button" onclick="removeSelectedLeader('${memberKey(m)}')" class="text-red-500 hover:text-red-700 font-black ml-0.5" title="সরান">✕</button></span>`:""}).join("")}</div><div class="text-[10px] text-blue-600 mt-1">সর্বোচ্চ ৩ জন</div>`
-   : `<span class="text-[11px] text-gray-500">নির্বাচিত গ্রুপ লিডার: ০ জন (সর্বোচ্চ ৩ জন)</span>`;
+
+ if(dutyFormMode==="other"){
+   const lq=(leaderSearch.value||"").toLowerCase();
+   leaderList.innerHTML=otherPeople.filter(p=>`${p.name||""} ${p.mobile||""}`.toLowerCase().includes(lq)).map((p,i)=>{
+     const idx=otherPeople.indexOf(p);
+     return `<label class="flex items-center gap-3 p-2 hover:bg-blue-50 rounded cursor-pointer border-b last:border-0"><input type="checkbox" class="leader-check w-4 h-4 text-orange-600 rounded" ${selectedOtherLeaderIndexes.includes(idx)?"checked":""} onchange="toggleOtherLeader(${idx})"><div><p class="text-sm font-semibold text-gray-800">${esc(p.name||"নামহীন")}</p><p class="text-xs text-gray-500">${esc(p.mobile||"")}</p></div></label>`;
+   }).join("")||`<div class="p-3 text-center text-xs text-gray-500">অন্যান্য ব্যক্তির নাম আগে যোগ করুন</div>`;
+   selectedLeaderSummary.innerHTML = selectedOtherLeaderIndexes.length
+     ? `<div class="flex flex-wrap gap-1.5 mt-2"><span class="text-[10px] text-gray-500 self-center mr-1">নির্বাচিত গ্রুপ লিডার:</span>${selectedOtherLeaderIndexes.map(i=>otherPeople[i]).filter(Boolean).map(p=>`<span class="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 rounded-full text-[10px] font-bold">${esc(p.name||"নামহীন")}<button type="button" onclick="removeOtherLeader(${otherPeople.indexOf(p)})" class="text-red-500 hover:text-red-700 font-black ml-0.5" title="সরান">✕</button></span>`).join("")}</div><div class="text-[10px] text-blue-600 mt-1">সর্বোচ্চ ৩ জন</div>`
+     : `<span class="text-[11px] text-gray-500">নির্বাচিত গ্রুপ লিডার: ০ জন (সর্বোচ্চ ৩ জন)</span>`;
+ }else{
+   const leaders=allMembers.filter(m=>selectedMemberIds.includes(memberKey(m)));
+   const lq=(leaderSearch.value||"").toLowerCase();
+   leaderList.innerHTML=leaders.filter(m=>(`${m.name||""} ${getVillage(m)} ${getPhone(m)}`).toLowerCase().includes(lq)).map(m=>`<label class="flex items-center gap-3 p-2 hover:bg-blue-50 rounded cursor-pointer border-b last:border-0"><input type="checkbox" class="leader-check w-4 h-4 text-orange-600 rounded" ${selectedLeaderIds.includes(memberKey(m))?"checked":""} onchange="toggleLeader('${memberKey(m)}')"><div><p class="text-sm font-semibold text-gray-800">${esc(m.name||"নামহীন")}</p><p class="text-xs text-gray-500">${esc(getVillage(m))} • ${esc(getPhone(m))}</p></div></label>`).join("")||`<div class="p-3 text-center text-xs text-gray-500">কোনো গ্রুপ লিডার পাওয়া যায়নি</div>`;
+   selectedLeaderSummary.innerHTML = selectedLeaderIds.length
+     ? `<div class="flex flex-wrap gap-1.5 mt-2"><span class="text-[10px] text-gray-500 self-center mr-1">নির্বাচিত গ্রুপ লিডার:</span>${selectedLeaderIds.map(id=>{const m=allMembers.find(x=>memberKey(x)===String(id));return m?`<span class="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-800 px-2 py-1 rounded-full text-[10px] font-bold">${esc(m.name||"নামহীন")}<button type="button" onclick="removeSelectedLeader('${memberKey(m)}')" class="text-red-500 hover:text-red-700 font-black ml-0.5" title="সরান">✕</button></span>`:""}).join("")}</div><div class="text-[10px] text-blue-600 mt-1">সর্বোচ্চ ৩ জন</div>`
+     : `<span class="text-[11px] text-gray-500">নির্বাচিত গ্রুপ লিডার: ০ জন (সর্বোচ্চ ৩ জন)</span>`;
+ }
  renderVillages();
 }
+function toggleOtherLeader(index){index=Number(index);const i=selectedOtherLeaderIndexes.indexOf(index);if(i>=0)selectedOtherLeaderIndexes.splice(i,1);else if(selectedOtherLeaderIndexes.length<3)selectedOtherLeaderIndexes.push(index);else{alert("সর্বোচ্চ ৩ জন গ্রুপ লিডার নির্বাচন করা যাবে।");}renderMembersUI();}
+function removeOtherLeader(index){index=Number(index);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(i=>i!==index);renderMembersUI();}
 function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
 function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(values)?values:[]).map(v=>String(v).trim()));document.querySelectorAll(".village-check").forEach(x=>x.checked=wanted.has(String(x.value)));}
-function renderVillages(selected=[]){const keep=selected.length?selected:getSelectedVillages();villageGrid.innerHTML=villages.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
-function addNewVillage(){const v=newVillageInput.value.trim();if(v&&!villages.includes(v)){villages.push(v);renderVillages();document.querySelectorAll(".village-check")[villages.length-1].checked=true;newVillageInput.value=""}}
+function renderVillages(selected=[]){const keep=selected.length?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
+function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
 function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);renderMembersUI()}
 function removeSelectedMember(id){
@@ -82,7 +99,12 @@ function removeSelectedLeader(id){
  renderMembersUI();
 }
 function toggleLeader(id){id=String(id);const i=selectedLeaderIds.indexOf(id);if(i>=0)selectedLeaderIds.splice(i,1);else if(selectedLeaderIds.length<3)selectedLeaderIds.push(id);else{alert("সর্বোচ্চ ৩ জন গ্রুপ লিডার নির্বাচন করা যাবে।");renderMembersUI();return}renderMembersUI()}
-function resetForm(){entryForm.reset();editId.value="";name.value="";date.value=new Date().toISOString().slice(0,10);dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];memberSearch.value="";leaderSearch.value="";renderMembersUI();renderVillages([])}
+function renderOtherPeople(){const box=document.getElementById("otherPeopleList");if(!box)return;box.innerHTML=otherPeople.map((p,i)=>`<div class="flex items-center justify-between gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-xs"><div class="min-w-0"><div class="font-bold text-gray-800 truncate">${esc(p.name||"")}</div><div class="text-gray-600">${esc(p.mobile||"")}</div></div><button type="button" onclick="removeOtherPerson(${i})" class="shrink-0 text-rose-600 font-bold px-2 py-1 rounded hover:bg-rose-100">✕</button></div>`).join("");}
+function addOtherPerson(){const n=(document.getElementById("otherName")?.value||"").trim(),m=(document.getElementById("otherMobile")?.value||"").trim();if(!n)return alert("দয়া করে নাম লিখুন।");if(!m)return alert("দয়া করে মোবাইল নম্বর লিখুন।");otherPeople.push({name:n,mobile:m});document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();}
+function removeOtherPerson(i){otherPeople.splice(i,1);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(x=>x!==i).map(x=>x>i?x-1:x);renderOtherPeople();renderMembersUI();}
+function setDutyFormMode(mode){dutyFormMode=mode==="other"?"other":"member";const a=document.getElementById("memberTabBtn"),b=document.getElementById("otherTabBtn"),box=document.getElementById("otherPersonFields"),memberBox=document.getElementById("memberSearch")?.parentElement;if(a&&b){a.className=dutyFormMode==="member"?"px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white":"px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border";b.className=dutyFormMode==="other"?"px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white":"px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border";}if(box)box.classList.toggle("hidden",dutyFormMode!=="other");if(memberBox)memberBox.classList.toggle("hidden",dutyFormMode==="other");const oh=document.getElementById("otherMode");if(oh)oh.value=dutyFormMode==="other"?"1":"0";renderMembersUI();}
+function openOtherModal(){modalTitle.textContent="অন্যান্য দায়িত্ব যোগ";resetForm();setDutyFormMode("other");entryModal.classList.remove("hidden");entryModal.classList.add("flex")}
+function resetForm(){entryForm.reset();editId.value="";name.value="";date.value=new Date().toISOString().slice(0,10);dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];selectedOtherLeaderIndexes=[];currentFormExtraVillages=[];otherPeople=[];memberSearch.value="";leaderSearch.value="";renderMembersUI();renderVillages([]);renderOtherPeople();setDutyFormMode("member")}
 function syncCollectedAmountLimit(){
  const limit=Math.max(0,Number(dutyAmount?.value)||0);
  if(amount){ amount.max=String(limit); if(Number(amount.value)>limit) amount.value=String(limit); }
@@ -221,8 +243,10 @@ async function saveEntry(e){
  e.preventDefault();
  const ms=selectedMemberIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean),
        vs=[...document.querySelectorAll(".village-check:checked")].map(x=>x.value),
-       ls=selectedLeaderIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean);
- if(!ms.length)return alert("দয়া করে অন্তত একজন সদস্য নির্বাচন করুন।");
+       ls=dutyFormMode==="other"?selectedOtherLeaderIndexes.map(i=>otherPeople[i]).filter(Boolean):selectedLeaderIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean);
+ if(dutyFormMode!=="other" && !ms.length)return alert("দয়া করে অন্তত একজন সদস্য নির্বাচন করুন।");
+ if(dutyFormMode==="other" && !(document.getElementById("otherName")?.value||"").trim())return alert("দয়া করে নাম লিখুন।");
+ if(dutyFormMode==="other" && !(document.getElementById("otherMobile")?.value||"").trim())return alert("দয়া করে মোবাইল নম্বর লিখুন।");
  if(!vs.length)return alert("দয়া করে অন্তত একটি গ্রাম নির্বাচন করুন।");
  const dateEl=document.getElementById("date"),responsibilityEl=document.getElementById("responsibility"),dutyAmountEl=document.getElementById("dutyAmount"),amountEl=document.getElementById("amount"),depositedEl=document.getElementById("deposited"),remarksEl=document.getElementById("remarks"),editIdEl=document.getElementById("editId");
  let remarks=(remarksEl?.value||"").trim();
@@ -238,7 +262,11 @@ async function saveEntry(e){
  const id=editIdEl?.value||"";
  const old=id?rows.find(x=>String(x.id)===String(id)):null;
  const treasurer=getPujaTreasurer();
- const data={date:dateEl?.value||today(),name:ms.map(x=>x.name||"").filter(Boolean).join(", "),mobile:ms.map(getPhone).join(", "),memberId:ms.map(x=>x.memberId||x.id||"").join(", "),memberIds:ms.map(x=>String(x.id)),selectedMembers:ms.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),groupLeaders:ls.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),villages:vs,responsibility:(responsibilityEl?.value||"").trim(),dutyAmount:dutyAmountValue,amount:amountValue,deposited:amountValue,remarks,updatedAt:Date.now(),depositedToTreasurerRole:"পূজা কোষাধ্যক্ষ",depositedToTreasurerName:treasurer?.name||"পূজা কোষাধ্যক্ষ"};
+ if(dutyFormMode==="other"){const n=(document.getElementById("otherName")?.value||"").trim(),m=(document.getElementById("otherMobile")?.value||"").trim();if(n||m){if(!n)return alert("দয়া করে নাম লিখুন।");if(!m)return alert("দয়া করে মোবাইল নম্বর লিখুন।");otherPeople.push({name:n,mobile:m});document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();}} if(dutyFormMode==="other"&&!otherPeople.length)return alert("দয়া করে অন্তত একজনের নাম ও মোবাইল নম্বর যোগ করুন।");
+ const otherNameValue=otherPeople.map(p=>p.name).filter(Boolean).join(", "),otherMobileValue=otherPeople.map(p=>p.mobile).filter(Boolean).join(", ");
+ const saveName=dutyFormMode==="other"?otherNameValue:ms.map(x=>x.name||"").filter(Boolean).join(", ");
+ const saveMobile=dutyFormMode==="other"?otherMobileValue:ms.map(getPhone).join(", ");
+ const data={date:dateEl?.value||today(),name:saveName,mobile:saveMobile,memberId:dutyFormMode==="other"?"":ms.map(x=>x.memberId||x.id||"").join(", "),memberIds:dutyFormMode==="other"?[]:ms.map(x=>String(x.id)),selectedMembers:dutyFormMode==="other"?[]:ms.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),groupLeaders:ls.map((x,i)=>({id:dutyFormMode==="other"?`other-${selectedOtherLeaderIndexes[i]}`:String(x.id),name:x.name||"",mobile:dutyFormMode==="other"?(x.mobile||""):getPhone(x),village:dutyFormMode==="other"?"":getVillage(x)})),isOther:dutyFormMode==="other",villages:vs,responsibility:(responsibilityEl?.value||"").trim(),dutyAmount:dutyAmountValue,amount:amountValue,deposited:amountValue,remarks,updatedAt:Date.now(),depositedToTreasurerRole:"পূজা কোষাধ্যক্ষ",depositedToTreasurerName:treasurer?.name||"পূজা কোষাধ্যক্ষ"};
  try{
    let savedId=id;
    if(id){
@@ -266,7 +294,7 @@ async function saveEntry(e){
  }catch(err){console.error("Daitobonton save error:",err);alert("সংরক্ষণ করা যায়নি: "+(err?.message||err))}
 }
 window.saveEntry=saveEntry;
-window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent="দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=x.remarks||"";selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));renderMembersUI();renderVillages(getRowVillages(x));entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
+window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent=x.isOther?"অন্যান্য দায়িত্ব সংশোধন":"দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=x.remarks||"";currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));otherPeople=x.isOther?String(x.name||"").split(/\s*,\s*/).map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(/\s*,\s*/)[i]?.trim()||""})).filter(p=>p.name||p.mobile):[];selectedOtherLeaderIndexes=x.isOther?(x.groupLeaders||[]).map(g=>{const i=otherPeople.findIndex(p=>String(p.name)===String(g.name)&&String(p.mobile)===String(g.mobile));return i;}).filter(i=>i>=0):[];document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();renderMembersUI();renderVillages(getRowVillages(x));setDutyFormMode(x.isOther?"other":"member");entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
 window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?"))try{const x=rows.find(r=>String(r.id)===String(id));if(x?.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",id));await loadDaitobontonFromCloud()}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(async x=>{if(x.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",x.id));}));await loadDaitobontonFromCloud()}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{
@@ -513,6 +541,9 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
@@ -653,4 +684,25 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
   }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
 })();
 </script>
+<script id="dpms-page-back-guard">
+(function(){
+  if (window.__dpmsBackGuardInstalled) return;
+  window.__dpmsBackGuardInstalled = true;
+
+  function install(){
+    try{
+      history.replaceState({dpmsPageBase:true}, "", location.href);
+      history.pushState({dpmsPageGuard:true}, "", location.href);
+      window.addEventListener("popstate", function(){
+        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
+        window.location.replace("dashboard.html");
+      }, {once:false});
+    }catch(e){ console.warn("DPMS back guard failed:", e); }
+  }
+
+  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
+  else install();
+})();
+</script>
+
 </body></html>

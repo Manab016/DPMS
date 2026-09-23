@@ -151,6 +151,12 @@
 </head>
 <body class="bg-amber-50/40 p-3 font-sans pb-20 text-gray-800">
 
+  <script>
+  (function(){
+    window.__dpmsSalesAuthPending = true;
+  })();
+  </script>
+
   <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
   <button
     onclick="toggleDevModal()"
@@ -468,6 +474,9 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
     const auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence);
 
@@ -502,6 +511,9 @@
         window.location.replace("index.html");
         return;
       }
+
+      document.body.style.visibility = "visible";
+      window.__dpmsSalesAuthPending = false;
 
       if ((user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
         try {
@@ -1678,6 +1690,9 @@
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
@@ -1818,5 +1833,13 @@
   }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
 })();
 </script>
+  <script>
+  setTimeout(function(){
+    if (window.__dpmsSalesAuthPending) {
+      window.location.replace("index.html");
+    }
+  }, 8000);
+  </script>
+
 </body>
 </html>

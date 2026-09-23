@@ -557,20 +557,28 @@
       const auth = getAuth(app);
       setPersistence(auth, browserLocalPersistence);
       const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
       window.currentUserRole = "user";
       window.isMasterAdmin = false;
 
       onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
-          window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
-          const profileEmailDisplay = document.getElementById("profileEmailDisplay");
-          if (profileEmailDisplay) profileEmailDisplay.innerText = user.email || "";
-          const profileRoleBadge = document.getElementById("profileRoleBadge");
-          if (profileRoleBadge) profileRoleBadge.innerText = window.isMasterAdmin ? "প্রধান প্রশাসক" : "সদস্য";
+        // Directly opening this page is allowed only after Firebase has restored a valid login.
+        if (!user) {
+          window.location.replace("index.html");
+          return;
         }
+
+        window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+        window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
+        const profileEmailDisplay = document.getElementById("profileEmailDisplay");
+        if (profileEmailDisplay) profileEmailDisplay.innerText = user.email || "";
+        const profileRoleBadge = document.getElementById("profileRoleBadge");
+        if (profileRoleBadge) profileRoleBadge.innerText = window.isMasterAdmin ? "প্রধান প্রশাসক" : "সদস্য";
+
         loadMembersData();
         loadSubscriptionsData();
         loadDaitobontonTotal();
@@ -1563,6 +1571,9 @@
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });

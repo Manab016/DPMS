@@ -701,6 +701,9 @@ id-card-reference {
     const auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     // STORAGE ARCHITECTURE:
     // - Firebase Auth + Firestore remain unchanged.

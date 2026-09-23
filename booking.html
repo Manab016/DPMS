@@ -81,7 +81,13 @@
   #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
 </style>
 </head>
-  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+  <body style="visibility:hidden" class="bg-amber-50/40 p-3 font-sans pb-20">
+<script>
+(function(){
+  window.__dpmsPageAuthPending = true;
+})();
+</script>
+
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন -->
     <button
       onclick="toggleDevModal()"
@@ -359,6 +365,9 @@
       const auth = getAuth(app);
       setPersistence(auth, browserLocalPersistence);
       const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
       let allBookingsData = [];
       let allMembersData = [];
@@ -376,6 +385,14 @@
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
 
       onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          window.location.replace("index.html");
+          return;
+        }
+
+        document.body.style.visibility = "visible";
+        window.__dpmsPageAuthPending = false;
+
         if (user && (user.email || "").toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
           try { 
             const userAccessDoc = await getDoc(doc(db, "app_users", user.uid)); 
@@ -412,8 +429,6 @@
           setupUIBasedOnRoleAndPermissions(user);
           loadMembersData();
           loadSalesData();
-        } else {
-          window.location.replace("index.html");
         }
       });
 
@@ -1214,6 +1229,9 @@
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
@@ -1356,3 +1374,11 @@
 </script>
 </body>
 </html>
+
+<script>
+setTimeout(function(){
+  if (window.__dpmsPageAuthPending) {
+    window.location.replace("index.html");
+  }
+}, 8000);
+</script>
