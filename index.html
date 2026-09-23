@@ -264,9 +264,9 @@
             await dpmsWarmDashboardData(signedUser, profile);
 
             await new Promise(resolve => setTimeout(resolve, 650));
-            const splash = document.getElementById("dpmsSplash");
-            splash?.classList.add("dpms-splash-leaving");
-            await new Promise(resolve => setTimeout(resolve, 620));
+            // Splash শেষ হওয়ার সঙ্গে সঙ্গেই Dashboard-এ যাওয়া হবে।
+            // Splash fade-out করা হবে না—কারণ fade-out করলে নিচের Login form
+            // কয়েক মিলিসেকেন্ডের জন্য দেখা যায়।
             window.location.replace("dashboard.html");
         }
 
@@ -710,8 +710,7 @@
                 await new Promise(r => setTimeout(r, remainingBeforeFade));
             }
 
-            document.getElementById("dpmsSplash")?.classList.add("dpms-splash-leaving");
-            await new Promise(r => setTimeout(r, 600));
+            // Splash শেষ → একবারেই Dashboard। Login page reveal করা যাবে না।
             window.location.replace("dashboard.html");
         }
 
