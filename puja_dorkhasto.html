@@ -208,6 +208,41 @@ onAuthStateChanged(dpmsAuth, async user => {
   await loadFromFirestore();
 });
 </script>
+
+<style id="dpms-responsive-v1">
+/* DPMS Responsive Layout — visual/layout only; existing JavaScript and data logic unchanged. */
+html{width:100%;max-width:100%;overflow-x:hidden;-webkit-text-size-adjust:100%;}
+body{width:100%;max-width:100%;min-width:0;box-sizing:border-box;overflow-x:hidden;}
+*,*::before,*::after{box-sizing:border-box;}
+img,video{max-width:100%;height:auto;}
+iframe{max-width:100%;}
+input,select,textarea,button{max-width:100%;}
+.grid,.flex,.block,.inline-flex{min-width:0;}
+.overflow-x-auto{max-width:100%;-webkit-overflow-scrolling:touch;}
+
+/* Keep wide data tables usable on phones without shrinking every column. */
+@media (max-width:640px){
+  body{padding-left:8px!important;padding-right:8px!important;}
+  table{max-width:none;}
+  .overflow-x-auto table{min-width:max-content;}
+  [role="dialog"]{max-width:calc(100vw - 16px)!important;}
+  .fixed.inset-0>div{max-width:calc(100vw - 16px)!important;}
+  .w-screen{width:100vw!important;max-width:100vw!important;}
+  input,select,textarea{min-width:0;}
+  button{white-space:normal;}
+}
+
+/* Mid-size screens: keep cards and forms inside the available viewport. */
+@media (min-width:641px) and (max-width:1024px){
+  body{padding-left:12px!important;padding-right:12px!important;}
+}
+
+/* Large screens: prevent accidental horizontal overflow while allowing the existing
+   page-specific max-width/layout classes to control the desktop presentation. */
+@media (min-width:1025px){
+  body{padding-left:max(12px,2vw);padding-right:max(12px,2vw);}
+}
+</style>
 </head>
 <body class="bg-amber-50 p-3 md:p-5">
 
@@ -349,6 +384,8 @@ function collect(id){
  const mv=document.getElementById(id+"_manualText");
  if(mv && mv.isContentEditable){ d.manualHtml=mv.innerHTML; d.manualText=mv.innerText; } else { d.manualText=mv?mv.value:""; }
  const old=get(id);
+ d.__savedApplicationId=old.__savedApplicationId||"";
+ d.__savedApplicationTitle=old.__savedApplicationTitle||"";
  d.manualHtml=d.manualHtml || old.manualHtml || "";
  d.manualText=d.manualText ?? old.manualText ?? "";
  const modes=document.querySelectorAll('input[name="writeMode_'+id+'"]');
@@ -1124,99 +1161,6 @@ window.startNewApplicationWithoutDeletingSaved = function(){
     location.reload();
   }catch(e){ location.reload(); }
 };
-</script>
-
-</body>
-</html>n cloud delete failed:",e));
-            }
-            showSavedApps();
-          }
-        };
-        row.append(title,edit,rename,del);
-        box.appendChild(row);
-      });
-    }
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    document.getElementById("closeSavedApps").onclick=()=>overlay.remove();
-  }
-
-  // Make the manager available after the page is ready.
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addManagerButton);
-  else addManagerButton();
-})();
-</script>
-
-
-<script id="new-application-helper">
-window.startNewApplicationWithoutDeletingSaved = function(){
-  try{
-    // Preserve every saved record. Only clear transient/current editing state.
-    const keep = {};
-    Object.keys(localStorage).forEach(k=>{
-      if(k==="puja_saved_applications_v2") keep[k]=localStorage.getItem(k);
-    });
-    location.reload();
-  }catch(e){ location.reload(); }
-};
-</script>
-
-</body>
-</html>   if(window.dpmsFirebase?.user && window.firestoreSavePujaDorkhasto){
-              const formsData={}; forms.forEach(f=>{formsData[f.id]=get(f.id)});
-              window.firestoreSavePujaDorkhasto(formsData, remaining).catch(e=>console.warn("Saved application cloud delete failed:",e));
-            }
-            showSavedApps();
-          }
-        };
-        row.append(title,edit,rename,del);
-        box.appendChild(row);
-      });
-    }
-    overlay.appendChild(box);
-    document.body.appendChild(overlay);
-    document.getElementById("closeSavedApps").onclick=()=>overlay.remove();
-  }
-
-  // Make the manager available after the page is ready.
-  if(document.readyState==="loading") document.addEventListener("DOMContentLoaded",addManagerButton);
-  else addManagerButton();
-})();
-</script>
-
-
-<script id="new-application-helper">
-window.startNewApplicationWithoutDeletingSaved = function(){
-  try{
-    // Preserve every saved record. Only clear transient/current editing state.
-    const keep = {};
-    Object.keys(localStorage).forEach(k=>{
-      if(k==="puja_saved_applications_v2") keep[k]=localStorage.getItem(k);
-    });
-    location.reload();
-  }catch(e){ location.reload(); }
-};
-</script>
-
-<script id="dpms-page-back-guard">
-(function(){
-  if (window.__dpmsBackGuardInstalled) return;
-  window.__dpmsBackGuardInstalled = true;
-
-  function install(){
-    try{
-      history.replaceState({dpmsPageBase:true}, "", location.href);
-      history.pushState({dpmsPageGuard:true}, "", location.href);
-      window.addEventListener("popstate", function(){
-        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
-        window.location.replace("dashboard.html");
-      }, {once:false});
-    }catch(e){ console.warn("DPMS back guard failed:", e); }
-  }
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
-  else install();
-})();
 </script>
 
 </body>
