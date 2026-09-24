@@ -1,6 +1,16 @@
 <!DOCTYPE html>
 <html lang="bn">
 <head>
+<script>
+(function(){
+  try {
+    const ref = document.referrer || '';
+    const isDashboardNavigation = /dashboard\.html(?:$|[?#])/i.test(ref);
+    const isInternal = isDashboardNavigation || !!sessionStorage.getItem('membersPageInternalNav');
+    if (!isInternal) location.replace('index.html');
+  } catch(e) { location.replace('index.html'); }
+})();
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>সদস্য ব্যবস্থাপনা</title>
@@ -115,6 +125,14 @@
   }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
 })();
 </script>
+<style id="members-auth-guard-style">
+html.members-auth-pending body { visibility: hidden !important; }
+html.members-auth-pending #committeePageHeading { visibility: hidden !important; }
+</style>
+<script id="members-auth-guard-start">
+  document.documentElement.classList.add("members-auth-pending");
+</script>
+
 <style id="developer-no-flicker">
 #devFloatingButton{position:fixed!important;right:20px!important;bottom:20px!important;z-index:40!important;}
 </style>
@@ -684,7 +702,7 @@ id-card-reference {
 </style>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
     import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
@@ -697,7 +715,7 @@ id-card-reference {
       appId: "1:625976130920:web:60190b21f1c7563cdd2add",
     };
 
-    const app = initializeApp(firebaseConfig);
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
     const auth = getAuth(app);
     setPersistence(auth, browserLocalPersistence);
     const db = getFirestore(app);
@@ -853,6 +871,10 @@ id-card-reference {
         return;
       }
 
+      // Authenticated হলে page দেখানো হবে; direct URL/run অবস্থায়
+      // authentication শেষ হওয়ার আগে members page-এর content দেখা যাবে না।
+      document.documentElement.classList.remove("members-auth-pending");
+
       const userEmail = String(user.email || "").trim().toLowerCase();
       const configuredAdminEmail = String(ADMIN_EMAIL || "").trim().toLowerCase();
       let isAdminByEmail = !!userEmail && userEmail === configuredAdminEmail;
@@ -918,7 +940,9 @@ id-card-reference {
         // Otherwise the initial HTML options can briefly show already-occupied posts.
         const editId = document.getElementById("editMemberDocId")?.value || "";
         updateRoleOptions(editId);
-        window.filterMembers();
+        // Firestore update-এর পরে বর্তমান pagination page ধরে রাখবে।
+        // Search/গ্রাম filter করলে filterMembers() আগের মতো Page 1 থেকে শুরু করবে।
+        window.filterMembers(true);
       });
     }
 
@@ -1822,7 +1846,7 @@ id-card-reference {
       }
     };
 
-    window.filterMembers = function() {
+    window.filterMembers = function(preserveCurrentPage = false) {
       const searchText = (document.getElementById("searchInput")?.value || "").toLowerCase();
       const selectedVillage = (document.getElementById("villageFilter")?.value || "");
       window.filteredMembersData = allMembersData.filter(m => {
@@ -1834,7 +1858,9 @@ id-card-reference {
         const matchVillage = selectedVillage === "" || (m.village || "") === selectedVillage;
         return matchSearch && matchVillage;
       });
-      currentMemberPage = 1;
+      if (!preserveCurrentPage) {
+        currentMemberPage = 1;
+      }
       renderTable(window.filteredMembersData);
     };
 

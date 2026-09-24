@@ -459,12 +459,22 @@
 
       let dpmsDashboardAuthHandled = false;
 
-      // Wait until Firebase has completely restored the local login session before
-      // deciding whether Dashboard may open. This prevents Splash -> Login flicker.
+      // Direct-open guard: wait for Firebase to restore the saved session.
+      // If there is no authenticated user, leave Dashboard immediately and open Login.
       async function dpmsBootDashboardAuth() {
         try {
           if (typeof auth.authStateReady === "function") {
             await auth.authStateReady();
+          } else {
+            await new Promise(resolve => {
+              let done = false;
+              const finish = () => { if (!done) { done = true; resolve(); } };
+              const unsub = onAuthStateChanged(auth, () => {
+                try { unsub(); } catch (_) {}
+                finish();
+              });
+              setTimeout(finish, 5000);
+            });
           }
         } catch (_) {}
 
@@ -1075,106 +1085,109 @@
 
       window.importFullBackup=async function(input){const file=input?.files?.[0];if(!file)return;if(!confirm("রিস্টোর করলে Backup ফাইলের ডাটা দিয়ে Firestore-এর পুরনো ডাটা একই ID-তে পুনরায় বসানো হবে এবং Backup-এ থাকা Supabase document file-ও পুনরায় আপলোড হবে। চালিয়ে যাবেন?")){input.value="";return;}try{if(!auth.currentUser)throw new Error("লগইন সেশন পাওয়া যাচ্ছে না।");const parsed=JSON.parse(await file.text());if(parsed?.backupType!=="DPMS_FULL_BACKUP")throw new Error("এটি DPMS-এর সম্পূর্ণ Backup ফাইল নয়।");const collectionsData=parsed.collections||{},mapping={users:"app_users"};for(const rawName of Object.keys(collectionsData)){const colName=mapping[rawName]||rawName,items=collectionsData[rawName];if(!Array.isArray(items))continue;for(const item of items){const id=item?.id;if(id===undefined||id===null||String(id).trim()==="")continue;const {id:ignored,...data}=item;await setDoc(doc(db,colName,String(id)),data,{merge:false});}}for(const f of (Array.isArray(parsed.supabaseFiles)?parsed.supabaseFiles:[])){if(!f?.dataUrl||!f?.storagePath)continue;const blob=dataUrlToBlob(f.dataUrl),bucket=f.storageBucket||DOCUMENTS_BUCKET,path=String(f.storagePath).replace(/^\/+/,"").replace(/^documents\//i,"");const upload=await supabaseClient.storage.from(bucket).upload(path,blob,{contentType:blob.type||"application/octet-stream",upsert:true});if(upload.error)throw upload.error;const {data:publicData}=supabaseClient.storage.from(bucket).getPublicUrl(path);if(f.documentId)await setDoc(doc(db,"past_documents",String(f.documentId)),{fileUrl:publicData?.publicUrl||"",storagePath:path,storageBucket:bucket,fileName:f.fileName||"document"},{merge:true});}alert("সম্পূর্ণ Restore সফল হয়েছে। Firestore-এর ডাটা এবং Supabase-এর Backup করা ফাইলগুলোও Restore হয়েছে।");input.value="";window.location.reload();}catch(e){console.error(e);alert("Restore সম্পূর্ণ হয়নি: "+(e?.message||e));input.value="";}};
 
-      // 🪔 স্বয়ংক্রিয় দুর্গাপূজা নির্ঘণ্ট — Kolkata/IST বাংলা পঞ্জিকা
-      const PUJA_API_BASE = "https://api.apimitra.in/panchang";
-      const PUJA_CITY = "kolkata";
+      // 🪔 স্বয়ংক্রিয় দুর্গাপূজা নির্ঘণ্ট — একই নির্ধারিত বাংলা পঞ্জিকা (PNA Durga Puja Nirghanta)
+      // অন্য কোনো পঞ্জিকা/API-র হিসাবের সঙ্গে মেশানো হবে না।
+      const PUJA_PANJIKA_SOURCE = "PNA Durga Puja Nirghanta";
+      const PUJA_PANJIKA_URL = "https://www.pnadurgapuja.com/p/blog-page_09.html";
       const PUJA_TITHI_META = {
-        Shashthi:{bn:"মহাষষ্ঠী",icon:"🌺",color:"from-orange-50 to-amber-50"},
-        Saptami:{bn:"মহাসপ্তমী",icon:"🌿",color:"from-emerald-50 to-green-50"},
-        Ashtami:{bn:"মহাষ্টমী",icon:"🌸",color:"from-pink-50 to-rose-50"},
-        Navami:{bn:"মহানবমী",icon:"🔥",color:"from-red-50 to-orange-50"},
-        Dashami:{bn:"বিজয়া দশমী",icon:"🪔",color:"from-yellow-50 to-orange-50"}
+        Shashthi:{bn:"শ্রীশ্রী দুর্গা মহাষষ্ঠী",icon:"✤"},
+        Saptami:{bn:"শ্রীশ্রী দুর্গা মহাসপ্তমী",icon:"✤"},
+        Ashtami:{bn:"শ্রীশ্রী দুর্গা মহাষ্টমী",icon:"✤"},
+        Navami:{bn:"শ্রীশ্রী দুর্গা মহানবমী",icon:"✤"},
+        Dashami:{bn:"শ্রীশ্রী দুর্গা বিজয়াদশমী",icon:"✤"}
       };
       const bnDigits=v=>String(v).replace(/\d/g,d=>"০১২৩৪৫৬৭৮৯"[d]);
       const bnMonths=["জানুয়ারি","ফেব্রুয়ারি","মার্চ","এপ্রিল","মে","জুন","জুলাই","আগস্ট","সেপ্টেম্বর","অক্টোবর","নভেম্বর","ডিসেম্বর"];
       const bnWeekdays=["রবিবার","সোমবার","মঙ্গলবার","বুধবার","বৃহস্পতিবার","শুক্রবার","শনিবার"];
       function formatBnDate(ds){const d=new Date(ds+"T12:00:00");return `${bnWeekdays[d.getDay()]}, ${bnDigits(d.getDate())} ${bnMonths[d.getMonth()]} ${bnDigits(d.getFullYear())}`}
       function banglaYear(ds){return new Date(ds+"T12:00:00").getFullYear()-593}
-      function normalizeTithi(raw){const s=String(raw||""),l=s.toLowerCase();if(l.includes("shashthi")||l.includes("shasthi")||s.includes("ষষ্ঠী"))return"Shashthi";if(l.includes("saptami")||s.includes("সপ্তমী"))return"Saptami";if(l.includes("ashtami")||s.includes("অষ্টমী"))return"Ashtami";if(l.includes("navami")||l.includes("nabami")||s.includes("নবমী"))return"Navami";if(l.includes("dashami")||l.includes("dashmi")||s.includes("দশমী"))return"Dashami";return null}
-      function tithiEnd(raw){const s=String(raw||"");let m=s.match(/(?:upto|until|till|ends?\s*at)\s*([0-9]{1,2}:[0-9]{2}\s*(?:AM|PM)?)/i);if(m)return m[1];m=s.match(/(?:শেষ|পর্যন্ত)\s*([0-9]{1,2}:[0-9]{2}\s*(?:AM|PM)?)/i);return m?m[1]:""}
-      function timeMin(t){const m=String(t||"").match(/(\d{1,2}):(\d{2})\s*(AM|PM)?/i);if(!m)return null;let h=+m[1],mi=+m[2],a=(m[3]||"").toUpperCase();if(a==="PM"&&h<12)h+=12;if(a==="AM"&&h===12)h=0;return h*60+mi}
-      function fmtMin(n){n=((n%1440)+1440)%1440;let h=Math.floor(n/60),m=n%60,a=h>=12?"PM":"AM";h=h%12||12;return`${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")} ${a}`}
-      function addDay(ds,n){const d=new Date(ds+"T12:00:00");d.setDate(d.getDate()+n);return d.toISOString().slice(0,10)}
-      async function fetchPanchang(ds){const url=`${PUJA_API_BASE}?city=${PUJA_CITY}&date=${encodeURIComponent(ds)}`;const r=await fetch(url,{cache:"no-store"});if(!r.ok)throw Error("Panchang API "+r.status);return r.json()}
-      function rawTithi(d){return d?.tithi||d?.data?.tithi||d?.panchang?.tithi||""}
-      function sunrise(d){return d?.sunrise||d?.data?.sunrise||d?.panchang?.sunrise||""}
-      function paksha(d){return String(d?.paksha||d?.data?.paksha||d?.panchang?.paksha||"")}
 
-      // ২০২৬-এর জন্য যাচাইকৃত Kolkata Bengali Panjika fallback। API না এলে এটিই দেখাবে।
-      // ২০২৬ কলকাতা বাংলা পঞ্জিকা অনুযায়ী নির্ঘণ্ট।
-      const PUJA_FALLBACK = {
-        2026:[
-          {key:"Shashthi",date:"2026-10-16",rawTithi:"শুক্ল ষষ্ঠী — শুরু ১৬ অক্টোবর দুপুর ০১:৪২, শেষ ১৭ অক্টোবর ভোর ০৩:৪৬",note:"বোধন, আমন্ত্রণ ও অধিবাস",startTime:"০১:৪২ PM",endTime:"০৩:৪৬ AM (১৭ অক্টোবর)",ritualTime:"বোধন/আমন্ত্রণ/অধিবাস — ১৬ অক্টোবর রাত ০৮:৩০-এর মধ্যে"},
-          {key:"Saptami",date:"2026-10-17",rawTithi:"শুক্ল সপ্তমী — শুরু ১৭ অক্টোবর ভোর ০৩:৪৬, শেষ ১৮ অক্টোবর ভোর ০৫:৫৩",note:"নবপত্রিকা প্রবেশ ও সপ্তমী পূজা",startTime:"০৩:৪৬ AM",endTime:"০৫:৫৩ AM (১৮ অক্টোবর)",ritualTime:"সপ্তমী পূজা — ১৭ অক্টোবর সকাল ০৭:০৪-এর পরে"},
-          {key:"Ashtami",date:"2026-10-19",rawTithi:"শুক্ল অষ্টমী — শুরু ১৮ অক্টোবর ভোর ০৫:৫৩, শেষ ১৯ অক্টোবর সন্ধ্যা ০৭:৫০",note:"মহাষ্টমী পূজা ও সন্ধিপূজা",startTime:"০৫:৫৩ AM (১৮ অক্টোবর)",endTime:"০৭:৫০ PM",ritualTime:"মহাষ্টমী পূজা — ১৯ অক্টোবর সকাল ০৭:০৫-এর আগে",sandhiStart:"০৭:২৬ PM",sandhiEnd:"০৮:১৪ PM"},
-          {key:"Navami",date:"2026-10-20",rawTithi:"শুক্ল নবমী — শুরু ১৯ অক্টোবর সন্ধ্যা ০৭:৫০, শেষ ২০ অক্টোবর সকাল ০৯:৩১",note:"মহানবমী পূজা",startTime:"০৭:৫০ PM (১৯ অক্টোবর)",endTime:"০৯:৩১ AM",ritualTime:"মহানবমী পূজা — ২০ অক্টোবর সকাল ০৮:৩১–০৯:৩১"},
-          {key:"Dashami",date:"2026-10-21",rawTithi:"শুক্ল দশমী — শুরু ২০ অক্টোবর সকাল ০৯:৩১, শেষ ২১ অক্টোবর সকাল ১০:৪৭",note:"বিজয়া দশমী ও বিসর্জন",startTime:"০৯:৩১ AM (২০ অক্টোবর)",endTime:"১০:৪৭ AM (২১ অক্টোবর)",ritualTime:"বিজয়া দশমী পূজা — ২১ অক্টোবর সকাল ০৮:৩১-এর মধ্যে"}
-        ]
-      };
-
-      const PUJA_RITUAL_TIMES = {
+      // এই তথ্যটি PNA-র ১৪৩৩ (ইং-২০২৬) নির্ঘণ্ট থেকে হুবহু রাখা হয়েছে।
+      // ভবিষ্যৎ বছরও একই PNA পঞ্জিকা থেকে আলাদা data entry হিসেবে যোগ হবে; অন্য source ব্যবহার হবে না।
+      const PUJA_PANJIKA_DATA = {
         2026: {
-          Ashtami: {sandhiStart:"০৭:২৬ PM",sandhiEnd:"০৮:১৪ PM",sandhiNote:"অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট"}
+          title:"পূজা নির্ঘণ্ট -১৪৩৩",
+          source:PUJA_PANJIKA_SOURCE,
+          sourceUrl:PUJA_PANJIKA_URL,
+          days:[
+            {
+              key:"Shashthi",date:"2026-10-16",
+              text:"২৮শে আশ্বিন ১৪৩৩ সন (ইং ১৬ই অক্টোবর ২০২৬) শুক্রবার, পূর্ব্বাহ্ন ঘ ৯।২৮ । মহাষষ্ঠী রাত্রি ঘ ৩৷৪৭ পর্য্যন্ত। শ্রীশ্রীদুর্গাষষ্ঠী । পূর্ব্বাহ্ন মধ্যে কিন্তু বারবেলানুরোধে দিব ঘ ৮৷৩০ মধ্যে শ্রীশ্রীশারদীয়া দুর্গাদেবীর ষষ্ঠ্যাদিকল্পারম্ভ ও ষষ্ঠীবিহিত পূজা প্রশস্তা। সায়ংকালে দেবীর আমন্ত্রন ও অধিবাস।"
+            },
+            {
+              key:"Saptami",date:"2026-10-17",
+              text:"২৯শে আশ্বিন ১৪৩৩ সন (ইং ১৭ই অক্টোবর ২০২৬) শনিবার, পূর্ব্বাহ্ন ঘ ৯৷২৮। সপ্তমী অহোরাত্র। শ্রীশ্রীশারদীয়া দুর্গাপূজা। পূর্ব্বাহ্ন মধ্যে দ্যাত্মক-চরলগ্নে ও চরনবাংশে শ্রীশ্রীশারদীয়া দুর্গাদেবীর নবপত্রিকা প্রবেশ স্থাপন, সপ্তম্যাদি কল্পারম্ভ ও সপ্তমীবিহিত পূজা প্রশস্তা। ঘোটকে আগমন। ফল - ছত্রভঙ্গ। রাত্রি ঘ ১১।৪ গতে ১১।৫২। ৩০শে আশ্বিন ১৪৩৩ সন (ইং ১৮ই অক্টোবর ২০২৬) রবিবার, পূর্ব্বাহ্ন ঘ ৯৷২৮। সপ্তমী প্রাতঃ ঘ ৫৷৫৩ পর্যন্ত্য। প্রাতঃ ঘ ৫।৫৩ মধ্যে শ্রীশ্রী শারদীয়া দুর্গাদেবীর শুক্লা সপ্তমীবিহিত অধিক পূজা প্রশস্তা। রাত্রি ঘ ১০৷৫৯ গতে ১১৷৪৭ মধ্যে দেবীর অর্দ্ধরাত্রবিহিতপূজা।"
+            },
+            {
+              key:"Ashtami",date:"2026-10-19",
+              text:"১লা কার্ত্তিক ১৪৩৩ সন (ইং ১৯শে অক্টোবর ২০২৬) সোমবার। পূর্ব্বাহ্ন ঘ ৯৷২৮ । মহাষ্টমী দিবা ঘ ৭৷৫০ মধ্যে কিন্তু সন্ধিপূজানুরোধে দিবা ঘ ৭৷২৬ মধ্যে কিন্তু কালবেলানুরোধে দিব ঘ ৭৷৫ মধ্যে শ্রীশ্রীশারদীয়া দুর্গাদেবীর মহাষ্টম্যাদি কল্পারম্ভ, কেবল মহাষ্টমী কল্পারম্ভ ও মহাষ্টমীবিহিত পূজা প্রশস্তা। বীরাষ্টমী ও মহাষ্টমীর ব্রতোপবাস। সন্ধিপূজা -দিবা ঘ ৭৷২৬ গতে ঘ ৮৷১৪ মধ্যে সন্ধিপূজা। দিবা ঘ ৭|২১ গতে সন্ধিপূজারম্ভ। দিবা ঘ ৭|৫০ গতে বলিদান। দিবা ঘ ৮|১৪ মধ্যে সন্ধিপূজা সমাপন।"
+            },
+            {
+              key:"Navami",date:"2026-10-20",
+              text:"২রা কার্ত্তিক ১৪৩৩ সন (ইং ২০শে অক্টোবর ২০২৬) মঙ্গলবার, পূর্ব্বাহ্ন ঘ ৯৷২৮ । মহানবমী দিবা ঘ ৯।৩১ পর্য্যন্ত। পূর্ব্বাহ্ন মধ্যে (কিন্তু বারবেলানুরোধে দিবা ঘ ৭৷৫ মধ্যে পুনঃ দিবা ঘ ৮৷৩১ গতে পূর্ব্বাহ্ন মধ্যে) শ্রী শ্রী শারদীয়া দুর্গাদেবীর কেবল মহানবমী কল্পারম্ভ ও মহানবমীবিহিত পূজা প্রশস্তা এবং দেবীর নবরাত্রিক ব্রত সমাপন। পূর্ব্বাহ্ন মধ্যে বীরাষ্টমীর ও মহাষ্টমীর ব্রতের পারণ।"
+            },
+            {
+              key:"Dashami",date:"2026-10-21",
+              text:"৩রা কার্ত্তিক ১৪৩৩ সন (ইং ২১শে অক্টোবর ২০২৬) বুধবার, পূর্ব্বাহ্ন মধ্যে দিবা ঘ ৯৷২৮ পর্য্যন্ত। পূর্ব্বাহ্ন মধ্যে চরলগ্নে ও চরনবাংশে কিন্তু কালবেলানুরোধে দিবা ঘ ৮৷৩১ মধ্যে শ্রীশ্রীশারদীয়া দুর্গাদেবীর দশমীবিহিত পূজা সমাপনান্তে বিসর্জ্জন প্রশস্তা। দেবীর নৌকায় গমন। ফল -শস্যবৃদ্ধি ও জলবৃদ্ধি। কুলাচারানুসারে বিসর্জ্জনান্তে অপরাজিতা পূজা। বিজয়াদশমীকৃত্য।"
+            }
+          ],
+          footer:"দেবীর ঘোটকে আগমন। ফল - ছত্রভঙ্গ।\nদেবীর নৌকায় গমন। ফল - শস্যবৃদ্ধি ও জলবৃদ্ধি।"
         }
       };
 
-      async function calculatePujaSchedule(year){
-        // API request কমানোর জন্য সেপ্টেম্বরের শেষ থেকে নভেম্বরের শুরু পর্যন্ত parallel batch।
-        const start=`${year}-09-25`, end=`${year}-11-05`, dates=[];
-        for(let ds=start;ds<=end;ds=addDay(ds,1)) dates.push(ds);
-        const out=[];
-        for(let i=0;i<dates.length;i+=8){
-          const batch=dates.slice(i,i+8);
-          const rows=await Promise.all(batch.map(async ds=>{try{return {date:ds,data:await fetchPanchang(ds)}}catch(e){return {date:ds,error:e}}}));
-          rows.forEach(({date,data})=>{if(!data)return;const rt=rawTithi(data),t=normalizeTithi(rt);if(t && /shukla|শুক্ল/i.test(paksha(data))) out.push({date,tithi:t,rawTithi:rt,sunrise:sunrise(data),source:data.source||"live"})});
-          const box=document.getElementById("pujaScheduleContainer");
-          if(box && i<dates.length-1 && !out.some(x=>x.tithi==="Dashami")) box.innerHTML=`<div class="puja-loading"><div class="text-center"><div class="text-3xl mb-2 animate-pulse">🪔</div><div class="text-xs font-bold text-orange-700">${bnDigits(year)} সালের পঞ্জিকা খোঁজা হচ্ছে...</div><div class="text-[10px] text-gray-500 mt-1">${bnDigits(Math.min(i+8,dates.length))}/${bnDigits(dates.length)} দিন যাচাই হয়েছে</div></div></div>`;
-          if(out.some(x=>x.tithi==="Shashthi")&&out.some(x=>x.tithi==="Dashami")&&i>20) break;
-        }
-        const result={};
-        // প্রথম পাওয়া তারিখ নয়—প্রতি তিথির প্রথম sunrise day-টাই ritual date হিসেবে নেওয়া হচ্ছে।
-        ["Shashthi","Saptami","Ashtami","Navami","Dashami"].forEach(k=>{const x=out.find(v=>v.tithi===k);if(x)result[k]=x});
-        return {result,all:out,source:"api"};
+      function pnaDayHtml(day){
+        const meta=PUJA_TITHI_META[day.key]||{bn:"পূজার দিন",icon:"✤"};
+        return `<div class="pna-day-row"><div class="pna-bullet">${meta.icon}</div><div class="pna-day-content"><div class="pna-day-title">${meta.bn}</div><div class="pna-day-text">${day.text}</div></div></div>`;
       }
 
-      function getFallbackSchedule(year){
-        const rows=(PUJA_FALLBACK[year]||[]).map(x=>({...x,sunrise:"",source:"fallback"}));
-        const result={};rows.forEach(x=>result[x.key]=x);return {result,all:rows,source:"fallback"};
-      }
-
-      function displayTithiName(raw, fallback){
-        const text=String(raw||fallback||"");
-        return text.split("—")[0].trim() || fallback || "তিথি";
-      }
-
-      function buildPujaCards(year,c){
-        const order=["Shashthi","Saptami","Ashtami","Navami","Dashami"];
-        const ritual=PUJA_RITUAL_TIMES[year]||{};
-        return order.map(key=>{
-          const x=c.result[key]; if(!x)return "";
-          const m=PUJA_TITHI_META[key], end=tithiEnd(x.rawTithi), r=ritual[key]||{};
-          let extra=x.note?`<div class="mt-2 text-[11px] font-semibold text-orange-700">📌 ${x.note}</div>`:"";
-          if(x.startTime||x.endTime) extra+=`<div class="mt-2 bg-white/70 rounded-lg p-2.5 text-[12px] leading-6"><div><b>শুরু:</b> ${x.startTime||"—"}</div><div><b>শেষ:</b> ${x.endTime||end||"—"}</div></div>`;
-          if(x.ritualTime) extra+=`<div class="mt-2 bg-amber-50 border border-amber-200 rounded-lg p-2 text-[11px] font-bold text-amber-800">🪔 <b>পূজা/আচার সময়:</b> ${x.ritualTime}</div>`;
-          if(key==="Ashtami"){
-            const ss=r.sandhiStart||x.sandhiStart, se=r.sandhiEnd||x.sandhiEnd;
-            if(ss&&se) extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${ss} – ${se}</div><div class="text-[9px] text-gray-500">${r.sandhiNote||"অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট"}</div></div>`;
-            else if(end){const n=timeMin(end);if(n!=null)extra+=`<div class="mt-2 bg-rose-50 border border-rose-200 rounded-lg p-2"><div class="text-[11px] font-extrabold text-rose-700">🕯️ সন্ধিপূজা</div><div class="text-[12px] font-bold text-gray-800">${fmtMin(n-24)} – ${fmtMin(n+24)}</div><div class="text-[9px] text-gray-500">অষ্টমী ও নবমীর সন্ধিক্ষণের ৪৮ মিনিট</div></div>`}
-          }
-          return `<div class="puja-day-card bg-gradient-to-r ${m.color} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm"><div class="flex items-start gap-3"><div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${m.icon}</div><div class="min-w-0 flex-1"><div class="flex flex-wrap items-center justify-between gap-1"><h4 class="text-sm font-extrabold text-gray-800">${m.bn}</h4><span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${formatBnDate(x.date)}</span></div><div class="mt-2 text-[10px] text-gray-700 bg-white/70 rounded-lg p-2"><b>তিথি:</b> ${displayTithiName(x.rawTithi,key)}</div>${x.sunrise?`<div class="mt-1 text-[10px] text-gray-600"><b>সূর্যোদয়:</b> ${x.sunrise}</div>`:""}${extra}</div></div></div>`;
-        }).join("");
-      }
-
-      function renderPujaSchedule(year,c){
+      function renderPujaSchedule(year,data){
         const box=document.getElementById("pujaScheduleContainer"),src=document.getElementById("pujaScheduleSource"),jpg=document.getElementById("pujaJpgBtn");
         if(!box)return;
-        const cards=buildPujaCards(year,c);
-        if(!cards){box.innerHTML='<div class="puja-loading text-center"><div class="text-4xl mb-2">📜</div><div class="text-sm text-rose-600 font-bold">এই বছরের তিথির তথ্য পাওয়া যায়নি।</div><div class="text-[10px] text-gray-500 mt-1">ইন্টারনেট সংযোগ পরীক্ষা করে আবার আপডেট করুন।</div></div>';if(jpg)jpg.disabled=true;return}
-        const sourceText=c.source==="fallback"?"২০২৬: বাংলা পঞ্জিকা fallback • কলকাতা":"স্বয়ংক্রিয় পঞ্জিকা: API Mitra • কলকাতা • IST";
-        box.innerHTML=`<div class="text-center mb-3"><div class="text-base font-extrabold text-orange-700">দুর্গাপূজা ${bnDigits(year)}</div><div class="text-[11px] text-gray-600">বাংলা সাল ${bnDigits(banglaYear(c.result.Shashthi?.date||c.result.Saptami?.date||`${year}-10-16`))} • কলকাতা</div></div>${cards}<div class="mt-3 bg-blue-50 border border-blue-100 rounded-xl p-2.5 text-[10px] text-blue-800 leading-relaxed">ℹ️ তিথির সময় পঞ্জিকা/গণনা পদ্ধতি ও স্থানের কারণে কয়েক মিনিট পর্যন্ত আলাদা হতে পারে।</div>`;
-        if(src)src.textContent=sourceText;
-        if(jpg){jpg.disabled=false;jpg.dataset.year=year;jpg.dataset.source=c.source;}
-        window.__lastPujaSchedule={year,cards,computed:c};
+        const cfg=PUJA_PANJIKA_DATA[year];
+        if(!cfg){
+          box.innerHTML='<div class="puja-loading text-center"><div class="text-4xl mb-2">📜</div><div class="text-sm text-rose-600 font-bold">এই বছরের নির্ঘণ্ট পাওয়া যায়নি।</div><div class="text-[10px] text-gray-500 mt-1">একই নির্ধারিত পঞ্জিকার data যোগ হলে এখানে দেখাবে।</div></div>';
+          if(src)src.textContent=`উৎস: ${PUJA_PANJIKA_SOURCE}`;
+          if(jpg)jpg.disabled=true;
+          return;
+        }
+
+        // আগের Dashboard-এর card/design/colour একই রাখা হয়েছে। শুধু নির্ঘণ্টের লেখা ছবির মতো করা হয়েছে।
+        const colors={
+          Shashthi:"from-amber-50 to-orange-50",
+          Saptami:"from-emerald-50 to-teal-50",
+          Ashtami:"from-rose-50 to-pink-50",
+          Navami:"from-violet-50 to-purple-50",
+          Dashami:"from-sky-50 to-cyan-50"
+        };
+        const cards=cfg.days.map(day=>{
+          const meta=PUJA_TITHI_META[day.key]||{bn:"পূজার দিন",icon:"✤"};
+          const cls=colors[day.key]||"from-orange-50 to-amber-50";
+          return `<div class="puja-day-card bg-gradient-to-r ${cls} border border-orange-100 rounded-xl p-3 mb-2.5 shadow-sm">
+            <div class="flex items-start gap-3">
+              <div class="w-11 h-11 rounded-full bg-white/80 flex items-center justify-center text-xl flex-shrink-0 shadow-sm">${meta.icon}</div>
+              <div class="min-w-0 flex-1">
+                <div class="flex flex-wrap items-center justify-between gap-1">
+                  <h4 class="text-sm font-extrabold text-gray-800">${meta.bn}</h4>
+                  <span class="text-[10px] font-bold bg-white/80 text-orange-700 px-2 py-1 rounded-full">${day.date.replace(/^2026-10-16$/,'১৬ অক্টোবর ২০২৬').replace(/^2026-10-17$/,'১৭ অক্টোবর ২০২৬').replace(/^2026-10-19$/,'১৯ অক্টোবর ২০২৬').replace(/^2026-10-20$/,'২০ অক্টোবর ২০২৬').replace(/^2026-10-21$/,'২১ অক্টোবর ২০২৬')}</span>
+                </div>
+                <div class="mt-2 text-[11px] leading-6 text-gray-700 bg-white/70 rounded-lg p-2.5 text-justify">${day.text}</div>
+              </div>
+            </div>
+          </div>`;
+        }).join("");
+
+        box.innerHTML=`
+          <div class="text-center mb-3">
+            <div class="text-base font-extrabold text-orange-700">${cfg.title}</div>
+            <div class="text-[11px] text-gray-600">একই নির্ধারিত বাংলা পঞ্জিকা অনুযায়ী</div>
+          </div>
+          ${cards}
+          <div class="mt-3 bg-white border-2 border-gray-700 rounded-xl p-2.5 text-center text-[11px] font-bold text-gray-800 leading-6">
+            ${cfg.footer.split("\n").map(x=>`<div>${x}</div>`).join("")}
+          </div>`;
+        if(src)src.textContent=`উৎস: ${PUJA_PANJIKA_SOURCE} • ${year} • একই পঞ্জিকা অনুসরণ করা হচ্ছে`;
+        if(jpg){jpg.disabled=false;jpg.dataset.year=year;jpg.dataset.source="pna";}
+        window.__lastPujaSchedule={year,computed:{result:Object.fromEntries(cfg.days.map(x=>[x.key,x])),source:"pna",sourceUrl:cfg.sourceUrl},pnaConfig:cfg};
       }
 
       let pujaInit=false,pujaLoading=null;
@@ -1186,21 +1199,9 @@
         year=+year||new Date().getFullYear();
         const box=document.getElementById("pujaScheduleContainer");if(!box||pujaLoading===year)return;
         pujaLoading=year;const jpg=document.getElementById("pujaJpgBtn");if(jpg)jpg.disabled=true;
-        box.innerHTML=`<div class="puja-loading"><div class="text-center"><div class="text-4xl mb-2 animate-pulse">🪔</div><div class="text-xs font-bold text-orange-700">${bnDigits(year)} সালের পঞ্জিকা হিসাব হচ্ছে...</div><div class="text-[10px] text-gray-500 mt-1">ইন্টারনেট থেকে তিথি যাচাই করা হচ্ছে</div></div></div>`;
-        try{
-          let data;
-          try{data=await calculatePujaSchedule(year)}catch(e){console.warn("Panchang API failed",e);data={result:{},all:[],source:"api"}}
-          if(Object.keys(data.result||{}).length<5){
-            const fb=getFallbackSchedule(year);
-            if(Object.keys(fb.result).length===5) data=fb;
-          }
-          if(year===2026 && data.result){
-            (PUJA_FALLBACK[2026]||[]).forEach(f=>{
-              if(data.result[f.key]) data.result[f.key]={...f,...data.result[f.key]};
-            });
-          }
-          renderPujaSchedule(year,data);
-        }catch(e){console.error(e);box.innerHTML='<div class="puja-loading text-center text-sm text-rose-600 font-bold">নির্ঘণ্ট লোড করা যায়নি। আবার আপডেট করুন।</div>'}
+        box.innerHTML=`<div class="puja-loading"><div class="text-center"><div class="text-4xl mb-2 animate-pulse">🪔</div><div class="text-xs font-bold text-orange-700">${bnDigits(year)} সালের নির্ঘণ্ট লোড হচ্ছে...</div><div class="text-[10px] text-gray-500 mt-1">${PUJA_PANJIKA_SOURCE} পঞ্জিকা</div></div></div>`;
+        try{renderPujaSchedule(year,{source:"pna"});}
+        catch(e){console.error(e);box.innerHTML='<div class="puja-loading text-center text-sm text-rose-600 font-bold">নির্ঘণ্ট লোড করা যায়নি। আবার আপডেট করুন।</div>'}
         finally{pujaLoading=null}
       };
 
