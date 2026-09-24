@@ -4,6 +4,12 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
+    <style id="dashboard-auth-pending-style">
+      html.dashboard-auth-pending body { visibility: hidden !important; }
+    </style>
+    <script id="dashboard-auth-pending-script">
+      document.documentElement.classList.add("dashboard-auth-pending");
+    </script>
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -112,23 +118,91 @@
     </div></div>
 
     <!-- ব্যাকআপ ও রিস্টোর মডাল -->
-    <div id="backupRestoreModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-      <div class="bg-white w-full max-w-sm p-5 rounded-2xl shadow-2xl border-2 border-indigo-500 relative">
-        <button onclick="closeBackupRestoreModal()" class="absolute top-3 right-3 text-gray-400 font-bold text-lg">✕</button>
-        <div class="text-center mb-4">
-          <div class="w-12 h-12 bg-indigo-100 text-indigo-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">📦</div>
-          <h3 class="text-base font-bold text-gray-800">ডাটা ব্যাকআপ ও রিস্টোর</h3>
+    <div id="backupRestoreModal" class="fixed inset-0 bg-[#fffaf3] hidden items-start justify-center z-50 overflow-y-auto">
+      <div class="w-full max-w-xl min-h-screen px-4 py-4 md:py-6">
+        <div class="flex items-center gap-3 mb-4">
+          <button onclick="closeBackupRestoreModal()" class="w-11 h-11 rounded-xl bg-white border border-gray-200 shadow-sm text-gray-700 text-2xl leading-none">←</button>
+          <h2 class="text-xl md:text-2xl font-extrabold text-gray-900">সম্পূর্ণ ব্যাকআপ ও রিস্টোর</h2>
         </div>
-        <div class="space-y-3 pt-2">
-          <button onclick="exportFullBackup()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white p-3 rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2">
-            <span>📦</span> ব্যাকআপ ডাউনলোড করুন
+
+        <!-- সম্পূর্ণ ব্যাকআপ -->
+        <section class="bg-white rounded-2xl border-2 border-sky-200 shadow-sm p-4 md:p-5 mb-4">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-2xl text-sky-700">⇩</span>
+            <h3 class="text-lg md:text-xl font-extrabold text-sky-800">সম্পূর্ণ ব্যাকআপ তৈরি করুন</h3>
+          </div>
+
+          <div class="rounded-xl bg-sky-50 p-4 mb-4">
+            <div class="flex items-center gap-2 text-sky-900 font-bold mb-3">
+              <span class="text-xl">▣</span>
+              <span>বর্তমান ডাটা সংখ্যা</span>
+            </div>
+            <div id="backupDataCounts" class="grid grid-cols-2 gap-x-5 gap-y-2 text-sm text-gray-700">
+              <div>ইউজার: <strong id="backupCountUsers">—</strong></div>
+              <div>সদস্য: <strong id="backupCountMembers">—</strong></div>
+              <div>চাঁদা: <strong id="backupCountSubscriptions">—</strong></div>
+              <div>খরচ: <strong id="backupCountExpenses">—</strong></div>
+              <div>বুকিং: <strong id="backupCountBookings">—</strong></div>
+              <div>বিক্রয়: <strong id="backupCountSales">—</strong></div>
+              <div>কোষাধ্যক্ষ: <strong id="backupCountTreasurer">—</strong></div>
+              <div>কমিটি: <strong id="backupCountCommittee">—</strong></div>
+              <div>বিগত বছরের ডকুমেন্ট: <strong id="backupCountPastDocuments">—</strong></div>
+              <div>পূজা নির্ঘণ্ট: <strong id="backupCountPujaSchedules">—</strong></div>
+              <div>পূজার দরখাস্ত: <strong id="backupCountPujaDorkhasto">—</strong></div>
+              <div>বাজেট: <strong id="backupCountBudget">0</strong></div>
+            </div>
+            <div class="border-t border-sky-200 mt-4 pt-3 text-center text-base font-extrabold text-gray-900">
+              মোট: <span id="backupCountTotal">—</span> রেকর্ড
+            </div>
+          </div>
+
+          <button onclick="exportFullBackup()" class="w-full bg-gray-900 hover:bg-black text-white p-4 rounded-xl text-sm font-bold shadow-md flex items-center justify-center gap-2">
+            <span class="text-lg">⇩</span> সম্পূর্ণ ব্যাকআপ ডাউনলোড করুন
           </button>
-          <button onclick="document.getElementById('modalRestoreInput').click()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white p-3 rounded-xl text-xs font-bold shadow-md flex items-center justify-center gap-2">
-            <span>🔄</span> ডাটা রিস্টোর করুন
+
+          <div class="mt-4 rounded-xl bg-amber-50 border border-amber-100 p-4 text-xs text-gray-700">
+            <div class="font-extrabold text-amber-700 mb-2">ⓘ টিপস:</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>প্রতি সপ্তাহে ব্যাকআপ নিন</li>
+              <li>নিরাপদ জায়গায় সংরক্ষণ করুন</li>
+              <li>JSON ফরম্যাটে ডাউনলোড হবে</li>
+              <li>Firestore-এর ডাটা ও Supabase-এর সংরক্ষিত document file একই Backup ফাইলে থাকবে</li>
+            </ul>
+          </div>
+        </section>
+
+        <!-- ব্যাকআপ রিস্টোর -->
+        <section class="bg-white rounded-2xl border-2 border-emerald-200 shadow-sm p-4 md:p-5">
+          <div class="flex items-center gap-2 mb-4">
+            <span class="text-2xl text-emerald-700">⇧</span>
+            <h3 class="text-lg md:text-xl font-extrabold text-emerald-800">ব্যাকআপ রিস্টোর করুন</h3>
+          </div>
+
+          <div class="rounded-xl bg-emerald-50 p-4 mb-4">
+            <div class="flex items-center gap-2 text-emerald-900 font-bold mb-2">
+              <span class="text-xl">▧</span>
+              <span>পূর্বের ব্যাকআপ আপলোড করুন</span>
+            </div>
+            <p class="text-xs text-gray-600 leading-5">আগের সম্পূর্ণ ব্যাকআপ ফাইল থেকে আপনার সংরক্ষিত ডাটা পুনরুদ্ধার করুন</p>
+          </div>
+
+          <button onclick="document.getElementById('modalRestoreInput').click()" class="w-full min-h-[150px] rounded-xl border-2 border-dashed border-gray-300 bg-white hover:bg-gray-50 flex flex-col items-center justify-center gap-2 text-gray-700">
+            <span class="text-5xl text-gray-400">⇧</span>
+            <span class="font-bold text-sm">ফাইল সিলেক্ট করুন</span>
+            <span class="text-xs text-gray-400">JSON ব্যাকআপ ফাইল</span>
           </button>
           <input type="file" id="modalRestoreInput" accept=".json" class="hidden" onchange="importFullBackup(this)">
-        </div>
-        <button onclick="closeBackupRestoreModal()" class="w-full mt-4 bg-gray-200 hover:bg-gray-300 text-gray-700 py-2 rounded-xl text-xs font-bold">বন্ধ করুন</button>
+
+          <div class="mt-4 rounded-xl bg-rose-50 border border-rose-100 p-4 text-xs text-gray-700">
+            <div class="font-extrabold text-rose-700 mb-2">ⓘ সতর্কতা:</div>
+            <ul class="list-disc pl-5 space-y-1">
+              <li>রিস্টোর করলে বর্তমান Firestore ডাটা একই ID-তে Backup-এর ডাটা দিয়ে প্রতিস্থাপিত হবে</li>
+              <li>অত্যন্ত সতর্কতার সঙ্গে ব্যবহার করুন</li>
+              <li>আগে অবশ্যই নতুন Backup নিন</li>
+              <li>ফিচারটি Admin-এর জন্য</li>
+            </ul>
+          </div>
+        </section>
       </div>
     </div>
 
@@ -197,6 +271,9 @@
       if (m) {
         m.classList.remove("hidden");
         m.classList.add("flex");
+      }
+      if (typeof window.loadBackupDataCounts === "function") {
+        window.loadBackupDataCounts();
       }
     };
 
@@ -351,8 +428,16 @@
              <div class="text-[10px] opacity-90 mt-1">পূজার আবেদন ও ব্যবস্থাপনা</div>
            </div>
 
+
+          <!-- বাজেট পরিকল্পনা -->
+          <div id="dash-card-budget" style="display:none" onclick="window.location.assign('./budget.html')" class="bg-green-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-green-700 transition flex flex-col items-center justify-center text-center">
+            <div class="text-2xl mb-1">📊</div>
+            <div class="text-xs font-bold">বাজেট পরিকল্পনা</div>
+            <div class="text-[10px] opacity-90 mt-1">পরিকল্পনা, খরচ ও পার্থক্য</div>
+          </div>
+
           <!-- ব্যাকআপ ও রিস্টোর ড্যাশবোর্ড কার্ড -->
-          <div id="dash-card-backup" style="display:none" onclick="openBackupRestoreModal()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center col-span-2">
+          <div id="dash-card-backup" style="display:none" onclick="openBackupRestoreModal()" class="bg-indigo-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-indigo-700 transition flex flex-col items-center justify-center text-center">
             <div class="text-2xl mb-1">📦</div>
             <div class="text-xs opacity-90 font-medium">ডাটা ব্যাকআপ ও রিস্টোর</div>
           </div>
@@ -459,22 +544,12 @@
 
       let dpmsDashboardAuthHandled = false;
 
-      // Direct-open guard: wait for Firebase to restore the saved session.
-      // If there is no authenticated user, leave Dashboard immediately and open Login.
+      // Wait until Firebase has completely restored the local login session before
+      // deciding whether Dashboard may open. This prevents Splash -> Login flicker.
       async function dpmsBootDashboardAuth() {
         try {
           if (typeof auth.authStateReady === "function") {
             await auth.authStateReady();
-          } else {
-            await new Promise(resolve => {
-              let done = false;
-              const finish = () => { if (!done) { done = true; resolve(); } };
-              const unsub = onAuthStateChanged(auth, () => {
-                try { unsub(); } catch (_) {}
-                finish();
-              });
-              setTimeout(finish, 5000);
-            });
           }
         } catch (_) {}
 
@@ -486,6 +561,7 @@
         }
 
         dpmsDashboardAuthHandled = true;
+        document.documentElement.classList.remove("dashboard-auth-pending");
         try { sessionStorage.removeItem("dpmsLoginHandoff"); } catch (_) {}
 
         installDashboardBackGuard();
@@ -495,7 +571,7 @@
 
         window.currentUserRole = isAdmin ? "admin" : "user";
         window.userPermissions = isAdmin
-          ? ["chada","expense","booking","sales","treasury","members","backup","documents","daitobonton","puja_dorkhasto"]
+          ? ["chada","expense","booking","sales","treasury","members","backup","documents","daitobonton","puja_dorkhasto","budget"]
           : [];
 
         // Fetch user permissions from Firestore for non-admin users
@@ -706,7 +782,8 @@
           "treasury": "treasury",
           "settings": "settings",
           "daitobonton": "daitobonton",
-          "puja_dorkhasto": "puja_dorkhasto"
+          "puja_dorkhasto": "puja_dorkhasto",
+          "budget": "budget"
         };
 
         const isAdmin = window.currentUserRole === "admin";
@@ -740,6 +817,13 @@
           settingsBtn.style.display = hasSettingsAccess ? "flex" : "none";
         }
 
+        // বাজেট পরিকল্পনা: সকল সক্রিয় লগইন করা user বিস্তারিত দেখতে পারবে।
+        // Add/Edit/Delete control শুধু Budget page-এ Admin-এর জন্য থাকবে।
+        const budgetCard = document.getElementById("dash-card-budget");
+        if (budgetCard) {
+          budgetCard.style.display = "flex";
+        }
+
         // পূজা দরখাস্ত কার্ডের ID বিদ্যমান কোডে dash-card-pujaDorkhasto,
         // তাই permission map-এর বাইরে থাকা এই card-টিকেও একই permission দিয়ে নিয়ন্ত্রণ করতে হবে।
         const pujaDorkhastoCard = document.getElementById("dash-card-pujaDorkhasto");
@@ -757,6 +841,12 @@
         const documentsCard = document.getElementById("dash-card-documents");
         if (documentsCard) {
           documentsCard.style.display = isAdmin ? "flex" : "none";
+        }
+
+        // ডাটা ব্যাকআপ ও রিস্টোর কার্ড শুধু Admin-এর জন্য
+        const backupCard = document.getElementById("dash-card-backup");
+        if (backupCard) {
+          backupCard.style.display = isAdmin ? "flex" : "none";
         }
 
         // সাধারণ user-এর visible dashboard cards-কে একটি মাত্র 2-column
@@ -1076,6 +1166,71 @@
 
       // ব্যাকআপ ও রিস্টোর ফাংশনসমূহ সরাসরি ড্যাশবোর্ডে যুক্ত
       const COLLECTIONS = ["members","subscriptions","expenses","bookings","sales","treasurer","committee","app_users","past_documents","puja_schedules","puja_dorkhasto"];
+
+      window.loadBackupDataCounts = async function() {
+        const map = {
+          app_users: "backupCountUsers",
+          members: "backupCountMembers",
+          subscriptions: "backupCountSubscriptions",
+          expenses: "backupCountExpenses",
+          bookings: "backupCountBookings",
+          sales: "backupCountSales",
+          treasurer: "backupCountTreasurer",
+          past_documents: "backupCountPastDocuments",
+          puja_schedules: "backupCountPujaSchedules",
+          puja_dorkhasto: "backupCountPujaDorkhasto"
+        };
+        let total = 0;
+
+        // ইউজার: শুধু Active user (disabled/deleted user count হবে না)
+        try {
+          const userSnap = await getDocs(collection(db, "app_users"));
+          const activeUsers = userSnap.docs.filter(docSnap => {
+            const data = docSnap.data() || {};
+            return data.disabled !== true && data.deleted !== true;
+          }).length;
+          const el = document.getElementById("backupCountUsers");
+          if (el) el.textContent = activeUsers;
+          total += activeUsers;
+        } catch (err) {
+          console.warn("Backup count failed: app_users", err);
+          const el = document.getElementById("backupCountUsers");
+          if (el) el.textContent = "0";
+        }
+
+        // কমিটি: সদস্য তালিকা নয়; Settings-এর committeeInfo-কে ১টি committee record হিসেবে ধরা হবে
+        try {
+          const committeeSnap = await getDoc(doc(db, "settings", "committeeInfo"));
+          const committeeCount = committeeSnap.exists() ? 1 : 0;
+          const el = document.getElementById("backupCountCommittee");
+          if (el) el.textContent = committeeCount;
+          total += committeeCount;
+        } catch (err) {
+          console.warn("Backup count failed: committee info", err);
+          const el = document.getElementById("backupCountCommittee");
+          if (el) el.textContent = "0";
+        }
+
+        // বাকি collection-গুলোর existing count logic অপরিবর্তিত
+        for (const colName of COLLECTIONS) {
+          if (colName === "app_users" || colName === "committee") continue;
+          const el = document.getElementById(map[colName]);
+          try {
+            const snap = await getDocs(collection(db, colName));
+            const n = snap.size || 0;
+            if (el) el.textContent = n;
+            total += n;
+          } catch (err) {
+            console.warn("Backup count failed:", colName, err);
+            if (el) el.textContent = "0";
+          }
+        }
+
+        const budgetEl = document.getElementById("backupCountBudget");
+        if (budgetEl) budgetEl.textContent = "0";
+        const totalEl = document.getElementById("backupCountTotal");
+        if (totalEl) totalEl.textContent = total;
+      };
 
       function dataUrlFromBlob(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(String(r.result||""));r.onerror=reject;r.readAsDataURL(blob);});}
       async function downloadSupabaseFileAsDataUrl(item){if(!item?.storagePath)return null;const bucket=item.storageBucket||DOCUMENTS_BUCKET;const path=String(item.storagePath).replace(/^\/+/,"").replace(/^documents\//i,"");const {data,error}=await supabaseClient.storage.from(bucket).download(path);if(error||!data)throw error||new Error("Supabase file download failed");return await dataUrlFromBlob(data);}
