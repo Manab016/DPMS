@@ -347,25 +347,25 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
   const wb=new ExcelJS.Workbook();
   const ws=wb.addWorksheet("চাঁদা সংগ্রহ দায়িত্ব");
   // Excel export formatting — all data centered, wrapped/fitted and bordered on all sides.
-  ws.columns=[{width:18},{width:32},{width:28}];
+  ws.columns=[{width:18},{width:38},{width:30}];
   const border={top:{style:"thin",color:{argb:"FF000000"}},bottom:{style:"thin",color:{argb:"FF000000"}},left:{style:"thin",color:{argb:"FF000000"}},right:{style:"thin",color:{argb:"FF000000"}}};
   const orange="FFFF6600";
   const formatDate=d=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");};
   const styleCell=(c,align="center",bold=false,size=11)=>{
     c.font={name:"Noto Sans Bengali",size,bold,color:{argb:"FF000000"}};
-    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
     c.border=border;
   };
   const titleCell=(c,size)=>{
     c.font={name:"Noto Sans Bengali",size,bold:true,color:{argb:"FF000000"}};
-    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
     c.border=border;
   };
   const borderMergedRange=(row,fromCol,toCol)=>{
     for(let col=fromCol;col<=toCol;col++){
       const c=ws.getCell(row,col);
       c.border=border;
-      c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+      c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
     }
   };
   let r=1;
@@ -416,6 +416,33 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     styleCell(ws.getCell(r,3),"center",true,12);
     ws.getRow(r).height=28;
   }
+
+  // FINAL EXCEL FORMAT — applies identically to every export from this page.
+  // Every used cell: centered, wrapped inside the cell, readable row height and
+  // all-side border. Long text never spills outside its cell.
+  ws.eachRow((row)=>{
+    let maxLines=1;
+    row.eachCell({includeEmpty:true},(c)=>{
+      c.alignment={
+        horizontal:"center",
+        vertical:"center",
+        wrapText:true,
+        shrinkToFit:false
+      };
+      c.border=border;
+
+      const value=c.value==null?"":String(
+        typeof c.value==="object" && c.value.richText
+          ? c.value.richText.map(x=>x.text||"").join("")
+          : c.value
+      );
+      const colWidth=Number(ws.getColumn(c.col).width)||12;
+      const charsPerLine=Math.max(8,Math.floor(colWidth*1.35));
+      const estimatedLines=Math.max(1,Math.ceil(value.length/charsPerLine));
+      maxLines=Math.max(maxLines,Math.min(8,estimatedLines));
+    });
+    row.height=Math.max(Number(row.height)||0,Math.min(120,18*maxLines+8));
+  });
 
   ws.pageSetup={paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0};
   ws.pageSetup.margins={left:0.25,right:0.25,top:0.5,bottom:0.5,header:0.2,footer:0.2};
