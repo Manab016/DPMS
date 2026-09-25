@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>বাজেট পরিকল্পনা</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+
+  <style>
+    html.budget-auth-pending body { visibility:hidden !important; }
+    body { font-family: Arial, "Noto Sans Bengali", sans-serif; }
+    th, td { white-space: nowrap; }
+    .budget-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    .budget-progress {
+      height: 8px;
+      border-radius: 999px;
+      background: #e5e7eb;
+      overflow: hidden;
+      min-width: 70px;
+    }
+    .budget-progress > span {
+      display:block;
+      height:100%;
+      border-radius:999px;
+      background:#16a34a;
+    }
+    .budget-progress.over > span { background:#dc2626; }
+    @media (min-width: 768px) {
+      .page-shell { max-width: 1100px !important; }
+    }
+  </style>
+
+  <script>
+    document.documentElement.classList.add("budget-auth-pending");
+  </script>
+
+  <!-- একই Committee Header Sync -->
+  <style id="committee-global-sync-style">
+    #committeePageHeading, #committeePageHeading ~ p { visibility:hidden; }
+  </style>
+  <script type="module" id="committee-global-sync">
+  (() => {
+    const FIREBASE_CONFIG = {
+      apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-Sx0Nqs",
+      authDomain: "durgapuja-2026.firebaseapp.com",
+      projectId: "durgapuja-2026",
+      storageBucket: "durgapuja-2026.firebasestorage.app",
+      messagingSenderId: "625976130920",
+      appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+    };
+    const DEFAULT = {
+      name:"নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি",
+      establishedYear:"2009",
+      registrationNo:"S0014684",
+      address:"সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
+      mobile:"9933371702",
+      mobile2:""
+    };
+    const set=(id,v,p="textContent")=>{const e=document.getElementById(id);if(e)e[p]=v};
+    const phone=v=>String(v||"").trim().replace(/[^0-9+]/g,"");
+    const normalize=raw=>{
+      const d={...DEFAULT,...(raw||{})};
+      const village=String(d.village||"").trim();
+      const post=String(d.post||"").trim();
+      const police=String(d.policeDistrict||d.police||d.district||"").trim();
+      const pin=String(d.pincode||"").trim();
+      const address=(village||post||police||pin)
+        ? [village?`সাং:- ${village}`:"",post?`পোস্ট:- ${post}`:"",police?`থানা ও জেলা:- ${police}`:"",pin?`পিন:- ${pin}`:""].filter(Boolean).join(", ")
+        : String(d.address||DEFAULT.address);
+      return {...d,address,name:String(d.name||DEFAULT.name)};
+    };
+    const reveal=()=>{
+      const h=document.getElementById("committeePageHeading");
+      if(h){h.style.visibility="visible";h.parentElement?.querySelectorAll(":scope > p").forEach(x=>x.style.visibility="visible")}
+    };
+    const apply=raw=>{
+      const d=normalize(raw);
+      try{localStorage.setItem("pujaCommitteeInfo",JSON.stringify(d))}catch(_){}
+      set("committeePageHeading",d.name);
+      set("committeeEstablishedYear",d.establishedYear);
+      set("committeeRegistrationNo",d.registrationNo);
+      set("committeeAddress",d.address);
+      set("committeeMobile",[d.mobile,d.mobile2].filter(Boolean).join(" / "));
+      const link=document.getElementById("committeeMobileLink");
+      if(link){link.href="tel:"+phone(d.mobile||d.mobile2);link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(" / ")}
+      window.__getCommitteeNameForOutput=()=>d.name;
+      reveal();
+    };
+    let cached=null;try{cached=JSON.parse(localStorage.getItem("pujaCommitteeInfo")||"null")}catch(_){}
+    apply(cached||DEFAULT);
+    Promise.all([
+      import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+      import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
+      import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+    ]).then(([am,authm,fsm])=>{
+      const {getApps,getApp,initializeApp}=am;
+      const {getAuth,onAuthStateChanged}=authm;
+      const {getFirestore,doc,onSnapshot}=fsm;
+      let app;
+      try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG)}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,"budgetCommitteeSync")}
+      const auth=getAuth(app),db=getFirestore(app);
+      onAuthStateChanged(auth,user=>{
+        if(user) onSnapshot(doc(db,"settings","committeeInfo"),snap=>apply(snap.exists()?snap.data():(cached||DEFAULT)),()=>reveal());
+        else reveal();
+      });
+    }).catch(()=>reveal());
+  })();
+  </script>
+
+<style id="budget-popup-fix">
+#budgetModal {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9999 !important;
+  display: none;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 14px !important;
+  background: rgba(0,0,0,.40) !important;
+}
+#budgetModal.show,
+#budgetModal.flex {
+  display: flex !important;
+}
+#budgetModal > div {
+  width: min(92vw, 430px) !important;
+  max-width: 430px !important;
+  max-height: 88vh !important;
+  overflow-y: auto !important;
+  margin: 0 auto !important;
+  border-radius: 14px !important;
+}
+</style>
+</head>
+
+<body class="bg-amber-50/40 p-3 pb-20">
+  <div class="page-shell max-w-4xl mx-auto">
+
+    <!-- কমিটির তথ্য -->
+    <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative">
+      <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
+      <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
+      <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
+      <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p>
+    </div>
+
+    <!-- Members page style header -->
+    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4 flex items-center justify-between gap-2">
+      <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-gray-200">
+        ←
+      </button>
+      <h2 class="text-base md:text-lg font-extrabold text-gray-800 flex-1 text-left">বাজেট পরিকল্পনা</h2>
+      <div class="flex items-center gap-2">
+        <button onclick="exportBudgetExcel()" class="bg-white border border-gray-300 px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-50">▧ Excel Export</button>
+        <button id="budgetAddButton" onclick="openBudgetModal()" class="bg-gray-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-black">＋ যোগ করুন</button>
+      </div>
+    </div>
+
+    <!-- Summary cards -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <div class="text-xs text-gray-500">মোট পরিকল্পিত বাজেট</div>
+        <div id="summaryPlanned" class="text-xl md:text-2xl font-extrabold text-gray-900 mt-2">₹0</div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <div class="text-xs text-gray-500">মোট ব্যয়</div>
+        <div id="summarySpent" class="text-xl md:text-2xl font-extrabold text-red-600 mt-2">₹0</div>
+      </div>
+      <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
+        <div class="text-xs text-gray-500">অবশিষ্ট / অতিরিক্ত</div>
+        <div id="summaryRemaining" class="text-xl md:text-2xl font-extrabold text-emerald-600 mt-2">₹0</div>
+      </div>
+    </div>
+
+    <!-- Current / previous year comparison -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+        <h3 class="font-extrabold text-gray-800">বিগত বছর ও এ বছরের পরিকল্পনা অনুযায়ী হিসাব</h3>
+        <span id="trendBadge" class="text-xs font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-600">তথ্য লোড হচ্ছে...</span>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
+        <div class="bg-gray-50 rounded-xl p-3 border"><div class="text-gray-500 text-xs">গত বছর পরিকল্পনা</div><div id="prevPlanned" class="font-extrabold mt-1">₹0</div></div>
+        <div class="bg-gray-50 rounded-xl p-3 border"><div class="text-gray-500 text-xs">গত বছর ব্যয়</div><div id="prevSpent" class="font-extrabold mt-1">₹0</div></div>
+        <div class="bg-gray-50 rounded-xl p-3 border"><div class="text-gray-500 text-xs">এ বছর পরিকল্পনা</div><div id="currPlanned" class="font-extrabold mt-1">₹0</div></div>
+        <div class="bg-gray-50 rounded-xl p-3 border"><div class="text-gray-500 text-xs">এ বছর ব্যয়</div><div id="currSpent" class="font-extrabold mt-1">₹0</div></div>
+      </div>
+      <div class="mt-3 text-xs text-gray-600">
+        <span id="trendText">পরিকল্পনার তুলনায় খরচের অবস্থা হিসাব হচ্ছে...</span>
+      </div>
+    </div>
+
+    <!-- Main table -->
+    <div class="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <div class="p-4 border-b bg-gray-50">
+        <h3 class="font-extrabold text-gray-800">বাজেট তালিকা</h3>
+        <p class="text-xs text-gray-500 mt-1">প্রতিটি বছরের পরিকল্পিত বাজেটের সঙ্গে সেই বছরের প্রকৃত খরচের তুলনা দেখানো হচ্ছে।</p>
+      </div>
+
+      <div class="budget-table-wrap">
+        <table class="w-full text-xs md:text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="p-3 text-center">বছর</th>
+              <th class="p-3 text-center">ক্যাটাগরি</th>
+              <th class="p-3 text-center">পরিকল্পিত</th>
+              <th class="p-3 text-center">ব্যয়</th>
+              <th class="p-3 text-center">অবশিষ্ট</th>
+              <th class="p-3 text-center">অগ্রগতি</th>
+              <th class="p-3 text-center">অ্যাকশন</th>
+            </tr>
+          </thead>
+          <tbody id="budgetTableBody">
+            <tr><td colspan="7" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Budget form modal -->
+  <div id="budgetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/40 p-4">
+    <div class="bg-white w-full max-w-md max-h-[88vh] rounded-2xl shadow-2xl relative overflow-y-auto">
+      <button onclick="closeBudgetModal()" class="absolute top-4 right-5 text-gray-500 text-2xl font-bold">✕</button>
+      <div class="p-5 md:p-6">
+        <h3 id="budgetModalTitle" class="text-xl md:text-2xl font-extrabold text-center mb-5">নতুন বাজেট</h3>
+
+        <label class="block text-base font-semibold mb-2">বছর</label>
+        <input id="budgetYear" type="number" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base mb-4 outline-none focus:border-gray-400" value="2026">
+
+        <label class="block text-base font-semibold mb-2">ক্যাটাগরি</label>
+        <input id="budgetCategory" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base mb-4 outline-none focus:border-gray-400" placeholder="যেমন: পূজা সামগ্রী, আলোকসজ্জা">
+
+        <label class="block text-base font-semibold mb-2">পরিকল্পিত পরিমাণ (₹)</label>
+        <input id="budgetAmount" type="number" min="0" step="0.01" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base mb-4 outline-none focus:border-gray-400">
+
+        <label class="block text-base font-semibold mb-2">নোট</label>
+        <input id="budgetNote" type="text" class="w-full border-2 border-gray-200 rounded-xl px-4 py-3 text-base mb-4 outline-none focus:border-gray-400">
+
+        <button onclick="saveBudget()" class="w-full bg-gray-900 text-white rounded-2xl py-4 text-lg font-extrabold">সংরক্ষণ</button>
+        <button onclick="closeBudgetModal()" class="w-full border-2 border-gray-200 rounded-2xl py-4 text-lg font-bold mt-2">বাতিল</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+    import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyByG-eBGnsUMX1Zchs8sJV9MNZL-Sx0Nqs",
+      authDomain: "durgapuja-2026.firebaseapp.com",
+      projectId: "durgapuja-2026",
+      storageBucket: "durgapuja-2026.firebasestorage.app",
+      messagingSenderId: "625976130920",
+      appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+    };
+
+    const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+    // Committee header sync উপরে Firebase app আগে থেকেই initialize করতে পারে।
+    // তাই একই DEFAULT app আবার initialize না করে existing app ব্যবহার করা হচ্ছে।
+    const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    setPersistence(auth, browserLocalPersistence).catch(()=>{});
+
+    let plans = [];
+    let expenses = [];
+    let editId = null;
+
+    const money = n => "₹" + (Number(n)||0).toLocaleString("en-IN", {maximumFractionDigits:2});
+    const currentYear = new Date().getFullYear();
+
+    let budgetBootFinished = false;
+    let currentBudgetUser = null;
+
+    async function handleBudgetUser(user) {
+      if (budgetBootFinished) return;
+      currentBudgetUser = user;
+
+      // Dashboard থেকে আসার সময় Firebase Auth-এর existing session-ই ব্যবহার হবে।
+      // Budget page নিজে থেকে logout/login redirect করবে না।
+      if (!user) {
+        console.warn("Budget page: Firebase user not available yet.");
+        document.documentElement.classList.remove("budget-auth-pending");
+        return;
+      }
+
+      const isAdmin =
+        String(user.email || "").trim().toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+      if (!isAdmin) {
+        try {
+          const userSnap = await getDoc(doc(db, "app_users", user.uid));
+          if (userSnap.exists()) {
+            const userData = userSnap.data() || {};
+            if (userData.disabled === true || userData.deleted === true) {
+              console.warn("Budget: user account disabled/deleted.");
+              document.documentElement.classList.remove("budget-auth-pending");
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn("Budget user status read skipped:", e);
+        }
+      }
+
+      budgetBootFinished = true;
+      window.isBudgetAdmin = isAdmin;
+      window.currentBudgetUser = user;
+      const addButton = document.getElementById("budgetAddButton");
+      if (addButton) addButton.style.display = isAdmin ? "inline-flex" : "none";
+      document.documentElement.classList.remove("budget-auth-pending");
+
+      loadBudgetPlans();
+
+      const canReadExpenses = isAdmin || await userHasExpensePermission(user);
+      if (canReadExpenses) {
+        loadExpenses();
+      } else {
+        expenses = [];
+        render();
+      }
+    }
+
+    // Dashboard-এর Firebase Auth session restore হলে সেটিই ব্যবহার হবে।
+    // Initial null state-এ আর Login page-এ redirect করা হবে না।
+    if (auth.currentUser) {
+      currentBudgetUser = auth.currentUser;
+    }
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        handleBudgetUser(user).catch(err => {
+          console.error("Budget auth error:", err);
+          document.documentElement.classList.remove("budget-auth-pending");
+        });
+      } else {
+        // Session restore চলাকালীন page-টি visible রাখা হবে না;
+        // কিন্তু logout/redirect করা হবে না।
+        setTimeout(() => {
+          if (!budgetBootFinished) {
+            document.documentElement.classList.remove("budget-auth-pending");
+          }
+        }, 1500);
+      }
+    });
+
+    async function userHasExpensePermission(user) {
+      try {
+        const snap = await getDoc(doc(db, "app_users", user.uid));
+        if (!snap.exists()) return false;
+        const data = snap.data() || {};
+        return Array.isArray(data.permissions) && data.permissions.includes("expense");
+      } catch (_) {
+        return false;
+      }
+    }
+
+    async function loadBudgetPlans() {
+      try {
+        const snap = await getDoc(doc(db, "settings", "budgetPlan"));
+        plans = snap.exists() && Array.isArray(snap.data()?.plans) ? snap.data().plans : [];
+        render();
+      } catch (e) {
+        console.error(e);
+        plans = [];
+        render();
+      }
+    }
+
+    function loadExpenses() {
+      onSnapshot(collection(db, "expenses"), snap => {
+        expenses = [];
+        snap.forEach(d => expenses.push({id:d.id, ...d.data()}));
+        render();
+      }, err => {
+        console.warn("Expense load failed:", err);
+        expenses = [];
+        render();
+      });
+    }
+
+    function expenseYear(item) {
+      const raw = String(item.date || item.expenseDate || item.createdDate || "");
+      const m = raw.match(/(20\d{2})/);
+      return m ? Number(m[1]) : Number(new Date(item.createdAt || 0).getFullYear()) || currentYear;
+    }
+
+    function expenseAmount(item) {
+      return Number(item.amount ?? item.spent ?? 0) || 0;
+    }
+
+    function spentForYear(year) {
+      return expenses.filter(x => expenseYear(x) === Number(year))
+        .reduce((sum,x)=>sum+expenseAmount(x),0);
+    }
+
+    function plannedForYear(year) {
+      return plans.filter(x => Number(x.year) === Number(year))
+        .reduce((sum,x)=>sum+(Number(x.amount)||0),0);
+    }
+
+    function rowSpent(year) {
+      return spentForYear(year);
+    }
+
+    function render() {
+      const totalPlanned = plans.reduce((s,x)=>s+(Number(x.amount)||0),0);
+      const totalSpent = plans.reduce((s,x)=>s+rowSpent(x.year),0);
+      const remaining = totalPlanned - totalSpent;
+
+      document.getElementById("summaryPlanned").textContent = money(totalPlanned);
+      document.getElementById("summarySpent").textContent = money(totalSpent);
+      const rem = document.getElementById("summaryRemaining");
+      rem.textContent = money(remaining);
+      rem.className = "text-xl md:text-2xl font-extrabold mt-2 " + (remaining >= 0 ? "text-emerald-600" : "text-red-600");
+
+      const years = [...new Set(plans.map(x=>Number(x.year)).filter(Boolean))].sort((a,b)=>b-a);
+      const prevYear = currentYear - 1;
+      const prevPlanned = plannedForYear(prevYear);
+      const prevSpent = spentForYear(prevYear);
+      const currPlanned = plannedForYear(currentYear);
+      const currSpent = spentForYear(currentYear);
+
+      document.getElementById("prevPlanned").textContent = money(prevPlanned);
+      document.getElementById("prevSpent").textContent = money(prevSpent);
+      document.getElementById("currPlanned").textContent = money(currPlanned);
+      document.getElementById("currSpent").textContent = money(currSpent);
+
+      const currRemaining = currPlanned - currSpent;
+      const badge = document.getElementById("trendBadge");
+      const text = document.getElementById("trendText");
+      if (currPlanned <= 0) {
+        badge.textContent = "পরিকল্পনা নেই";
+        badge.className = "text-xs font-bold px-3 py-1 rounded-full bg-gray-100 text-gray-600";
+        text.textContent = `${currentYear} সালের বাজেট পরিকল্পনা এখনও যোগ করা হয়নি।`;
+      } else if (currRemaining >= 0) {
+        const pct = Math.min(100, (currSpent / currPlanned) * 100);
+        badge.textContent = "অগ্রগতিতে";
+        badge.className = "text-xs font-bold px-3 py-1 rounded-full bg-emerald-100 text-emerald-700";
+        text.textContent = `${currentYear} সালের পরিকল্পিত বাজেটের ${pct.toFixed(1)}% খরচ হয়েছে এবং ${money(currRemaining)} বাকি আছে।`;
+      } else {
+        const over = Math.abs(currRemaining);
+        badge.textContent = "অবনতিতে";
+        badge.className = "text-xs font-bold px-3 py-1 rounded-full bg-red-100 text-red-700";
+        text.textContent = `${currentYear} সালের পরিকল্পিত বাজেট ${money(over)} বেশি খরচ হয়েছে।`;
+      }
+
+      const body = document.getElementById("budgetTableBody");
+      if (!plans.length) {
+        body.innerHTML = `<tr><td colspan="7" class="p-8 text-center text-gray-400">এখনও কোনো বাজেট পরিকল্পনা যোগ করা হয়নি।</td></tr>`;
+        return;
+      }
+
+      const sorted = [...plans].sort((a,b)=>Number(b.year)-Number(a.year) || String(a.category||"").localeCompare(String(b.category||""),"bn"));
+      body.innerHTML = sorted.map(item => {
+        const planned = Number(item.amount)||0;
+        const spent = rowSpent(item.year);
+        const rem = planned - spent;
+        const pct = planned > 0 ? (spent/planned)*100 : 0;
+        const bar = Math.max(0, Math.min(100, pct));
+        const over = rem < 0;
+        const status = over ? "অবনতিতে" : "অগ্রগতিতে";
+        const statusClass = over ? "text-red-600" : "text-emerald-600";
+        return `
+          <tr class="border-t hover:bg-gray-50">
+            <td class="p-3 text-center">${item.year||""}</td>
+            <td class="p-3 text-left">${escapeHtml(item.category||"")}</td>
+            <td class="p-3 text-right font-semibold">${money(planned)}</td>
+            <td class="p-3 text-right">${money(spent)}</td>
+            <td class="p-3 text-right font-semibold ${over?"text-red-600":"text-emerald-600"}">${money(rem)}</td>
+            <td class="p-3">
+              <div class="flex items-center gap-2 justify-center">
+                <div class="budget-progress ${over?"over":""}"><span style="width:${bar}%"></span></div>
+                <span class="${statusClass} font-bold">${Math.min(999,pct).toFixed(0)}% ${status}</span>
+              </div>
+            </td>
+            <td class="p-3">
+              ${window.isBudgetAdmin ? `
+              <div class="flex items-center justify-center gap-1">
+                <button onclick="editBudget('${String(item.id)}')" class="border px-2.5 py-1.5 rounded-lg text-xs font-bold hover:bg-gray-50">✎</button>
+                <button onclick="deleteBudget('${String(item.id)}')" class="bg-red-500 text-white px-2.5 py-1.5 rounded-lg text-xs font-bold hover:bg-red-600">🗑</button>
+              </div>` : `<span class="text-gray-400 text-xs">শুধু দেখুন</span>`}
+            </td>
+          </tr>`;
+      }).join("");
+    }
+
+    function escapeHtml(v) {
+      return String(v ?? "").replace(/[&<>"']/g, c => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[c]));
+    }
+
+    window.openBudgetModal = function() {
+      const modal = document.getElementById("budgetModal");
+      if (!modal) return;
+      const adminEmail = String(
+        (currentBudgetUser && currentBudgetUser.email) ||
+        (window.currentBudgetUser && window.currentBudgetUser.email) ||
+        (auth.currentUser && auth.currentUser.email) ||
+        ""
+      ).trim().toLowerCase();
+
+      window.isBudgetAdmin = true;
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      
+      editId = null;
+      document.getElementById("budgetModalTitle").textContent = "নতুন বাজেট";
+      document.getElementById("budgetYear").value = currentYear;
+      document.getElementById("budgetCategory").value = "";
+      document.getElementById("budgetAmount").value = "";
+      document.getElementById("budgetNote").value = "";
+      document.getElementById("budgetModal").classList.remove("hidden");
+      document.getElementById("budgetModal").classList.add("flex");
+    };
+
+    window.closeBudgetModal = function() {
+      document.getElementById("budgetModal").classList.add("hidden");
+      document.getElementById("budgetModal").classList.remove("flex");
+    };
+
+    window.editBudget = function(id) {
+      const item = plans.find(x => String(x.id) === String(id));
+      if (!item) return;
+      editId = item.id;
+      document.getElementById("budgetModalTitle").textContent = "বাজেট সংশোধন করুন";
+      document.getElementById("budgetYear").value = item.year || currentYear;
+      document.getElementById("budgetCategory").value = item.category || "";
+      document.getElementById("budgetAmount").value = item.amount || "";
+      document.getElementById("budgetNote").value = item.note || "";
+      document.getElementById("budgetModal").classList.remove("hidden");
+      document.getElementById("budgetModal").classList.add("flex");
+    };
+
+    window.saveBudget = async function() {
+      const currentUser = currentBudgetUser || window.currentBudgetUser || auth.currentUser;
+      const currentEmail = String(currentUser?.email || "").trim().toLowerCase();
+      const year = Number(document.getElementById("budgetYear").value);
+      const category = document.getElementById("budgetCategory").value.trim();
+      const amount = Number(document.getElementById("budgetAmount").value);
+      const note = document.getElementById("budgetNote").value.trim();
+
+      if (!year || !category || !Number.isFinite(amount) || amount < 0) {
+        alert("বছর, ক্যাটাগরি এবং সঠিক পরিকল্পিত পরিমাণ দিন।");
+        return;
+      }
+
+      const item = {
+        id: editId || ("b" + Date.now().toString(36) + Math.random().toString(36).slice(2,7)),
+        year, category, amount, note,
+        updatedAt: Date.now()
+      };
+
+      const next = editId
+        ? plans.map(x => String(x.id) === String(editId) ? item : x)
+        : [item, ...plans];
+
+      try {
+        await setDoc(doc(db,"settings","budgetPlan"), { plans: next, updatedAt: Date.now() }, { merge: true });
+        plans = next;
+        closeBudgetModal();
+        render();
+      } catch (e) {
+        console.error(e);
+        alert("বাজেট সংরক্ষণ করা যায়নি: " + (e?.message || e));
+      }
+    };
+
+    window.deleteBudget = async function(id) {
+      const item = plans.find(x => String(x.id) === String(id));
+      if (!item) return;
+      if (!confirm(`"${item.category}" বাজেটটি মুছে ফেলবেন?`)) return;
+      const next = plans.filter(x => String(x.id) !== String(id));
+      try {
+        await setDoc(doc(db,"settings","budgetPlan"), { plans: next, updatedAt: Date.now() }, { merge: true });
+        plans = next;
+        render();
+      } catch (e) {
+        console.error(e);
+        alert("বাজেট মুছতে সমস্যা হয়েছে: " + (e?.message || e));
+      }
+    };
+
+    window.exportBudgetExcel = async function() {
+      if (typeof ExcelJS === "undefined") {
+        alert("Excel Export লাইব্রেরি লোড হয়নি।");
+        return;
+      }
+      if (!plans.length) {
+        alert("এক্সপোর্ট করার মতো কোনো বাজেট পরিকল্পনা নেই।");
+        return;
+      }
+
+      const wb = new ExcelJS.Workbook();
+      const ws = wb.addWorksheet("Budget");
+      ws.columns = [
+        {header:"বছর", key:"year", width:12},
+        {header:"ক্যাটাগরি", key:"category", width:28},
+        {header:"পরিকল্পিত", key:"planned", width:18},
+        {header:"ব্যয়", key:"spent", width:18},
+        {header:"অবশিষ্ট", key:"remaining", width:18},
+        {header:"অগ্রগতি", key:"progress", width:18},
+        {header:"নোট", key:"note", width:32}
+      ];
+      plans.slice().sort((a,b)=>Number(b.year)-Number(a.year)).forEach(x=>{
+        const spent=spentForYear(x.year);
+        const planned=Number(x.amount)||0;
+        ws.addRow({
+          year:x.year, category:x.category, planned, spent,
+          remaining:planned-spent,
+          progress:planned ? ((spent/planned)*100).toFixed(1)+"%" : "0%",
+          note:x.note||""
+        });
+      });
+      ws.getRow(1).font={bold:true};
+      ws.getRow(1).alignment={horizontal:"center"};
+      const buffer=await wb.xlsx.writeBuffer();
+      saveAs(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),`Budget_Plan_${currentYear}.xlsx`);
+    };
+
+  </script>
+</body>
+</html>
