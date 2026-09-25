@@ -1,6 +1,13 @@
 <!DOCTYPE html>
 <html lang="bn">
   <head>
+  <style id="early-auth-guard">
+    html.auth-checking body { visibility: hidden !important; }
+  </style>
+  <script>
+    document.documentElement.classList.add('auth-checking');
+  </script>
+
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>টিকিট বুকিং ব্যবস্থাপনা - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
@@ -247,10 +254,10 @@
 
         <div class="space-y-3">
           <!-- সদস্য ফিল্ড (সদস্য ট্যাবের জন্য) -->
-          <div id="memberSelectContainer">
+          <div id="memberSelectContainer" class="relative">
             <label class="block text-xs font-bold text-gray-600 mb-1">সদস্য নির্বাচন করুন *</label>
             <input id="bookingMemberSearch" type="text" placeholder="নাম, মোবাইল বা নম্বর দিয়ে খুঁজুন..." oninput="searchMembersDropdown(this.value)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-            <div id="memberDropdownResults" class="hidden absolute z-20 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto w-[calc(100%-2.5rem)]"></div>
+            <div id="memberDropdownResults" class="hidden absolute left-0 right-0 top-full z-50 bg-white border border-gray-200 rounded-lg shadow-lg mt-1 max-h-40 overflow-y-auto w-full"></div>
             <div id="selectedMemberInfo" class="mt-2 hidden rounded-xl border border-amber-300 bg-amber-50/60 p-2.5 relative">
               <button type="button" onclick="clearSelectedMember()" class="absolute top-1.5 right-2 text-gray-400 hover:text-gray-700 text-lg leading-none" title="সদস্য পরিবর্তন করুন">×</button>
               <div class="pr-5 flex items-center gap-2">
@@ -277,24 +284,18 @@
 
           <div>
             <label class="block text-xs font-bold text-gray-600 mb-1">বই নম্বর *</label>
-            <input id="bookingBookNo" type="text" placeholder="বই নম্বর লিখুন (যেমন: 201)" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-          </div>
-
-          <div class="grid grid-cols-2 gap-2">
-            <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর থেকে *</label>
-              <input id="bookingStartTicket" type="number" min="1" step="1" placeholder="শুরুর টিকিট (যেমন: ১)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-gray-600 mb-1">টিকিট নম্বর পর্যন্ত *</label>
-              <input id="bookingEndTicket" type="number" min="1" step="1" placeholder="শেষ টিকিট (যেমন: ৫০)" oninput="calculateTicketQuantity()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-            </div>
+            <input id="bookingBookNo" type="text" placeholder="বই নম্বর লিখুন (যেমন: 1001)" oninput="updateBookingBookRange()" class="w-full p-2.5 border rounded-lg text-sm bg-white">
           </div>
 
           <div>
-            <label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (মোট টিকিট)</label>
-            <input id="bookingQuantity" type="number" readonly placeholder="স্বয়ংক্রিয় গণিত" class="w-full p-2.5 border rounded-lg text-sm bg-gray-100 font-bold text-orange-700">
+            <label class="block text-xs font-bold text-gray-600 mb-1">মোট টিকিট (এই বইয়ে স্টকে)</label>
+            <input id="bookingQuantity" type="number" readonly placeholder="বই নম্বর দিলে স্বয়ংক্রিয় দেখাবে" class="w-full p-2.5 border rounded-lg text-sm bg-gray-100 font-bold text-orange-700">
+            <p id="bookingBookStockInfo" class="text-[10px] text-gray-500 mt-1"></p>
           </div>
+
+          <!-- পুরনো ticket range field রাখা হয়েছে data compatibility-এর জন্য, কিন্তু form-এ দেখানো হবে না -->
+          <input id="bookingStartTicket" type="hidden">
+          <input id="bookingEndTicket" type="hidden">
 
           <div class="grid grid-cols-2 gap-2 pt-3 border-t">
             <button type="button" onclick="closeBookingEntryModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl text-sm font-bold hover:bg-gray-50">বাতিল</button>
@@ -432,10 +433,19 @@
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
 
       onAuthStateChanged(auth, async (user) => {
+        // Directly opening this HTML file/page must always go through login first.
+        // Internal navigation from the already-open app is allowed to continue.
+        const openedDirectly = !document.referrer;
+        if (openedDirectly) {
+          window.location.replace("index.html");
+          return;
+        }
+
         if (!user) {
           window.location.replace("index.html");
           return;
         }
+        document.documentElement.classList.remove('auth-checking');
 
         document.body.style.visibility = "visible";
         window.__dpmsPageAuthPending = false;
@@ -897,11 +907,135 @@
         if (resBox) resBox.classList.add("hidden");
       };
 
+      function getBookBaseRange(bookNo) {
+        /*
+         * বই নম্বর = STOCK RANGE-এর আসল বই/প্রথম টিকিট নম্বর।
+         * উদাহরণ: stock 1001-3500 হলে
+         * 1001 = 1001-1025
+         * 1026 = 1026-1050
+         * 1051 = 1051-1075
+         * ...
+         *
+         * 10-এর মতো কোনো ordinal book number নিজে থেকে আর বানানো হবে না।
+         */
+        const bookValue = String(bookNo ?? "").trim();
+        const start = parseInt(bookValue, 10);
+
+        if (!Number.isSafeInteger(start) || !stockStartTicket || !stockEndTicket) return null;
+        if (start < stockStartTicket || start > stockEndTicket) return null;
+
+        // একটি বই অবশ্যই stock range-এর valid 25-ticket boundary থেকে শুরু হতে হবে।
+        if ((start - stockStartTicket) % TICKETS_PER_BOOK !== 0) return null;
+
+        const end = Math.min(stockEndTicket, start + TICKETS_PER_BOOK - 1);
+        if (end < start) return null;
+
+        return { start, end, total: end - start + 1 };
+      }
+
+      function getAvailableBookInfo(bookNo, excludeId = "") {
+        const range = getBookBaseRange(bookNo);
+        if (!range) return null;
+
+        /*
+         * বই নম্বর সবসময় STOCK RANGE থেকেই নির্ধারিত হবে:
+         * বই 1 = stockStartTicket থেকে পরের 25টি,
+         * বই 2 = তার পরের 25টি, এভাবেই চলবে।
+         *
+         * আনসোল্ড করা টিকিট আবার একই বইয়ের available stock-এ ফিরে আসবে।
+         * তাই শুধু quantity বাদ দিয়ে ধারাবাহিক range বানানো হবে না; প্রতিটি
+         * ticket number-এর অবস্থান হিসাব করা হবে।
+         */
+        const occupied = new Set();
+
+        allBookingsData.forEach(item => {
+          if (excludeId && item.id === excludeId) return;
+          if (normalizeBookNo(item.bookNo) !== normalizeBookNo(bookNo)) return;
+
+          const start = Number(item.startTicket);
+          const end = Number(item.endTicket);
+          if (!Number.isSafeInteger(start) || !Number.isSafeInteger(end) || end < start) return;
+
+          const soldNumbers = getSoldTicketNumbersForBooking(item);
+
+          // নতুন/পুরনো sales data-তে নির্দিষ্ট ticket number থাকলে সেটাই occupied।
+          if (soldNumbers.length > 0) {
+            soldNumbers.forEach(n => {
+              if (n >= range.start && n <= range.end) occupied.add(n);
+            });
+          } else {
+            // পুরনো quantity-only sales data হলে booking-এর range-এর শুরু থেকে
+            // যতগুলো ticket sold/active, ততগুলোকে occupied ধরা হবে।
+            const activeQty = getActiveAllocated(item);
+            for (let n = start; n <= end && occupied.size < range.total; n++) {
+              if (n >= range.start && n <= range.end) occupied.add(n);
+              if (n - start + 1 >= activeQty) break;
+            }
+          }
+        });
+
+        // আনসোল্ড করা ticket booking range থেকে বাদ পড়ে; ফলে সেটি আবার stock-এ থাকে।
+        const availableNumbers = [];
+        for (let n = range.start; n <= range.end; n++) {
+          if (!occupied.has(n)) availableNumbers.push(n);
+        }
+
+        const available = availableNumbers.length;
+        const availableStart = available > 0 ? availableNumbers[0] : 0;
+        const availableEnd = available > 0 ? availableNumbers[availableNumbers.length - 1] : 0;
+
+        return {
+          ...range,
+          activeAllocated: occupied.size,
+          available,
+          availableStart,
+          availableEnd,
+          availableNumbers
+        };
+      }
+
       window.calculateTicketQuantity = function() {
-        const start=parseInt(document.getElementById("bookingStartTicket").value)||0;
-        const end=parseInt(document.getElementById("bookingEndTicket").value)||0;
-        const qtyField=document.getElementById("bookingQuantity");
-        if(end>=start&&start>0) qtyField.value=(end-start+1); else qtyField.value="";
+        const bookNo = document.getElementById("bookingBookNo")?.value || "";
+        updateBookingBookRange(bookNo);
+      };
+
+      // বই নম্বর অনুযায়ী ওই বইয়ে বর্তমানে যত টিকিট স্টকে আছে সেটিই দেখাবে।
+      // সাধারণ বই = ২৫টি; আগে ২৫টির মধ্যে ১৫টি বিক্রি/সক্রিয় থাকলে আনসোল্ড হয়ে ফেরত আসা ১০টি দেখাবে।
+      window.updateBookingBookRange = function(rawBookNo) {
+        const raw = String(rawBookNo ?? (document.getElementById("bookingBookNo")?.value || "")).trim();
+        const bookNo = parseInt(raw, 10);
+        const startEl = document.getElementById("bookingStartTicket");
+        const endEl = document.getElementById("bookingEndTicket");
+        const qtyEl = document.getElementById("bookingQuantity");
+        const infoEl = document.getElementById("bookingBookStockInfo");
+        if (!startEl || !endEl || !qtyEl) return;
+
+        if (!Number.isSafeInteger(bookNo) || bookNo < 1) {
+          startEl.value = ""; endEl.value = ""; qtyEl.value = "";
+          if (infoEl) infoEl.textContent = "";
+          return;
+        }
+
+        const info = getAvailableBookInfo(bookNo, editingBookingId || "");
+        if (!info) {
+          startEl.value = ""; endEl.value = ""; qtyEl.value = "";
+          if (infoEl) infoEl.textContent = "এই বই নম্বরটি বর্তমান স্টক রেঞ্জে নেই।";
+          return;
+        }
+
+        qtyEl.value = info.available;
+        if (info.available > 0) {
+          startEl.value = info.availableStart;
+          endEl.value = info.availableEnd;
+          if (infoEl) {
+            infoEl.textContent =
+              `বই ${bookNo}: স্টক রেঞ্জ ${info.start}-${info.end} | মোট ${info.total}টি | বর্তমানে ${info.available}টি টিকিট স্টকে আছে।`;
+          }
+        } else {
+          startEl.value = ""; endEl.value = "";
+          if (infoEl) infoEl.textContent =
+            `বই ${bookNo}: স্টক রেঞ্জ ${info.start}-${info.end} | মোট ${info.total}টি | বর্তমানে কোনো টিকিট স্টকে নেই।`;
+        }
       };
 
       window.openAddBookingModal = function() {
@@ -915,6 +1049,7 @@
         document.getElementById("bookingStartTicket").value = "";
         document.getElementById("bookingEndTicket").value = "";
         document.getElementById("bookingQuantity").value = "";
+        document.getElementById("bookingBookStockInfo").textContent = "";
         setDefaultBookingDate();
         switchBookingType("member");
 
@@ -936,9 +1071,25 @@
         
         switchBookingType(item.type || "member");
         if (item.type === "member") {
-          selectedMemberObject = allMembersData.find(m => m.name === item.name) || { name: item.name };
-          document.getElementById("bookingMemberSearch").value = item.name + (item.mobile ? ` (${item.mobile})` : "");
-          document.getElementById("selectedMemberInfo").innerText = `নির্বাচিত সদস্য: ${item.name}`;
+          const foundMember = allMembersData.find(m =>
+            (m.name || "") === (item.name || "") &&
+            String(m.mobile || m.phone || "") === String(item.mobile || "")
+          ) || allMembersData.find(m => (m.name || "") === (item.name || ""));
+
+          if (foundMember) {
+            window.selectMemberItem(foundMember.id);
+          } else {
+            selectedMemberObject = { name: item.name || "", mobile: item.mobile || "" };
+            document.getElementById("bookingMemberSearch").value = item.name || "";
+            document.getElementById("selectedMemberName").textContent = item.name || "";
+            document.getElementById("selectedMemberId").textContent = "";
+            document.getElementById("selectedMemberId").classList.add("hidden");
+            document.getElementById("selectedMemberMobile").textContent = item.mobile ? `📞 ${item.mobile}` : "";
+            document.getElementById("selectedMemberVillage").textContent = "";
+            document.getElementById("selectedMemberVillage").classList.add("hidden");
+            document.getElementById("selectedMemberInfo").classList.remove("hidden");
+            document.getElementById("memberDropdownResults").classList.add("hidden");
+          }
         } else {
           document.getElementById("bookingCustomerName").value = item.name || "";
         }
@@ -948,6 +1099,7 @@
         document.getElementById("bookingStartTicket").value = item.startTicket || "";
         document.getElementById("bookingEndTicket").value = item.endTicket || "";
         document.getElementById("bookingQuantity").value = item.quantity || "";
+        updateBookingBookRange(item.bookNo || "");
 
         const modal = document.getElementById("bookingEntryModal");
         if (modal) { modal.classList.remove("hidden"); modal.classList.add("flex"); }
@@ -969,49 +1121,23 @@
           }
 
           const date = document.getElementById("bookingDate").value;
-          const bookNo = document.getElementById("bookingBookNo").value.trim();
-          const startTicket = parseInt(document.getElementById("bookingStartTicket").value) || 0;
-          const endTicket = parseInt(document.getElementById("bookingEndTicket").value) || 0;
+          const rawBookNo = document.getElementById("bookingBookNo").value.trim();
+          const bookNumber = parseInt(rawBookNo, 10);
+          const bookNo = Number.isSafeInteger(bookNumber) && bookNumber > 0 ? String(bookNumber) : "";
           const quantity = parseInt(document.getElementById("bookingQuantity").value) || 0;
+          const bookInfo = getAvailableBookInfo(bookNo, editingBookingId || "");
+          const startTicket = bookInfo?.availableStart || 0;
+          const endTicket = bookInfo?.availableEnd || 0;
 
-          if (!date || !bookNo || !startTicket || !endTicket || quantity <= 0) {
-            alert("সব প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।");
+          if (!date || !bookNo || !bookInfo || quantity <= 0 || !startTicket || !endTicket) {
+            alert(bookInfo && quantity <= 0 ? `বই ${bookNo}-এ বর্তমানে কোনো টিকিট স্টকে নেই।` : "সব প্রয়োজনীয় তথ্য সঠিকভাবে পূরণ করুন।");
             return;
           }
 
-          if (!Number.isSafeInteger(startTicket) || !Number.isSafeInteger(endTicket) || startTicket < 1 || endTicket < startTicket) {
-             alert("টিকিট নম্বর সঠিকভাবে দিন।"); return;
-          }
-          if (!stockStartTicket || !stockEndTicket || stockEndTicket < stockStartTicket) {
-             alert("আগে টিকিট স্টকের শুরু ও শেষ নম্বর সেভ করুন।"); return;
-          }
-          if (startTicket < stockStartTicket || endTicket > stockEndTicket) {
-             alert(`স্টকের টিকিট রেঞ্জ ${stockStartTicket} থেকে ${stockEndTicket}। এই রেঞ্জের মধ্যেই বুকিং দিতে হবে।`); return;
-          }
-          if (quantity !== (endTicket - startTicket + 1) || quantity > TICKETS_PER_BOOK) { alert(`একটি বইয়ে সর্বোচ্চ ${TICKETS_PER_BOOK}টি টিকিট রাখা যাবে।`); return; }
-          const startBookGroup = Math.floor((startTicket - stockStartTicket) / TICKETS_PER_BOOK);
-          const endBookGroup = Math.floor((endTicket - stockStartTicket) / TICKETS_PER_BOOK);
-          if (startBookGroup !== endBookGroup) {
-             alert(`একটি বুকিং একই ২৫-টিকিটের বইয়ের মধ্যে হতে হবে।`); return;
+          if (!bookInfo || quantity !== bookInfo.available || quantity > TICKETS_PER_BOOK) {
+            alert(`বই ${bookNo}-এ বর্তমানে ${bookInfo ? bookInfo.available : 0}টি টিকিট স্টকে আছে।`); return;
           }
           const oldItem=editingBookingId?allBookingsData.find(x=>x.id===editingBookingId):null;
-          const oldActive=oldItem?getActiveAllocated(oldItem):0;
-          const availableStock=Math.max(0,ticketStock-(getTotalBookedTickets()-oldActive));
-          if(quantity>availableStock){alert(`স্টকে পর্যাপ্ত টিকিট নেই। বর্তমানে স্টকে ${availableStock}টি টিকিট আছে।`);return;}
-
-          // Duplicate Ticket Number Check Logic
-          const isDuplicate = allBookingsData.some(item => {
-              if (editingBookingId && item.id === editingBookingId) return false;
-              const eStart = Number(item.startTicket);
-              const eEnd = Number(item.endTicket);
-              if (!Number.isSafeInteger(eStart) || !Number.isSafeInteger(eEnd) || eEnd < eStart) return false;
-              return Math.max(startTicket, eStart) <= Math.min(endTicket, eEnd);
-          });
-
-          if (isDuplicate) {
-              alert(`এই বই নম্বরে (${bookNo}) প্রদত্ত টিকিট নম্বরগুলো (${startTicket} - ${endTicket}) ইতিমধ্যে বরাদ্দ করা হয়েছে। একই টিকিট পুনরায় যোগ করা যাবে নিয়োগ করা যাবে না।`);
-              return;
-          }
 
           const data = {
             type: currentBookingType,
@@ -1168,6 +1294,7 @@
               <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold !== undefined ? item.sold : 0}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
+                  <button onclick="openUnsoldModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded font-bold" title="আনসোল্ড করে স্টকে ফেরত দিন">↩️</button>
                   <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
                   <button onclick="deleteBooking('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
                 </div>
@@ -1190,6 +1317,7 @@
               <td class="p-2 border-r text-center font-bold text-emerald-600">${item.sold !== undefined ? item.sold : 0}</td>
               <td class="p-2 text-center whitespace-nowrap">
                 <div class="flex items-center justify-center gap-1">
+                  <button onclick="openUnsoldModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded font-bold" title="আনসোল্ড করে স্টকে ফেরত দিন">↩️</button>
                   <button onclick="openEditBookingModal('${item.id}')" class="text-amber-700 bg-amber-100 px-2 py-1 rounded" title="এডিট">✏️</button>
                   <button onclick="deleteBooking('${item.id}')" class="text-red-600 bg-red-100 px-2 py-1 rounded" title="ডিলিট">🗑️</button>
                 </div>
@@ -1253,7 +1381,7 @@
         for(let b=0;b<bookCount;b++){
           const from=stockStartTicket+(b*TICKETS_PER_BOOK);
           const to=Math.min(stockEndTicket,from+TICKETS_PER_BOOK-1);
-          rows.push([b+1,from,to,to-from+1,"স্টক"]);
+          rows.push([from,from,to,to-from+1,"স্টক"]);
         }
         styleExportSheet(ws,headers,rows,"টিকিট স্টক ও বই তালিকা",{1:"সর্বমোট",4:ticketStock,5:`${bookCount} বই`});
         await downloadWorkbook(wb,"টিকিট স্টক ও বই তালিকা.xlsx");
