@@ -346,12 +346,28 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
   await ensureExportLibraries();
   const wb=new ExcelJS.Workbook();
   const ws=wb.addWorksheet("চাঁদা সংগ্রহ দায়িত্ব");
-  ws.columns=[{width:12},{width:40},{width:24}];
+  // Excel export formatting — all data centered, wrapped/fitted and bordered on all sides.
+  ws.columns=[{width:18},{width:32},{width:28}];
   const border={top:{style:"thin",color:{argb:"FF000000"}},bottom:{style:"thin",color:{argb:"FF000000"}},left:{style:"thin",color:{argb:"FF000000"}},right:{style:"thin",color:{argb:"FF000000"}}};
   const orange="FFFF6600";
   const formatDate=d=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");};
-  const styleCell=(c,align="center",bold=false,size=11)=>{c.font={name:"Noto Sans Bengali",size,bold,color:{argb:"FF000000"}};c.alignment={horizontal:align,vertical:"center",wrapText:true};c.border=border;};
-  const titleCell=(c,size)=>{c.font={name:"Noto Sans Bengali",size,bold:true,color:{argb:"FF000000"}};c.alignment={horizontal:"center",vertical:"center",wrapText:true};};
+  const styleCell=(c,align="center",bold=false,size=11)=>{
+    c.font={name:"Noto Sans Bengali",size,bold,color:{argb:"FF000000"}};
+    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+    c.border=border;
+  };
+  const titleCell=(c,size)=>{
+    c.font={name:"Noto Sans Bengali",size,bold:true,color:{argb:"FF000000"}};
+    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+    c.border=border;
+  };
+  const borderMergedRange=(row,fromCol,toCol)=>{
+    for(let col=fromCol;col<=toCol;col++){
+      const c=ws.getCell(row,col);
+      c.border=border;
+      c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:true};
+    }
+  };
   let r=1;
   list.forEach((x,index)=>{
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[];
@@ -361,15 +377,15 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     const due=Math.max(0,(Number(x.dutyAmount ?? x.amount)||0)-collected);
 
     // Header — same order/structure as the printed responsibility list.
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি"; titleCell(ws.getCell(r,1),16); ws.getRow(r).height=35; r++;
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`; titleCell(ws.getCell(r,1),14); ws.getRow(r).height=30; r++;
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`; titleCell(ws.getCell(r,1),14); ws.getRow(r).height=28; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি"; titleCell(ws.getCell(r,1),16); borderMergedRange(r,1,3); ws.getRow(r).height=35; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`; titleCell(ws.getCell(r,1),14); borderMergedRange(r,1,3); ws.getRow(r).height=30; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`; titleCell(ws.getCell(r,1),14); borderMergedRange(r,1,3); ws.getRow(r).height=28; r++;
 
-    ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}`; styleCell(ws.getCell(r,1),"left",true,12);
+    ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}`; styleCell(ws.getCell(r,1),"center",true,12);
     ws.getCell(r,2).value=""; styleCell(ws.getCell(r,2),"center",false,12);
-    ws.getCell(r,3).value=`তারিখ :- ${formatDate(x.date)}`; styleCell(ws.getCell(r,3),"right",true,12); ws.getRow(r).height=25; r++;
+    ws.getCell(r,3).value=`তারিখ :- ${formatDate(x.date)}`; styleCell(ws.getCell(r,3),"center",true,12); ws.getRow(r).height=25; r++;
 
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`; titleCell(ws.getCell(r,1),12); ws.getCell(r,1).border=border; ws.getRow(r).height=25; r++;
+    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`; titleCell(ws.getCell(r,1),12); borderMergedRange(r,1,3); ws.getRow(r).height=25; r++;
 
     ["SR নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{const c=ws.getCell(r,i+1);c.value=v;c.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.alignment={horizontal:"center",vertical:"center",wrapText:true};c.border=border;});
     ws.getRow(r).height=25; r++;
@@ -395,7 +411,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     },0);
     ws.mergeCells(r,1,r,2);
     ws.getCell(r,1).value="সর্বমোট সদস্য";
-    styleCell(ws.getCell(r,1),"center",true,12);
+    styleCell(ws.getCell(r,1),"center",true,12); borderMergedRange(r,1,2);
     ws.getCell(r,3).value=totalMembers+" জন";
     styleCell(ws.getCell(r,3),"center",true,12);
     ws.getRow(r).height=28;
