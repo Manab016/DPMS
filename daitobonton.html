@@ -148,6 +148,12 @@ function loadPageCaches(){
  try{const t=Number(localStorage.getItem(SUB_CACHE_KEY));if(Number.isFinite(t)){subscriptionTotal=t;render();}}catch(_){}
 }
 
+const STAND_COLLECTION="স্ট্যান্ড কালেকশন (নেকড়ামারী, আদিনা স্টেশন, আটমাইল, কালুয়াদীঘি)";
+const STAND_COLLECTION_PARTS=new Set(["নেকড়ামারী","আদিনা স্টেশন","আটমাইল","কালুয়াদীঘি",STAND_COLLECTION]);
+function normalizeVillageName(v){
+ const name=String(v??"").trim();
+ return STAND_COLLECTION_PARTS.has(name)?STAND_COLLECTION:name;
+}
 function getRowVillages(x){
  const out=[];
  const add=(v)=>{
@@ -160,7 +166,9 @@ function getRowVillages(x){
  add(x?.village); add(x?.gram); add(x?.grams); add(x?.selectedVillages);
  const m=String(x?.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
  if(m) add(m[1].split(","));
- return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
+ // পুরনো data-তে Stand Collection-এর জায়গায় আলাদা নাম save হয়ে থাকলেও
+ // এখন সেগুলো একটিমাত্র Stand Collection option হিসেবে দেখাবে।
+ return [...new Set(out.map(normalizeVillageName).filter(Boolean))];
 }
 function getRowLeaders(x){
  const out=[];
