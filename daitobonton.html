@@ -25,7 +25,7 @@
 <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">পূজা কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
-<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button><button onclick="downloadDutyPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">📄 PDF</button><button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
+<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button><button onclick="downloadDutyPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">📄 PDF</button><button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
 <div class="relative flex-1"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span><input id="listSearch" oninput="render()" type="text" placeholder="সদস্য, দায়িত্ব, গ্রুপ লিডার বা গ্রামের নাম লিখে খুঁজুন..." class="w-full p-2.5 pl-9 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"></div>
 <select id="villageFilter" onchange="render()" class="w-full md:w-52 p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><option value="">সব গ্রাম</option></select>
@@ -245,18 +245,12 @@ onAuthStateChanged(auth,async user=>{
  loadDaitobontonFromCloud();
  loadChada();
 });
-function render(){
- let a=0,p=0,d=0,collectedTotal=0;rows.forEach(x=>{const target=Number(x.dutyAmount ?? x.amount)||0;const collected=Number(x.amount)||0;const q=Math.min(Math.max(Number(x.deposited ?? collected)||0,0),collected);a+=target;p+=q;collectedTotal+=collected;d+=Math.max(0,target-collected)});
- totalChada.textContent=money(subscriptionTotal+collectedTotal);
- totalAssigned.textContent=money(a);totalDeposited.textContent=money(p);totalDue.textContent=money(d);
- renderVillageFilter();
+function getFilteredRows(){
  const q=normalizeSearchText(document.getElementById("listSearch")?.value||"");
  const vf=normalizeSearchText(document.getElementById("villageFilter")?.value||"");
- const filtered=rows.filter(x=>{
+ return rows.filter(x=>{
    const villages=getRowVillages(x);
    const leaders=getRowLeaders(x);
-   // Search every saved form field plus the resolved village/leader values.
-   // This keeps old records searchable even when they used a different field name.
    const haystack=normalizeSearchText([
      x?.name,x?.responsibility,x?.mobile,x?.memberId,x?.memberIds,
      x?.village,x?.gram,x?.grams,x?.groupLeader,x?.groupLeaderName,x?.leader,x?.leaderName,
@@ -265,6 +259,14 @@ function render(){
    const villageMatch=!vf || villages.some(v=>normalizeSearchText(v)===vf || normalizeSearchText(v).includes(vf) || vf.includes(normalizeSearchText(v)));
    return (!q || haystack.includes(q)) && villageMatch;
  });
+}
+
+function render(){
+ let a=0,p=0,d=0,collectedTotal=0;rows.forEach(x=>{const target=Number(x.dutyAmount ?? x.amount)||0;const collected=Number(x.amount)||0;const q=Math.min(Math.max(Number(x.deposited ?? collected)||0,0),collected);a+=target;p+=q;collectedTotal+=collected;d+=Math.max(0,target-collected)});
+ totalChada.textContent=money(subscriptionTotal+collectedTotal);
+ totalAssigned.textContent=money(a);totalDeposited.textContent=money(p);totalDue.textContent=money(d);
+ renderVillageFilter();
+ const filtered=getFilteredRows();
  const countEl=document.getElementById("dutyCount"); if(countEl) countEl.textContent=`মোট: ${filtered.length} টি`;
  const box=document.getElementById("tableBody");
  if(!box)return;
@@ -384,8 +386,9 @@ window.depositToTreasurer=async id=>{
  }catch(e){alert("কোষাধ্যক্ষের হিসাবে জমা করা যায়নি: "+e.message)}
 };
 window.exportSingleDuty=async function(id){const x=rows.find(r=>String(r.id)===String(id));if(!x)return;await exportDutiesAsExcel([x],true);};
-window.exportExcel=async function(){if(!rows.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(rows,false);};
+window.exportExcel=async function(){const list=getFilteredRows();if(!list.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(list,false);};
 function buildPrintHTML(mode="duties"){
+  const exportRows=getFilteredRows();
   const escPrint=(v)=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   const formatPrintDate=(d)=>{
     const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -393,7 +396,7 @@ function buildPrintHTML(mode="duties"){
   };
 
   if(mode==="groups"){
-    const groups=rows.map((x,i)=>{
+    const groups=exportRows.map((x,i)=>{
       const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length
         ?x.selectedMembers
         :(x.name?String(x.name).split(",").map((n,j)=>({
@@ -428,7 +431,7 @@ function buildPrintHTML(mode="duties"){
     return `<div class="print-document">${groups}</div>`;
   }
 
-  const printRows=rows.map((x,index)=>{
+  const printRows=exportRows.map((x,index)=>{
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length
       ?x.selectedMembers
       :(x.name?String(x.name).split(",").map((n,i)=>({
@@ -645,7 +648,7 @@ function cleanupPrintHost(){
 }
 
 function printWithoutPopup(mode="duties"){
-  if(!rows.length){
+  if(!getFilteredRows().length){
     alert(mode==="groups"?"গ্রুপ লিস্ট প্রিন্ট করার মতো তথ্য নেই":"প্রিন্ট করার মতো তথ্য নেই");
     return;
   }
@@ -681,7 +684,7 @@ window.printDuties=function(){
 };
 
 async function downloadPDF(mode="duties"){
-  if(!rows.length){
+  if(!getFilteredRows().length){
     alert(mode==="groups"?"PDF ডাউনলোড করার মতো গ্রুপ লিস্ট নেই":"PDF ডাউনলোড করার মতো তথ্য নেই");
     return;
   }
