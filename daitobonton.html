@@ -85,7 +85,7 @@ function toggleOtherLeader(index){index=Number(index);const i=selectedOtherLeade
 function removeOtherLeader(index){index=Number(index);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(i=>i!==index);renderMembersUI();}
 function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
 function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(values)?values:[]).map(v=>String(v).trim()));document.querySelectorAll(".village-check").forEach(x=>x.checked=wanted.has(String(x.value)));}
-function renderVillages(selected=[]){const keep=selected.length?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
+function renderVillages(selected=null){const keep=Array.isArray(selected)?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
 function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
 function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);renderMembersUI()}
@@ -217,15 +217,10 @@ async function loadChada(){
  }catch(e){console.warn("Subscription total load failed:",e);}
 }
 onAuthStateChanged(auth,async user=>{
- // Direct URL / direct HTML run must always go to the login page.
- // When opened from an in-app page (for example dashboard.html), the same-origin
- // referrer is present, so the already logged-in user can continue normally.
- const referrer=String(document.referrer||"");
- const sameOriginReferrer=(()=>{
-   if(!referrer)return false;
-   try{return new URL(referrer,location.href).origin===location.origin;}catch(_){return false;}
- })();
- if(!sameOriginReferrer){location.replace("index.html");return}
+ // Directly opened local HTML files must always go to the login page.
+ // Normal in-app navigation is controlled only by Firebase auth state;
+ // document.referrer is intentionally NOT used because Android WebView can omit it.
+ if(location.protocol === "file:"){location.replace("index.html");return}
  if(!user){location.replace("index.html");return}
  document.documentElement.classList.remove("auth-checking");
  currentUser=user;
@@ -324,6 +319,8 @@ async function saveEntry(e){
  if(!vs.length)return alert("দয়া করে অন্তত একটি গ্রাম নির্বাচন করুন।");
  const dateEl=document.getElementById("date"),extraDateEls=[document.getElementById("extraDate1"),document.getElementById("extraDate2"),document.getElementById("extraDate3")],responsibilityEl=document.getElementById("responsibility"),dutyAmountEl=document.getElementById("dutyAmount"),amountEl=document.getElementById("amount"),depositedEl=document.getElementById("deposited"),remarksEl=document.getElementById("remarks"),editIdEl=document.getElementById("editId");
  let remarks=(remarksEl?.value||"").trim();
+ // Remove the old saved village tag before saving the current checkbox selection.
+ remarks=remarks.replace(/\s*\[গ্রাম:\s*[^\]]*\]/g, "").trim();
  remarks+=` [গ্রাম: ${vs.join(", ")}]`;
  if(ls.length)remarks+=` [লিডার: ${ls.map(x=>x.name||"").join(", ")}]`;
  const dutyAmountValue=Math.max(0,Number(dutyAmountEl?.value)||0);
