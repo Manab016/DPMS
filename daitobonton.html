@@ -38,7 +38,7 @@
 <div id="otherPersonFields" class="hidden space-y-2"><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-gray-700 mb-1">নাম *</label><input id="otherName" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="নাম লিখুন"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর *</label><input id="otherMobile" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="মোবাইল নম্বর লিখুন"></div></div><div class="flex justify-end"><button type="button" onclick="addOtherPerson()" class="bg-orange-100 text-orange-700 px-3 py-2 rounded-lg text-xs font-bold border border-orange-200 hover:bg-orange-200">➕ আরও একজন যোগ করুন</button></div><div id="otherPeopleList" class="space-y-2"></div></div>
 <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য নির্বাচন *</label><input type="text" id="memberSearch" oninput="filterMembers()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="memberList" class="max-h-40 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedMemberSummary" class="text-[11px] text-orange-700 font-bold mt-1 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"></div></div>
 <div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব *</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="যেমন: চাঁদা সংগ্রহ, টিকিট বিতরণ"></div>
-<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রাম নির্বাচন *</label><div id="villageGrid" class="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-3 rounded-lg border"></div><div class="flex gap-2"><input type="text" id="newVillageInput" placeholder="অন্য গ্রাম যোগ করুন" class="flex-1 p-2 border rounded-lg text-sm"><button type="button" onclick="addNewVillage()" class="bg-gray-100 px-4 py-2 rounded-lg text-sm border font-semibold hover:bg-gray-200">যোগ করুন</button></div></div>
+<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রাম নির্বাচন *</label><div id="villageGrid" class="grid grid-cols-2 md:grid-cols-3 gap-x-2 gap-y-1 mb-2 bg-gray-50 p-2 rounded-lg border max-h-32 overflow-y-auto custom-scroll"></div><div class="flex gap-2"><input type="text" id="newVillageInput" placeholder="অন্য গ্রাম যোগ করুন" class="flex-1 p-2 border rounded-lg text-sm"><button type="button" onclick="addNewVillage()" class="bg-gray-100 px-4 py-2 rounded-lg text-sm border font-semibold hover:bg-gray-200">যোগ করুন</button></div></div>
 <div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রুপ লিডার (ঐচ্ছিক - সর্বোচ্চ ৩ জন)</label><input type="text" id="leaderSearch" oninput="filterLeaders()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="leaderList" class="max-h-32 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedLeaderSummary" class="text-[11px] text-blue-700 font-bold mt-1"></div></div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4"><div><label class="block text-xs font-bold text-gray-700 mb-1">সংগ্রহের তারিখ (ঐচ্ছিক)</label><input type="date" id="date" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের টাকা (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="dutyAmount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">সংগৃহীত টাকা — পূজা কোষাধ্যক্ষের কাছে জমা হবে (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="amount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div></div>
 <div class="mt-3 p-3 bg-gray-50 border rounded-lg"><label class="block text-xs font-bold text-gray-700 mb-2">অতিরিক্ত তারিখ (ঐচ্ছিক — সর্বোচ্চ ৩টি)</label><div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ১</label><input type="date" id="extraDate1" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ২</label><input type="date" id="extraDate2" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ৩</label><input type="date" id="extraDate3" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div></div><p class="text-[10px] text-gray-500 mt-2">এক্সেল-এ তারিখের ঘরে প্রতিটি তারিখ আলাদা লাইনে পরপর দেখাবে এবং ঘরের ভিতরে নিজে থেকে wrap হবে।</p></div>
@@ -49,7 +49,7 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা নতুনটোলা","সহরা পশ্চিমপাড়া","চাকলিপাড়া","মহেশকুড়ি","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","সব্দলখানি","চুনাকিটোলা","রাস্তা কালেকশন","হাট কালেকশন","স্ট্যান্ড কালেকশন( "নেকড়ামারী","আদিনা স্টেশন","আটমাইল","কালুয়াদীঘি")", ],currentFormExtraVillages=[];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা নতুনটোলা","সহরা পশ্চিমপাড়া","চাকলিপাড়া","মহেশকুড়ি","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","সব্দলখানি","চুনাকিটোলা","রাস্তা কালেকশন","হাট কালেকশন","স্ট্যান্ড কালেকশন","নেকড়ামারী","আদিনা স্টেশন","আটমাইল","কালুয়াদীঘি"],currentFormExtraVillages=[];
 let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
@@ -88,7 +88,7 @@ function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(valu
 function renderVillages(selected=null){const keep=Array.isArray(selected)?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
 function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
-function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);renderMembersUI()}
+function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);if(memberSearch)memberSearch.value="";renderMembersUI()}
 function removeSelectedMember(id){
  id=String(id); const i=selectedMemberIds.indexOf(id);
  if(i>=0) selectedMemberIds.splice(i,1);
@@ -202,7 +202,8 @@ loadPageCaches();
 async function loadDaitobontonFromCloud(){
  try{
    const s=await getDocs(collection(db,"daitobonton"));
-   rows=[];s.forEach(d=>rows.push({id:d.id,...d.data()}));
+   const cloudRows=[];s.forEach(d=>cloudRows.push({id:d.id,...d.data()}));
+   rows=cloudRows;
    rows.sort((a,b)=>String(b.date||"").localeCompare(String(a.date||""))||Number(b.createdAt||0)-Number(a.createdAt||0));
    saveRowsCache();render();
  }catch(e){console.warn("Daitobonton cloud load failed:",e);}
@@ -480,7 +481,7 @@ function getPrintCSS(){
     .print-sheet{
       width:210mm;
       min-height:297mm;
-      padding:0 8mm 8mm;
+      padding:3mm 4mm 4mm;
       background:#fff;
       page-break-after:always;
       break-after:page;
@@ -622,7 +623,7 @@ function getPrintCSS(){
       *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
       html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
       .print-document{width:210mm!important;margin:0 auto!important}
-      .print-sheet{width:210mm!important;min-height:297mm!important;padding:0 8mm 8mm!important}
+      .print-sheet{width:210mm!important;min-height:297mm!important;padding:3mm 4mm 4mm!important}
     }
   </style>`;
 }
@@ -714,8 +715,8 @@ async function downloadPDF(mode="duties"){
     await window.html2pdf().set({
       margin:0,
       filename:fileName,
-      image:{type:"jpeg",quality:0.98},
-      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false},
+      image:{type:"png"},
+      html2canvas:{scale:3,useCORS:true,backgroundColor:"#ffffff",logging:false,imageTimeout:0,removeContainer:true},
       jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},
       pagebreak:{mode:["css","legacy"]}
     }).from(host.querySelector(".print-document")).save();
