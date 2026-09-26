@@ -25,7 +25,7 @@
 <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">পূজা কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
-<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button><button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
+<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button><button onclick="downloadDutyPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">📄 PDF</button><button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
 <div class="relative flex-1"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span><input id="listSearch" oninput="render()" type="text" placeholder="সদস্য, দায়িত্ব, গ্রুপ লিডার বা গ্রামের নাম লিখে খুঁজুন..." class="w-full p-2.5 pl-9 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"></div>
 <select id="villageFilter" onchange="render()" class="w-full md:w-52 p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><option value="">সব গ্রাম</option></select>
@@ -149,13 +149,40 @@ function loadPageCaches(){
 }
 
 function getRowVillages(x){
- const a=Array.isArray(x.villages)?x.villages:[];
- if(a.length)return a.map(v=>String(v).trim()).filter(Boolean);
- const m=String(x.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
- return m?m[1].split(",").map(v=>v.trim()).filter(Boolean):[];
+ const out=[];
+ const add=(v)=>{
+   if(Array.isArray(v)) v.forEach(add);
+   else if(v!=null && String(v).trim()) out.push(String(v).trim());
+ };
+ // Current schema.
+ add(x?.villages);
+ // Older/alternate saved schemas are also included so existing entries remain searchable.
+ add(x?.village); add(x?.gram); add(x?.grams); add(x?.selectedVillages);
+ const m=String(x?.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
+ if(m) add(m[1].split(","));
+ return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
 }
 function getRowLeaders(x){
- return Array.isArray(x.groupLeaders)?x.groupLeaders.map(m=>m?.name||"").filter(Boolean):[];
+ const out=[];
+ const add=(v)=>{
+   if(Array.isArray(v)) v.forEach(add);
+   else if(v && typeof v==="object") add(v.name||v.leaderName||v.groupLeader||v.title||"");
+   else if(v!=null && String(v).trim()) out.push(String(v).trim());
+ };
+ add(x?.groupLeaders);
+ // Keep compatibility with older duty records that stored leader names differently.
+ add(x?.groupLeader); add(x?.groupLeaderName); add(x?.leader); add(x?.leaderName);
+ const m=String(x?.remarks||"").match(/\[লিডার:\s*([^\]]+)\]/);
+ if(m) add(m[1].split(","));
+ return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
+}
+function normalizeSearchText(v){
+ return String(v??"")
+   .toLocaleLowerCase("bn-BD")
+   .normalize("NFKC")
+   .replace(/[\u200B-\u200D\uFEFF]/g,"")
+   .replace(/[\s\u00A0]+/g," ")
+   .trim();
 }
 function getRowDates(x){
  const primary=String(x?.date||"").trim();
@@ -169,6 +196,7 @@ function renderVillageFilter(){
  el.innerHTML='<option value="">সব গ্রাম</option>'+list.map(v=>`<option value="${esc(v)}">${esc(v)}</option>`).join("");
  if(list.includes(current))el.value=current;
 }
+window.render=render;
 
 loadPageCaches();
 async function loadDaitobontonFromCloud(){
@@ -189,9 +217,15 @@ async function loadChada(){
  }catch(e){console.warn("Subscription total load failed:",e);}
 }
 onAuthStateChanged(auth,async user=>{
- // Direct URL / direct HTML run: always enter through the login page.
- const openedDirectly=!document.referrer;
- if(openedDirectly){location.replace("index.html");return}
+ // Direct URL / direct HTML run must always go to the login page.
+ // When opened from an in-app page (for example dashboard.html), the same-origin
+ // referrer is present, so the already logged-in user can continue normally.
+ const referrer=String(document.referrer||"");
+ const sameOriginReferrer=(()=>{
+   if(!referrer)return false;
+   try{return new URL(referrer,location.href).origin===location.origin;}catch(_){return false;}
+ })();
+ if(!sameOriginReferrer){location.replace("index.html");return}
  if(!user){location.replace("index.html");return}
  document.documentElement.classList.remove("auth-checking");
  currentUser=user;
@@ -216,13 +250,20 @@ function render(){
  totalChada.textContent=money(subscriptionTotal+collectedTotal);
  totalAssigned.textContent=money(a);totalDeposited.textContent=money(p);totalDue.textContent=money(d);
  renderVillageFilter();
- const q=(document.getElementById("listSearch")?.value||"").trim().toLowerCase();
- const vf=(document.getElementById("villageFilter")?.value||"").trim();
+ const q=normalizeSearchText(document.getElementById("listSearch")?.value||"");
+ const vf=normalizeSearchText(document.getElementById("villageFilter")?.value||"");
  const filtered=rows.filter(x=>{
-   const villagesText=getRowVillages(x).join(" ");
-   const leadersText=getRowLeaders(x).join(" ");
-   const haystack=`${x.name||""} ${x.responsibility||""} ${leadersText} ${villagesText} ${x.mobile||""} ${x.memberId||""}`.toLowerCase();
-   return (!q||haystack.includes(q))&&(!vf||getRowVillages(x).includes(vf));
+   const villages=getRowVillages(x);
+   const leaders=getRowLeaders(x);
+   // Search every saved form field plus the resolved village/leader values.
+   // This keeps old records searchable even when they used a different field name.
+   const haystack=normalizeSearchText([
+     x?.name,x?.responsibility,x?.mobile,x?.memberId,x?.memberIds,
+     x?.village,x?.gram,x?.grams,x?.groupLeader,x?.groupLeaderName,x?.leader,x?.leaderName,
+     x?.remarks,villages.join(" "),leaders.join(" ")
+   ].flat(Infinity).join(" "));
+   const villageMatch=!vf || villages.some(v=>normalizeSearchText(v)===vf || normalizeSearchText(v).includes(vf) || vf.includes(normalizeSearchText(v)));
+   return (!q || haystack.includes(q)) && villageMatch;
  });
  const countEl=document.getElementById("dutyCount"); if(countEl) countEl.textContent=`মোট: ${filtered.length} টি`;
  const box=document.getElementById("tableBody");
@@ -344,79 +385,358 @@ window.depositToTreasurer=async id=>{
 };
 window.exportSingleDuty=async function(id){const x=rows.find(r=>String(r.id)===String(id));if(!x)return;await exportDutiesAsExcel([x],true);};
 window.exportExcel=async function(){if(!rows.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(rows,false);};
-window.printGroupList=function(){
-  if(!rows.length){alert("গ্রুপ লিস্ট প্রিন্ট করার মতো তথ্য নেই");return;}
-  const esc=v=>String(v==null?"":v).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
-  const formatPrintDate=d=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");};
-  const html=rows.map((x,i)=>{
-    const ms=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:(x.name?String(x.name).split(",").map((n,j)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[j]||""})):[]);
-    const ls=typeof getRowLeaders==="function"?getRowLeaders(x):[];
-    const vs=typeof getRowVillages==="function"?getRowVillages(x):[];
-    const dates=(typeof getRowDates==="function"?getRowDates(x):[x.date||"",...(Array.isArray(x.extraDates)?x.extraDates:[])]).map(formatPrintDate);
-    while(dates.length<4)dates.push("-");
-    const dateText=dates.slice(0,4).map((d,n)=>`<div><b>তারিখ ${n+1}:</b> ${esc(d)}</div>`).join("");
-    const memberRows=ms.map((m,j)=>`<tr><td>${j+1}</td><td>${esc(m.name||"-")}</td><td>${esc(m.mobile||"N/A")}</td></tr>`).join("");
-    return `<section class="group"><div class="gh"><b>গ্রুপ ${i+1}</b><div class="dates">${dateText}</div></div><div class="info"><div><b>গ্রুপ লিডার:</b> ${esc(ls.length?ls.join(", "):"-")}</div><div><b>গ্রাম:</b> ${esc(vs.length?vs.join(", "):"-")}</div></div><table><thead><tr><th>ক্রমিক</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead><tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody></table><div class="count">মোট সদস্য: ${ms.length} জন</div></section>`;
-  }).join("");
-  const w=window.open("","_blank","width=900,height=1200");
-  if(!w){alert("Print window খুলতে পারেনি। Browser popup অনুমতি দিন।");return;}
-  w.document.open();
-  w.document.write(`<!doctype html><html lang="bn"><head><meta charset="UTF-8"><title>গ্রুপ লিস্ট</title><style>@page{size:A4 portrait;margin:0}*{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#000;font-family:"Noto Sans Bengali","Nirmala UI","SolaimanLipi",Arial,sans-serif}body{width:210mm;margin:0 auto;padding:0 8mm 8mm}.head{text-align:center;background:#ff0000;color:#fff;border:1px solid #000;font-size:18px;font-weight:700;padding:8px}.sub{text-align:center;background:#fff2cc;border:1px solid #000;border-top:0;font-size:14px;font-weight:700;padding:6px}.group{border:1px solid #000;margin-bottom:7px;break-inside:avoid;page-break-inside:avoid}.gh{display:grid;grid-template-columns:30% 70%;align-items:center;background:#ff6600;color:#fff;padding:6px 8px;text-align:center}.dates{display:grid;grid-template-columns:1fr 1fr;gap:2px 8px;font-size:10.5px;line-height:1.35;text-align:center}.dates div{white-space:nowrap}.info{display:grid;grid-template-columns:1fr 1fr;background:#ddebf7;border-bottom:1px solid #000;font-size:11.5px;font-weight:600}.info div{padding:6px;text-align:center}.info div+div{border-left:1px solid #000}table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}th,td{border:1px solid #000;text-align:center;vertical-align:middle;padding:4px;overflow-wrap:anywhere;word-break:break-word}th{background:#f4b183}th:first-child,td:first-child{width:14%}th:nth-child(2),td:nth-child(2){width:51%}th:nth-child(3),td:nth-child(3){width:35%}.count{text-align:center;background:#fce4d6;font-weight:700;padding:6px;font-size:11.5px}@media print{body{width:auto;margin:0;padding:0 8mm 8mm}}</style></head><body><div class="head">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div><div class="sub">গ্রুপ সদস্য তালিকা ${new Date().getFullYear()}</div>${html}</body></html>`);
-  w.document.close();w.focus();setTimeout(()=>w.print(),300);
-};
-window.printDuties=function(){
-  if(!rows.length)return alert("প্রিন্ট করার মতো তথ্য নেই");
-  const escPrint=(v)=>String(v??"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#39;");
-  const formatPrintDate=(d)=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");};
+function buildPrintHTML(mode="duties"){
+  const escPrint=(v)=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
+  const formatPrintDate=(d)=>{
+    const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");
+  };
+
+  if(mode==="groups"){
+    const groups=rows.map((x,i)=>{
+      const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length
+        ?x.selectedMembers
+        :(x.name?String(x.name).split(",").map((n,j)=>({
+            name:n.trim(),
+            mobile:String(x.mobile||"").split(",")[j]||""
+          })):[]);
+      const leaders=getRowLeaders(x);
+      const villages=getRowVillages(x);
+      const dates=getRowDates(x).map(formatPrintDate);
+      while(dates.length<4)dates.push("-");
+      const dateText=dates.slice(0,4).map((d,n)=>`<div><b>তারিখ ${n+1}:</b> ${escPrint(d)}</div>`).join("");
+      const memberRows=members.map((m,j)=>`<tr><td>${j+1}</td><td>${escPrint(m.name||"-")}</td><td>${escPrint(m.mobile||"N/A")}</td></tr>`).join("");
+      return `<section class="print-sheet">
+        <div class="committee">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div>
+        <div class="title">গ্রুপ সদস্য তালিকা ${new Date().getFullYear()}</div>
+        <div class="group-head">
+          <div class="group-no">গ্রুপ ${i+1}</div>
+          <div class="dates">${dateText}</div>
+        </div>
+        <div class="leader-village">
+          <div><b>গ্রুপ লিডার:</b> ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
+          <div><b>গ্রাম:</b> ${escPrint(villages.length?villages.join(", "):"-")}</div>
+        </div>
+        <table>
+          <thead><tr><th>ক্রমিক</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
+          <tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody>
+        </table>
+        <div class="count">মোট সদস্য: ${members.length} জন</div>
+      </section>`;
+    }).join("");
+
+    return `<div class="print-document">${groups}</div>`;
+  }
+
   const printRows=rows.map((x,index)=>{
-    const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:(x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[]);
-    const leaders=getRowLeaders(x), villages=getRowVillages(x), dates=getRowDates(x).map(formatPrintDate);
-    const dutyAmount=Number(x.dutyAmount ?? x.amount)||0, collected=Number(x.amount)||0, deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected), due=Math.max(0,dutyAmount-collected);
+    const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length
+      ?x.selectedMembers
+      :(x.name?String(x.name).split(",").map((n,i)=>({
+          name:n.trim(),
+          mobile:String(x.mobile||"").split(",")[i]||""
+        })):[]);
+    const leaders=getRowLeaders(x);
+    const villages=getRowVillages(x);
+    const dates=getRowDates(x).map(formatPrintDate);
+    const dutyAmount=Number(x.dutyAmount ?? x.amount)||0;
+    const collected=Number(x.amount)||0;
+    const deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected);
+    const due=Math.max(0,dutyAmount-collected);
     const memberRows=members.map((m,i)=>`<tr><td>${i+1}</td><td>${escPrint(m.name||"-")}</td><td>${escPrint(m.mobile||"N/A")}</td></tr>`).join("");
-    return `<section class="print-duty">
+    const dateText=dates.length?dates.map(d=>escPrint(d)).join("<br>"):"-";
+
+    return `<section class="print-sheet">
       <div class="committee">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div>
-      <div class="title">চাঁদা সংগ্রহ দায়িত্ব বণ্টন ${new Date().getFullYear()}</div>
+      <div class="title">চাঁদা সংগ্রহ দায়িত্ব বণ্টন ${new Date().getFullYear()}</div>
       <div class="leader">গ্রুপ লিডার: ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
-      <div class="meta"><div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div><div><b>তারিখ:</b> ${dates.length?dates.map(escPrint).join("<br>"):"-"}</div></div>
+      <div class="meta">
+        <div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
+        <div><b>তারিখ:</b><br>${dateText}</div>
+      </div>
       <div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>
-      <table><thead><tr><th>SR নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead><tbody>${memberRows}</tbody></table>
-      <table class="summary"><tbody><tr><td>সংগ্রহ হয়েছে</td><td>₹${collected.toFixed(2)}</td></tr><tr><td>পূজা কোষাধ্যক্ষের কাছে জমা</td><td>₹${deposited.toFixed(2)}</td></tr><tr><td>বাকি</td><td>₹${due.toFixed(2)}</td></tr></tbody></table>
+      <table>
+        <thead><tr><th>SR নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
+        <tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody>
+      </table>
+      <table class="summary">
+        <tbody>
+          <tr><td>সংগ্রহ হয়েছে</td><td>₹${collected.toFixed(2)}</td></tr>
+          <tr><td>পূজা কোষাধ্যক্ষের কাছে জমা</td><td>₹${deposited.toFixed(2)}</td></tr>
+          <tr><td>বাকি</td><td>₹${due.toFixed(2)}</td></tr>
+        </tbody>
+      </table>
     </section>`;
   }).join("");
-  const w=window.open("","_blank","width=900,height=1200");
-  if(!w)return alert("Print window খুলতে পারেনি। Browser popup অনুমতি দিন।");
-  w.document.open();
-  w.document.write(`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8"><title>চাঁদা সংগ্রহ দায়িত্ব বণ্টন - Print</title><style>
+
+  return `<div class="print-document">${printRows}</div>`;
+}
+
+function getPrintCSS(){
+  return `<style id="daitobonton-print-style">
     @page{size:A4 portrait;margin:0}
-    *{box-sizing:border-box}
-    html,body{margin:0;padding:0;background:#fff;color:#000;font-family:"Noto Sans Bengali","Nirmala UI","SolaimanLipi",Arial,sans-serif}
-    body{width:210mm;margin:0 auto;padding:0}
-    .print-duty{width:100%;padding:0 8mm 8mm 8mm;page-break-after:always;break-after:page}
-    .print-duty:last-child{page-break-after:auto;break-after:auto}
-    .committee,.title,.leader,.village{text-align:center;border:1px solid #000;border-bottom:0;padding:6px 8px;font-weight:700}
-    .committee{margin-top:0;background:#ff0000;color:#fff;font-size:17px;padding-top:8px;padding-bottom:8px}
+    *{box-sizing:border-box;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    html,body{margin:0;padding:0;background:#fff;color:#000;font-family:"Noto Sans Bengali","Nirmala UI","SolaimanLipi",Arial,sans-serif;-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+    .print-document{width:210mm;margin:0 auto;background:#fff}
+    .print-sheet{
+      width:210mm;
+      min-height:297mm;
+      padding:0 8mm 8mm;
+      background:#fff;
+      page-break-after:always;
+      break-after:page;
+      page-break-inside:auto;
+      overflow:hidden;
+    }
+    .print-sheet:last-child{page-break-after:auto;break-after:auto}
+    .committee,.title,.leader,.village{
+      text-align:center;
+      border:1px solid #000;
+      border-bottom:0;
+      padding:6px 8px;
+      font-weight:700;
+      line-height:1.35;
+    }
+    .committee{
+      background:#ff0000;
+      color:#fff;
+      font-size:16px;
+      padding-top:8px;
+      padding-bottom:8px;
+    }
     .title{background:#fff2cc;font-size:14px}
     .leader{background:#ddebf7;font-size:13px}
-    .meta{display:grid;grid-template-columns:1fr 1fr;border:1px solid #000;background:#e7e6e6;font-size:12px;font-weight:600}
-    .meta>div{padding:7px 8px;text-align:center;vertical-align:middle;min-height:34px}
+    .meta{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      border:1px solid #000;
+      background:#e7e6e6;
+      font-size:12px;
+      font-weight:600;
+    }
+    .meta>div{
+      padding:7px 8px;
+      text-align:center;
+      vertical-align:middle;
+      min-height:34px;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
     .meta>div+div{border-left:1px solid #000}
-    .village{background:#e2f0d9;border-bottom:1px solid #000;font-size:12px}
-    table{width:100%;border-collapse:collapse;table-layout:fixed;font-size:10.5px}
-    th,td{border:1px solid #000;text-align:center;vertical-align:middle;padding:5px 4px;overflow-wrap:anywhere;word-break:break-word}
-    th{background:#ff6600;color:#fff;font-weight:700}
+    .village{
+      background:#e2f0d9;
+      border-bottom:1px solid #000;
+      font-size:12px;
+    }
+    .group-head{
+      display:grid;
+      grid-template-columns:30% 70%;
+      align-items:center;
+      background:#ff6600;
+      color:#fff;
+      border:1px solid #000;
+      border-bottom:0;
+      text-align:center;
+    }
+    .group-no{
+      padding:8px;
+      font-size:14px;
+      font-weight:700;
+      border-right:1px solid #000;
+    }
+    .dates{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:2px 8px;
+      padding:5px 8px;
+      font-size:10.5px;
+      line-height:1.35;
+      text-align:center;
+    }
+    .dates div{overflow-wrap:anywhere;word-break:break-word}
+    .leader-village{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      background:#ddebf7;
+      border:1px solid #000;
+      border-bottom:0;
+      font-size:11.5px;
+      font-weight:600;
+    }
+    .leader-village>div{
+      padding:6px;
+      text-align:center;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    .leader-village>div+div{border-left:1px solid #000}
+    table{
+      width:100%;
+      border-collapse:collapse;
+      table-layout:fixed;
+      font-size:10.5px;
+    }
+    th,td{
+      border:1px solid #000;
+      text-align:center;
+      vertical-align:middle;
+      padding:5px 4px;
+      overflow-wrap:anywhere;
+      word-break:break-word;
+    }
+    th{
+      background:#ff6600;
+      color:#fff;
+      font-weight:700;
+    }
     th:first-child,td:first-child{width:14%}
     th:nth-child(2),td:nth-child(2){width:51%}
     th:nth-child(3),td:nth-child(3){width:35%}
     .summary{margin-top:0}
-    .summary td{background:#fce4d6;font-weight:700;font-size:11.5px}
+    .summary td{
+      background:#fce4d6;
+      font-weight:700;
+      font-size:11.5px;
+    }
     .summary td:first-child{width:70%}
     .summary td:last-child{width:30%}
-    @media print{body{width:auto}.print-duty{padding:0 8mm 8mm 8mm}}
-  </style></head><body>${printRows}</body></html>`);
-  w.document.close();
-  w.focus();
-  setTimeout(()=>{w.print();},300);
+    .count{
+      text-align:center;
+      background:#fce4d6;
+      border:1px solid #000;
+      border-top:0;
+      font-weight:700;
+      padding:6px;
+      font-size:11.5px;
+    }
+    #__printHost{display:none}
+    body.app-printing>*:not(#__printHost){display:none!important}
+    body.app-printing{margin:0!important;padding:0!important;background:#fff!important}
+    body.app-printing #__printHost{
+      display:block!important;
+      position:static!important;
+      width:210mm!important;
+      margin:0 auto!important;
+      background:#fff!important;
+    }
+    @media print{
+      *,*::before,*::after{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important}
+      html,body{width:210mm!important;margin:0!important;padding:0!important;background:#fff!important}
+      .print-document{width:210mm!important;margin:0 auto!important}
+      .print-sheet{width:210mm!important;min-height:297mm!important;padding:0 8mm 8mm!important}
+    }
+  </style>`;
+}
+
+function preparePrintHost(mode){
+  let host=document.getElementById("__printHost");
+  if(!host){
+    host=document.createElement("div");
+    host.id="__printHost";
+    document.body.appendChild(host);
+  }
+  host.innerHTML=getPrintCSS()+buildPrintHTML(mode);
+  return host;
+}
+
+function cleanupPrintHost(){
+  document.body.classList.remove("app-printing");
+  const host=document.getElementById("__printHost");
+  if(host)host.innerHTML="";
+}
+
+function printWithoutPopup(mode="duties"){
+  if(!rows.length){
+    alert(mode==="groups"?"গ্রুপ লিস্ট প্রিন্ট করার মতো তথ্য নেই":"প্রিন্ট করার মতো তথ্য নেই");
+    return;
+  }
+  preparePrintHost(mode);
+  document.body.classList.add("app-printing");
+
+  let cleaned=false;
+  const cleanup=()=>{
+    if(cleaned)return;
+    cleaned=true;
+    cleanupPrintHost();
+    window.removeEventListener("afterprint",cleanup);
+  };
+  window.addEventListener("afterprint",cleanup);
+  setTimeout(()=>{
+    try{
+      window.focus();
+      window.print();
+      setTimeout(cleanup,1500);
+    }catch(e){
+      cleanup();
+      alert("প্রিন্ট চালু করা যায়নি: "+(e?.message||e));
+    }
+  },100);
+}
+
+window.printGroupList=function(){
+  printWithoutPopup("groups");
 };
+
+window.printDuties=function(){
+  printWithoutPopup("duties");
+};
+
+async function downloadPDF(mode="duties"){
+  if(!rows.length){
+    alert(mode==="groups"?"PDF ডাউনলোড করার মতো গ্রুপ লিস্ট নেই":"PDF ডাউনলোড করার মতো তথ্য নেই");
+    return;
+  }
+  try{
+    const load=(src)=>new Promise((resolve,reject)=>{
+      const s=document.createElement("script");
+      s.src=src;
+      s.onload=resolve;
+      s.onerror=()=>reject(new Error("PDF লাইব্রেরি লোড করা যায়নি"));
+      document.head.appendChild(s);
+    });
+    if(!window.html2pdf){
+      await load("https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js");
+    }
+
+    const host=preparePrintHost(mode);
+    host.style.display="block";
+    host.style.position="fixed";
+    host.style.left="-100000px";
+    host.style.top="0";
+    host.style.width="210mm";
+    host.style.background="#fff";
+
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+
+    const fileName=mode==="groups"
+      ?`গ্রুপ-সদস্য-তালিকা_${new Date().getFullYear()}.pdf`
+      :`চাঁদা-সংগ্রহ-দায়িত্ব-বণ্টন_${new Date().getFullYear()}.pdf`;
+
+    await window.html2pdf().set({
+      margin:0,
+      filename:fileName,
+      image:{type:"jpeg",quality:0.98},
+      html2canvas:{scale:2,useCORS:true,backgroundColor:"#ffffff",logging:false},
+      jsPDF:{unit:"mm",format:"a4",orientation:"portrait",compress:true},
+      pagebreak:{mode:["css","legacy"]}
+    }).from(host.querySelector(".print-document")).save();
+
+    host.style.display="";
+    host.style.position="";
+    host.style.left="";
+    host.style.top="";
+    host.style.width="";
+    host.style.background="";
+    cleanupPrintHost();
+  }catch(e){
+    cleanupPrintHost();
+    console.error("PDF download failed:",e);
+    alert("PDF ডাউনলোড করা যায়নি: "+(e?.message||e));
+  }
+}
+
+window.downloadDutyPDF=()=>downloadPDF("duties");
+window.downloadGroupPDF=()=>downloadPDF("groups");
+
 async function ensureExportLibraries(){
   if(window.ExcelJS && window.saveAs)return;
   const load=(src)=>new Promise((resolve,reject)=>{const s=document.createElement("script");s.src=src;s.onload=resolve;s.onerror=()=>reject(new Error("লাইব্রেরি লোড করা যায়নি: "+src));document.head.appendChild(s);});
