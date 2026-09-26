@@ -49,7 +49,7 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা নতুনটোলা","সহরা পশ্চিমপাড়া","চাকলিপাড়া","মহেশকুড়ি","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","সব্দলখানি","চুনাকিটোলা","রাস্তা কালেকশন","হাট কালেকশন","স্ট্যান্ড কালেকশন(নেকড়ামারী,আদিনা স্টেশন,আটমাইল,কালুয়াদীঘি)"],currentFormExtraVillages=[];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা নতুনটোলা","সহরা পশ্চিমপাড়া","চাকলিপাড়া","মহেশকুড়ি","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাটা","খুটাচিড়ি","সিংড়াপাড়া","সব্দলখানি","চুনাকিটোলা","রাস্তা কালেকশন","হাট কালেকশন","স্ট্যান্ড কালেকশন (নেকড়ামারী, আদিনা স্টেশন, আটমাইল, কালুয়াদীঘি)"],currentFormExtraVillages=[];
 let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
@@ -85,8 +85,47 @@ function toggleOtherLeader(index){index=Number(index);const i=selectedOtherLeade
 function removeOtherLeader(index){index=Number(index);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(i=>i!==index);renderMembersUI();}
 function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
 function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(values)?values:[]).map(v=>String(v).trim()));document.querySelectorAll(".village-check").forEach(x=>x.checked=wanted.has(String(x.value)));}
-function renderVillages(selected=null){const keep=Array.isArray(selected)?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
-function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
+function renderVillages(selected=null){
+  const keep=Array.isArray(selected)?selected:getSelectedVillages();
+
+  const seen=new Set();
+  const list=[];
+
+  [...villages,...currentFormExtraVillages].forEach(raw=>{
+    let v=String(raw??"")
+      .trim()
+      .replace(/[\u200B-\u200D\uFEFF]/g,"")
+      .replace(/[\s\u00A0]+/g," ")
+      .trim();
+
+    const compact=v.replace(/[()]/g,"").trim();
+
+    if(
+      /^স্ট্যান্ড\s*কালেকশন/i.test(v) ||
+      /^স্ট্যান্ড\s*কালেকশন/i.test(compact) ||
+      compact==="কালুয়াদীঘি"
+    ){
+      v="স্ট্যান্ড কালেকশন (নেকড়ামারী, আদিনা স্টেশন, আটমাইল, কালুয়াদীঘি)";
+    }
+
+    const key=v.toLowerCase();
+
+    if(v && !seen.has(key)){
+      seen.add(key);
+      list.push(v);
+    }
+  });
+
+  villageGrid.innerHTML=list.map(v=>`
+    <label class="flex items-center gap-2 cursor-pointer">
+      <input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded">
+      <span class="text-sm text-gray-700">${esc(v)}</span>
+    </label>
+  `).join("");
+
+  setSelectedVillages(keep);
+}
+  function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
 function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);if(memberSearch)memberSearch.value="";renderMembersUI()}
 function removeSelectedMember(id){
