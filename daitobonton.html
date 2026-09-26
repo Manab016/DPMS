@@ -49,7 +49,7 @@
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"],currentFormExtraVillages=[];
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা নতুনটোলা","সহরা পশ্চিমপাড়া","চাকলিপাড়া","মহেশকুড়ি","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","সব্দলখানি","চুনাকিটোলা","রাস্তা কালেকশন","হাট কালেকশন","স্ট্যান্ড কালেকশন( "নেকড়ামারী","আদিনা স্টেশন","আটমাইল","কালুয়াদীঘি")", ],currentFormExtraVillages=[];
 let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
