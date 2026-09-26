@@ -103,7 +103,11 @@ function renderVillages(selected=null){
     if(
       /^স্ট্যান্ড\s*কালেকশন/i.test(v) ||
       /^স্ট্যান্ড\s*কালেকশন/i.test(compact) ||
+      compact==="নেকড়ামারী" ||
+      compact==="আদিনা স্টেশন" ||
+      compact==="আটমাইল" ||
       compact==="কালুয়াদীঘি"
+
     ){
       v="স্ট্যান্ড কালেকশন (নেকড়ামারী, আদিনা স্টেশন, আটমাইল, কালুয়াদীঘি)";
     }
@@ -188,18 +192,39 @@ function loadPageCaches(){
 }
 
 function getRowVillages(x){
- const out=[];
- const add=(v)=>{
-   if(Array.isArray(v)) v.forEach(add);
-   else if(v!=null && String(v).trim()) out.push(String(v).trim());
- };
- // Current schema.
- add(x?.villages);
- // Older/alternate saved schemas are also included so existing entries remain searchable.
- add(x?.village); add(x?.gram); add(x?.grams); add(x?.selectedVillages);
- const m=String(x?.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
- if(m) add(m[1].split(","));
- return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
+  const out=[];
+  const add=(v)=>{
+    if(Array.isArray(v)){
+      v.forEach(add);
+    }else if(v!=null && String(v).trim()){
+      const raw=String(v).trim();
+      const compact=raw.replace(/[()]/g,"").trim();
+
+      if(
+        /^স্ট্যান্ড\s*কালেকশন/i.test(raw) ||
+        /^স্ট্যান্ড\s*কালেকশন/i.test(compact) ||
+        compact==="নেকড়ামারী" ||
+        compact==="আদিনা স্টেশন" ||
+        compact==="আটমাইল" ||
+        compact==="কালুয়াদীঘি"
+      ){
+        out.push("স্ট্যান্ড কালেকশন (নেকড়ামারী, আদিনা স্টেশন, আটমাইল, কালুয়াদীঘি)");
+      }else{
+        out.push(raw);
+      }
+    }
+  };
+
+  add(x?.villages);
+  add(x?.village);
+  add(x?.gram);
+  add(x?.grams);
+  add(x?.selectedVillages);
+
+  const m=String(x?.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
+  if(m) add(m[1].split(","));
+
+  return [...new Set(out)];
 }
 function getRowLeaders(x){
  const out=[];
