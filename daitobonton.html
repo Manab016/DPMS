@@ -7,7 +7,9 @@
 <title>দায়িত্ব বণ্টন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
-.data-table td,.data-table th{text-align:center;vertical-align:middle;white-space:nowrap}
+.data-table td,.data-table th{text-align:center;vertical-align:middle;white-space:normal;overflow-wrap:anywhere;word-break:break-word;height:auto;min-height:0}
+.data-table tr{height:auto!important}
+.data-table td,.data-table th{line-height:1.35}
 .custom-scroll::-webkit-scrollbar{width:6px}.custom-scroll::-webkit-scrollbar-track{background:#f1f1f1;border-radius:4px}.custom-scroll::-webkit-scrollbar-thumb{background:#fb923c;border-radius:4px}
 </style>
 <style id="committee-global-sync-style">
@@ -385,7 +387,36 @@ async function saveEntry(e){
  }catch(err){console.error("Daitobonton save error:",err);alert("সংরক্ষণ করা যায়নি: "+(err?.message||err))}
 }
 window.saveEntry=saveEntry;
-window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent=x.isOther?"অন্যান্য দায়িত্ব সংশোধন":"দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();const savedExtraDates=Array.isArray(x.extraDates)?x.extraDates:[];extraDate1.value=savedExtraDates[0]||"";extraDate2.value=savedExtraDates[1]||"";extraDate3.value=savedExtraDates[2]||"";responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=x.remarks||"";currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));otherPeople=x.isOther?String(x.name||"").split(/\s*,\s*/).map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(/\s*,\s*/)[i]?.trim()||""})).filter(p=>p.name||p.mobile):[];selectedOtherLeaderIndexes=x.isOther?(x.groupLeaders||[]).map(g=>{const i=otherPeople.findIndex(p=>String(p.name)===String(g.name)&&String(p.mobile)===String(g.mobile));return i;}).filter(i=>i>=0):[];document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();renderMembersUI();renderVillages(getRowVillages(x));setDutyFormMode(x.isOther?"other":"member");entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
+window.editEntry=function(id){
+  const wanted=String(id);
+  const x=rows.find(r=>String(r.id)===wanted);
+  if(!x){alert("এই দায়িত্বের তথ্য পাওয়া যায়নি।");return;}
+  modalTitle.textContent=x.isOther?"অন্যান্য দায়িত্ব সংশোধন":"দায়িত্ব বণ্টন সংশোধন";
+  editId.value=String(x.id||"");
+  date.value=x.date||today();
+  const savedExtraDates=Array.isArray(x.extraDates)?x.extraDates:[];
+  extraDate1.value=savedExtraDates[0]||""; extraDate2.value=savedExtraDates[1]||""; extraDate3.value=savedExtraDates[2]||"";
+  responsibility.value=x.responsibility||"";
+  dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;
+  amount.value=x.amount||0;
+  syncCollectedAmountLimit();
+  deposited.value=x.deposited||0;
+  remarks.value=String(x.remarks||"").replace(/\s*\[গ্রাম:[^\]]*\]/g,"").replace(/\s*\[লিডার:[^\]]*\]/g,"").trim();
+  currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));
+  selectedMemberIds=(Array.isArray(x.selectedMembers)?x.selectedMembers:[]).map(m=>String(m?.id||"")).filter(Boolean);
+  if(!selectedMemberIds.length)selectedMemberIds=String(x.memberIds?.join?.(",")||x.memberId||"").split(",").map(v=>v.trim()).filter(Boolean);
+  selectedLeaderIds=(Array.isArray(x.groupLeaders)?x.groupLeaders:[]).map(m=>String(m?.id||"")).filter(id=>id&&selectedMemberIds.includes(id)&&!id.startsWith("other-"));
+  otherPeople=x.isOther?String(x.name||"").split(/\s*,\s*/).map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(/\s*,\s*/)[i]?.trim()||""})).filter(p=>p.name||p.mobile):[];
+  selectedOtherLeaderIndexes=x.isOther?(Array.isArray(x.groupLeaders)?x.groupLeaders:[]).map(g=>otherPeople.findIndex(p=>String(p.name)===String(g?.name||"")&&String(p.mobile)===String(g?.mobile||""))).filter(i=>i>=0):[];
+  document.getElementById("otherName").value="";
+  document.getElementById("otherMobile").value="";
+  renderOtherPeople();
+  renderMembersUI();
+  renderVillages(getRowVillages(x));
+  setDutyFormMode(x.isOther?"other":"member");
+  entryModal.classList.remove("hidden");
+  entryModal.classList.add("flex");
+};
 window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?"))try{const x=rows.find(r=>String(r.id)===String(id));if(x?.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",id));await loadDaitobontonFromCloud()}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(async x=>{if(x.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",x.id));}));await loadDaitobontonFromCloud()}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{
@@ -474,7 +505,7 @@ function buildPrintHTML(mode="duties"){
       </div>
       <div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>
       <table>
-        <thead><tr><th>SR নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
+        <thead><tr class="same-table-header"><th>ক্রমিক নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
         <tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody>
       </table>
       <table class="summary">
@@ -590,12 +621,15 @@ function getPrintCSS(){
     .leader-village>div+div{border-left:1px solid #000}
     table{
       width:100%;
+      height:auto;
       border-collapse:collapse;
       table-layout:fixed;
       font-size:10.5px;
     }
     th,td{
       border:1px solid #000;
+      height:auto;
+      min-height:0;
       text-align:center;
       vertical-align:middle;
       padding:5px 4px;
@@ -604,6 +638,8 @@ function getPrintCSS(){
     }
     th{
       background:#ff6600;
+      height:25px;
+      min-height:25px;
       color:#fff;
       font-weight:700;
     }
@@ -724,6 +760,7 @@ async function downloadPDF(mode="duties"){
     host.style.width="210mm";
     host.style.background="#fff";
 
+    if(document.fonts?.ready){try{await document.fonts.ready;}catch(_){}}
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
 
     const fileName=mode==="groups"
@@ -817,7 +854,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
 
     ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`; titleCell(ws.getCell(r,1),12); ws.getCell(r,1).fill=fillSolid(lightGreen); borderMergedRange(r,1,3); ws.getRow(r).height=25; r++;
 
-    ["SR নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{const c=ws.getCell(r,i+1);c.value=v;c.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.alignment={horizontal:"center",vertical:"center",wrapText:true};c.border=border;});
+    ["ক্রমিক নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{const c=ws.getCell(r,i+1);c.value=v;c.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.alignment={horizontal:"center",vertical:"center",wrapText:true};c.border=border;});
     ws.getRow(r).height=25; r++;
 
     members.forEach((m,i)=>{[i+1,m.name||"-",m.mobile||"N/A"].forEach((v,j)=>{const c=ws.getCell(r,j+1);c.value=v;styleCell(c,"center",false,11);});ws.getRow(r).height=26;r++;});
