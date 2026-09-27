@@ -2,7 +2,16 @@
 <html lang="bn">
 <head>
 <style id="early-auth-guard">html.auth-checking body{visibility:hidden!important}</style>
-<script>document.documentElement.classList.add('auth-checking');</script>
+<script>
+document.documentElement.classList.add('auth-checking');
+(function(){
+  const ref=document.referrer||"";
+  const fromDashboard=/dashboard\.html(?:[?#]|$)/i.test(ref);
+  if(!fromDashboard){
+    location.replace("index.html");
+  }
+})();
+</script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>দায়িত্ব বণ্টন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
 <script src="https://cdn.tailwindcss.com"></script>
@@ -21,35 +30,173 @@
 <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button><div class="text-center mb-4"><div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div><h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3></div>
 <div class="space-y-2.5 text-xs border-t pt-3"><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div><div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a></div></div>
 <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button></div></div>
+
+<div id="previewModal" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-2 md:p-4 z-50">
+  <div class="bg-white w-full max-w-4xl h-[90vh] rounded-2xl shadow-2xl flex flex-col overflow-hidden relative">
+    <div class="flex justify-between items-center p-4 border-b bg-gray-50">
+      <h3 id="previewModalTitle" class="text-base font-bold text-gray-800">প্রিভিউ</h3>
+      <div class="flex items-center gap-2">
+        <button id="previewPrintBtn" onclick="printFromPreview()" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-blue-700">🖨️ প্রিন্ট করুন</button>
+        <button id="previewPdfBtn" onclick="pdfFromPreview()" class="bg-red-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:bg-red-700">📄 PDF ডাউনলোড</button>
+        <button onclick="closePreviewModal()" class="text-gray-500 hover:text-gray-800 text-lg font-black ml-2">✕</button>
+      </div>
+    </div>
+    <div id="previewModalBody" class="flex-1 overflow-y-auto p-4 custom-scroll bg-gray-100"></div>
+  </div>
+</div>
+
 <div class="max-w-4xl mx-auto">
 <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">পূজা কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
-<div class="flex flex-wrap gap-2 mb-4"><button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button><button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button><button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button><button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button><button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button><button onclick="downloadDutyPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">📄 PDF</button><button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button><button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button><button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button></div>
+<div class="flex flex-wrap gap-2 mb-4">
+<button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button>
+<button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button>
+<button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button>
+<button onclick="openPreviewModal('duties')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-teal-700 shadow-sm">👁️ দায়িত্ব প্রিভিউ</button>
+<button onclick="openPreviewModal('groups')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-indigo-700 shadow-sm">👁️ গ্রুপ প্রিভিউ</button>
+<button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
+<button onclick="printDuties()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-blue-700 shadow-sm">🖨️ প্রিন্ট</button>
+<button onclick="downloadDutyPDF()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-700 shadow-sm">📄 PDF</button>
+<button onclick="printGroupList()" class="bg-violet-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-violet-700 shadow-sm">🖨️ গ্রুপ লিস্ট</button>
+<button onclick="downloadGroupPDF()" class="bg-fuchsia-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-fuchsia-700 shadow-sm">📄 গ্রুপ PDF</button>
+<button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button>
+</div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
 <div class="relative flex-1"><span class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span><input id="listSearch" oninput="render()" type="text" placeholder="সদস্য, দায়িত্ব, গ্রুপ লিডার বা গ্রামের নাম লিখে খুঁজুন..." class="w-full p-2.5 pl-9 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"></div>
 <select id="villageFilter" onchange="render()" class="w-full md:w-52 p-2.5 border rounded-xl text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><option value="">সব গ্রাম</option></select>
 </div>
-<div class="mb-2 text-xs text-gray-500" id="dutyCount">মোট: ০ টি</div><div id="tableBody" class="space-y-3"><div class="p-5 text-center text-gray-500 border rounded-lg">কোনো দায়িত্ব বণ্টনের তথ্য নেই</div></div></div></div>
+<div class="mb-2 text-xs text-gray-500" id="dutyCount">মোট: ০ টি</div><div id="tableBody" class="space-y-6"><div class="p-5 text-center text-gray-500 border rounded-lg">কোনো দায়িত্ব বণ্টনের তথ্য নেই</div></div></div></div>
+
 <div id="entryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
 <div class="bg-white w-full max-w-lg rounded-xl shadow-2xl p-0 relative flex flex-col max-h-[90vh]"><div class="flex justify-between items-center p-4 border-b"><h3 id="modalTitle" class="text-base font-bold text-gray-900">নতুন দায়িত্ব যোগ</h3><button onclick="closeModal()" class="text-gray-400 hover:text-gray-700 font-bold text-lg">✕</button></div>
-<div class="overflow-y-auto p-4 custom-scroll space-y-5"><form id="entryForm" onsubmit="saveEntry(event)"><input type="hidden" id="editId"><input type="hidden" id="name"><input type="hidden" id="otherMode" value="0">
+<div class="overflow-y-auto p-4 custom-scroll space-y-4"><form id="entryForm" onsubmit="saveEntry(event)"><input type="hidden" id="editId"><input type="hidden" id="name"><input type="hidden" id="otherMode" value="0">
 <div class="flex gap-2 border-b pb-2"><button type="button" id="memberTabBtn" onclick="setDutyFormMode('member')" class="px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white">সদস্য নির্বাচন</button><button type="button" id="otherTabBtn" onclick="setDutyFormMode('other')" class="px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border">অন্যান্য</button></div>
+
+<div>
+  <label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের ধরন *</label>
+  <select id="dutyCategory" onchange="toggleDutyCategoryFields()" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500 font-semibold text-gray-800">
+    <option value="chada">চাঁদা সংগ্রহ দায়িত্ব</option>
+    <option value="event">অন্যান্য / বিশেষ কার্যসূচি দায়িত্ব</option>
+  </select>
+</div>
+
+<div id="customHeadingContainer" class="hidden">
+  <label class="block text-xs font-bold text-gray-700 mb-1">প্রিন্ট ও হেডিং শিরোনাম (যেমন: দুর্গোৎসব সাংস্কৃতিক অনুষ্ঠান দায়িত্ব)</label>
+  <input type="text" id="customHeading" class="w-full p-2.5 border rounded-lg text-sm bg-white focus:ring-1 focus:ring-orange-500" placeholder="যেমন: দুর্গোৎসব মণ্ডপ সজ্জা দায়িত্ব">
+</div>
+
 <div id="otherPersonFields" class="hidden space-y-2"><div class="grid grid-cols-1 md:grid-cols-2 gap-3"><div><label class="block text-xs font-bold text-gray-700 mb-1">নাম *</label><input id="otherName" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="নাম লিখুন"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর *</label><input id="otherMobile" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="মোবাইল নম্বর লিখুন"></div></div><div class="flex justify-end"><button type="button" onclick="addOtherPerson()" class="bg-orange-100 text-orange-700 px-3 py-2 rounded-lg text-xs font-bold border border-orange-200 hover:bg-orange-200">➕ আরও একজন যোগ করুন</button></div><div id="otherPeopleList" class="space-y-2"></div></div>
+
 <div><label class="block text-xs font-bold text-gray-700 mb-1">সদস্য নির্বাচন *</label><input type="text" id="memberSearch" oninput="filterMembers()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="memberList" class="max-h-40 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedMemberSummary" class="text-[11px] text-orange-700 font-bold mt-1 bg-orange-50 border border-orange-200 rounded-lg px-2 py-1"></div></div>
-<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব *</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="যেমন: চাঁদা সংগ্রহ, টিকিট বিতরণ"></div>
-<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রাম নির্বাচন *</label><div id="villageGrid" class="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-3 rounded-lg border"></div><div class="flex gap-2"><input type="text" id="newVillageInput" placeholder="অন্য গ্রাম যোগ করুন" class="flex-1 p-2 border rounded-lg text-sm"><button type="button" onclick="addNewVillage()" class="bg-gray-100 px-4 py-2 rounded-lg text-sm border font-semibold hover:bg-gray-200">যোগ করুন</button></div></div>
-<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রুপ লিডার (ঐচ্ছিক - সর্বোচ্চ ৩ জন)</label><input type="text" id="leaderSearch" oninput="filterLeaders()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="leaderList" class="max-h-32 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedLeaderSummary" class="text-[11px] text-blue-700 font-bold mt-1"></div></div>
-<div class="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4"><div><label class="block text-xs font-bold text-gray-700 mb-1">সংগ্রহের তারিখ (ঐচ্ছিক)</label><input type="date" id="date" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের টাকা (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="dutyAmount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div><div><label class="block text-xs font-bold text-gray-700 mb-1">সংগৃহীত টাকা — পূজা কোষাধ্যক্ষের কাছে জমা হবে (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="amount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div></div>
+
+<div class="mt-3"><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্ব *</label><input id="responsibility" required class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500" placeholder="যেমন: চাঁদা সংগ্রহ, টিকিট বিতরণ"></div>
+
+<div class="mt-3"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রাম নির্বাচন (ঐচ্ছিক)</label><div id="villageGrid" class="grid grid-cols-2 gap-2 mb-2 bg-gray-50 p-3 rounded-lg border"></div><div class="flex gap-2"><input type="text" id="newVillageInput" placeholder="অন্য গ্রাম যোগ করুন" class="flex-1 p-2 border rounded-lg text-sm"><button type="button" onclick="addNewVillage()" class="bg-gray-100 px-4 py-2 rounded-lg text-sm border font-semibold hover:bg-gray-200">যোগ করুন</button></div></div>
+
+<div class="mt-3"><label class="block text-xs font-bold text-gray-700 mb-1">গ্রুপ লিডার (ঐচ্ছিক - সর্বোচ্চ ৩ জন)</label><input type="text" id="leaderSearch" oninput="filterLeaders()" placeholder="🔍 নাম, গ্রাম বা মোবাইল নম্বর দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm bg-gray-50 focus:bg-white focus:ring-1 focus:ring-orange-500"><div id="leaderList" class="max-h-32 overflow-y-auto custom-scroll border rounded-lg p-2 space-y-1 bg-white mt-2"></div><div id="selectedLeaderSummary" class="text-[11px] text-blue-700 font-bold mt-1"></div></div>
+
+<div id="moneyFieldsSection" class="space-y-4">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের টাকা (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="dutyAmount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">সংগৃহীত টাকা (ঐচ্ছিক)</label><input type="number" step="any" min="0" id="amount" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="0.00"></div>
+  </div>
+  <div class="mt-3"><label class="block text-xs font-bold text-gray-700 mb-1">পূজা কোষাধ্যক্ষের কাছে জমা — সংগৃহীত পুরো টাকা (ডিফল্ট)</label><div class="bg-orange-50 border border-orange-200 p-3 rounded-lg"><p class="text-sm font-semibold text-orange-900"><span id="pujaTreasurerDefault">পূজা কোষাধ্যক্ষ খোঁজা হচ্ছে...</span></p><p class="text-xs text-gray-600">পূজা কোষাধ্যক্ষ (ডিফল্ট)</p></div><input type="hidden" id="deposited" value="0"></div>
+</div>
+
+<div class="mt-3">
+  <label id="mainDateLabel" class="block text-xs font-bold text-gray-700 mb-1">সংগ্রহের তারিখ (ঐচ্ছিক)</label>
+  <input type="date" id="date" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50">
+</div>
+
 <div class="mt-3 p-3 bg-gray-50 border rounded-lg"><label class="block text-xs font-bold text-gray-700 mb-2">অতিরিক্ত তারিখ (ঐচ্ছিক — সর্বোচ্চ ৩টি)</label><div class="grid grid-cols-1 md:grid-cols-3 gap-3"><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ১</label><input type="date" id="extraDate1" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ২</label><input type="date" id="extraDate2" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div><div><label class="block text-[11px] text-gray-500 mb-1">অতিরিক্ত তারিখ ৩</label><input type="date" id="extraDate3" class="w-full p-2.5 border rounded-lg text-sm bg-white"></div></div><p class="text-[10px] text-gray-500 mt-2">এক্সেল-এ তারিখের ঘরে প্রতিটি তারিখ আলাদা লাইনে পরপর দেখাবে এবং ঘরের ভিতরে নিজে থেকে wrap হবে।</p></div>
-<div class="mt-4"><label class="block text-xs font-bold text-gray-700 mb-1">পূজা কোষাধ্যক্ষের কাছে জমা — সংগৃহীত পুরো টাকা (ডিফল্ট)</label><div class="bg-orange-50 border border-orange-200 p-3 rounded-lg"><p class="text-sm font-semibold text-orange-900"><span id="pujaTreasurerDefault">পূজা কোষাধ্যক্ষ খোঁজা হচ্ছে...</span></p><p class="text-xs text-gray-600">পূজা কোষাধ্যক্ষ (ডিফল্ট)</p></div><input type="hidden" id="deposited" value="0"></div>
-<div class="mt-4 mb-2"><label class="block text-xs font-bold text-gray-700 mb-1">মন্তব্য (ঐচ্ছিক)</label><input id="remarks" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="অতিরিক্ত তথ্য"></div>
+
+<div class="mt-3 mb-2"><label class="block text-xs font-bold text-gray-700 mb-1">মন্তব্য (ঐচ্ছিক)</label><input id="remarks" class="w-full p-2.5 border rounded-lg text-sm bg-gray-50" placeholder="অতিরিক্ত তথ্য"></div>
 </form></div><div class="p-4 border-t bg-white rounded-b-xl flex flex-col gap-2"><button type="submit" form="entryForm" class="w-full bg-gray-900 text-white py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-black">সংরক্ষণ</button><button type="button" onclick="closeModal()" class="w-full bg-white text-gray-800 border-2 py-2.5 rounded-lg text-sm font-bold shadow-sm hover:bg-gray-50">বাতিল</button></div></div></div>
+
 <script>
 const defaultDevInfo={name:"Manabendra Nath Sarkar",mobile:"9933371702",email:"manabendra@gmail.com"};
 function loadDevData(){const saved=JSON.parse(localStorage.getItem("pujaDevData"))||defaultDevInfo;popDevName.textContent=saved.name;popDevMobile.textContent=saved.mobile;popDevMobile.href=`tel:${saved.mobile}`;popDevEmail.textContent=saved.email;popDevEmail.href=`mailto:${saved.email}`}
 function toggleDevModal(){const opening=devModal.classList.contains("hidden");devModal.classList.toggle("hidden");devModal.classList.toggle("flex",opening);if(opening)loadDevData()}
-let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি"],currentFormExtraVillages=[];
+let currentPreviewMode="duties";
+function openPreviewModal(mode="duties"){
+  currentPreviewMode=mode;
+  const modal=document.getElementById("previewModal");
+  const body=document.getElementById("previewModalBody");
+  const title=document.getElementById("previewModalTitle");
+  if(title) title.textContent = mode==="groups" ? "👁️ গ্রুপ সদস্য তালিকা প্রিভিউ" : "👁️ দায়িত্ব বণ্টন প্রিভিউ";
+  if(body){
+    body.innerHTML = "";
+    const frame=document.createElement("iframe");
+    frame.title=mode==="groups" ? "গ্রুপ সদস্য তালিকা প্রিভিউ" : "দায়িত্ব বণ্টন প্রিভিউ";
+    frame.className="w-full h-full border-0 bg-white";
+    frame.setAttribute("scrolling","auto");
+    body.appendChild(frame);
+    const doc=frame.contentDocument || frame.contentWindow.document;
+    doc.open();
+    doc.write(`<!DOCTYPE html><html lang="bn"><head><meta charset="UTF-8">${window.getPrintCSS()}<style>
+      html,body{margin:0!important;padding:0!important;background:#fff!important;overflow-x:hidden!important;overflow-y:auto!important}
+      body{display:block!important;width:100%!important;min-width:0!important}
+      .print-document{margin:0!important;transform-origin:top left!important;will-change:transform!important;display:block!important}
+      .print-sheet{margin-left:0!important;margin-right:0!important}
+    </style></head><body>${window.buildPrintHTML(mode)}</body></html>`);
+    doc.close();
+    const fitPreview=()=>{
+      const previewDoc=frame.contentDocument || frame.contentWindow.document;
+      const printDocument=previewDoc.querySelector('.print-document');
+      if(!printDocument) return;
+      printDocument.style.transform='none';
+      printDocument.style.marginLeft='0';
+      printDocument.style.marginRight='0';
+      printDocument.style.transformOrigin='top left';
+      const availableWidth=Math.max(1,frame.clientWidth-2);
+      const documentWidth=printDocument.getBoundingClientRect().width;
+      const scale=Math.min(1,availableWidth/documentWidth);
+      printDocument.style.transform=`scale(${scale})`;
+      const naturalHeight=printDocument.scrollHeight || printDocument.getBoundingClientRect().height;
+      const scaledHeight=naturalHeight*scale;
+      previewDoc.body.style.width=`${availableWidth}px`;
+      previewDoc.body.style.minWidth='0';
+      previewDoc.body.style.minHeight=`${scaledHeight}px`;
+      previewDoc.documentElement.style.width=`${availableWidth}px`;
+      previewDoc.documentElement.style.minWidth='0';
+      previewDoc.documentElement.style.minHeight=`${scaledHeight}px`;
+    };
+    requestAnimationFrame(()=>{fitPreview(); requestAnimationFrame(fitPreview);});
+    frame.addEventListener('load',fitPreview);
+    if(window.ResizeObserver){
+      const ro=new ResizeObserver(fitPreview);
+      ro.observe(frame);
+      body._previewResizeObserver=ro;
+    }
+  }
+  if(modal){ modal.classList.remove("hidden"); modal.classList.add("flex"); }
+}
+function closePreviewModal(){
+  const modal=document.getElementById("previewModal");
+  if(modal){ modal.classList.add("hidden"); modal.classList.remove("flex"); }
+}
+function printFromPreview(){ window.printWithoutPopup(currentPreviewMode); }
+function pdfFromPreview(){ window.downloadPDF(currentPreviewMode); }
+
+function toggleDutyCategoryFields(){
+  const cat = document.getElementById("dutyCategory")?.value || "chada";
+  const headingBox = document.getElementById("customHeadingContainer");
+  const moneySection = document.getElementById("moneyFieldsSection");
+  const dateLabel = document.getElementById("mainDateLabel");
+  
+  if(cat === "event"){
+    if(headingBox) headingBox.classList.remove("hidden");
+    if(moneySection) moneySection.classList.add("hidden");
+    if(dateLabel) dateLabel.textContent = "দায়িত্বের তারিখ (ঐচ্ছিক)";
+  }else{
+    if(headingBox) headingBox.classList.add("hidden");
+    if(moneySection) moneySection.classList.remove("hidden");
+    if(dateLabel) dateLabel.textContent = "সংগ্রহের তারিখ (ঐচ্ছিক)";
+  }
+}
+
+let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা পশ্চিমপাড়া","সহরা নতুনটোলা","স্ট্যান্ড কালেকশন (নেকড়ামারী, আটমাইল, আদিনা স্টেশন, কালুয়াদিঘী, হিমঘর)","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি","চুনাকীটোল","মহেশকুড়ি"],currentFormExtraVillages=[];
 let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
 function memberKey(m){return String(m.id)}
 function getPhone(m){return m.mobile||m.phone||m.contact||""}
@@ -85,7 +232,17 @@ function toggleOtherLeader(index){index=Number(index);const i=selectedOtherLeade
 function removeOtherLeader(index){index=Number(index);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(i=>i!==index);renderMembersUI();}
 function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
 function setSelectedVillages(values=[]){const wanted=new Set((Array.isArray(values)?values:[]).map(v=>String(v).trim()));document.querySelectorAll(".village-check").forEach(x=>x.checked=wanted.has(String(x.value)));}
-function renderVillages(selected=null){const keep=Array.isArray(selected)?selected:getSelectedVillages();const list=[...villages,...currentFormExtraVillages.filter(v=>!villages.some(b=>b.toLowerCase()===String(v).toLowerCase()))];villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");setSelectedVillages(keep)}
+function renderVillages(selected=null){
+  const keep=Array.isArray(selected)?selected:getSelectedVillages();
+  const list=[...villages];
+  currentFormExtraVillages.forEach(v=>{
+    if(v && !list.some(b=>b.toLowerCase()===String(v).trim().toLowerCase())){
+      list.push(String(v).trim());
+    }
+  });
+  villageGrid.innerHTML=list.map(v=>`<label class="flex items-center gap-2 cursor-pointer"><input type="checkbox" value="${esc(v)}" class="village-check w-4 h-4 text-orange-600 rounded"><span class="text-sm text-gray-700">${esc(v)}</span></label>`).join("");
+  setSelectedVillages(keep);
+}
 function addNewVillage(){const v=newVillageInput.value.trim();if(!v)return;const exists=[...villages,...currentFormExtraVillages].find(x=>String(x).trim().toLowerCase()===v.toLowerCase());if(!exists)currentFormExtraVillages.push(v);renderVillages([...getSelectedVillages(),v]);newVillageInput.value=""}
 function filterMembers(){renderMembersUI()} function filterLeaders(){renderMembersUI()}
 function toggleMember(id){id=String(id);const i=selectedMemberIds.indexOf(id);if(i>=0){selectedMemberIds.splice(i,1);const li=selectedLeaderIds.indexOf(id);if(li>=0)selectedLeaderIds.splice(li,1)}else selectedMemberIds.push(id);renderMembersUI()}
@@ -114,7 +271,7 @@ function addOtherPerson(){const n=(document.getElementById("otherName")?.value||
 function removeOtherPerson(i){otherPeople.splice(i,1);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(x=>x!==i).map(x=>x>i?x-1:x);renderOtherPeople();renderMembersUI();}
 function setDutyFormMode(mode){dutyFormMode=mode==="other"?"other":"member";const a=document.getElementById("memberTabBtn"),b=document.getElementById("otherTabBtn"),box=document.getElementById("otherPersonFields"),memberBox=document.getElementById("memberSearch")?.parentElement;if(a&&b){a.className=dutyFormMode==="member"?"px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white":"px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border";b.className=dutyFormMode==="other"?"px-3 py-2 rounded-lg text-xs font-bold bg-orange-600 text-white":"px-3 py-2 rounded-lg text-xs font-bold bg-gray-100 text-gray-700 border";}if(box)box.classList.toggle("hidden",dutyFormMode!=="other");if(memberBox)memberBox.classList.toggle("hidden",dutyFormMode==="other");const oh=document.getElementById("otherMode");if(oh)oh.value=dutyFormMode==="other"?"1":"0";renderMembersUI();}
 function openOtherModal(){modalTitle.textContent="অন্যান্য দায়িত্ব যোগ";resetForm();setDutyFormMode("other");entryModal.classList.remove("hidden");entryModal.classList.add("flex")}
-function resetForm(){entryForm.reset();editId.value="";name.value="";date.value=new Date().toISOString().slice(0,10);extraDate1.value="";extraDate2.value="";extraDate3.value="";dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];selectedOtherLeaderIndexes=[];currentFormExtraVillages=[];otherPeople=[];memberSearch.value="";leaderSearch.value="";renderMembersUI();renderVillages([]);renderOtherPeople();setDutyFormMode("member")}
+function resetForm(){entryForm.reset();editId.value="";name.value="";document.getElementById("dutyCategory").value="chada";document.getElementById("customHeading").value="";date.value="";extraDate1.value="";extraDate2.value="";extraDate3.value="";dutyAmount.value="0";amount.value="0";deposited.value="0";selectedMemberIds=[];selectedLeaderIds=[];selectedOtherLeaderIndexes=[];currentFormExtraVillages=[];otherPeople=[];memberSearch.value="";leaderSearch.value="";toggleDutyCategoryFields();renderMembersUI();renderVillages([]);renderOtherPeople();setDutyFormMode("member")}
 function syncCollectedAmountLimit(){
  const limit=Math.max(0,Number(dutyAmount?.value)||0);
  if(amount){ amount.max=String(limit); if(Number(amount.value)>limit) amount.value=String(limit); }
@@ -129,10 +286,11 @@ document.addEventListener("DOMContentLoaded",()=>{renderMembersUI()});
 </script>
 <script type="module">
 import{initializeApp}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import{getAuth,onAuthStateChanged,signOut,browserSessionPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import{getAuth,onAuthStateChanged,signOut,browserLocalPersistence,setPersistence}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
 import{getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,getDocs}from"https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
-const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);setPersistence(auth,browserSessionPersistence).catch(()=>{});
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
+setPersistence(auth,browserLocalPersistence).catch(()=>{});
 let rows=[],currentUser=null,subscriptionTotal=0;
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const ROW_CACHE_KEY="daitobonton_rows_cache_v4";
@@ -150,32 +308,74 @@ function loadPageCaches(){
 
 function getRowVillages(x){
  const out=[];
+ const standFull="স্ট্যান্ড কালেকশন (নেকড়ামারী, আটমাইল, আদিনা স্টেশন, কালুয়াদিঘী, হিমঘর)";
  const add=(v)=>{
    if(Array.isArray(v)) v.forEach(add);
-   else if(v!=null && String(v).trim()) out.push(String(v).trim());
+   else if(v!=null && String(v).trim()){
+     let str=String(v).trim();
+     const parens=[];
+     str=str.replace(/\([^)]*\)/g, m=>{ parens.push(m); return `__PAR_${parens.length-1}__`; });
+     str.split(",").forEach(item=>{
+       let restored=item.replace(/__PAR_(\d+)__/g, (_,idx)=>parens[Number(idx)]).trim();
+       if(restored.includes("স্ট্যান্ড কালেকশন") || restored.includes("কালুয়াদিঘী") || restored.includes("হিমঘর")){
+         out.push(standFull);
+       }else if(restored){
+         out.push(restored);
+       }
+     });
+   }
  };
- // Current schema.
- add(x?.villages);
- // Older/alternate saved schemas are also included so existing entries remain searchable.
- add(x?.village); add(x?.gram); add(x?.grams); add(x?.selectedVillages);
+ add(x?.villages); add(x?.village); add(x?.gram); add(x?.grams); add(x?.selectedVillages);
  const m=String(x?.remarks||"").match(/\[গ্রাম:\s*([^\]]+)\]/);
- if(m) add(m[1].split(","));
- return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
+ if(m) add(m[1]);
+ return [...new Set(out)];
 }
+
 function getRowLeaders(x){
  const out=[];
  const add=(v)=>{
    if(Array.isArray(v)) v.forEach(add);
    else if(v && typeof v==="object") add(v.name||v.leaderName||v.groupLeader||v.title||"");
-   else if(v!=null && String(v).trim()) out.push(String(v).trim());
+   else if(v!=null && String(v).trim()) {
+     String(v).split(",").forEach(item=>{
+       const cleaned = item.trim();
+       if(cleaned) out.push(cleaned);
+     });
+   }
  };
  add(x?.groupLeaders);
- // Keep compatibility with older duty records that stored leader names differently.
  add(x?.groupLeader); add(x?.groupLeaderName); add(x?.leader); add(x?.leaderName);
  const m=String(x?.remarks||"").match(/\[লিডার:\s*([^\]]+)\]/);
- if(m) add(m[1].split(","));
- return [...new Set(out.map(v=>String(v).trim()).filter(Boolean))];
+ if(m) add(m[1]);
+ return [...new Set(out)];
 }
+
+function getLatestLeaderNamesForDisplay(x){
+  const names=[];
+  const add=(v)=>{
+    if(Array.isArray(v)) v.forEach(add);
+    else if(v && typeof v==="object") add(v.name||v.leaderName||v.groupLeader||"");
+    else if(v!=null && String(v).trim()) String(v).split(",").forEach(n=>{
+      const t=n.trim();
+      if(t&&!names.includes(t)) names.push(t);
+    });
+  };
+  add(x?.groupLeaders);
+  if(names.length) return names;
+  const matches=[...String(x?.remarks||"").matchAll(/\[লিডার:\s*([^\]]+)\]/g)];
+  if(matches.length) add(matches[matches.length-1][1]);
+  return names;
+}
+function cleanRemarksWithLatestLeader(x){
+  let text=String(x?.remarks||"")
+    .replace(/\s*\[গ্রাম:\s*[^\]]*\]/g,"")
+    .replace(/\s*\[লিডার:\s*[^\]]*\]/g,"")
+    .trim();
+  const leaders=getLatestLeaderNamesForDisplay(x);
+  if(leaders.length) text += `${text ? " " : ""}[লিডার: ${leaders.join(", ")}]`;
+  return text.trim();
+}
+
 function normalizeSearchText(v){
  return String(v??"")
    .toLocaleLowerCase("bn-BD")
@@ -217,26 +417,24 @@ async function loadChada(){
  }catch(e){console.warn("Subscription total load failed:",e);}
 }
 onAuthStateChanged(auth,async user=>{
- // Directly opened local HTML files must always go to the login page.
- // Normal in-app navigation is controlled only by Firebase auth state;
- // document.referrer is intentionally NOT used because Android WebView can omit it.
- if(location.protocol === "file:"){location.replace("index.html");return}
  if(!user){location.replace("index.html");return}
  document.documentElement.classList.remove("auth-checking");
  currentUser=user;
  if((user.email||"").toLowerCase()!==ADMIN_EMAIL.toLowerCase()){
    try{
-     const s=await getDocs(collection(db,"app_users")),mine=s.docs.find(d=>d.id===user.uid),p=mine?.data()?.permissions||[];
-     if(!p.includes("daitobonton")){alert("এই মডিউল ব্যবহারের অনুমতি নেই।");location.replace("dashboard.html");return}
-   }catch(e){location.replace("dashboard.html");return}
+     const s=await getDocs(collection(db,"app_users")),mine=s.docs.find(d=>d.id===user.uid),ud=mine?.data()||{},p=ud.permissions||[];
+     const role=String(ud.role||ud.userRole||ud.type||"").toLowerCase();
+     const isAdmin=role==="admin"||role==="masteradmin"||role==="master_admin"||ud.isAdmin===true||ud.admin===true;
+     if(!isAdmin && !p.includes("daitobonton")){alert("এই মডিউল ব্যবহারের অনুমতি নেই।");location.replace("dashboard.html");return}
+   }catch(e){
+     console.warn("Permission check skipped:",e);
+   }
  }
- // সদস্য listener রাখা হয়েছে যাতে নতুন সদস্য/পূজা কোষাধ্যক্ষ সঙ্গে সঙ্গে পাওয়া যায়।
  onSnapshot(collection(db,"members"),s=>{
    allMembers=[];s.forEach(d=>allMembers.push({id:d.id,...d.data()}));
    allMembers.sort((a,b)=>String(a.name||"").localeCompare(String(b.name||""),"bn"));
    saveMembersCache();renderMembersUI();renderPujaTreasurer();
  },err=>console.warn("Members load failed:",err));
- // পুরনো full-time realtime listener সরানো হয়েছে: cache আগে দেখাবে, cloud data background-এ একবার load হবে।
  loadDaitobontonFromCloud();
  loadChada();
 });
@@ -247,7 +445,7 @@ function getFilteredRows(){
    const villages=getRowVillages(x);
    const leaders=getRowLeaders(x);
    const haystack=normalizeSearchText([
-     x?.name,x?.responsibility,x?.mobile,x?.memberId,x?.memberIds,
+     x?.name,x?.responsibility,x?.customHeading,x?.mobile,x?.memberId,x?.memberIds,
      x?.village,x?.gram,x?.grams,x?.groupLeader,x?.groupLeaderName,x?.leader,x?.leaderName,
      x?.remarks,villages.join(" "),leaders.join(" ")
    ].flat(Infinity).join(" "));
@@ -256,8 +454,72 @@ function getFilteredRows(){
  });
 }
 
+function renderRowCard(x){
+ const isEvent = x.dutyCategory === "event";
+ const dutyAmountValue=Number(x.dutyAmount ?? x.amount)||0, amount=Number(x.amount)||0, deposited=Math.min(Math.max(Number(x.deposited)||0,0),amount), due=Math.max(0,dutyAmountValue-amount), id=JSON.stringify(x.id);
+ const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((name,i)=>({name:name.trim(),mobile:String(x.mobile||"").split(",")[i]||"",memberId:String(x.memberId||"").split(",")[i]||""})):[];
+ const villages=getRowVillages(x); const leaders=getRowLeaders(x);
+ const leaderText=leaders.length?leaders.join(", "):"গ্রুপ লিডার নির্ধারিত নয়";
+ const dates=getRowDates(x);
+ const dateText=dates.length?dates.join("\n"):"-";
+ const dateHeaderBadge = dates.length ? ` • <span class="text-xs font-semibold text-gray-600 bg-amber-100/80 px-2 py-0.5 rounded">📅 ${dates.join(", ")}</span>` : '';
+ const detailsId=`duty-details-${String(x.id).replace(/[^a-zA-Z0-9_-]/g,"")}`;
+
+ return `<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden mb-3">
+   <div class="p-3 md:p-4 flex items-start justify-between gap-3">
+     <button type="button" onclick="toggleDutyDetails('${detailsId}',this)" class="min-w-0 flex-1 text-left">
+       <div class="flex items-center gap-2 flex-wrap">
+         <span class="text-orange-500 text-xs">⌄</span>
+         <h3 class="text-base font-bold text-orange-700 truncate">${esc(leaderText)}</h3>
+         ${isEvent && x.customHeading ? `<span class="bg-violet-100 text-violet-800 text-[10px] font-bold px-2 py-0.5 rounded-full border border-violet-200">${esc(x.customHeading)}</span>` : ''}
+       </div>
+       <p class="text-xs text-gray-600 mt-1">
+         ${members.length} জন সদস্য • <b>${esc(x.responsibility||"-")}</b>
+         ${!isEvent ? ` • দায়িত্ব: <span class="font-bold text-blue-700">${money(dutyAmountValue)}</span> • সংগ্রহ: <span class="font-bold text-gray-800">${money(amount)}</span>` : ''}
+         ${dateHeaderBadge}
+       </p>
+     </button>
+     <div class="flex items-center gap-1 shrink-0">
+       <button type="button" onclick='exportSingleDuty(${id})' title="এক্সপোর্ট" aria-label="এক্সপোর্ট" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg border text-xs hover:bg-gray-200">📥</button>
+       <button type="button" onclick='editEntry(${id})' title="সম্পাদনা" aria-label="সম্পাদনা" class="bg-amber-100 text-amber-700 px-2 py-1.5 rounded-lg text-xs hover:bg-amber-200">✏️</button>
+       <button type="button" onclick='deleteEntry(${id})' title="মুছুন" aria-label="মুছুন" class="bg-red-100 text-red-600 px-2 py-1.5 rounded-lg text-xs hover:bg-red-200">🗑️</button>
+     </div>
+   </div>
+   <div id="${detailsId}" class="hidden border-t bg-white p-3 md:p-4">
+     ${isEvent ? `<div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">দায়িত্বসমূহ:</div><div class="flex flex-wrap gap-1.5"><span class="bg-violet-50 border border-violet-200 text-violet-800 px-2 py-1 rounded-md text-[11px] font-semibold">${esc(x.responsibility||"-")}</span></div></div>` : `<div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">গ্রামসমূহ:</div><div class="flex flex-wrap gap-1.5">${(villages.length?villages:["-"]).map(v=>`<span class="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-1 rounded-md text-[11px] font-semibold">${esc(v)}</span>`).join("")}</div></div>`}
+     <div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">সদস্যসমূহ:</div><div class="flex flex-wrap gap-1.5">${(members.length?members:[{name:"-"}]).map(m=>`<span class="inline-flex items-center bg-gray-50 border border-gray-200 rounded-md px-2 py-1 text-[11px] text-gray-700 font-semibold">${esc(m.name||"-")}${m.memberId?`<span class="text-[9px] text-gray-400 ml-1">(${esc(m.memberId)})</span>`:""}</span>`).join("")}</div></div>
+     <div class="border-t pt-3">
+       <div class="text-xs font-bold text-gray-700 mb-2">দায়িত্বের বিশদ তথ্য:</div>
+       <div class="grid grid-cols-1 sm:grid-cols-2 ${!isEvent ? 'lg:grid-cols-4' : 'lg:grid-cols-2'} gap-2">
+         <div class="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">তারিখ:</span> <b class="whitespace-pre-line">${esc(dateText)}</b></div>
+         ${!isEvent ? `
+           <div class="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">দায়িত্ব:</span> <b>${money(dutyAmountValue)}</b></div>
+           <div class="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">সংগ্রহ হয়েছে:</span> <b>${money(amount)}</b></div>
+           <div class="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">পূজা কোষাধ্যক্ষের কাছে জমা:</span> <b>${money(deposited)}</b></div>
+         ` : `
+           <div class="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">শিরোনাম/ধরন:</span> <b>${esc(x.customHeading||"বিশেষ কার্যসূচি")}</b></div>
+         `}
+       </div>
+       <div class="grid grid-cols-1 ${!isEvent ? 'sm:grid-cols-2' : ''} gap-2 mt-2">
+         ${!isEvent ? `<div class="bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">বাকি:</span> <b>${money(due)}</b></div>` : ''}
+         <div class="bg-gray-50 border rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">মন্তব্য:</span> <b>${esc(cleanRemarksWithLatestLeader(x)||"-")}</b></div>
+       </div>
+     </div>
+     ${!isEvent && Math.max(0,amount-deposited)>0?`<div class="mt-3 flex justify-end"><button type="button" onclick='depositToTreasurer(${id})' title="পূজা কোষাধ্যক্ষের কাছে জমা" aria-label="পূজা কোষাধ্যক্ষের কাছে জমা" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg border border-orange-200 text-xs font-bold hover:bg-orange-200">💰 কোষাধ্যক্ষে জমা</button></div>`:""}
+   </div>
+ </div>`;
+}
+
 function render(){
- let a=0,p=0,d=0,collectedTotal=0;rows.forEach(x=>{const target=Number(x.dutyAmount ?? x.amount)||0;const collected=Number(x.amount)||0;const q=Math.min(Math.max(Number(x.deposited ?? collected)||0,0),collected);a+=target;p+=q;collectedTotal+=collected;d+=Math.max(0,target-collected)});
+ let a=0,p=0,d=0,collectedTotal=0;
+ rows.forEach(x=>{
+   if(x.dutyCategory !== "event"){
+     const target=Number(x.dutyAmount ?? x.amount)||0;
+     const collected=Number(x.amount)||0;
+     const q=Math.min(Math.max(Number(x.deposited ?? collected)||0,0),collected);
+     a+=target; p+=q; collectedTotal+=collected; d+=Math.max(0,target-collected);
+   }
+ });
  totalChada.textContent=money(subscriptionTotal+collectedTotal);
  totalAssigned.textContent=money(a);totalDeposited.textContent=money(p);totalDue.textContent=money(d);
  renderVillageFilter();
@@ -266,39 +528,25 @@ function render(){
  const box=document.getElementById("tableBody");
  if(!box)return;
  if(!filtered.length){box.innerHTML=`<div class="p-5 text-center text-gray-500 border rounded-lg">${rows.length?"কোনো মিল পাওয়া যায়নি":"কোনো দায়িত্ব বণ্টনের তথ্য নেই"}</div>`;return;}
- box.innerHTML=filtered.map(x=>{
-   const dutyAmountValue=Number(x.dutyAmount ?? x.amount)||0, amount=Number(x.amount)||0, deposited=Math.min(Math.max(Number(x.deposited)||0,0),amount), due=Math.max(0,dutyAmountValue-amount), id=JSON.stringify(x.id);
-   const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((name,i)=>({name:name.trim(),mobile:String(x.mobile||"").split(",")[i]||"",memberId:String(x.memberId||"").split(",")[i]||""})):[];
-   const villages=getRowVillages(x); const leaders=getRowLeaders(x);
-   const leaderText=leaders.length?leaders.join(", "):"গ্রুপ লিডার নির্ধারিত নয়";
-   const dates=getRowDates(x);
-   const date=dates.length?dates.join("\n"):"-";
-   const detailsId=`duty-details-${String(x.id).replace(/[^a-zA-Z0-9_-]/g,"")}`;
-   return `<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
-     <div class="p-3 md:p-4 flex items-start justify-between gap-3">
-       <button type="button" onclick="toggleDutyDetails('${detailsId}',this)" class="min-w-0 flex-1 text-left">
-         <div class="flex items-center gap-2"><span class="text-orange-500 text-xs">⌄</span><h3 class="text-base font-bold text-orange-700 truncate">${esc(leaderText)}</h3></div>
-         <p class="text-xs text-gray-500 mt-1">${members.length} জন সদস্য • ${esc(x.responsibility||"-")} • দায়িত্ব: <span class="font-bold text-blue-700">${money(dutyAmountValue)}</span> • সংগ্রহ: <span class="font-bold text-gray-800">${money(amount)}</span></p>
-       </button>
-       <div class="flex items-center gap-1 shrink-0">
-         <button type="button" onclick='exportSingleDuty(${id})' title="এক্সপোর্ট" aria-label="এক্সপোর্ট" class="bg-gray-100 text-gray-700 px-2 py-1.5 rounded-lg border text-xs hover:bg-gray-200">📥</button>
-         <button type="button" onclick='editEntry(${id})' title="সম্পাদনা" aria-label="সম্পাদনা" class="bg-amber-100 text-amber-700 px-2 py-1.5 rounded-lg text-xs hover:bg-amber-200">✏️</button>
-         <button type="button" onclick='deleteEntry(${id})' title="মুছুন" aria-label="মুছুন" class="bg-red-100 text-red-600 px-2 py-1.5 rounded-lg text-xs hover:bg-red-200">🗑️</button>
-       </div>
-     </div>
-     <div id="${detailsId}" class="hidden border-t bg-white p-3 md:p-4">
-       <div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">গ্রামসমূহ:</div><div class="flex flex-wrap gap-1.5">${(villages.length?villages:["-"]).map(v=>`<span class="bg-orange-50 border border-orange-200 text-orange-800 px-2 py-1 rounded-md text-[11px] font-semibold">${esc(v)}</span>`).join("")}</div></div>
-       <div class="mb-3"><div class="text-xs font-bold text-gray-700 mb-1">সদস্যসমূহ:</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">${(members.length?members:[{name:"-"}]).map(m=>`<div class="bg-gray-50 border rounded-lg px-3 py-2 text-xs text-gray-700"><div class="font-semibold">${esc(m.name||"-")}</div>${m.memberId?`<div class="text-[10px] text-gray-400">ID: ${esc(m.memberId)}</div>`:""}</div>`).join("")}</div></div>
-       <div class="border-t pt-3"><div class="text-xs font-bold text-gray-700 mb-2">সংগ্রহের তথ্য:</div><div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2"><div class="bg-blue-50 border border-blue-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">তারিখ:</span> <b class="whitespace-pre-line">${esc(date)}</b></div><div class="bg-indigo-50 border border-indigo-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">দায়িত্ব:</span> <b>${money(dutyAmountValue)}</b></div><div class="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">সংগ্রহ হয়েছে:</span> <b>${money(amount)}</b></div><div class="bg-purple-50 border border-purple-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">পূজা কোষাধ্যক্ষের কাছে জমা:</span> <b>${money(deposited)}</b></div></div><div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-2"><div class="bg-rose-50 border border-rose-100 rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">বাকি:</span> <b>${money(due)}</b></div><div class="bg-gray-50 border rounded-lg px-3 py-2 text-xs"><span class="text-gray-500">মন্তব্য:</span> <b>${esc(String(x.remarks||"").replace(/\s*\[গ্রাম:[^\]]*\]/,"" ).replace(/\s*\[লিডার:[^\]]*\]/,"" ).trim()||"-")}</b></div></div></div>
-       ${Math.max(0,amount-deposited)>0?`<div class="mt-3 flex justify-end"><button type="button" onclick='depositToTreasurer(${id})' title="পূজা কোষাধ্যক্ষের কাছে জমা" aria-label="পূজা কোষাধ্যক্ষের কাছে জমা" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg border border-orange-200 text-xs font-bold hover:bg-orange-200">💰</button></div>`:""}
-     </div>
-   </div>`;
- }).join("");
+
+ const chadaList = filtered.filter(x => x.dutyCategory !== "event");
+ const eventList = filtered.filter(x => x.dutyCategory === "event");
+
+ let html = "";
+ if(chadaList.length){
+   html += `<div class="mb-6"><h2 class="text-sm font-extrabold text-orange-800 bg-orange-100/90 border border-orange-200 px-3 py-2 rounded-xl mb-3 flex items-center justify-between"><span>📌 চাঁদা সংগ্রহ দায়িত্ব তালিকা</span><span class="text-xs bg-orange-200 px-2 py-0.5 rounded-full">${chadaList.length} টি</span></h2><div>${chadaList.map(renderRowCard).join("")}</div></div>`;
+ }
+ if(eventList.length){
+   html += `<div class="mb-6"><h2 class="text-sm font-extrabold text-violet-800 bg-violet-100/90 border border-violet-200 px-3 py-2 rounded-xl mb-3 flex items-center justify-between"><span>📋 অন্যান্য / বিশেষ কার্যসূচি দায়িত্ব তালিকা</span><span class="text-xs bg-violet-200 px-2 py-0.5 rounded-full">${eventList.length} টি</span></h2><div>${eventList.map(renderRowCard).join("")}</div></div>`;
+ }
+ box.innerHTML = html;
 }
 window.toggleDutyDetails=function(id,btn){const el=document.getElementById(id);if(!el)return;const open=!el.classList.contains("hidden");el.classList.toggle("hidden",open);const icon=btn?.querySelector("span");if(icon)icon.textContent=open?"⌄":"⌃";};
 
 async function saveEntry(e){
  e.preventDefault();
+ const cat=document.getElementById("dutyCategory")?.value||"chada";
+ const customHead=(document.getElementById("customHeading")?.value||"").trim();
  const ms=selectedMemberIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean),
        vs=[...document.querySelectorAll(".village-check:checked")].map(x=>x.value),
        ls=dutyFormMode==="other"?selectedOtherLeaderIndexes.map(i=>otherPeople[i]).filter(Boolean):selectedLeaderIds.map(id=>allMembers.find(m=>memberKey(m)===String(id))).filter(Boolean);
@@ -316,16 +564,16 @@ async function saveEntry(e){
    }
    if(!otherPeople.length)return alert("দয়া করে অন্তত একজনের নাম ও মোবাইল নম্বর যোগ করুন।");
  }
- if(!vs.length)return alert("দয়া করে অন্তত একটি গ্রাম নির্বাচন করুন।");
+ 
  const dateEl=document.getElementById("date"),extraDateEls=[document.getElementById("extraDate1"),document.getElementById("extraDate2"),document.getElementById("extraDate3")],responsibilityEl=document.getElementById("responsibility"),dutyAmountEl=document.getElementById("dutyAmount"),amountEl=document.getElementById("amount"),depositedEl=document.getElementById("deposited"),remarksEl=document.getElementById("remarks"),editIdEl=document.getElementById("editId");
  let remarks=(remarksEl?.value||"").trim();
- // Remove the old saved village tag before saving the current checkbox selection.
- remarks=remarks.replace(/\s*\[গ্রাম:\s*[^\]]*\]/g, "").trim();
- remarks+=` [গ্রাম: ${vs.join(", ")}]`;
- if(ls.length)remarks+=` [লিডার: ${ls.map(x=>x.name||"").join(", ")}]`;
- const dutyAmountValue=Math.max(0,Number(dutyAmountEl?.value)||0);
- const rawAmount=Math.max(0,Number(amountEl?.value)||0);
- if(rawAmount>dutyAmountValue){
+ remarks=remarks.replace(/\s*\[গ্রাম:\s*[^\]]*\]/g, "").replace(/\s*\[লিডার:\s*[^\]]*\]/g, "").trim();
+ if(vs.length) remarks+=` [গ্রাম: ${vs.join(", ")}]`;
+ if(ls.length) remarks+=` [লিডার: ${ls.map(x=>x.name||"").join(", ")}]`;
+ 
+ const dutyAmountValue=cat==="event"?0:Math.max(0,Number(dutyAmountEl?.value)||0);
+ const rawAmount=cat==="event"?0:Math.max(0,Number(amountEl?.value)||0);
+ if(cat!=="event" && rawAmount>dutyAmountValue){
    amountEl.value=String(dutyAmountValue);
    return alert(`সংগৃহীত টাকা দায়িত্বের টাকার বেশি হতে পারবে না। সর্বোচ্চ ${money(dutyAmountValue)} লেখা/সংরক্ষণ করা যাবে।`);
  }
@@ -338,26 +586,26 @@ async function saveEntry(e){
  const otherNameValue=otherPeople.map(p=>p.name).filter(Boolean).join(", "),otherMobileValue=otherPeople.map(p=>p.mobile).filter(Boolean).join(", ");
  const saveName=dutyFormMode==="other"?otherNameValue:ms.map(x=>x.name||"").filter(Boolean).join(", ");
  const saveMobile=dutyFormMode==="other"?otherMobileValue:ms.map(getPhone).join(", ");
- const data={date:dateEl?.value||today(),extraDates,name:saveName,mobile:saveMobile,memberId:dutyFormMode==="other"?"":ms.map(x=>x.memberId||x.id||"").join(", "),memberIds:dutyFormMode==="other"?[]:ms.map(x=>String(x.id)),selectedMembers:dutyFormMode==="other"?[]:ms.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),groupLeaders:ls.map((x,i)=>({id:dutyFormMode==="other"?`other-${selectedOtherLeaderIndexes[i]}`:String(x.id),name:x.name||"",mobile:dutyFormMode==="other"?(x.mobile||""):getPhone(x),village:dutyFormMode==="other"?"":getVillage(x)})),isOther:dutyFormMode==="other",villages:vs,responsibility:(responsibilityEl?.value||"").trim(),dutyAmount:dutyAmountValue,amount:amountValue,deposited:amountValue,remarks,updatedAt:Date.now(),depositedToTreasurerRole:"পূজা কোষাধ্যক্ষ",depositedToTreasurerName:treasurer?.name||"পূজা কোষাধ্যক্ষ"};
+ const data={dutyCategory:cat,customHeading:cat==="event"?customHead:"",date:dateEl?.value||"",extraDates,name:saveName,mobile:saveMobile,memberId:dutyFormMode==="other"?"":ms.map(x=>x.memberId||x.id||"").join(", "),memberIds:dutyFormMode==="other"?[]:ms.map(x=>String(x.id)),selectedMembers:dutyFormMode==="other"?[]:ms.map(x=>({id:String(x.id),name:x.name||"",mobile:getPhone(x),village:getVillage(x)})),groupLeaders:ls.map((x,i)=>({id:dutyFormMode==="other"?`other-${selectedOtherLeaderIndexes[i]}`:String(x.id),name:x.name||"",mobile:dutyFormMode==="other"?(x.mobile||""):getPhone(x),village:dutyFormMode==="other"?"":getVillage(x)})),isOther:dutyFormMode==="other",villages:vs,responsibility:(responsibilityEl?.value||"").trim(),dutyAmount:dutyAmountValue,amount:amountValue,deposited:cat==="event"?0:amountValue,remarks,updatedAt:Date.now(),depositedToTreasurerRole:"পূজা কোষাধ্যক্ষ",depositedToTreasurerName:treasurer?.name||"পূজা কোষাধ্যক্ষ"};
  try{
    let savedId=id;
    if(id){
      await updateDoc(doc(db,"daitobonton",id),{...data,createdBy:old?.createdBy||currentUser?.uid||""});
-     if(treasurer && old?.treasurerTransactionId){
+     if(cat!=="event" && treasurer && old?.treasurerTransactionId){
        if(Number(data.deposited)>0){
          await updateDoc(doc(db,"treasurer",String(old.treasurerTransactionId)),{kind:"transactions",data:{id:Number(old.treasurerTransactionDataId)||Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
        }else{
          try{await deleteDoc(doc(db,"treasurer",String(old.treasurerTransactionId)))}catch(_){ }
          await updateDoc(doc(db,"daitobonton",id),{treasurerTransactionId:"",treasurerTransactionDataId:0});
        }
-     }else if(treasurer && !old?.treasurerTransactionId && amountValue>0){
+     }else if(cat!=="event" && treasurer && !old?.treasurerTransactionId && amountValue>0){
        const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(id),sourceType:"daitobonton_collection"}});
        await updateDoc(doc(db,"daitobonton",id),{treasurerTransactionId:tr.id,treasurerTransactionDataId:Date.now()});
      }
    }else{
      const ref=await addDoc(collection(db,"daitobonton"),{...data,createdAt:Date.now(),createdBy:currentUser?.uid||""});
      savedId=ref.id;
-     if(treasurer && Number(data.deposited)>0){
+     if(cat!=="event" && treasurer && Number(data.deposited)>0){
        const tr=await addDoc(collection(db,"treasurer"),{kind:"transactions",data:{id:Date.now(),date:data.date||today(),type:"income",amount:Number(data.deposited)||0,desc:`চাঁদা — ${data.name||""} — ${data.responsibility||""}`,receiver:treasurer.name||"পূজা কোষাধ্যক্ষ",receiverRole:"puja_treasury",receiverMemberId:String(treasurer.id||""),source:"daitobonton",sourceId:String(savedId),sourceType:"daitobonton_collection"}});
        await updateDoc(doc(db,"daitobonton",savedId),{treasurerTransactionId:tr.id,treasurerTransactionDataId:Date.now(),depositedToTreasurerAt:Date.now()});
      }
@@ -366,7 +614,7 @@ async function saveEntry(e){
  }catch(err){console.error("Daitobonton save error:",err);alert("সংরক্ষণ করা যায়নি: "+(err?.message||err))}
 }
 window.saveEntry=saveEntry;
-window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent=x.isOther?"অন্যান্য দায়িত্ব সংশোধন":"দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;date.value=x.date||today();const savedExtraDates=Array.isArray(x.extraDates)?x.extraDates:[];extraDate1.value=savedExtraDates[0]||"";extraDate2.value=savedExtraDates[1]||"";extraDate3.value=savedExtraDates[2]||"";responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=x.remarks||"";currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));otherPeople=x.isOther?String(x.name||"").split(/\s*,\s*/).map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(/\s*,\s*/)[i]?.trim()||""})).filter(p=>p.name||p.mobile):[];selectedOtherLeaderIndexes=x.isOther?(x.groupLeaders||[]).map(g=>{const i=otherPeople.findIndex(p=>String(p.name)===String(g.name)&&String(p.mobile)===String(g.mobile));return i;}).filter(i=>i>=0):[];document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();renderMembersUI();renderVillages(getRowVillages(x));setDutyFormMode(x.isOther?"other":"member");entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
+window.editEntry=id=>{const x=rows.find(r=>r.id===id);if(!x)return;modalTitle.textContent=x.isOther?"অন্যান্য দায়িত্ব সংশোধন":"দায়িত্ব বণ্টন সংশোধন";editId.value=x.id;document.getElementById("dutyCategory").value=x.dutyCategory||"chada";document.getElementById("customHeading").value=x.customHeading||"";toggleDutyCategoryFields();date.value=x.date||"";const savedExtraDates=Array.isArray(x.extraDates)?x.extraDates:[];extraDate1.value=savedExtraDates[0]||"";extraDate2.value=savedExtraDates[1]||"";extraDate3.value=savedExtraDates[2]||"";responsibility.value=x.responsibility||"";dutyAmount.value=x.dutyAmount ?? x.amount ?? 0;amount.value=x.amount||0;syncCollectedAmountLimit();deposited.value=x.deposited||0;remarks.value=cleanRemarksWithLatestLeader(x)||"";currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));selectedMemberIds=(x.selectedMembers||[]).map(m=>String(m.id)).filter(Boolean);if(!selectedMemberIds.length)selectedMemberIds=String(x.memberId||"").split(",").map(x=>x.trim()).filter(Boolean);selectedLeaderIds=(x.groupLeaders||[]).map(m=>String(m.id)).filter(id=>id&&selectedMemberIds.includes(id));otherPeople=x.isOther?String(x.name||"").split(/\s*,\s*/).map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(/\s*,\s*/)[i]?.trim()||""})).filter(p=>p.name||p.mobile):[];selectedOtherLeaderIndexes=x.isOther?(x.groupLeaders||[]).map(g=>{const i=otherPeople.findIndex(p=>String(p.name)===String(g.name)&&String(p.mobile)===String(g.mobile));return i;}).filter(i=>i>=0):[];document.getElementById("otherName").value="";document.getElementById("otherMobile").value="";renderOtherPeople();renderMembersUI();renderVillages(getRowVillages(x));setDutyFormMode(x.isOther?"other":"member");entryModal.classList.remove("hidden");entryModal.classList.add("flex")};
 window.deleteEntry=async id=>{if(confirm("এই দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন?"))try{const x=rows.find(r=>String(r.id)===String(id));if(x?.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",id));await loadDaitobontonFromCloud()}catch(e){alert("Delete করা যায়নি: "+e.message)}};
 window.deleteAll=async()=>{if(rows.length&&confirm("সব দায়িত্ব বণ্টনের তথ্য মুছে ফেলবেন? এটি আর ফিরিয়ে আনা যাবে না!"))try{await Promise.all(rows.map(async x=>{if(x.treasurerTransactionId){try{await deleteDoc(doc(db,"treasurer",String(x.treasurerTransactionId)))}catch(_){}}await deleteDoc(doc(db,"daitobonton",x.id));}));await loadDaitobontonFromCloud()}catch(e){alert("Delete All করা যায়নি: "+e.message)}};
 window.depositToTreasurer=async id=>{
@@ -384,12 +632,13 @@ window.depositToTreasurer=async id=>{
 };
 window.exportSingleDuty=async function(id){const x=rows.find(r=>String(r.id)===String(id));if(!x)return;await exportDutiesAsExcel([x],true);};
 window.exportExcel=async function(){const list=getFilteredRows();if(!list.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(list,false);};
+
 function buildPrintHTML(mode="duties"){
   const exportRows=getFilteredRows();
   const escPrint=(v)=>String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#39;"}[m]));
   const formatPrintDate=(d)=>{
     const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
-    return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");
+    return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"");
   };
 
   if(mode==="groups"){
@@ -402,23 +651,22 @@ function buildPrintHTML(mode="duties"){
           })):[]);
       const leaders=getRowLeaders(x);
       const villages=getRowVillages(x);
-      const dates=getRowDates(x).map(formatPrintDate);
-      while(dates.length<4)dates.push("-");
-      const dateText=dates.slice(0,4).map((d,n)=>`<div><b>তারিখ ${n+1}:</b> ${escPrint(d)}</div>`).join("");
+      const dates=getRowDates(x).map(formatPrintDate).filter(Boolean);
+      const dateText=dates.length?dates.map(d=>escPrint(d)).join("<br>"):"-";
       const memberRows=members.map((m,j)=>`<tr><td>${j+1}</td><td>${escPrint(m.name||"-")}</td><td>${escPrint(m.mobile||"N/A")}</td></tr>`).join("");
-      return `<section class="print-sheet">
+      const sheetTitle = x.dutyCategory === "event" && x.customHeading ? x.customHeading : `গ্রুপ সদস্য তালিকা ${new Date().getFullYear()}`;
+      
+      return `<section class="print-sheet mb-6">
         <div class="committee">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div>
-        <div class="title">গ্রুপ সদস্য তালিকা ${new Date().getFullYear()}</div>
-        <div class="group-head">
-          <div class="group-no">গ্রুপ ${i+1}</div>
-          <div class="dates">${dateText}</div>
+        <div class="title">${escPrint(sheetTitle)}</div>
+        <div class="leader">গ্রুপ লিডার: ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
+        <div class="meta">
+          <div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
+          <div><b>তারিখ:</b><br>${dateText}</div>
         </div>
-        <div class="leader-village">
-          <div><b>গ্রুপ লিডার:</b> ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
-          <div><b>গ্রাম:</b> ${escPrint(villages.length?villages.join(", "):"-")}</div>
-        </div>
+        ${x.dutyCategory === "event" ? `<div class="village">দায়িত্ব: ${escPrint(x.responsibility||"-")}</div>` : `<div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>`}
         <table>
-          <thead><tr><th>ক্রমিক</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
+          <thead><tr><th>SR নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
           <tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody>
         </table>
         <div class="count">মোট সদস্য: ${members.length} জন</div>
@@ -429,6 +677,7 @@ function buildPrintHTML(mode="duties"){
   }
 
   const printRows=exportRows.map((x,index)=>{
+    const isEvent = x.dutyCategory === "event";
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length
       ?x.selectedMembers
       :(x.name?String(x.name).split(",").map((n,i)=>({
@@ -437,34 +686,36 @@ function buildPrintHTML(mode="duties"){
         })):[]);
     const leaders=getRowLeaders(x);
     const villages=getRowVillages(x);
-    const dates=getRowDates(x).map(formatPrintDate);
+    const dates=getRowDates(x).map(formatPrintDate).filter(Boolean);
     const dutyAmount=Number(x.dutyAmount ?? x.amount)||0;
     const collected=Number(x.amount)||0;
     const deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected);
     const due=Math.max(0,dutyAmount-collected);
     const memberRows=members.map((m,i)=>`<tr><td>${i+1}</td><td>${escPrint(m.name||"-")}</td><td>${escPrint(m.mobile||"N/A")}</td></tr>`).join("");
     const dateText=dates.length?dates.map(d=>escPrint(d)).join("<br>"):"-";
+    const sheetTitle = isEvent && x.customHeading ? x.customHeading : `চাঁদা সংগ্রহ দায়িত্ব বণ্টন ${new Date().getFullYear()}`;
 
-    return `<section class="print-sheet">
+    return `<section class="print-sheet mb-6">
       <div class="committee">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div>
-      <div class="title">চাঁদা সংগ্রহ দায়িত্ব বণ্টন ${new Date().getFullYear()}</div>
+      <div class="title">${escPrint(sheetTitle)}</div>
       <div class="leader">গ্রুপ লিডার: ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
       <div class="meta">
         <div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
         <div><b>তারিখ:</b><br>${dateText}</div>
       </div>
-      <div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>
+      ${x.dutyCategory === "event" ? `<div class="village">দায়িত্ব: ${escPrint(x.responsibility||"-")}</div>` : `<div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>`}
       <table>
         <thead><tr><th>SR নং</th><th>সদস্যের নাম</th><th>মোবাইল নম্বর</th></tr></thead>
         <tbody>${memberRows||'<tr><td colspan="3">কোনো সদস্য নেই</td></tr>'}</tbody>
       </table>
+      ${!isEvent ? `
       <table class="summary">
         <tbody>
           <tr><td>সংগ্রহ হয়েছে</td><td>₹${collected.toFixed(2)}</td></tr>
           <tr><td>পূজা কোষাধ্যক্ষের কাছে জমা</td><td>₹${deposited.toFixed(2)}</td></tr>
           <tr><td>বাকি</td><td>₹${due.toFixed(2)}</td></tr>
         </tbody>
-      </table>
+      </table>` : `<div class="count">মোট সদস্য: ${members.length} জন</div>`}
     </section>`;
   }).join("");
 
@@ -527,48 +778,6 @@ function getPrintCSS(){
       border-bottom:1px solid #000;
       font-size:12px;
     }
-    .group-head{
-      display:grid;
-      grid-template-columns:30% 70%;
-      align-items:center;
-      background:#ff6600;
-      color:#fff;
-      border:1px solid #000;
-      border-bottom:0;
-      text-align:center;
-    }
-    .group-no{
-      padding:8px;
-      font-size:14px;
-      font-weight:700;
-      border-right:1px solid #000;
-    }
-    .dates{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:2px 8px;
-      padding:5px 8px;
-      font-size:10.5px;
-      line-height:1.35;
-      text-align:center;
-    }
-    .dates div{overflow-wrap:anywhere;word-break:break-word}
-    .leader-village{
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      background:#ddebf7;
-      border:1px solid #000;
-      border-bottom:0;
-      font-size:11.5px;
-      font-weight:600;
-    }
-    .leader-village>div{
-      padding:6px;
-      text-align:center;
-      overflow-wrap:anywhere;
-      word-break:break-word;
-    }
-    .leader-village>div+div{border-left:1px solid #000}
     table{
       width:100%;
       border-collapse:collapse;
@@ -672,6 +881,11 @@ function printWithoutPopup(mode="duties"){
   },100);
 }
 
+window.buildPrintHTML=buildPrintHTML;
+window.getPrintCSS=getPrintCSS;
+window.printWithoutPopup=printWithoutPopup;
+window.downloadPDF=downloadPDF;
+
 window.printGroupList=function(){
   printWithoutPopup("groups");
 };
@@ -743,80 +957,105 @@ async function ensureExportLibraries(){
   if(!window.ExcelJS)await load("https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js");
   if(!window.saveAs)await load("https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js");
 }
+
 async function exportDutiesAsExcel(list,includeCollectionSummary=true){
   await ensureExportLibraries();
   const wb=new ExcelJS.Workbook();
   const ws=wb.addWorksheet("চাঁদা সংগ্রহ দায়িত্ব");
-  // Excel export formatting — all data centered, wrapped/fitted and bordered on all sides.
   ws.columns=[{width:18},{width:38},{width:30}];
   const border={top:{style:"thin",color:{argb:"FF000000"}},bottom:{style:"thin",color:{argb:"FF000000"}},left:{style:"thin",color:{argb:"FF000000"}},right:{style:"thin",color:{argb:"FF000000"}}};
-  const orange="FFFF6600";
-  const red="FFFF0000", lightYellow="FFFFF2CC", lightBlue="FFDDEBF7", lightGray="FFE7E6E6", lightGreen="FFE2F0D9", lightPeach="FFFCE4D6", white="FFFFFFFF";
+  const orange="FFFF6600", red="FFFF0000", lightYellow="FFFFF2CC", lightBlue="FFDDEBF7", lightGray="FFE7E6E6", lightGreen="FFE2F0D9", lightPeach="FFFCE4D6", white="FFFFFFFF";
   const fillSolid=argb=>({type:"pattern",pattern:"solid",fgColor:{argb}});
-  const formatDate=d=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"-");};
-  const styleCell=(c,align="center",bold=false,size=11)=>{
-    c.font={name:"Noto Sans Bengali",size,bold,color:{argb:"FF000000"}};
-    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
-    c.border=border;
+  const formatDate=d=>{const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);return m?`${m[3]}-${m[2]}-${m[1]}`:(d||"");};
+  
+  const applyStyle=(cell, fill=null, bold=false, size=11, fontColor="FF000000")=>{
+    cell.font={name:"Noto Sans Bengali",size,bold,color:{argb:fontColor}};
+    cell.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
+    cell.border=border;
+    if(fill) cell.fill=fillSolid(fill);
   };
-  const titleCell=(c,size)=>{
-    c.font={name:"Noto Sans Bengali",size,bold:true,color:{argb:"FF000000"}};
-    c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
-    c.border=border;
-  };
+
   const borderMergedRange=(row,fromCol,toCol)=>{
     for(let col=fromCol;col<=toCol;col++){
-      const c=ws.getCell(row,col);
-      c.border=border;
-      c.alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
+      applyStyle(ws.getCell(row,col));
     }
   };
+
   let r=1;
   list.forEach((x,index)=>{
+    const isEvent = x.dutyCategory === "event";
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[];
     const leaders=getRowLeaders(x); const villages=getRowVillages(x);
     const collected=Number(x.amount)||0;
     const deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected);
     const due=Math.max(0,(Number(x.dutyAmount ?? x.amount)||0)-collected);
 
-    // Header — same order/structure as the printed responsibility list.
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি"; titleCell(ws.getCell(r,1),16); ws.getCell(r,1).fill=fillSolid(red); ws.getCell(r,1).font={name:"Noto Sans Bengali",size:16,bold:true,color:{argb:white}}; borderMergedRange(r,1,3); ws.getRow(r).height=35; r++;
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`; titleCell(ws.getCell(r,1),14); ws.getCell(r,1).fill=fillSolid(lightYellow); borderMergedRange(r,1,3); ws.getRow(r).height=30; r++;
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`; titleCell(ws.getCell(r,1),14); ws.getCell(r,1).fill=fillSolid(lightBlue); borderMergedRange(r,1,3); ws.getRow(r).height=28; r++;
+    ws.mergeCells(r,1,r,3);
+    ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
+    borderMergedRange(r,1,3);
+    applyStyle(ws.getCell(r,1), red, true, 16, white);
+    ws.getRow(r).height=35; r++;
 
-    ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}`; styleCell(ws.getCell(r,1),"center",true,12); ws.getCell(r,1).fill=fillSolid(lightGray);
-    ws.getCell(r,2).value=""; styleCell(ws.getCell(r,2),"center",false,12); ws.getCell(r,2).fill=fillSolid(lightGray);
-    const exportDates=getRowDates(x).map(formatDate);
+    const headerText = isEvent && x.customHeading ? x.customHeading : `চাঁদা সংগ্রহ দায়িত্ব বন্টন ${new Date().getFullYear()}`;
+    ws.mergeCells(r,1,r,3);
+    ws.getCell(r,1).value=headerText;
+    borderMergedRange(r,1,3);
+    applyStyle(ws.getCell(r,1), lightYellow, true, 14);
+    ws.getRow(r).height=30; r++;
 
+    ws.mergeCells(r,1,r,3);
+    ws.getCell(r,1).value=`গ্রুপ লিডার: ${leaders.length?leaders.join(", "):"-"}`;
+    borderMergedRange(r,1,3);
+    applyStyle(ws.getCell(r,1), lightBlue, true, 14);
+    ws.getRow(r).height=28; r++;
+
+    ws.mergeCells(r,1,r,2);
+    ws.getCell(r,1).value=`দায়িত্ব: ${x.responsibility||"-"}`;
+    borderMergedRange(r,1,2);
+    applyStyle(ws.getCell(r,1), lightGray, true, 12);
+
+    const exportDates=getRowDates(x).map(formatDate).filter(Boolean);
     const exportDateText=exportDates.length?exportDates.join("\n"):"-";
+    ws.getCell(r,3).value=`তারিখ :- ${exportDateText}`;
+    applyStyle(ws.getCell(r,3), lightGray, true, 12);
+    ws.getRow(r).height=Math.max(28,24+Math.max(0,exportDates.length-1)*18); r++;
 
-    ws.getCell(r,3).value=`তারিখ :- ${exportDateText}`; styleCell(ws.getCell(r,3),"center",true,12); ws.getCell(r,3).fill=fillSolid(lightGray);
-
-    ws.getCell(r,3).alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
-
-    ws.getRow(r).height=Math.max(25,24+Math.max(0,exportDates.length-1)*18); r++;
-
-    ws.mergeCells(r,1,r,3); ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`; titleCell(ws.getCell(r,1),12); ws.getCell(r,1).fill=fillSolid(lightGreen); borderMergedRange(r,1,3); ws.getRow(r).height=25; r++;
-
-    ["SR নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{const c=ws.getCell(r,i+1);c.value=v;c.font={name:"Noto Sans Bengali",size:11,bold:true,color:{argb:"FFFFFFFF"}};c.fill={type:"pattern",pattern:"solid",fgColor:{argb:orange}};c.alignment={horizontal:"center",vertical:"center",wrapText:true};c.border=border;});
+    ws.mergeCells(r,1,r,3);
+    ws.getCell(r,1).value=`গ্রাম: ${villages.length?villages.join(", "):"-"}`;
+    borderMergedRange(r,1,3);
+    applyStyle(ws.getCell(r,1), lightGreen, true, 12);
     ws.getRow(r).height=25; r++;
 
-    members.forEach((m,i)=>{[i+1,m.name||"-",m.mobile||"N/A"].forEach((v,j)=>{const c=ws.getCell(r,j+1);c.value=v;styleCell(c,"center",false,11);});ws.getRow(r).height=26;r++;});
+    ["SR নং","সদস্যের নাম","মোবাইল নম্বর"].forEach((v,i)=>{
+      const c=ws.getCell(r,i+1);
+      c.value=v;
+      applyStyle(c, orange, true, 11, white);
+    });
+    ws.getRow(r).height=25; r++;
 
-    // Per-duty export contains the full printed-style list including collection details.
-    // The top/main Excel export contains only the duty/member list and adds a total member count at the end.
-    if(includeCollectionSummary){
+    members.forEach((m,i)=>{
+      [i+1,m.name||"-",m.mobile||"N/A"].forEach((v,j)=>{
+        const c=ws.getCell(r,j+1);
+        c.value=v;
+        applyStyle(c, null, false, 11);
+      });
+      ws.getRow(r).height=26; r++;
+    });
+
+    if(!isEvent && includeCollectionSummary){
       const moneyRows=[["সংগ্রহ হয়েছে",collected],["পূজা কোষাধ্যক্ষের কাছে জমা",deposited],["বাকি",due]];
-      moneyRows.forEach(([label,val])=>{ws.getCell(r,1).value="";styleCell(ws.getCell(r,1));ws.getCell(r,1).fill=fillSolid(lightPeach);ws.getCell(r,2).value=label;styleCell(ws.getCell(r,2),"center",true,12);ws.getCell(r,2).fill=fillSolid(lightPeach);ws.getCell(r,3).value=`₹${Number(val).toFixed(2)}`;styleCell(ws.getCell(r,3),"center",true,12);ws.getCell(r,3).fill=fillSolid(lightPeach);r++;});
-      ws.getCell(r,1).value="";styleCell(ws.getCell(r,1));ws.getCell(r,2).value="তারিখ";styleCell(ws.getCell(r,2),"center",true,12); ws.getCell(r,2).fill=fillSolid(lightYellow);
+      moneyRows.forEach(([label,val])=>{
+        ws.mergeCells(r,1,r,2);
+        ws.getCell(r,1).value=label;
+        borderMergedRange(r,1,2);
+        applyStyle(ws.getCell(r,1), lightPeach, true, 12);
 
-      ws.getCell(r,3).value=exportDateText;styleCell(ws.getCell(r,3),"center",false,12); ws.getCell(r,3).fill=fillSolid(lightYellow);
-
-      ws.getCell(r,3).alignment={horizontal:"center",vertical:"center",wrapText:true,shrinkToFit:false};
-
-      ws.getRow(r).height=Math.max(25,24+Math.max(0,exportDates.length-1)*18);r++;
+        ws.getCell(r,3).value=`₹${Number(val).toFixed(2)}`;
+        applyStyle(ws.getCell(r,3), lightPeach, true, 12);
+        ws.getRow(r).height=26; r++;
+      });
     }
-    if(index<list.length-1)r+=2;
+    if(index<list.length-1) r+=2;
   });
 
   if(!includeCollectionSummary){
@@ -828,23 +1067,22 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     },0);
     ws.mergeCells(r,1,r,2);
     ws.getCell(r,1).value="সর্বমোট সদস্য";
-    styleCell(ws.getCell(r,1),"center",true,12); ws.getCell(r,1).fill=fillSolid(lightPeach); borderMergedRange(r,1,2);
+    borderMergedRange(r,1,2);
+    applyStyle(ws.getCell(r,1), lightPeach, true, 12);
+    
     ws.getCell(r,3).value=totalMembers+" জন";
-    styleCell(ws.getCell(r,3),"center",true,12); ws.getCell(r,3).fill=fillSolid(lightPeach);
+    applyStyle(ws.getCell(r,3), lightPeach, true, 12);
     ws.getRow(r).height=28;
   }
 
-  // FINAL EXCEL FORMAT — applies identically to every export from this page.
-  // Every used cell: centered, wrapped inside the cell, readable row height and
-  // all-side border. Long text never spills outside its cell.
-  ws.eachRow((row)=>{
+  ws.eachRow({includeEmpty:false},(row)=>{
     let maxLines=1;
     row.eachCell({includeEmpty:true},(c)=>{
       c.alignment={
         horizontal:"center",
         vertical:"center",
         wrapText:true,
-        shrinkToFit:true
+        shrinkToFit:false
       };
       c.border=border;
 
@@ -859,7 +1097,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
       const estimatedLines=explicitLines.reduce((sum,line)=>sum+Math.max(1,Math.ceil(line.length/charsPerLine)),0);
       maxLines=Math.max(maxLines,Math.min(8,estimatedLines));
     });
-    row.height=Math.max(Number(row.height)||0,Math.min(120,18*maxLines+8));
+    row.height=Math.max(Number(row.height)||25, Math.min(120, 18*maxLines+8));
   });
 
   ws.pageSetup={paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0};
@@ -869,7 +1107,6 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
   const suffix=includeCollectionSummary?"পূর্ণ-তালিকা":"দায়িত্ব-তালিকা";
   saveAs(new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"}),`চাঁদা-সংগ্রহ-${suffix}_${new Date().getFullYear()}.xlsx`);
 }
-
 </script>
 <script type="module">
 (() => {
@@ -914,7 +1151,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
 <script type="module">
 (() => {
   const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-Sx0Nqs",
     authDomain: "durgapuja-2026.firebaseapp.com",
     projectId: "durgapuja-2026",
     storageBucket: "durgapuja-2026.firebasestorage.app",
@@ -1026,9 +1263,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
     const auth = getAuth(app);
     const db = getFirestore(app);
-      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
-      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
-
+    try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
 
     let readyResolve;
     window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
@@ -1055,7 +1290,6 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
       };
       await setDoc(doc(ctx.db, "settings", "committeeInfo"), { ...data, updatedAt: Date.now() }, { merge: true });
 
-      // Keep the already-existing per-page heading system in sync with the common committee name.
       const allNames = {
         dashboard: data.name, members: data.name, chada: data.name,
         expense: data.name, booking: data.name, sales: data.name,
@@ -1066,7 +1300,6 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
       try { localStorage.setItem("pujaCommitteeNames", JSON.stringify(allNames)); } catch (_) {}
     };
 
-    // Override the older heading helper so its save also uses the authenticated Firebase app.
     window.__saveCommitteeNamesToCloud = async function(names) {
       const ctx = await window.__pujaGlobalReady;
       await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...(names || {}), updatedAt: Date.now() }, { merge: true });
@@ -1167,26 +1400,6 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
     onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
   }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
-})();
-</script>
-<script id="dpms-page-back-guard">
-(function(){
-  if (window.__dpmsBackGuardInstalled) return;
-  window.__dpmsBackGuardInstalled = true;
-
-  function install(){
-    try{
-      history.replaceState({dpmsPageBase:true}, "", location.href);
-      history.pushState({dpmsPageGuard:true}, "", location.href);
-      window.addEventListener("popstate", function(){
-        try{ history.replaceState({dpmsPageBase:true}, "", location.href); }catch(_){}
-        window.location.replace("dashboard.html");
-      }, {once:false});
-    }catch(e){ console.warn("DPMS back guard failed:", e); }
-  }
-
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", install, {once:true});
-  else install();
 })();
 </script>
 
