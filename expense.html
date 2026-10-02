@@ -56,8 +56,10 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
     </div>
 
     <div class="mb-4">
-      <input id="expenseSearch" oninput="filterExpenses()" type="text" placeholder="প্রাপক, বিবরণ, তারিখ, পরিমাণ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+      <input id="expenseSearch" oninput="filterExpenses()" type="text" placeholder="খরচ প্রদানকারী, প্রাপক, বিবরণ, তারিখ, পরিমাণ দিয়ে খুঁজুন..." class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
     </div>
+
+    <div id="providerSummary" class="mb-4 hidden"></div>
 
     <div class="mb-4">
       <p class="text-xs font-bold text-gray-700 mb-2">খরচ ও অগ্রিম হিসাব তালিকা:</p>
@@ -72,11 +74,13 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
               <th class="p-2.5 border-r text-center align-middle">অগ্রিম (₹)</th>
               <th class="p-2.5 border-r text-center align-middle">আসল খরচ (₹)</th>
               <th class="p-2.5 border-r text-center align-middle">ফেরত / Due অবস্থা</th>
-              <th class="p-2.5 border-r text-center align-middle">কোষাধ্যক্ষ</th>
+              <th class="p-2.5 border-r text-center align-middle">খরচ প্রদানকারী</th>
+              <th class="p-2.5 border-r text-center align-middle">কোষাধ্যক্ষকে শোধ (₹)</th>
+              <th class="p-2.5 border-r text-center align-middle">বাকি (₹)</th>
               <th id="actionHead" class="p-2.5 text-center align-middle hidden">অ্যাকশন</th>
             </tr>
           </thead>
-          <tbody id="expenseTableBody"><tr><td colspan="9" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
+          <tbody id="expenseTableBody"><tr><td colspan="11" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
         </table>
       </div>
     </div>
@@ -167,7 +171,17 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
     </div>
 
     <label class="block text-xs font-semibold text-gray-600 mb-1">খরচ প্রদানকারী</label>
-    <input type="text" id="expenseTreasurer" placeholder="খরচ প্রদানকারীর নাম" class="w-full p-2.5 border rounded-lg mb-4 text-sm bg-white">
+    <input type="text" id="expenseTreasurer" placeholder="খরচ প্রদানকারীর নাম" class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white">
+
+    <div class="p-3 rounded-lg bg-emerald-50 border border-emerald-200 mb-4">
+      <label class="flex items-center gap-2 text-xs md:text-sm font-semibold text-emerald-800 cursor-pointer mb-2">
+        <input type="checkbox" id="expenseTreasurerPaidMark" onchange="toggleTreasurerPaidInput()" class="w-4 h-4">
+        <span>কোষাধ্যক্ষ কর্তৃক এই খরচের টাকা শোধ করা হয়েছে</span>
+      </label>
+      <label class="block text-xs font-semibold text-gray-600 mb-1">কোষাধ্যক্ষ শোধ করেছেন (₹)</label>
+      <input type="number" id="expenseTreasurerPaid" min="0" step="0.01" value="0" disabled placeholder="যেমন: 45000" class="w-full p-2.5 border rounded-lg text-sm font-bold text-emerald-700 bg-white">
+      <p class="text-[11px] text-gray-600 mt-1">খরচ প্রদানকারীর মোট খরচের মধ্যে যত টাকা কোষাধ্যক্ষ শোধ করেছেন, এখানে লিখুন। বাকি টাকা স্বয়ংক্রিয়ভাবে হিসাব হবে।</p>
+    </div>
 
     <div class="flex justify-end gap-2">
       <button onclick="closeExpenseModal()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
@@ -244,11 +258,46 @@ function setupUIBasedOnRoleAndPermissions() {
   });
 }
 
+function getFilteredExpenses(){
+ const q=(document.getElementById("expenseSearch")?.value||"").toLowerCase().trim();
+ if(!q) return [...allExpenses];
+ return allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.advance,x.spent,x.returned,x.dueAmount,x.description,x.note,x.treasurer,x.pujaTreasurer,x.date].join(" ").toLowerCase().includes(q));
+}
+
+function providerName(x){ return String(x.treasurer||x.pujaTreasurer||"").trim() || "-"; }
+function providerSpent(name, list=allExpenses){
+ return list.filter(x=>providerName(x).toLowerCase()===String(name).toLowerCase()).reduce((s,x)=>s+Number(x.spent ?? x.amount ?? 0),0);
+}
+function providerPaid(name, list=allExpenses, excludeId=""){
+ return list.filter(x=>providerName(x).toLowerCase()===String(name).toLowerCase() && x.id!==excludeId).reduce((s,x)=>s+Number(x.treasurerPaid ?? 0),0);
+}
+
+function renderProviderSummary(list){
+ const box=document.getElementById("providerSummary");
+ if(!box) return;
+ const providers=[...new Set(list.map(providerName).filter(n=>n && n!=="-"))];
+ if(!providers.length){ box.classList.add("hidden"); box.innerHTML=""; return; }
+ box.classList.remove("hidden");
+ box.innerHTML=`<div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50">
+   <div class="text-xs font-bold text-emerald-800 mb-2">খরচ প্রদানকারী অনুযায়ী মোট হিসাব</div>
+   <div class="overflow-x-auto">
+    <table class="w-full text-xs border-collapse bg-white rounded-lg overflow-hidden">
+      <thead><tr class="bg-emerald-100 text-gray-700">
+        <th class="p-2 border text-center">খরচ প্রদানকারী</th><th class="p-2 border text-center">মোট খরচ</th><th class="p-2 border text-center">কোষাধ্যক্ষ শোধ</th><th class="p-2 border text-center">বাকি</th>
+      </tr></thead><tbody>
+      ${providers.map(name=>{ const spent=providerSpent(name, list); const paid=providerPaid(name,list); const bal=Math.max(0,spent-paid); return `<tr><td class="p-2 border text-center font-bold">${esc(name)}</td><td class="p-2 border text-center font-bold text-orange-600">${money(spent)}</td><td class="p-2 border text-center font-bold text-emerald-600">${money(Math.min(paid,spent))}</td><td class="p-2 border text-center font-bold ${bal>0?'text-red-600':'text-emerald-600'}">${money(bal)}</td></tr>`; }).join("")}
+      </tbody>
+    </table>
+   </div>
+ </div>`;
+}
+
 function renderExpenses(list=allExpenses){
  const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead"),selectHead=document.getElementById("selectHead");
  actionHead.classList.toggle("hidden",!canManage());
  selectHead.classList.toggle("hidden",!canManage());
- if(!list.length){body.innerHTML='<tr><td colspan="9" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>'; return;}
+ renderProviderSummary(list);
+ if(!list.length){body.innerHTML='<tr><td colspan="11" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>'; return;}
 
  body.innerHTML=list.map(x=>{
     const adv = Number(x.advance ?? x.amount ?? 0);
@@ -258,24 +307,23 @@ function renderExpenses(list=allExpenses){
     const extraDue = Number(x.extraDueAmount ?? Math.max(0, spent - adv));
     const extraReturned = Number(x.extraReturned ?? 0);
     const extraBalance = Math.max(0, extraDue - extraReturned);
+    const provider=providerName(x);
+    const paid=Number(x.treasurerPaid||0);
+    const providerTotal=providerSpent(provider, allExpenses);
+    const providerPaidTotal=providerPaid(provider, allExpenses);
+    const providerBalance=Math.max(0,providerTotal-providerPaidTotal);
     
     let statusBadge = "";
     if (x.returnDue && due > 0) {
-      statusBadge = `<div class="flex flex-col items-center gap-1">
-        <span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">🔴 Due: ${money(due)}</span>
-        ${canManage() ? `<button onclick="clearDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ ফেরত পেলাম</button>` : ''}
-      </div>`;
+      statusBadge = `<div class="flex flex-col items-center gap-1"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">🔴 Due: ${money(due)}</span>${canManage() ? `<button onclick="clearDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ ফেরত পেলাম</button>` : ''}</div>`;
     } else if (adv > spent) {
       statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">🟢 ফেরত জমা: ${money(ret)}</span>`;
     } else if (spent > adv) {
-      statusBadge = `<div class="flex flex-col items-center gap-1">
-        <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold">🟠 অতিরিক্ত খরচ: ${money(extraDue)}</span>
-        ${extraBalance > 0 && canManage() ? `<button onclick="clearExtraDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ অতিরিক্ত টাকা পরিশোধ</button>` : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${extraDue > 0 ? 'পরিশোধ হয়েছে' : ''}</span>`}
-      </div>`;
+      statusBadge = `<div class="flex flex-col items-center gap-1"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold">🟠 অতিরিক্ত খরচ: ${money(extraDue)}</span>${extraBalance > 0 && canManage() ? `<button onclick="clearExtraDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ অতিরিক্ত টাকা পরিশোধ</button>` : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${extraDue > 0 ? 'পরিশোধ হয়েছে' : ''}</span>`}</div>`;
     } else {
       statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-semibold">হিসাব ঠিক আছে</span>`;
     }
-
+    const paidButton = canManage() ? `<button onclick="markTreasurerPaid('${x.id}')" class="mt-1 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 font-semibold">${paid>0?'✏️ শোধ বদলান':'💰 শোধ করুন'}</button>` : '';
     return `<tr class="border-b hover:bg-gray-50">
       <td class="p-2.5 text-center align-middle ${canManage()?"":"hidden"}"><input type="checkbox" class="expense-checkbox w-4 h-4" value="${esc(x.id)}" onchange="syncExpenseSelectAll()"></td>
       <td class="p-2.5 text-center align-middle">${esc(x.date||"-")}</td>
@@ -284,19 +332,17 @@ function renderExpenses(list=allExpenses){
       <td class="p-2.5 text-center font-bold text-blue-600">${money(adv)}</td>
       <td class="p-2.5 text-center font-bold text-orange-600">${money(spent)}</td>
       <td class="p-2.5 text-center align-middle">${statusBadge}</td>
-      <td class="p-2.5 text-center align-middle">${esc(x.treasurer||x.pujaTreasurer||"-")}</td>
-      <td class="p-2.5 text-center ${canManage()?"":"hidden"}">
-        <button onclick="editExpense('${x.id}')" class="bg-gray-100 hover:bg-gray-200 p-1 rounded mr-1" title="এডিট">✏️</button>
-        <button onclick="deleteExpense('${x.id}')" class="bg-red-50 hover:bg-red-100 p-1 rounded text-red-600" title="ডিলিট">🗑️</button>
-      </td>
+      <td class="p-2.5 text-center align-middle font-semibold">${esc(provider)}</td>
+      <td class="p-2.5 text-center align-middle"><div class="font-bold text-emerald-600">${money(paid)}</div>${paidButton}</td>
+      <td class="p-2.5 text-center align-middle"><div class="font-bold ${providerBalance>0?'text-red-600':'text-emerald-600'}">${money(providerBalance)}</div><div class="text-[10px] text-gray-500">মোট ${money(providerTotal)}</div></td>
+      <td class="p-2.5 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 hover:bg-gray-200 p-1 rounded mr-1" title="এডিট">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 hover:bg-red-100 p-1 rounded text-red-600" title="ডিলিট">🗑️</button></td>
     </tr>`;
  }).join("");
 
- const totalSpent = allExpenses.reduce((s,x)=>s+Number(x.spent ?? x.amount ?? 0), 0);
- const totalAdv = allExpenses.reduce((s,x)=>s+Number(x.advance ?? x.amount ?? 0), 0);
- const totalDue = allExpenses.reduce((z,x)=>z+Number(x.dueAmount || 0), 0);
- const totalRet = allExpenses.reduce((z,x)=>z+Number(x.returned || 0), 0);
-
+ const totalSpent = list.reduce((s,x)=>s+Number(x.spent ?? x.amount ?? 0), 0);
+ const totalAdv = list.reduce((s,x)=>s+Number(x.advance ?? x.amount ?? 0), 0);
+ const totalDue = list.reduce((z,x)=>z+Number(x.dueAmount || 0), 0);
+ const totalRet = list.reduce((z,x)=>z+Number(x.returned || 0), 0);
  document.getElementById("totalExpense").innerText = money(totalSpent);
  document.getElementById("totalAdvance").innerText = money(totalAdv);
  document.getElementById("totalDue").innerText = money(totalDue);
@@ -339,8 +385,8 @@ window.clearDue = async (id) => {
 };
 
 window.filterExpenses=()=>{
- const q=document.getElementById("expenseSearch").value.toLowerCase().trim();
- renderExpenses(allExpenses.filter(x=>[x.name,x.payerName,x.amount,x.advance,x.spent,x.returned,x.dueAmount,x.description,x.note,x.treasurer,x.date].join(" ").toLowerCase().includes(q)));
+ const list=getFilteredExpenses();
+ renderExpenses(list);
 };
 
 window.updateReturnCalculation=()=>{
@@ -396,6 +442,9 @@ window.openExpenseModal=()=>{
  document.getElementById("expenseDuePreview").classList.add("hidden");
  document.getElementById("expenseDescription").value="";
  document.getElementById("expenseTreasurer").value=pujaTreasurerName||"";
+ document.getElementById("expenseTreasurerPaid").value="0";
+ document.getElementById("expenseTreasurerPaidMark").checked=false;
+ document.getElementById("expenseTreasurerPaid").disabled=true;
  const m=document.getElementById("expenseModal");
  updateReturnCalculation();
  m.classList.remove("hidden");m.classList.add("flex");
@@ -419,9 +468,33 @@ window.editExpense=(id)=>{
  document.getElementById("expenseReturnDue").checked=Boolean(x.returnDue);
  document.getElementById("expenseDescription").value=x.description||x.note||"";
  document.getElementById("expenseTreasurer").value=x.treasurer||x.pujaTreasurer||"";
+ const paid=Number(x.treasurerPaid||0);
+ document.getElementById("expenseTreasurerPaid").value=paid.toFixed(2);
+ document.getElementById("expenseTreasurerPaidMark").checked=paid>0;
+ document.getElementById("expenseTreasurerPaid").disabled=paid<=0;
  const m=document.getElementById("expenseModal");
  updateReturnCalculation();
  m.classList.remove("hidden");m.classList.add("flex");
+};
+
+window.toggleTreasurerPaidInput=()=>{
+ const mark=document.getElementById("expenseTreasurerPaidMark");
+ const input=document.getElementById("expenseTreasurerPaid");
+ input.disabled=!mark.checked;
+ if(!mark.checked) input.value="0";
+};
+
+window.markTreasurerPaid=(id)=>{
+ if(!canManage()) return;
+ const x=allExpenses.find(e=>e.id===id);
+ if(!x) return;
+ editExpense(id);
+ setTimeout(()=>{
+   const mark=document.getElementById("expenseTreasurerPaidMark");
+   const input=document.getElementById("expenseTreasurerPaid");
+   if(mark) mark.checked=true;
+   if(input){ input.disabled=false; input.focus(); input.select(); }
+ },50);
 };
 
 window.saveExpense=async()=>{
@@ -444,9 +517,24 @@ window.saveExpense=async()=>{
  const description=document.getElementById("expenseDescription").value.trim();
  const treasurer=document.getElementById("expenseTreasurer").value.trim();
  const id=document.getElementById("expenseDocId").value;
+ const treasurerPaidMark=document.getElementById("expenseTreasurerPaidMark").checked;
+ const treasurerPaid=treasurerPaidMark ? Math.max(0, Number(document.getElementById("expenseTreasurerPaid").value||0)) : 0;
 
  if(!date || !name || advance <= 0){
    alert("দয়া করে তারিখ, প্রাপকের নাম এবং সঠিক অগ্রিম টাকার পরিমাণ দিন।");
+   return;
+ }
+ if(!treasurer){
+   alert("দয়া করে খরচ প্রদানকারীর নাম দিন।");
+   return;
+ }
+ const oldExpense=id ? allExpenses.find(e=>e.id===id) : null;
+ const sameProvider = oldExpense && providerName(oldExpense).toLowerCase() === treasurer.toLowerCase();
+ const providerTotalBase=providerSpent(treasurer, allExpenses);
+ const providerTotal=sameProvider ? providerTotalBase : providerTotalBase + spent;
+ const alreadyPaid=providerPaid(treasurer, allExpenses, id);
+ if(treasurerPaid > Math.max(0, providerTotal - alreadyPaid)){
+   alert(`এই খরচ প্রদানকারীর মোট খরচ ${money(providerTotal)}। আগে থেকেই শোধ হয়েছে ${money(alreadyPaid)}। এখন সর্বোচ্চ ${money(Math.max(0, providerTotal-alreadyPaid))} শোধ করা যাবে।`);
    return;
  }
 
@@ -466,6 +554,7 @@ window.saveExpense=async()=>{
      extraDueCleared: id ? !!allExpenses.find(e=>e.id===id)?.extraDueCleared : false,
      description,
      treasurer,
+     treasurerPaid,
      updatedAt: Date.now()
    };
    
@@ -608,8 +697,8 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     const boldFont = { name: "Noto Sans Bengali", size: 10, bold: true };
     const totalFont = { name: "Noto Sans Bengali", size: 11, bold: true };
 
-    const columnCount = dueOnly ? 4 : 11;
-    const lastCol = dueOnly ? "D" : "K";
+    const columnCount = dueOnly ? 4 : 13;
+    const lastCol = dueOnly ? "D" : "M";
 
     ws.mergeCells(`A1:${lastCol}1`);
     ws.getCell("A1").value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
@@ -629,7 +718,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
 
     const headers = dueOnly
       ? ["তারিখ", "নাম", "Due (₹)", "কী বাবদ Due"]
-      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "অগ্রিম ফেরত (₹)", "Due (₹)", "অতিরিক্ত পাওনা (₹)", "অতিরিক্ত ফেরত (₹)", "অবস্থা", "বিবরণ", "খরচ প্রদানকারী"];
+      : ["তারিখ", "প্রাপকের নাম", "অগ্রিম (₹)", "আসল খরচ (₹)", "অগ্রিম ফেরত (₹)", "Due (₹)", "অতিরিক্ত পাওনা (₹)", "অতিরিক্ত ফেরত (₹)", "অবস্থা", "বিবরণ", "খরচ প্রদানকারী", "কোষাধ্যক্ষকে শোধ (₹)", "খরচ প্রদানকারীর বাকি (₹)"];
 
     headers.forEach((h, i) => {
       const cell = ws.getCell(4, i + 1);
@@ -641,7 +730,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     });
     ws.getRow(4).height = 30;
 
-    let totalAdvance = 0, totalExpense = 0, totalReturned = 0, totalDue = 0, totalExtraDue = 0, totalExtraReturned = 0;
+    let totalAdvance = 0, totalExpense = 0, totalReturned = 0, totalDue = 0, totalExtraDue = 0, totalExtraReturned = 0, totalTreasurerPaid = 0;
 
     expenses.forEach(x => {
       const adv = Number(x.advance ?? x.amount ?? 0);
@@ -651,6 +740,11 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       const extraDue = Number(x.extraDueAmount ?? Math.max(0, spent - adv));
       const extraReturned = Number(x.extraReturned ?? 0);
       const extraBalance = Math.max(0, extraDue - extraReturned);
+      const provider = providerName(x);
+      const treasurerPaid = Number(x.treasurerPaid ?? 0);
+      const providerTotal = providerSpent(provider, expenses);
+      const providerPaidTotal = providerPaid(provider, expenses);
+      const providerBalance = Math.max(0, providerTotal - providerPaidTotal);
 
       totalAdvance += adv;
       totalExpense += spent;
@@ -658,6 +752,7 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
       totalDue += due;
       totalExtraDue += extraDue;
       totalExtraReturned += extraReturned;
+      totalTreasurerPaid += treasurerPaid;
 
       const values = dueOnly
         ? [
@@ -677,7 +772,9 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
             extraReturned,
             extraBalance > 0 ? "অতিরিক্ত ₹" + extraBalance.toFixed(2) + " বাকি" : (extraDue > 0 ? "সম্পূর্ণ Clear" : "হিসাব ঠিক আছে"),
             x.description || x.note || "",
-            x.treasurer || x.pujaTreasurer || ""
+            provider,
+            treasurerPaid,
+            providerBalance
           ];
 
       const row = ws.addRow(values);
@@ -716,17 +813,25 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     if (dueOnly) {
       addAdjacentTotal("সর্বমোট Due", totalDue);
     } else {
+      const providerNames=[...new Set(expenses.map(providerName).filter(n=>n && n!=="-"))];
+      const totalProviderBalance=providerNames.reduce((sum,name)=>{
+        const spent=providerSpent(name, expenses);
+        const paid=providerPaid(name, expenses);
+        return sum + Math.max(0, spent-paid);
+      },0);
       addAdjacentTotal("সর্বমোট অগ্রিম", totalAdvance);
       addAdjacentTotal("সর্বমোট খরচ", totalExpense);
       addAdjacentTotal("সর্বমোট অগ্রিম ফেরত", totalReturned);
       addAdjacentTotal("সর্বমোট Due", totalDue);
       addAdjacentTotal("সর্বমোট অতিরিক্ত পাওনা", totalExtraDue);
       addAdjacentTotal("সর্বমোট অতিরিক্ত ফেরত", totalExtraReturned);
+      addAdjacentTotal("সর্বমোট কোষাধ্যক্ষ শোধ", totalTreasurerPaid);
+      addAdjacentTotal("সর্বমোট খরচ প্রদানকারীর বাকি", totalProviderBalance);
     }
 
     const widths = dueOnly
       ? [15, 25, 17, 42]
-      : [14, 22, 16, 18, 17, 15, 18, 18, 22, 30, 20];
+      : [14, 22, 16, 18, 17, 15, 18, 18, 22, 30, 22, 22, 22];
 
     widths.forEach((w, i) => {
       ws.getColumn(i + 1).width = w;
@@ -782,8 +887,9 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
 }
 
 window.exportExpenses = async () => {
+  const filtered = getFilteredExpenses();
   await createExpenseExcel(
-    allExpenses,
+    filtered,
     "খরচ রিপোর্ট",
     "খরচ-রিপোর্ট.xlsx",
     "খরচ রিপোর্ট"
@@ -791,7 +897,7 @@ window.exportExpenses = async () => {
 };
 
 window.exportDueExpenses = async () => {
-  const dueExpenses = allExpenses.filter(
+  const dueExpenses = getFilteredExpenses().filter(
     x => Number(x.dueAmount ?? 0) > 0
   );
 
@@ -883,7 +989,7 @@ onAuthStateChanged(auth, async user => {
    renderExpenses();
  }, err => {
    console.error(err);
-   document.getElementById("expenseTableBody").innerHTML = '<tr><td colspan="9" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
+   document.getElementById("expenseTableBody").innerHTML = '<tr><td colspan="11" class="p-8 text-center text-red-500">তথ্য লোড করা যায়নি</td></tr>';
  });
 });
 
