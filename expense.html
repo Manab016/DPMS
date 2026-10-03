@@ -49,7 +49,14 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
 
     <div id="expenseControls" class="flex flex-wrap gap-2 mb-4 hidden">
       <button onclick="openExpenseModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ খরচের এনট্রি যোগ</button>
-      <button onclick="exportExpenses()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 সব খরচ এক্সেল</button>
+      <div class="relative" id="expenseExportMenu">
+        <button type="button" onclick="document.getElementById('expenseExportDropdown').classList.toggle('hidden')" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সপোর্ট ▾</button>
+        <div id="expenseExportDropdown" class="hidden absolute left-0 top-full mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-xl z-30 overflow-hidden">
+          <button type="button" onclick="exportExpenses(); document.getElementById('expenseExportDropdown').classList.add('hidden')" class="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-emerald-50">📥 সব খরচ এক্সেল</button>
+          <button type="button" onclick="openRecipientWiseExpenseExport(); document.getElementById('expenseExportDropdown').classList.add('hidden')" class="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-orange-50">📥 প্রাপকের নাম অনুযায়ী Excel</button>
+          <button type="button" onclick="openProviderWiseExpenseExport(); document.getElementById('expenseExportDropdown').classList.add('hidden')" class="w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-purple-50">📥 খরচ প্রদানকারীর নাম অনুযায়ী Excel</button>
+        </div>
+      </div>
       <button onclick="exportDueExpenses()" class="bg-amber-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-amber-700 shadow-sm">📥 Due এক্সেল</button>
       <button onclick="deleteMarkedExpenses()" class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-600 shadow-sm">☑️ নির্বাচিত মুছুন</button>
       <button onclick="deleteAllExpenses()" class="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-800 shadow-sm">🗑️ সব মুছুন</button>
@@ -120,6 +127,46 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
       <button onclick="closeDevModal()" class="w-full mt-4 bg-orange-600 hover:bg-orange-700 text-white font-bold py-3 rounded-xl shadow-md transition-colors text-sm">
         বন্ধ করুন
       </button>
+    </div>
+  </div>
+</div>
+
+<!-- প্রাপকের নাম অনুযায়ী খরচ Excel Export modal -->
+<div id="recipientWiseExpenseExportModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-orange-600">প্রাপকের নাম অনুযায়ী খরচ Excel</h3>
+      <button onclick="closeRecipientWiseExpenseExport()" class="text-gray-400 hover:text-gray-700 text-xl">✕</button>
+    </div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">প্রাপকের নাম লিখুন</label>
+    <div class="relative">
+      <input id="recipientWiseExpenseSearch" type="text" autocomplete="off" placeholder="প্রাপকের নাম লিখুন / Search করুন" onfocus="showExpenseNameList('recipient')" oninput="handleExpenseNameInput('recipient')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+      <div id="recipientExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-orange-300 rounded-lg shadow-xl overflow-y-auto max-h-56 z-[70]"></div>
+    </div>
+    <div id="recipientWiseExpensePreview" class="mt-4 p-3 rounded-xl bg-orange-50 border border-orange-200 text-sm text-gray-700">নাম লিখলে ওই প্রাপকের খরচের তালিকা এখানে দেখা যাবে।</div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeRecipientWiseExpenseExport()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
+      <button onclick="exportRecipientWiseExpense()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-orange-700">📥 Excel Export</button>
+    </div>
+  </div>
+</div>
+
+<!-- খরচ প্রদানকারীর নাম অনুযায়ী Excel Export modal -->
+<div id="providerWiseExpenseExportModal" class="fixed inset-0 bg-black/50 hidden items-center justify-center p-4 z-50">
+  <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-2xl">
+    <div class="flex items-center justify-between mb-4">
+      <h3 class="text-lg font-bold text-purple-600">খরচ প্রদানকারীর নাম অনুযায়ী Excel</h3>
+      <button onclick="closeProviderWiseExpenseExport()" class="text-gray-400 hover:text-gray-700 text-xl">✕</button>
+    </div>
+    <label class="block text-xs font-semibold text-gray-600 mb-1">খরচ প্রদানকারীর নাম লিখুন</label>
+    <div class="relative">
+      <input id="providerWiseExpenseSearch" type="text" autocomplete="off" placeholder="খরচ প্রদানকারীর নাম লিখুন / Search করুন" onfocus="showExpenseNameList('provider')" oninput="handleExpenseNameInput('provider')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-purple-500">
+      <div id="providerExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-purple-300 rounded-lg shadow-xl overflow-y-auto max-h-56 z-[70]"></div>
+    </div>
+    <div id="providerWiseExpensePreview" class="mt-4 p-3 rounded-xl bg-purple-50 border border-purple-200 text-sm text-gray-700">নাম লিখলে ওই খরচ প্রদানকারীর তালিকা এখানে দেখা যাবে।</div>
+    <div class="flex justify-end gap-2 mt-5">
+      <button onclick="closeProviderWiseExpenseExport()" class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold">বাতিল</button>
+      <button onclick="exportProviderWiseExpense()" class="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-purple-700">📥 Excel Export</button>
     </div>
   </div>
 </div>
@@ -885,6 +932,173 @@ async function createExpenseExcel(expenses, reportTitle, fileName, sheetName, du
     alert("Excel রিপোর্ট তৈরি করতে সমস্যা হয়েছে।");
   }
 }
+
+function normalizeExpensePersonName(value){
+  return String(value ?? "").trim().replace(/\s+/g," ").toLowerCase();
+}
+
+function getExpenseNameList(searchName, field){
+  const q=normalizeExpensePersonName(searchName);
+  if(!q) return [];
+  return allExpenses.filter(x => normalizeExpensePersonName(field === "provider" ? (x.treasurer || x.pujaTreasurer || "") : (x.name || x.payerName || "")) === q);
+}
+
+function getExpenseUniqueNames(field){
+  return [...new Set(allExpenses.map(x => String(field === "provider" ? (x.treasurer || x.pujaTreasurer || "") : (x.name || x.payerName || "")).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"bn"));
+}
+
+function safeExpenseExportFileName(value){
+  const name=String(value || "নাম").trim().replace(/[\\/:*?"<>|]/g," ").replace(/\s+/g," ").replace(/[. ]+$/g,"");
+  return name || "নাম";
+}
+
+function fillExpenseNameDatalist(id, field){
+  const list=document.getElementById(id);
+  if(!list)return;
+  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
+  const input=document.getElementById(inputId);
+  const q=normalizeExpensePersonName(input?.value||"");
+  const names=getExpenseUniqueNames(field).filter(name=>!q||normalizeExpensePersonName(name).includes(q));
+  if(!names.length){
+    list.innerHTML=`<div class="px-4 py-3 text-sm text-gray-500">কোনো নাম পাওয়া যায়নি</div>`;
+    return;
+  }
+  list.innerHTML=names.map(name=>`<button type="button" class="expense-name-option w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-100 active:bg-gray-200 text-sm font-semibold text-gray-800">${esc(name)}</button>`).join("");
+  list.querySelectorAll(".expense-name-option").forEach((btn,index)=>{
+    btn.addEventListener("click",function(ev){
+      ev.preventDefault();
+      ev.stopPropagation();
+      selectExpenseName(field,names[index]);
+    });
+  });
+}
+
+window.showExpenseNameList=function(field){
+  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
+  fillExpenseNameDatalist(id,field);
+  document.getElementById(id)?.classList.remove("hidden");
+}
+
+window.hideExpenseNameList=function(field){
+  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
+  document.getElementById(id)?.classList.add("hidden");
+}
+
+window.handleExpenseNameInput=function(field){
+  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
+  const input=document.getElementById(inputId);
+  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
+  fillExpenseNameDatalist(id,field);
+  document.getElementById(id)?.classList.remove("hidden");
+  if(field==="provider") previewProviderWiseExpenseExport();
+  else previewRecipientWiseExpenseExport();
+}
+
+window.selectExpenseName=function(field,name){
+  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
+  const input=document.getElementById(inputId);
+  if(input) input.value=name;
+  hideExpenseNameList(field);
+  if(field==="provider") {
+    previewProviderWiseExpenseExport();
+  } else {
+    previewRecipientWiseExpenseExport();
+  }
+}
+
+document.addEventListener("click",function(e){
+  if(!e.target.closest("#recipientWiseExpenseSearch") && !e.target.closest("#recipientExpenseNameList")){hideExpenseNameList("recipient");}
+  if(!e.target.closest("#providerWiseExpenseSearch") && !e.target.closest("#providerExpenseNameList")){hideExpenseNameList("provider");}
+});
+
+window.openRecipientWiseExpenseExport=()=>{
+  if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}
+  const input=document.getElementById("recipientWiseExpenseSearch");
+  if(input) input.value="";
+  showExpenseNameList("recipient");
+  const preview=document.getElementById("recipientWiseExpensePreview");
+  if(preview)preview.innerHTML="নাম লিখলে ওই প্রাপকের খরচের তালিকা এখানে দেখা যাবে।";
+  const modal=document.getElementById("recipientWiseExpenseExportModal");
+  modal.classList.remove("hidden");modal.classList.add("flex");
+  setTimeout(()=>input?.focus(),50);
+};
+
+window.closeRecipientWiseExpenseExport=()=>{
+  const modal=document.getElementById("recipientWiseExpenseExportModal");
+  if(!modal)return; modal.classList.add("hidden");modal.classList.remove("flex");
+};
+
+window.previewRecipientWiseExpenseExport=()=>{
+  const input=document.getElementById("recipientWiseExpenseSearch"),preview=document.getElementById("recipientWiseExpensePreview");
+  if(!input||!preview)return;
+  const searchName=input.value.trim();
+  if(!searchName){preview.innerHTML="নাম লিখলে ওই প্রাপকের খরচের তালিকা এখানে দেখা যাবে।";return;}
+  const list=getExpenseNameList(searchName,"recipient");
+  if(!list.length){preview.innerHTML=`<div class="text-red-600 font-semibold">“${esc(searchName)}” নামে কোনো খরচ পাওয়া যায়নি।</div>`;return;}
+  const total=list.reduce((sum,x)=>sum+Number(x.spent??x.amount??0),0);
+  preview.innerHTML=`<div class="font-bold text-orange-700 mb-2">${esc(searchName)}</div><div class="text-xs text-gray-600 mb-2">মোট ${list.length}টি খরচের রেকর্ড পাওয়া গেছে।</div><div class="overflow-x-auto border rounded-lg bg-white"><table class="w-full text-xs border-collapse"><thead><tr class="bg-orange-100"><th class="p-2 border text-center">তারিখ</th><th class="p-2 border text-center">কী বাবদ</th><th class="p-2 border text-center">টাকা</th></tr></thead><tbody>${list.map(x=>`<tr><td class="p-2 border text-center">${esc(x.date||"-")}</td><td class="p-2 border">${esc(x.description||x.note||"-")}</td><td class="p-2 border text-center font-bold">${money(x.spent??x.amount??0)}</td></tr>`).join("")}<tr class="bg-amber-100 font-bold"><td colspan="2" class="p-2 border text-right">মোট</td><td class="p-2 border text-center">${money(total)}</td></tr></tbody></table></div>`;
+};
+
+window.openProviderWiseExpenseExport=()=>{
+  if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}
+  const input=document.getElementById("providerWiseExpenseSearch");
+  if(input)input.value="";
+  showExpenseNameList("provider");
+  const preview=document.getElementById("providerWiseExpensePreview");
+  if(preview)preview.innerHTML="নাম লিখলে ওই খরচ প্রদানকারীর তালিকা এখানে দেখা যাবে।";
+  const modal=document.getElementById("providerWiseExpenseExportModal");
+  modal.classList.remove("hidden");modal.classList.add("flex");
+  setTimeout(()=>input?.focus(),50);
+};
+
+window.closeProviderWiseExpenseExport=()=>{
+  const modal=document.getElementById("providerWiseExpenseExportModal");
+  if(!modal)return;modal.classList.add("hidden");modal.classList.remove("flex");
+};
+
+window.previewProviderWiseExpenseExport=()=>{
+  const input=document.getElementById("providerWiseExpenseSearch"),preview=document.getElementById("providerWiseExpensePreview");
+  if(!input||!preview)return;
+  const searchName=input.value.trim();
+  if(!searchName){preview.innerHTML="নাম লিখলে ওই খরচ প্রদানকারীর তালিকা এখানে দেখা যাবে।";return;}
+  const list=getExpenseNameList(searchName,"provider");
+  if(!list.length){preview.innerHTML=`<div class="text-red-600 font-semibold">“${esc(searchName)}” নামে কোনো খরচ প্রদানকারীর রেকর্ড পাওয়া যায়নি।</div>`;return;}
+  const total=list.reduce((sum,x)=>sum+Number(x.spent??x.amount??0),0);
+  preview.innerHTML=`<div class="font-bold text-purple-700 mb-2">${esc(searchName)}</div><div class="text-xs text-gray-600 mb-2">মোট ${list.length}টি রেকর্ড পাওয়া গেছে।</div><div class="overflow-x-auto border rounded-lg bg-white"><table class="w-full text-xs border-collapse"><thead><tr class="bg-purple-100"><th class="p-2 border text-center">তারিখ</th><th class="p-2 border text-center">কী বাবদ</th><th class="p-2 border text-center">প্রাপক</th><th class="p-2 border text-center">টাকা</th></tr></thead><tbody>${list.map(x=>`<tr><td class="p-2 border text-center">${esc(x.date||"-")}</td><td class="p-2 border">${esc(x.description||x.note||"-")}</td><td class="p-2 border">${esc(x.name||x.payerName||"-")}</td><td class="p-2 border text-center font-bold">${money(x.spent??x.amount??0)}</td></tr>`).join("")}<tr class="bg-purple-100 font-bold"><td colspan="3" class="p-2 border text-right">এই ব্যক্তির মোট খরচ</td><td class="p-2 border text-center">${money(total)}</td></tr></tbody></table></div>`;
+};
+
+async function exportExpenseNameWise(searchName, field){
+  if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}
+  if(!searchName){alert(`দয়া করে ${field==="provider"?"খরচ প্রদানকারীর":"প্রাপকের"} নাম লিখুন।`);return;}
+  const expenses=getExpenseNameList(searchName,field);
+  if(!expenses.length){alert(`“${searchName}” নামে কোনো ${field==="provider"?"খরচ প্রদানকারীর":"প্রাপকের"} রেকর্ড পাওয়া যায়নি।`);return;}
+  if(typeof ExcelJS==="undefined"){alert("Excel Export চালু হয়নি। ইন্টারনেট সংযোগ পরীক্ষা করুন।");return;}
+  try{
+    const actualName=String(field==="provider"?(expenses[0].treasurer||searchName):(expenses[0].name||expenses[0].payerName||searchName)).trim();
+    const wb=new ExcelJS.Workbook();wb.creator="কমিটি ম্যানেজমেন্ট সিস্টেম";
+    const ws=wb.addWorksheet(field==="provider"?"খরচ প্রদানকারী অনুযায়ী":"প্রাপক অনুযায়ী",{views:[{showGridLines:false}],pageSetup:{paperSize:9,orientation:"portrait",fitToPage:true,fitToWidth:1,fitToHeight:0,margins:{left:0.3,right:0.3,top:0.45,bottom:0.45,header:0.2,footer:0.2}}});
+    const border={top:{style:"thin",color:{argb:"FF808080"}},left:{style:"thin",color:{argb:"FF808080"}},bottom:{style:"thin",color:{argb:"FF808080"}},right:{style:"thin",color:{argb:"FF808080"}}};
+    const titleFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFEDD5"}};
+    const headerFill={type:"pattern",pattern:"solid",fgColor:{argb:field==="provider"?"FF9333EA":"FFF97316"}};
+    const dataFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFFBEB"}};
+    const totalFill={type:"pattern",pattern:"solid",fgColor:{argb:"FFFFF3C4"}};
+    ws.mergeCells("A1:D1");ws.getCell("A1").value=window.__getCommitteeNameForOutput?.()||"নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";ws.getCell("A1").font={name:"Noto Sans Bengali",size:16,bold:true};ws.getCell("A1").alignment={horizontal:"center",vertical:"middle"};ws.getCell("A1").fill=titleFill;ws.getCell("A1").border={left:border.left,right:border.right,top:border.top};ws.getRow(1).height=30;
+    ws.mergeCells("A2:D2");ws.getCell("A2").value=`${field==="provider"?"খরচ প্রদানকারীর":"প্রাপকের"} নাম অনুযায়ী খরচের হিসাব — ${actualName}`;ws.getCell("A2").font={name:"Noto Sans Bengali",size:13,bold:true};ws.getCell("A2").alignment={horizontal:"center",vertical:"middle"};ws.getCell("A2").fill=titleFill;ws.getCell("A2").border={left:border.left,right:border.right,bottom:border.bottom};ws.getRow(2).height=26;
+    const headers=field==="provider"?["তারিখ","কী বাবদ","প্রাপকের নাম","টাকা (₹)"]:["তারিখ","কী বাবদ","কাকে দেওয়া হয়েছে","টাকা (₹)"];
+    headers.forEach((h,i)=>{const c=ws.getCell(4,i+1);c.value=h;c.font={name:"Noto Sans Bengali",size:10,bold:true,color:{argb:"FFFFFFFF"}};c.fill=headerFill;c.border=border;c.alignment={horizontal:"center",vertical:"middle",wrapText:true};});ws.getRow(4).height=28;
+    let total=0;
+    expenses.forEach(x=>{const spent=Number(x.spent??x.amount??0);total+=spent;const row=ws.addRow([x.date||"",x.description||x.note||"",x.name||x.payerName||"",spent]);row.eachCell({includeEmpty:true},c=>{c.font={name:"Noto Sans Bengali",size:10};c.fill=dataFill;c.border=border;c.alignment={horizontal:"center",vertical:"middle",wrapText:true};});row.getCell(4).numFmt='₹#,##0.00';row.height=24;});
+    const totalRow=ws.addRow(["","",field==="provider"?"এই ব্যক্তির মোট খরচ":"এই প্রাপকের মোট খরচ",total]);totalRow.eachCell({includeEmpty:true},c=>{c.font={name:"Noto Sans Bengali",size:11,bold:true};c.fill=totalFill;c.border=border;c.alignment={horizontal:"center",vertical:"middle",wrapText:true};});totalRow.getCell(4).numFmt='₹#,##0.00';totalRow.height=28;
+    [16,36,28,18].forEach((w,i)=>ws.getColumn(i+1).width=w);ws.pageSetup.printTitlesRow="4:4";ws.pageSetup.printArea=`A1:D${ws.lastRow.number}`;
+    const buffer=await wb.xlsx.writeBuffer();const blob=new Blob([buffer],{type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+    const fileName=`${safeExpenseExportFileName(actualName)}-${field==="provider"?"খরচ-প্রদানকারীর":"প্রাপকের"}-খরচের-হিসাব.xlsx`;
+    if(typeof saveAs==="function")saveAs(blob,fileName);else{const url=URL.createObjectURL(blob);const a=document.createElement("a");a.href=url;a.download=fileName;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    field==="provider"?closeProviderWiseExpenseExport():closeRecipientWiseExpenseExport();
+  }catch(e){console.error("Name-wise expense Excel export error:",e);alert("নাম অনুযায়ী Excel রিপোর্ট তৈরি করতে সমস্যা হয়েছে।");}
+}
+
+window.exportRecipientWiseExpense=()=>exportExpenseNameWise(document.getElementById("recipientWiseExpenseSearch")?.value.trim()||"","recipient");
+window.exportProviderWiseExpense=()=>exportExpenseNameWise(document.getElementById("providerWiseExpenseSearch")?.value.trim()||"","provider");
 
 window.exportExpenses = async () => {
   const filtered = getFilteredExpenses();
