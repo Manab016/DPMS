@@ -5,12 +5,14 @@
 <script>
 document.documentElement.classList.add('auth-checking');
 (function(){
-  const ref=document.referrer||"";
-  const fromDashboard=/dashboard\.html(?:[?#]|$)/i.test(ref);
-  if(!fromDashboard){
+  const hasAuthSession = Object.keys(localStorage).some(key => key.startsWith('firebase:authUser'));
+  if(!hasAuthSession){
     location.replace("index.html");
   }
 })();
+setTimeout(function(){
+  document.documentElement.classList.remove('auth-checking');
+}, 1200);
 </script>
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>দায়িত্ব বণ্টন - নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</title>
@@ -99,7 +101,7 @@ document.documentElement.classList.add('auth-checking');
 
   <div id="moneyFieldsSection" class="space-y-3">
     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
-      <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের মোট টাকা (Target)</label><input type="number" step="any" min="0" id="dutyAmount" class="w-full p-2.5 border rounded-lg text-sm bg-white" placeholder="0.00"></div>
+      <div><label class="block text-xs font-bold text-gray-700 mb-1">দায়িত্বের মোট টাকা (Target)</label><input type="number" step="any" min="0" id="dutyAmount" oninput="onDutyAmountInput()" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm bg-white focus:ring-2 focus:ring-orange-500" placeholder="0.00"></div>
       <div>
         <label class="block text-xs font-bold text-orange-800 mb-1"><span id="selectedDateLabel">নির্বাচিত তারিখের</span> সংগৃহীত টাকা</label>
         <input type="number" step="any" min="0" id="amount" oninput="onAmountInput()" class="w-full p-2.5 border border-orange-300 rounded-lg text-sm bg-white font-bold text-orange-900 focus:ring-2 focus:ring-orange-500" placeholder="0.00">
@@ -109,10 +111,10 @@ document.documentElement.classList.add('auth-checking');
 
   <div>
     <div class="text-xs font-bold text-gray-700 mb-1">সেভ হওয়া তারিখসমূহের তালিকা (Highlighted Collection Dates):</div>
-    <div id="collectionBadgesContainer" class="flex flex-wrap gap-1.5 p-2 bg-white border rounded-lg min-h-[36px] items-center">
-      <span class="text-xs text-gray-400">কোনো তারিখে টাকা সেভ করা হয়নি</span>
+    <div id="collectionBadgesContainer" class="flex flex-wrap gap-2 p-2 bg-white border rounded-lg min-h-[36px] items-center">
+      <span class="text-xs text-gray-400">কোনো তারিখে দায়িত্বের টাকা সেভ করা হয়নি</span>
     </div>
-    <p class="text-[10px] text-gray-500 mt-1">💡 নির্বাচিত তারিখে টাকার পরিমাণ লিখে অন্য তারিখে সুইচ করলে বা সেভ করলে ক্যালেন্ডার/তালিকায় চিহ্নিত (Highlight) হবে।</p>
+    <p class="text-[10px] text-gray-500 mt-1">💡 নির্বাচিত তারিখে <b>দায়িত্বের মোট টাকা (Target)</b> লিখলে সেই তারিখটি হাইলাইট হিসেবে চিহ্নিত হবে।</p>
   </div>
 </div>
 
@@ -208,7 +210,7 @@ function toggleDutyCategoryFields(){
 
 let allMembers=[],selectedMemberIds=[],selectedLeaderIds=[],villages=["সহরা","সহরা পশ্চিমপাড়া","সহরা নতুনটোলা","স্ট্যান্ড কালেকশন (নেকড়ামারী, আটমাইল, আদিনা স্টেশন, কালুয়াদিঘী, হিমঘর)","নেকড়ামারী","আটমাইল","বাঙ্গাবাড়ি","সাঞ্জাইল","বেলাহার","তেলিপুকুর","কেশরাইল","কাজিহাট্টা","খুটাচিড়ি","সিংড়াপাড়া","শব্দলখানি","চুনাকীটোল","মহেশকুড়ি"],currentFormExtraVillages=[];
 let dutyFormMode="member",otherPeople=[],selectedOtherLeaderIndexes=[];
-let tempCollections={}, currentSelectedDate="";
+let tempCollections={}, tempDutyAmounts={}, currentSelectedDate="";
 
 function formatDate(d){
   const m=String(d||"").match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -221,6 +223,7 @@ function getVillage(m){return m.village||m.gram||m.address||""}
 function getPost(m){return m.role||m.post||m.designation||m.position||m.pod||m.postName||m.office||m.committeePost||m.committeeRole||m.memberPost||""}
 function getPujaTreasurer(){return allMembers.find(m=>String(m.role||"").trim()==="পূজা কোষাধ্যক্ষ")||null}
 function renderPujaTreasurer(){const el=document.getElementById("pujaTreasurerDefault");if(!el)return;const treasurer=getPujaTreasurer();if(treasurer){const village=getVillage(treasurer);el.textContent=`${treasurer.name||"নামহীন"}${village?` - ${village}`:""} ⭐`;}else{el.textContent="সদস্য তালিকায় ‘পূজা কোষাধ্যক্ষ’ পদ পাওয়া যায়নি";}}
+
 function renderMembersUI(){
  const q=(memberSearch.value||"").toLowerCase();
  memberList.innerHTML=allMembers.filter(m=>(`${m.name||""} ${getVillage(m)} ${getPhone(m)} ${m.memberId||""}`).toLowerCase().includes(q)).map(m=>`<label class="flex items-center gap-3 p-2 hover:bg-orange-50 rounded cursor-pointer border-b last:border-0"><input type="checkbox" value="${memberKey(m)}" class="member-check w-4 h-4 text-orange-600 rounded" ${selectedMemberIds.includes(memberKey(m))?"checked":""} onchange="toggleMember('${memberKey(m)}')"><div><p class="text-sm font-semibold text-gray-800">${esc(m.name||"নামহীন")}</p><p class="text-xs text-gray-500">${esc(getVillage(m))} • ${esc(getPhone(m))}</p></div></label>`).join("")||`<div class="p-3 text-center text-xs text-gray-500">কোনো সদস্য পাওয়া যায়নি</div>`;
@@ -245,6 +248,7 @@ function renderMembersUI(){
  }
  renderVillages();
 }
+
 function toggleOtherLeader(index){index=Number(index);const i=selectedOtherLeaderIndexes.indexOf(index);if(i>=0)selectedOtherLeaderIndexes.splice(i,1);else if(selectedOtherLeaderIndexes.length<3)selectedOtherLeaderIndexes.push(index);else{alert("সর্বোচ্চ ৩ জন গ্রুপ লিডার নির্বাচন করা যাবে।");}renderMembersUI();}
 function removeOtherLeader(index){index=Number(index);selectedOtherLeaderIndexes=selectedOtherLeaderIndexes.filter(i=>i!==index);renderMembersUI();}
 function getSelectedVillages(){return [...document.querySelectorAll(".village-check:checked")].map(x=>x.value);}
@@ -292,23 +296,27 @@ function openOtherModal(){modalTitle.textContent="অন্যান্য দ�
 function renderCollectionBadges(){
   const container=document.getElementById("collectionBadgesContainer");
   if(!container)return;
-  const entries=Object.entries(tempCollections).filter(([d,a])=>Number(a)>0);
+  const entries=Object.keys(tempDutyAmounts).filter(d=>Number(tempDutyAmounts[d])>0).sort();
   if(!entries.length){
-    container.innerHTML=`<span class="text-xs text-gray-400">কোনো তারিখে টাকা সেভ করা হয়নি (টাকা লিখে সেভ করলে এখানে হাইলাইট দেখাবে)</span>`;
+    container.innerHTML=`<span class="text-xs text-gray-400">কোনো তারিখে দায়িত্বের টাকা সেভ করা হয়নি</span>`;
     return;
   }
-  container.innerHTML=entries.map(([d,a])=>`
-    <span class="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-900 border border-emerald-300 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm">
-      <span>📅 ${formatDate(d)}: <b>₹${Number(a).toLocaleString("en-IN")}</b></span>
-      <button type="button" onclick="removeCollectionDate('${d}')" class="text-red-500 hover:text-red-700 font-black ml-1" title="মুছুন">✕</button>
+  container.innerHTML=entries.map(d=>`
+    <span class="inline-flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-600 text-white border border-orange-700 px-3 py-1.5 rounded-lg text-xs font-bold shadow-md">
+      <span class="flex items-center gap-1">📅 ${formatDate(d)}</span>
+      <span class="px-2 border-l border-orange-300">দায়িত্ব: ₹${Number(tempDutyAmounts[d]||0).toLocaleString("en-IN")}</span>
+      ${tempCollections[d] ? `<span class="px-2 border-l border-orange-300">সংগ্রহ: ₹${Number(tempCollections[d]||0).toLocaleString("en-IN")}</span>` : ''}
+      <button type="button" onclick="removeCollectionDate('${d}')" class="ml-1 text-orange-100 hover:text-white font-black text-sm outline-none" title="মুছুন">✕</button>
     </span>
   `).join("");
 }
 
 function removeCollectionDate(d){
   delete tempCollections[d];
+  delete tempDutyAmounts[d];
   if(currentSelectedDate===d){
     amount.value="";
+    dutyAmount.value="";
   }
   renderCollectionBadges();
 }
@@ -325,6 +333,11 @@ function updateAmountForCurrentDate(){
   }else{
     amount.value="";
   }
+  if(currentSelectedDate && tempDutyAmounts[currentSelectedDate]!=null && Number(tempDutyAmounts[currentSelectedDate])>0){
+    dutyAmount.value=String(tempDutyAmounts[currentSelectedDate]);
+  }else{
+    dutyAmount.value="";
+  }
 }
 
 function onDateChange(){
@@ -332,11 +345,17 @@ function onDateChange(){
   const newDate=dateEl?.value||"";
   
   const currentAmt=Number(amount.value)||0;
+  const currentDutyAmt=Number(dutyAmount.value)||0;
   if(currentSelectedDate){
     if(currentAmt>0){
       tempCollections[currentSelectedDate]=currentAmt;
     }else{
       delete tempCollections[currentSelectedDate];
+    }
+    if(currentDutyAmt>0){
+      tempDutyAmounts[currentSelectedDate]=currentDutyAmt;
+    }else{
+      delete tempDutyAmounts[currentSelectedDate];
     }
   }
   currentSelectedDate=newDate;
@@ -356,6 +375,18 @@ function onAmountInput(){
   renderCollectionBadges();
 }
 
+function onDutyAmountInput(){
+  const currentDutyAmt=Number(dutyAmount.value)||0;
+  if(currentSelectedDate){
+    if(currentDutyAmt>0){
+      tempDutyAmounts[currentSelectedDate]=currentDutyAmt;
+    }else{
+      delete tempDutyAmounts[currentSelectedDate];
+    }
+  }
+  renderCollectionBadges();
+}
+
 function resetForm(){
   entryForm.reset();
   editId.value="";
@@ -365,7 +396,7 @@ function resetForm(){
   const todayStr=new Date().toISOString().slice(0,10);
   date.value=todayStr;
   currentSelectedDate=todayStr;
-  dutyAmount.value="0";
+  dutyAmount.value="";
   amount.value="";
   deposited.value="0";
   selectedMemberIds=[];
@@ -374,6 +405,7 @@ function resetForm(){
   currentFormExtraVillages=[];
   otherPeople=[];
   tempCollections={};
+  tempDutyAmounts={};
   memberSearch.value="";
   leaderSearch.value="";
   toggleDutyCategoryFields();
@@ -512,7 +544,8 @@ function getRowTotalCollected(x){
 
 function getRowDates(x){
  const cols=getRowCollections(x);
- const dates=Object.keys(cols).sort();
+ const dutyCols=x?.dutyAmounts||{};
+ const dates=[...new Set([...Object.keys(cols),...Object.keys(dutyCols)])].sort();
  if(dates.length) return dates;
  const primary=String(x?.date||"").trim();
  const extras=Array.isArray(x?.extraDates)?x.extraDates.map(v=>String(v||"").trim()).filter(Boolean):[];
@@ -717,18 +750,25 @@ async function saveEntry(e){
  
  const selectedDate=dateEl?.value||"";
  const currentAmt=Number(amountEl?.value)||0;
+ const currentDutyAmt=Number(dutyAmountEl?.value)||0;
  if(selectedDate){
    if(currentAmt>0){
      tempCollections[selectedDate]=currentAmt;
    }else{
      delete tempCollections[selectedDate];
    }
+   if(currentDutyAmt>0){
+     tempDutyAmounts[selectedDate]=currentDutyAmt;
+   }else{
+     delete tempDutyAmounts[selectedDate];
+   }
  }
 
  const totalCollected = cat==="event"?0:Object.values(tempCollections).reduce((sum,v)=>sum+Number(v||0),0);
- const dutyAmountValue=cat==="event"?0:Math.max(totalCollected,Number(dutyAmountEl?.value)||0);
+ const totalDutyAmount = cat==="event"?0:Object.values(tempDutyAmounts).reduce((sum,v)=>sum+Number(v||0),0);
+ const dutyAmountValue=cat==="event"?0:Math.max(totalDutyAmount,Number(dutyAmountEl?.value)||0);
 
- const datesList=Object.keys(tempCollections).sort();
+ const datesList=[...new Set([...Object.keys(tempCollections),...Object.keys(tempDutyAmounts)])].sort();
  const mainDate=datesList[0]||selectedDate||today();
  const extraDates=datesList.slice(1);
 
@@ -745,6 +785,7 @@ async function saveEntry(e){
    date:mainDate,
    extraDates,
    collections:tempCollections,
+   dutyAmounts:tempDutyAmounts,
    name:saveName,
    mobile:saveMobile,
    memberId:dutyFormMode==="other"?"":ms.map(x=>x.memberId||x.id||"").join(", "),
@@ -801,13 +842,22 @@ window.editEntry=id=>{
   toggleDutyCategoryFields();
   
   tempCollections={ ...getRowCollections(x) };
-  const datesList=Object.keys(tempCollections).sort();
+  tempDutyAmounts={ ...(x.dutyAmounts || {}) };
+  if(Object.keys(tempDutyAmounts).length === 0 && Number(x.dutyAmount) > 0) {
+    const dList = Object.keys(tempCollections).sort();
+    if(dList.length > 0) {
+      tempDutyAmounts[dList[0]] = Number(x.dutyAmount);
+    } else if(x.date) {
+      tempDutyAmounts[x.date] = Number(x.dutyAmount);
+    }
+  }
+
+  const datesList=[...new Set([...Object.keys(tempCollections),...Object.keys(tempDutyAmounts)])].sort();
   const initDate=datesList[0] || x.date || today();
   date.value=initDate;
   currentSelectedDate=initDate;
   
   responsibility.value=x.responsibility||"";
-  dutyAmount.value=x.dutyAmount ?? getRowTotalCollected(x) ?? 0;
   deposited.value=x.deposited||0;
   remarks.value=cleanRemarksWithLatestLeader(x)||"";
   currentFormExtraVillages=getRowVillages(x).filter(v=>!villages.some(b=>String(b).toLowerCase()===String(v).toLowerCase()));
@@ -1634,4 +1684,5 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
 })();
 </script>
 
-</body></html>
+</body>
+</html>
