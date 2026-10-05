@@ -890,9 +890,36 @@
           if (item.donorType === "member") membersAmt += amt;
           else othersAmt += amt;
         });
-        const grandTotal = membersAmt + othersAmt;
-        const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
-        if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+
+        const subscriptionGrandTotal = membersAmt + othersAmt;
+        const updateDashboardChada = (dutyCollectedTotal = 0) => {
+          const grandTotal = subscriptionGrandTotal + (Number(dutyCollectedTotal) || 0);
+          const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
+          if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+        };
+
+        onSnapshot(collection(db, "daitobonton"), (snapshot) => {
+          let dutyCollectedTotal = 0;
+          snapshot.forEach((docSnap) => {
+            const item = docSnap.data() || {};
+            if (item.dutyCategory === "event") return;
+
+            const collections = item.collections && typeof item.collections === "object"
+              ? item.collections
+              : null;
+
+            if (collections) {
+              Object.keys(collections).forEach((key) => {
+                dutyCollectedTotal += Number(collections[key]) || 0;
+              });
+            } else {
+              dutyCollectedTotal += Number(item.amount) || 0;
+            }
+          });
+          updateDashboardChada(dutyCollectedTotal);
+        }, () => {
+          updateDashboardChada(0);
+        });
       }
 
       window.checkAdminPermissionForTab = function (tabName) {
