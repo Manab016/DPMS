@@ -56,7 +56,8 @@ setTimeout(function(){
 <button onclick="window.location.href='members.html'" class="bg-gray-100 hover:bg-gray-200 text-gray-800 border px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 shadow-sm">👥 সদস্য তালিকা</button>
 <button onclick="openPreviewModal('duties')" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-teal-700 shadow-sm">👁️ দায়িত্ব প্রিভিউ</button>
 <button onclick="openPreviewModal('groups')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-indigo-700 shadow-sm">👁️ গ্রুপ প্রিভিউ</button>
-<button onclick="exportExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 এক্সেল এক্সপোর্ট</button>
+<button onclick="exportGroupExcel()" class="bg-emerald-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-emerald-700 shadow-sm">📥 গ্রুপ এক্সেল</button>
+<button onclick="exportDutyExcel()" class="bg-teal-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-teal-700 shadow-sm">📥 দায়িত্ব এক্সেল</button>
 <button onclick="deleteAll()" class="bg-rose-700 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-rose-800 shadow-sm">⚠️ সব ডিলিট</button>
 </div>
 <div class="flex flex-col md:flex-row gap-2 mb-4">
@@ -897,7 +898,9 @@ window.depositToTreasurer=async id=>{
  }catch(e){alert("কোষাধ্যক্ষের হিসাবে জমা করা যায়নি: "+e.message)}
 };
 window.exportSingleDuty=async function(id){const x=rows.find(r=>String(r.id)===String(id));if(!x)return;await exportDutiesAsExcel([x],true);};
-window.exportExcel=async function(){const list=getFilteredRows();if(!list.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(list,false);};
+window.exportGroupExcel=async function(){const list=getFilteredRows();if(!list.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(list,false);};
+window.exportDutyExcel=async function(){const list=getFilteredRows();if(!list.length)return alert("Export করার মতো তথ্য নেই");await exportDutiesAsExcel(list,true);};
+window.exportExcel=window.exportDutyExcel;
 
 function buildPrintHTML(mode="duties"){
   const exportRows=getFilteredRows();
@@ -923,7 +926,7 @@ function buildPrintHTML(mode="duties"){
         <div class="title">${escPrint(sheetTitle)}</div>
         <div class="leader">গ্রুপ লিডার: ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
         <div class="meta">
-          <div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
+          <div><b>টাইটেল / দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
           <div><b>তারিখ:</b><br>${dateText}</div>
         </div>
         ${x.dutyCategory === "event" ? `<div class="village">দায়িত্ব: ${escPrint(x.responsibility||"-")}</div>` : `<div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>`}
@@ -949,7 +952,9 @@ function buildPrintHTML(mode="duties"){
     const leaders=getRowLeaders(x);
     const villages=getRowVillages(x);
     const cols=getRowCollections(x);
-    const colEntries=Object.entries(cols).filter(([d,a])=>Number(a)>0);
+    const dutyCols=x.dutyAmounts || {};
+    const allDates=[...new Set([...Object.keys(cols), ...Object.keys(dutyCols)])].sort();
+    
     const collected=getRowTotalCollected(x);
     const dutyAmount=Number(x.dutyAmount ?? collected)||0;
     const deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected);
@@ -960,14 +965,21 @@ function buildPrintHTML(mode="duties"){
     const dateText=dates.length?dates.map(d=>escPrint(d)).join("<br>"):"-";
     const sheetTitle = isEvent && x.customHeading ? x.customHeading : `চাঁদা সংগ্রহ দায়িত্ব বণ্টন ${new Date().getFullYear()}`;
 
-    const colBreakdownRows = colEntries.map(([d,a])=>`<tr><td colspan="2">${formatDate(d)} - চাঁদা সংগ্রহ</td><td>₹${Number(a).toFixed(2)}</td></tr>`).join("");
+    const dateBreakdownRows = allDates.map(d => {
+      const colAmt = Number(cols[d] || 0);
+      const targetAmt = Number(dutyCols[d] || 0);
+      let details = [];
+      if(targetAmt > 0) details.push(`টার্গেট: ₹${targetAmt.toFixed(2)}`);
+      if(colAmt > 0) details.push(`সংগ্রহ: ₹${colAmt.toFixed(2)}`);
+      return `<tr><td colspan="2">📅 ${formatDate(d)} ${details.length ? `(${details.join(" | ")})` : ""}</td><td>₹${colAmt.toFixed(2)}</td></tr>`;
+    }).join("");
 
     return `<section class="print-sheet mb-6">
       <div class="committee">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</div>
       <div class="title">${escPrint(sheetTitle)}</div>
       <div class="leader">গ্রুপ লিডার: ${escPrint(leaders.length?leaders.join(", "):"-")}</div>
       <div class="meta">
-        <div><b>দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
+        <div><b>টাইটেল / দায়িত্ব:</b> ${escPrint(x.responsibility||"-")}</div>
         <div><b>তারিখ:</b><br>${dateText}</div>
       </div>
       ${x.dutyCategory === "event" ? `<div class="village">দায়িত্ব: ${escPrint(x.responsibility||"-")}</div>` : `<div class="village">গ্রাম: ${escPrint(villages.length?villages.join(", "):"-")}</div>`}
@@ -978,8 +990,9 @@ function buildPrintHTML(mode="duties"){
       ${!isEvent ? `
       <table class="summary">
         <tbody>
-          ${colBreakdownRows}
-          <tr style="border-top:2px solid #000;"><td><b>সর্বমোট সংগ্রহ</b></td><td></td><td><b>₹${collected.toFixed(2)}</b></td></tr>
+          ${dateBreakdownRows}
+          <tr style="border-top:2px solid #000;"><td><b>দায়িত্বের মোট টাকা (Target)</b></td><td></td><td><b>₹${dutyAmount.toFixed(2)}</b></td></tr>
+          <tr><td><b>সর্বমোট সংগ্রহ</b></td><td></td><td><b>₹${collected.toFixed(2)}</b></td></tr>
           <tr><td>পূজা কোষাধ্যক্ষের কাছে জমা</td><td></td><td>₹${deposited.toFixed(2)}</td></tr>
           <tr><td>বাকি</td><td></td><td>₹${due.toFixed(2)}</td></tr>
         </tbody>
