@@ -1268,10 +1268,13 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     const members=Array.isArray(x.selectedMembers)&&x.selectedMembers.length?x.selectedMembers:x.name?String(x.name).split(",").map((n,i)=>({name:n.trim(),mobile:String(x.mobile||"").split(",")[i]||""})):[];
     const leaders=getRowLeaders(x); const villages=getRowVillages(x);
     const cols=getRowCollections(x);
-    const colEntries=Object.entries(cols).filter(([d,a])=>Number(a)>0);
+    const dutyCols=x.dutyAmounts || {};
+    const allDates=[...new Set([...Object.keys(cols), ...Object.keys(dutyCols)])].sort();
+    
     const collected=getRowTotalCollected(x);
+    const dutyAmount=Number(x.dutyAmount ?? collected)||0;
     const deposited=Math.min(Math.max(Number(x.deposited)||0,0),collected);
-    const due=Math.max(0,(Number(x.dutyAmount ?? collected)||0)-collected);
+    const due=Math.max(0,dutyAmount-collected);
 
     ws.mergeCells(r,1,r,3);
     ws.getCell(r,1).value="নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
@@ -1326,18 +1329,30 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     });
 
     if(!isEvent && includeCollectionSummary){
-      colEntries.forEach(([d,a])=>{
+      allDates.forEach(d => {
+        const colAmt = Number(cols[d] || 0);
+        const targetAmt = Number(dutyCols[d] || 0);
+        let details = [];
+        if(targetAmt > 0) details.push(`টার্গেট: ₹${targetAmt.toFixed(2)}`);
+        if(colAmt > 0) details.push(`সংগ্রহ: ₹${colAmt.toFixed(2)}`);
+        const detailStr = details.length ? ` (${details.join(" | ")})` : "";
+
         ws.mergeCells(r,1,r,2);
-        ws.getCell(r,1).value=`${formatDate(d)} - সংগৃহীত চাঁদা`;
+        ws.getCell(r,1).value=`📅 ${formatDate(d)}${detailStr}`;
         borderMergedRange(r,1,2);
         applyStyle(ws.getCell(r,1), lightPeach, true, 11);
 
-        ws.getCell(r,3).value=`₹${Number(a).toFixed(2)}`;
+        ws.getCell(r,3).value=`₹${colAmt.toFixed(2)}`;
         applyStyle(ws.getCell(r,3), lightPeach, true, 11);
         ws.getRow(r).height=25; r++;
       });
 
-      const moneyRows=[["সর্বমোট সংগ্রহ",collected],["পূজা কোষাধ্যক্ষের কাছে জমা",deposited],["বাকি",due]];
+      const moneyRows=[
+        ["দায়িত্বের মোট টাকা (Target)", dutyAmount],
+        ["সর্বমোট সংগ্রহ", collected],
+        ["পূজা কোষাধ্যক্ষের কাছে জমা", deposited],
+        ["বাকি", due]
+      ];
       moneyRows.forEach(([label,val])=>{
         ws.mergeCells(r,1,r,2);
         ws.getCell(r,1).value=label;
@@ -1688,7 +1703,7 @@ async function exportDutiesAsExcel(list,includeCollectionSummary=true){
     import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
     import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
   ]).then(([am,authm,fsm])=>{
-    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
+    const {getApps,getApp,initializeApps}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
     let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
     const auth=getAuth(app), db=getFirestore(app);
     const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
