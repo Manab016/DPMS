@@ -1085,11 +1085,12 @@
       function renderTxTable() {
         const tbody = document.getElementById("txTableBody");
         tbody.innerHTML = "";
-        if (txData.length === 0) {
+        const regularTxData = getRegularTreasuryTransactions();
+        if (regularTxData.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো লেনদেন পাওয়া যায়নি</td></tr>';
           return;
         }
-        txData.forEach(item => {
+        regularTxData.forEach(item => {
           const typeText =
                 item.type === 'cash_addition' ? 'নগদ জমা' :
                 item.type === 'cash_to_bank' ? 'নগদ -> ব্যাংক' :
@@ -1238,6 +1239,23 @@
           viewCash.classList.remove("hidden");
           viewTx.classList.add("hidden");
         }
+      }
+
+      // Daitobonton থেকে "পূজা কোষাধ্যক্ষ"-এর কাছে জমা হওয়া টাকা
+      // সাধারণ "কোষাধ্যক্ষ" হিসাবের অংশ নয়। রেকর্ড Firestore-এ থাকবে,
+      // কিন্তু এই সাধারণ কোষাধ্যক্ষ পেজের তালিকা/ব্যালেন্স/এক্সপোর্টে দেখাবে না।
+      function isPujaTreasuryTransaction(item) {
+        if (!item) return false;
+        const sourceType = String(item.sourceType || "").trim().toLowerCase();
+        const source = String(item.source || "").trim().toLowerCase();
+        const receiverRole = String(item.receiverRole || "").trim().toLowerCase();
+        return sourceType === "daitobonton_collection" ||
+               source === "daitobonton" && receiverRole === "puja_treasury" ||
+               receiverRole === "puja_treasury";
+      }
+
+      function getRegularTreasuryTransactions() {
+        return txData.filter(item => !isPujaTreasuryTransaction(item));
       }
 
       function updateBalances() {
@@ -2409,7 +2427,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
         const q = v => '"' + String(v ?? "").replace(/"/g, '""') + '"';
         if (type === "transactions") {
           rows = [["তারিখ","লেনদেনের ধরন","পরিমাণ (₹)","বিবরণ"]];
-          txData.forEach(x => rows.push([x.date, x.type, x.amount, x.desc || ""]));
+          getRegularTreasuryTransactions().forEach(x => rows.push([x.date, x.type, x.amount, x.desc || ""]));
           fileName = "Transaction_Report.csv";
         } else if (type === "cash") {
           rows = [["তারিখ","প্রাপকের নাম","পেমেন্টের ধরন","উদ্দেশ্য/খাত","পরিমাণ (₹)","বিবরণ"]];
@@ -2453,12 +2471,11 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
       async function initTreasuryFirebase() {
         try {
-          const [appMod, authMod, fs] = await Promise.all([
+          const [{ initializeApp }, authMod, fs] = await Promise.all([
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
             import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
           ]);
-          const { getApps, getApp, initializeApp } = appMod;
           const { getAuth, onAuthStateChanged, setPersistence, browserLocalPersistence } = authMod;
           const { getFirestore, collection, onSnapshot, getDocs, addDoc, updateDoc, deleteDoc, doc } = fs;
 
@@ -2467,12 +2484,7 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
           // The previous named "treasuryApp" created a separate Auth instance, so the login
           // session from the main login page was not reliably available on this page (especially
           // inside the Android WebView). That caused members and treasury data to remain local.
-          let app;
-          try {
-            app = getApps().length ? getApp() : initializeApp(window.treasuryFirebaseConfig);
-          } catch (e) {
-            app = getApps().length ? getApp() : initializeApp(window.treasuryFirebaseConfig);
-          }
+          const app = initializeApp(window.treasuryFirebaseConfig);
           window.treasuryDb = getFirestore(app);
           window.treasuryAuth = getAuth(app);
           window.treasuryStorage = null;
@@ -2599,27 +2611,26 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
               renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
 
               onSnapshot(collection(window.treasuryDb, "treasurer"), snap2 => {
+                // Delete/edit-এর মাঝখানে পুরনো snapshot এসে local UI-কে আবার পুরনো data-তে ফিরিয়ে দেবে না।
+                if (treasuryCloudMutationBusy) {
+                  treasuryCloudSnapshotPending = true;
+                  return;
+                }
                 const next = { transactions:[], cash:[], loans:[] };
                 snap2.forEach(d => {
                   const v = d.data() || {};
                   if (v.kind && next[v.kind]) {
                     const item = { ...(v.data || {}), _docId:d.id };
-                    if (item.id !== undefined && item.id !== null) next[v.kind].push(item);
+                    next[v.kind].push(item);
                   }
                 });
-
-                // Firestore snapshot is the final source of truth.
-                // A completed write is already reflected in this snapshot, so applying it
-                // immediately keeps every open browser/WebView in sync without stale rollback.
                 txData = next.transactions;
                 cashData = next.cash;
                 loanData = next.loans;
                 saveLocalTreasuryOnly();
                 rebuildTreasuryCloudMaps();
                 renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
-              }, err => {
-                console.warn("treasurer sync error:", err);
-              });
+              }, err => console.warn("treasurer sync error:", err));
             } catch(e) {
               treasuryCloudReady = false;
               console.error("Treasurer cloud sync failed:", e);
@@ -2686,20 +2697,15 @@ ${payment.remarks ? `\n📝 *মন্তব্য:* ${String(payment.remarks)}`
 
             // সব save/delete operation serialise করা হচ্ছে, যাতে একটার snapshot অন্যটাকে undo না করে।
             treasuryCloudWriteQueue = treasuryCloudWriteQueue.then(async () => {
-              await waitForCloud();
+              await waitForCloud;
               treasuryCloudMutationBusy = true;
               try {
                 await saveArrayToCloud("transactions", txData);
                 await saveArrayToCloud("cash", cashData);
                 await saveArrayToCloud("loans", loanData);
-                // Keep this device immediately updated even before onSnapshot paints.
-                saveLocalTreasuryOnly();
-                rebuildTreasuryCloudMaps();
-                renderTxTable(); renderCashTable(); renderLoanTable(); updateBalances();
               } catch(e) {
                 console.error("Treasury cloud sync operation failed:", e);
                 alert("Firebase-এ পরিবর্তন সংরক্ষণ করা যায়নি। আপনার login এবং treasurer permission পরীক্ষা করুন।");
-                throw e;
               } finally {
                 treasuryCloudMutationBusy = false;
                 treasuryCloudSnapshotPending = false;
