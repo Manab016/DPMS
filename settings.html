@@ -349,6 +349,7 @@
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasury" type="checkbox"/> কোষাধ্যক্ষ</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_daitobonton" type="checkbox"/> দায়িত্ব বণ্টন</label>
 <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_puja_dorkhasto" type="checkbox"/> পূজা দরখাস্ত</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_budget_plan" type="checkbox"/> বাজেট পরিকল্পনা</label>
 </div>
 </div>
 <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
@@ -446,7 +447,8 @@ const PERMISSION_NAMES = {
   sales: "বিক্রয়",
   treasury: "কোষাধ্যক্ষ",
   daitobonton: "দায়িত্ব বণ্টন",
-  puja_dorkhasto: "পূজা দরখাস্ত"
+  puja_dorkhasto: "পূজা দরখাস্ত",
+  budget_plan: "বাজেট পরিকল্পনা"
 };
 let allUsersData = [];
 let allLoginHistory = [];
@@ -468,7 +470,7 @@ onAuthStateChanged(auth, async (user) => {
   // Show the role immediately, then refine it from Firestore.
   window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
   window.userPermissions = window.isMasterAdmin
-    ? ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"]
+    ? ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"]
     : [];
 
   const settingsRoleBadge = document.getElementById("settingsUserRoleBadge");
@@ -672,7 +674,7 @@ window.handleSaveUser = async function(event) {
   const name = document.getElementById("uNameInput").value.trim();
   const email = document.getElementById("uEmailInput").value.trim().toLowerCase();
   const role = document.getElementById("uRoleInput").value;
-  const selectedPerms = ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"]
+  const selectedPerms = ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"]
     .filter(p => document.getElementById("perm_" + p)?.checked);
 
   try {
@@ -724,7 +726,7 @@ window.openCreateUserModal = function() {
   document.getElementById("uPassInput").value = "";
   document.getElementById("uRoleInput").value = "member";
   document.getElementById("passInputContainer").style.display = "block";
-  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"].forEach(p => document.getElementById("perm_" + p).checked = false);
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"].forEach(p => document.getElementById("perm_" + p).checked = false);
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
@@ -744,7 +746,7 @@ window.editUserPermissions = function(uId) {
   document.getElementById("uRoleInput").value = user.role || "member";
   document.getElementById("passInputContainer").style.display = "none";
   const perms = user.permissions || [];
-  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
   document.getElementById("createUserModal").classList.remove("hidden");
 };
 
@@ -1489,5 +1491,86 @@ document.addEventListener("DOMContentLoaded", () => {
   }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
 })();
 </script>
+
+<script id="dpms-unified-list-minimize">
+(() => {
+  const headerStyle='width:100%;background:#fffbeb;padding:8px 12px;border-bottom:1px solid #fde68a;display:flex;align-items:center;justify-content:space-between;text-align:left;cursor:pointer;box-sizing:border-box;';
+  const titleStyle='font-size:13px;font-weight:800;color:#374151;';
+  const arrowStyle='color:#b45309;font-weight:800;font-size:18px;line-height:1;';
+  function setOpen(state,open){
+    if(!state||!state.content||!state.header)return;
+    state.open=!!open;
+    state.content.style.display=state.open?'':'none';
+    state.header.querySelectorAll('.dpms-list-arrow').forEach(a=>a.textContent=state.open?'⌃':'⌄');
+    state.header.querySelectorAll('.dpms-minimize-text').forEach(a=>a.remove());
+    (state.pagination||[]).forEach(p=>p.style.display=state.open?'':'none');
+  }
+  function createControl(header,content,initiallyOpen,pagination=[]){
+    if(!header||!content)return;
+    const state=header._dpmsState||{header,content,open:false,pagination};
+    state.pagination=pagination; state.content=content; state.header=header;
+    header._dpmsState=state; content._dpmsState=state; header.dataset.dpmsListControl='1';
+    let arrow=header.querySelector('.dpms-list-arrow');
+    if(!arrow){ arrow=document.createElement('span'); arrow.className='dpms-list-arrow'; arrow.style.cssText=arrowStyle; header.appendChild(arrow); }
+    header.querySelectorAll('.dpms-minimize-text').forEach(x=>x.remove());
+    setOpen(state,initiallyOpen);
+    if(!header.dataset.dpmsClickBound){
+      header.dataset.dpmsClickBound='1';
+      header.addEventListener('click',e=>{
+        if(e.target.closest('input,select,textarea,a,[data-no-list-toggle]')) return;
+        setOpen(state,!state.open);
+      });
+    }
+  }
+  function wrapTable(table){
+    if(table.dataset.dpmsTableDone==='1')return;
+    const wrap=table.closest('.overflow-x-auto')||table.parentElement; if(!wrap)return;
+    const parent=wrap.parentElement; if(!parent)return;
+    table.dataset.dpmsTableDone='1';
+    let existing=parent.querySelector(':scope > [data-dpms-list-header]');
+    if(existing)return;
+    const h=document.createElement('button'); h.type='button'; h.dataset.dpmsListHeader='1'; h.style.cssText=headerStyle+'border:0;border-radius:8px 8px 0 0;margin-top:6px;';
+    h.innerHTML='<span style="'+titleStyle+'">📋 তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>';
+    parent.insertBefore(h,wrap);
+    const content=document.createElement('div'); content.dataset.dpmsListContent='1';
+    parent.insertBefore(content,wrap); content.appendChild(wrap);
+    const pagination=[...parent.querySelectorAll('[id*="Pagination"],.pagination')].filter(x=>x!==h&&x!==content);
+    pagination.forEach(x=>content.appendChild(x));
+    createControl(h,content,false,pagination);
+  }
+  function wrapCards(){
+    document.querySelectorAll('.sub-list-card,.sale-list-card').forEach(card=>{
+      if(card.dataset.dpmsUnified==='1')return; card.dataset.dpmsUnified='1';
+      const children=[...card.children]; if(!children.length)return;
+      let header=children[0];
+      const looks=header.matches('.bg-orange-50,.bg-amber-50,.bg-gray-50,[data-list-header]')||header.querySelector('h3,h2');
+      if(!looks){ header=document.createElement('div'); header.style.cssText=headerStyle; header.innerHTML='<span style="'+titleStyle+'">📋 তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>'; card.insertBefore(header,card.firstChild); }
+      else { header.querySelectorAll('.dpms-minimize-text').forEach(x=>x.remove()); if(!header.querySelector('.dpms-list-arrow')){const a=document.createElement('span');a.className='dpms-list-arrow';a.style.cssText=arrowStyle;header.appendChild(a);} }
+      const content=document.createElement('div'); content.dataset.dpmsListContent='1'; [...card.children].filter(x=>x!==header).forEach(x=>content.appendChild(x)); card.appendChild(content);
+      createControl(header,content,false,[]);
+    });
+  }
+  function process(){
+    wrapCards();
+    document.querySelectorAll('table').forEach(wrapTable);
+    const tabs=document.getElementById('tabs');
+    if(tabs&&!tabs.dataset.dpmsTabsDone){
+      tabs.dataset.dpmsTabsDone='1'; const parent=tabs.parentElement;
+      if(parent){ const h=document.createElement('button'); h.type='button'; h.style.cssText=headerStyle+'border:0;border-radius:8px;margin-bottom:6px;'; h.innerHTML='<span style="'+titleStyle+'">📋 দরখাস্তের তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>'; parent.insertBefore(h,tabs); createControl(h,tabs,false,[]); }
+    }
+  }
+  function openSearchList(el){
+    // Clicking/focusing a search box is an explicit request to inspect the list.
+    const listStates=[...document.querySelectorAll('[data-dpms-list-control="1"]')].map(h=>h._dpmsState).filter(Boolean);
+    listStates.forEach(s=>{ if(!s.open) setOpen(s,true); });
+  }
+  document.addEventListener('focusin',e=>{ const el=e.target; if(!(el instanceof HTMLInputElement))return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  document.addEventListener('click',e=>{ const el=e.target instanceof Element ? e.target.closest('input') : null; if(!el)return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  document.addEventListener('input',e=>{ const el=e.target; if(!(el instanceof HTMLInputElement))return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',process);else process();
+  new MutationObserver(process).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
 </body>
 </html>
