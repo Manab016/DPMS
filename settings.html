@@ -1,0 +1,1576 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>দুর্গাপূজা ব্যবস্থাপনা - সেটিংস</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+
+      #subTableBody td,
+      #subTableBody th {
+        text-align: center;
+        vertical-align: middle;
+        white-space: nowrap;
+        width: auto;
+      }
+
+      /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশন (ডান থেকে বামে) */
+      @keyframes autoScroll {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+      .animate-auto-slide {
+        display: flex;
+        width: max-content;
+        animation: autoScroll 20s linear infinite;
+      }
+      .animate-auto-slide:hover {
+        animation-play-state: paused;
+      }
+
+      /* স্ক্রলবার লুকানোর জন্য */
+      .hide-scrollbar::-webkit-scrollbar {
+        display: none;
+      }
+      .hide-scrollbar {
+        -ms-overflow-style: none;
+        scrollbar-width: none;
+      }
+
+      /* ড্যাশবোর্ড মেনুর active state: শুধু বর্তমানে খোলা পেজ/ট্যাব orange থাকবে */
+      #quickMenuContent .dashboard-menu-btn.menu-active {
+        background-color: #ea580c !important;
+        color: #ffffff !important;
+        border-color: #ea580c !important;
+      }
+      #quickMenuContent .dashboard-menu-btn.menu-active:hover {
+        background-color: #c2410c !important;
+      }
+
+      @media print {
+        body {
+          background: white !important;
+        }
+        body > *:not(#idCardModal) {
+          display: none !important;
+        }
+        .no-print {
+          display: none !important;
+        }
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    
+.settings-menu-active {
+  background-color:#ea580c !important;
+  color:#fff !important;
+  border-color:#ea580c !important;
+}
+</style>
+
+<style id="auth-pending-style">
+  html.auth-pending body { visibility: visible !important; }
+</style>
+<script>
+  document.documentElement.classList.add("auth-ready");
+  window.__finishAuthRender = function () {
+    document.documentElement.classList.remove("auth-pending");
+    document.documentElement.classList.add("auth-ready");
+  };
+</script>
+
+
+<style id="committee-global-sync-style">
+  /* Committee header is revealed only after cached/cloud data has been applied. */
+  #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
+</style>
+</head>
+<body class="bg-amber-50/40 p-3 font-sans pb-20">
+<div class="max-w-4xl mx-auto">
+  <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4">
+    <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
+    <p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p>
+    <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p>
+    <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <span id="committeeMobileWrap"></span></p>
+  </div>
+
+  <div id="section-settings">
+<div class="mb-4">
+<button class="inline-flex items-center gap-1 bg-white border border-gray-200 px-4 py-2 rounded-lg text-sm font-bold shadow-sm text-gray-800 hover:bg-gray-50 transition" onclick="goDashboard()">⬅️ হোম</button>
+</div>
+<div class="flex bg-gray-100/70 rounded-lg p-1.5 mb-4 overflow-x-auto hide-scrollbar border border-gray-200/60 gap-1">
+<button class="bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition" id="tabBtnProfile" onclick="switchSettingsSubTab('profile')">
+            প্রোফাইল
+          </button>
+<button class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition" id="tabBtnSystem" onclick="switchSettingsSubTab('system')">
+            সিস্টেম
+          </button>
+<button class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition" id="tabBtnUsers" onclick="switchSettingsSubTab('users')">
+            ব্যবহারকারী
+          </button>
+<button class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition" id="tabBtnHistory" onclick="switchSettingsSubTab('history')">
+            লগইন ইতিহাস
+          </button>
+</div>
+<div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100" id="subSectionProfile">
+<h2 class="text-2xl font-black text-gray-900 mb-6 tracking-tight">প্রোফাইল তথ্য</h2>
+<div class="space-y-5">
+<div class="flex items-start gap-4">
+<div class="w-full">
+<p class="text-xs font-semibold text-gray-500 mb-0.5">বর্তমান নাম</p>
+<p class="text-[17px] font-bold text-gray-800 mb-3" id="profileNameDisplay">নাম দেওয়া নেই</p>
+<div class="p-3 bg-amber-50/60 rounded-xl border border-amber-200/80 max-w-md" id="profileNameEditor">
+  <label class="block text-xs font-bold text-gray-700 mb-1.5">✏️ নাম পরিবর্তন করুন</label>
+  <div class="flex gap-2">
+    <input id="profileNameInput" type="text"
+      class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-orange-500"
+      placeholder="নতুন নাম লিখুন" autocomplete="name">
+    <button id="saveProfileNameBtn" type="button"
+      class="px-4 py-2 rounded-lg bg-orange-600 hover:bg-orange-700 transition text-white text-xs font-bold shadow-sm whitespace-nowrap">
+      নাম সংরক্ষণ
+    </button>
+  </div>
+  <p class="text-[11px] text-gray-500 mt-1.5">এখানে দেওয়া নাম ড্যাশবোর্ড এবং প্রোফাইলে প্রদর্শিত হবে।</p>
+</div>
+
+</div>
+</div>
+<div class="flex items-start gap-4">
+<div>
+<p class="text-xs font-semibold text-gray-500 mb-0.5">ব্যবহারকারী ইমেইল / আইডি</p>
+<p class="text-[17px] font-semibold text-gray-800" id="profileEmailDisplay">লোড হচ্ছে...</p>
+<div class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide" id="profileRoleBadge">
+                  লোড হচ্ছে...
+                </div>
+</div>
+</div>
+</div>
+<div class="mt-7">
+<p class="text-[15px] font-bold text-gray-800 mb-3">অনুমতি:</p>
+<div class="flex flex-wrap gap-2" id="profilePermissionsContainer"></div>
+</div>
+<div class="mt-8 flex gap-3">
+<button class="flex-1 border border-orange-500 bg-orange-50 rounded-lg py-3 text-[13px] font-bold text-orange-700 hover:bg-orange-100 transition shadow-sm" onclick="openPasswordModal()">
+              পাসওয়ার্ড পরিবর্তন
+            </button>
+<button class="flex-1 bg-[#F04445] text-white rounded-lg py-3 text-[13px] font-bold hover:bg-red-600 transition shadow-sm" onclick="handleLogout()">
+              লগ আউট
+            </button>
+</div>
+</div>
+<div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden" id="subSectionSystem">
+<h2 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">⚙️ সিস্টেম সেটিংস</h2>
+<div class="mt-8 p-4 bg-amber-50/70 rounded-xl border border-amber-200">
+  <h3 class="text-sm font-bold text-orange-900 mb-1">🏛️ কমিটির উপরের তথ্য</h3>
+  <p class="text-[11px] text-gray-600 mb-4">কমিটির তথ্য আলাদা আলাদাভাবে সেভ হবে এবং সব পেজে একই তথ্য দেখাবে।</p>
+  <form class="space-y-3" id="committeeInfoForm" onsubmit="saveCommitteeInfo(event)">
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">কমিটির নাম</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoName" required type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">স্থাপিত সাল</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoEstablished" required type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">Registration No.</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoReg" required type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">সাং</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoVillage" placeholder="যেমন: সহরা" type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">পোস্ট</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPost" placeholder="যেমন: আদিনা স্টেশন" type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">থানা ও জেলা</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPoliceDistrict" placeholder="যেমন: মালদা" type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">পিনকোড</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoPincode" placeholder="যেমন: 732128" type="text"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ১</label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile" placeholder="যেমন: 9002652507" type="tel"/></div>
+    <div><label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর ২ <span class="font-normal text-gray-500">(ঐচ্ছিক)</span></label>
+      <input class="w-full p-2.5 border rounded-lg text-sm bg-white" id="committeeInfoMobile2" placeholder="দ্বিতীয় নম্বর না থাকলে খালি রাখুন" type="tel"/></div>
+    <button class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition" type="submit">💾 কমিটির তথ্য সেভ করুন</button>
+  </form>
+</div>
+
+<div>
+<h3 class="text-sm font-bold text-orange-900 mb-3">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
+<form class="space-y-4" id="devConfigForm" onsubmit="saveDevData(event)">
+<div>
+<label class="block text-xs font-bold text-gray-700 mb-1">ডেভেলপারের নাম</label>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="devNameInput" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="devMobileInput" required="" type="text"/>
+</div>
+<div>
+<label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল এড্রেস</label>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="devEmailInput" required="" type="email"/>
+</div>
+<button class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition" type="submit">
+                💾 ডেভেলপার তথ্য সেভ করুন
+              </button>
+</form>
+</div>
+</div>
+
+<div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden" id="subSectionUsers">
+<div class="flex justify-between items-center mb-4">
+<h2 class="text-xl font-bold text-gray-900">ব্যবহারকারী ব্যবস্থাপনা</h2>
+<button class="bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-bold" onclick="openCreateUserModal()">
+              ➕ নতুন ব্যবহারকারী
+            </button>
+</div>
+<div class="overflow-x-auto border rounded-lg">
+<table class="w-full text-left border-collapse text-sm">
+<thead>
+<tr class="bg-gray-100 text-gray-700 border-b">
+<th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
+<th class="p-2.5 border-r text-center align-middle">নাম</th>
+<th class="p-2.5 border-r text-center align-middle">রোল</th><th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
+<th class="p-2.5 text-center align-middle">অ্যাকশন</th>
+</tr>
+</thead>
+<tbody id="usersTableBody"></tbody>
+</table>
+</div>
+</div>
+<div class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden" id="subSectionHistory">
+<div class="flex flex-col gap-3 mb-4">
+  <div class="flex justify-between items-center gap-2">
+    <h2 class="text-xl font-bold text-gray-900">লগইন ইতিহাস</h2>
+    <button class="bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold hidden" id="deleteHistoryBtn" onclick="deleteSelectedHistory()">🗑️ নির্বাচিত ডিলিট</button>
+  </div>
+  <div class="flex gap-2">
+    <input id="historySearchInput" type="search" oninput="filterLoginHistory()" placeholder="নাম / User ID / ইমেইল দিয়ে খুঁজুন" class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500 bg-gray-50/30">
+    <button type="button" onclick="clearHistorySearch()" class="px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-xs font-bold">✖ পরিষ্কার</button>
+  </div>
+</div>
+<div class="overflow-x-auto border rounded-lg">
+<table class="w-full text-left border-collapse text-sm">
+<thead>
+<tr class="bg-gray-100 text-gray-700 border-b">
+<th class="p-2.5 border-r text-center align-middle w-10"><input id="selectAllHistory" onclick="toggleSelectAllHistory()" type="checkbox"/></th>
+<th class="p-2.5 border-r text-center align-middle">নাম</th>
+<th class="p-2.5 border-r text-center align-middle">User ID / ইমেইল</th>
+<th class="p-2.5 border-r text-center align-middle">সময়</th>
+<th class="p-2.5 border-r text-center align-middle">ডিভাইস</th>
+<th class="p-2.5 text-center align-middle">অ্যাকশন</th>
+</tr>
+</thead>
+<tbody id="historyTableBody"></tbody>
+</table>
+</div>
+</div>
+</div>
+
+<div class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50" id="changePasswordModal">
+<div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl border border-gray-100">
+<h3 class="text-lg font-bold text-orange-600 mb-4">🔒 পাসওয়ার্ড পরিবর্তন করুন</h3>
+<form class="space-y-3" id="changePasswordForm" onsubmit="handlePasswordChange(event)">
+<div>
+<label class="block text-xs font-bold text-gray-600 mb-1">নতুন পাসওয়ার্ড *</label>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="newPasswordInput" minlength="6" required="" type="password"/>
+</div>
+<div>
+<label class="block text-xs font-bold text-gray-600 mb-1">কনফার্ম পাসওয়ার্ড *</label>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="confirmPasswordInput" minlength="6" required="" type="password"/>
+</div>
+<div class="text-xs font-bold text-red-600 hidden" id="passErrorMsg"></div>
+<div class="flex justify-end gap-2 mt-4 pt-2 border-t">
+<button class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold" onclick="closePasswordModal()" type="button">
+              বাতিল
+            </button>
+<button class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold" id="savePassBtn" type="submit">
+              আপডেট করুন
+            </button>
+</div>
+</form>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50" id="devModal">
+<div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+<button class="absolute top-3 right-3 text-gray-400 font-bold" onclick="toggleDevModal()">✕</button>
+<div class="text-center mb-4">
+<div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">
+            👨‍💻
+          </div>
+<h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+</div>
+<div class="space-y-2.5 text-xs border-t pt-3">
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+<span class="text-gray-500">নাম:</span>
+<span class="font-bold text-gray-800" id="popDevName">লোড হচ্ছে...</span>
+</div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+<span class="text-gray-500">মোবাইল:</span>
+<a class="font-bold text-orange-700" href="#" id="popDevMobile">লোড হচ্ছে...</a>
+</div>
+<div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+<span class="text-gray-500">ইমেইল:</span>
+<a class="font-bold text-gray-800" href="#" id="popDevEmail">লোড হচ্ছে...</a>
+</div>
+</div>
+<button class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold" onclick="toggleDevModal()">
+          বন্ধ করুন
+        </button>
+</div>
+</div>
+<div class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50" id="createUserModal">
+<div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
+<h3 class="text-lg font-bold text-orange-600 mb-4" id="userModalTitle">👤 নতুন ব্যবহারকারী তৈরি করুন</h3>
+<form class="space-y-3" id="createUserForm" onsubmit="handleSaveUser(event)">
+<input id="editUserId" type="hidden"/>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="uNameInput" placeholder="পূর্ণ নাম" required="" type="text"/>
+<input class="w-full p-2.5 border rounded-lg text-sm" id="uEmailInput" placeholder="ইমেইল" required="" type="email"/>
+<div id="passInputContainer">
+<input class="w-full p-2.5 border rounded-lg text-sm" id="uPassInput" minlength="6" placeholder="পাসওয়ার্ড" type="password"/>
+</div>
+<div class="mb-3">
+<label class="block text-xs font-bold text-gray-700 mb-1">রোল নির্বাচন করুন</label>
+<select id="uRoleInput" class="w-full p-2.5 border rounded-lg text-sm bg-white">
+  <option value="member">সাধারণ সদস্য</option>
+  <option value="admin">Admin</option>
+  <option value="treasury">কোষাধ্যক্ষ</option>
+  <option value="puja_treasury">পূজা কোষাধ্যক্ষ</option>
+</select>
+<p class="text-[10px] text-gray-500 mt-1">রোল পরিচয় নির্ধারণ করে; কোন মডিউল দেখা যাবে তা নিচের Permission দিয়ে নির্ধারিত হবে।</p>
+</div>
+<div class="mb-2">
+<label class="block text-xs font-bold text-gray-700 mb-2">Permission — যা দেওয়া হবে শুধু সেটাই দেখা যাবে</label>
+<p class="text-[10px] text-red-600 font-semibold mb-2">কোনো Permission না দিলে এই ব্যবহারকারী কোনো module দেখতে বা খুলতে পারবেবিধা পাবে না।</p>
+<div class="grid grid-cols-2 gap-2 text-xs">
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_members" type="checkbox"/> সদস্য</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_chada" type="checkbox"/> চাঁদা</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_expense" type="checkbox"/> খরচ</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_booking" type="checkbox"/> বুকিং</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_sales" type="checkbox"/> বিক্রয়</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_treasury" type="checkbox"/> কোষাধ্যক্ষ</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_daitobonton" type="checkbox"/> দায়িত্ব বণ্টন</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_puja_dorkhasto" type="checkbox"/> পূজা দরখাস্ত</label>
+<label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer"><input id="perm_budget_plan" type="checkbox"/> বাজেট পরিকল্পনা</label>
+</div>
+</div>
+<div class="flex justify-end gap-2 mt-4 pt-2 border-t">
+<button class="bg-gray-200 px-4 py-2 rounded-lg text-xs font-bold" onclick="closeCreateUserModal()" type="button">
+              বাতিল
+            </button>
+<button class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold" id="saveUserBtn" type="submit">
+              সেভ করুন
+            </button>
+</div>
+</form>
+</div>
+</div>
+
+<script>
+(function () {
+  const KEY = "pujaAuthSessionV2";
+  window.__pujaAuthCache = {
+    get() {
+      try { return JSON.parse(localStorage.getItem(KEY) || "null"); } catch (_) { return null; }
+    },
+    set(user, role, permissions) {
+      try {
+        localStorage.setItem(KEY, JSON.stringify({
+          uid: user.uid, email: user.email || "",
+          role: role || "user",
+          permissions: Array.isArray(permissions) ? permissions : [],
+          savedAt: Date.now()
+        }));
+      } catch (_) {}
+    },
+    clear() { try { localStorage.removeItem(KEY); } catch (_) {} }
+  };
+  const cached = window.__pujaAuthCache.get();
+  window.currentUserRole = cached?.role || "user";
+  window.userPermissions = Array.isArray(cached?.permissions) ? cached.permissions : [];
+  window.__pujaAuthReady = !!cached;
+})();
+</script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+import {
+  getAuth,
+  initializeAuth,
+  setPersistence,
+  browserLocalPersistence,
+  inMemoryPersistence,
+  onAuthStateChanged,
+  signOut,
+  updatePassword,
+  updateProfile,
+  createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+import {
+  getFirestore,
+  collection,
+  onSnapshot,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+  authDomain: "durgapuja-2026.firebaseapp.com",
+  projectId: "durgapuja-2026",
+  storageBucket: "durgapuja-2026.firebasestorage.app",
+  messagingSenderId: "625976130920",
+  appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+setPersistence(auth, browserLocalPersistence);
+const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
+
+const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
+const ROLE_NAMES = {
+  member: "সাধারণ সদস্য",
+  admin: "Admin",
+  treasury: "কোষাধ্যক্ষ",
+  puja_treasury: "পূজা কোষাধ্যক্ষ"
+};
+const PERMISSION_NAMES = {
+  members: "সদস্য",
+  chada: "চাঁদা",
+  expense: "খরচ",
+  booking: "বুকিং",
+  sales: "বিক্রয়",
+  treasury: "কোষাধ্যক্ষ",
+  daitobonton: "দায়িত্ব বণ্টন",
+  puja_dorkhasto: "পূজা দরখাস্ত",
+  budget_plan: "বাজেট পরিকল্পনা"
+};
+let allUsersData = [];
+let allLoginHistory = [];
+let loginHistoryCutoff = 0;
+
+window.currentUserRole = "member";
+window.userPermissions = [];
+window.isMasterAdmin = false;
+
+onAuthStateChanged(auth, async (user) => {
+  if (!user) {
+    window.__pujaAuthCache.clear();
+    window.location.replace("index.html");
+    return;
+  }
+
+  window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  // Show the role immediately, then refine it from Firestore.
+  window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
+  window.userPermissions = window.isMasterAdmin
+    ? ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"]
+    : [];
+
+  const settingsRoleBadge = document.getElementById("settingsUserRoleBadge");
+  if (settingsRoleBadge) {
+    settingsRoleBadge.innerText =
+      window.isMasterAdmin ? "রোল: Admin" : "রোল: সাধারণ সদস্য";
+  }
+
+  document.getElementById("profileEmailDisplay").innerText = user.email || "-";
+  document.getElementById("profileNameDisplay").innerText = (window.__pujaAuthCache?.get?.()?.name || user.displayName || "নাম দেওয়া নেই");
+
+  let userDocData = {};
+  try {
+    const snap = await getDoc(doc(db, "app_users", user.uid));
+    userDocData = snap.exists() ? snap.data() : {};
+  } catch (e) {
+    userDocData = {};
+  }
+
+  // মেইন অ্যাডমিন আইডিতে ভুল করে ডিলিট বা ডিজেবল ট্যাগ থাকলে তা অটোমেটিক ঠিক করে দেবে
+  if (window.isMasterAdmin && (userDocData.disabled || userDocData.deleted)) {
+      try {
+          await updateDoc(doc(db, "app_users", user.uid), { disabled: false, deleted: false });
+          userDocData.disabled = false;
+          userDocData.deleted = false;
+      } catch (e) { console.log("Master admin auto-fix failed", e); }
+  } else if (userDocData.disabled || userDocData.deleted) {
+      await signOut(auth);
+      window.location.replace("index.html");
+      return;
+  }
+
+  window.currentUserRole = window.isMasterAdmin ? "admin" : (userDocData.role || "member");
+  window.userPermissions = window.isMasterAdmin
+    ? Object.keys(PERMISSION_NAMES)
+    : (Array.isArray(userDocData.permissions) ? userDocData.permissions : []);
+
+  // Settings is Master Admin only. A normal user cannot open it by direct URL.
+  if (!window.isMasterAdmin) {
+    window.location.replace("dashboard.html");
+    return;
+  }
+
+  window.__pujaAuthCache.set(user, window.currentUserRole, window.userPermissions);
+  
+  const displayName = (userDocData.name || "").trim();
+  document.getElementById("profileEmailDisplay").innerText = user.email || "-";
+  document.getElementById("profileNameDisplay").innerText = displayName || "নাম দেওয়া নেই";
+  document.getElementById("profileRoleBadge").innerText = ROLE_NAMES[window.currentUserRole] || "সাধারণ সদস্য";
+
+  const shownPerms = window.userPermissions;
+
+  wireProfileNameEditor(user, userDocData);
+
+  document.getElementById("profilePermissionsContainer").innerHTML = shownPerms.length
+    ? shownPerms.map(p => `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${PERMISSION_NAMES[p] || p}</span>`).join("")
+    : `<span class="text-xs font-semibold text-red-600">কোনো Permission দেওয়া হয়নি</span>`;
+
+  if (!window.isMasterAdmin && window.currentUserRole !== "admin") {
+    ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "none";
+    });
+    ["subSectionSystem","subSectionUsers","subSectionHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.add("hidden");
+    });
+  } else {
+    // Admin/Master Admin-এর জন্য আলাদা System, Users ও Login History tab দেখাবে।
+    // গুরুত্বপূর্ণ: এখানে section-গুলোর "hidden" class সরানো যাবে না।
+    // switchSettingsSubTab() নিজেই নির্বাচিত tab ছাড়া বাকি সব section hide করে।
+    ["tabBtnSystem","tabBtnUsers","tabBtnHistory"].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = "";
+    });
+
+    loadAppUsers();
+    loadLoginHistory();
+    loadDevData();
+    loadClubLogo();
+  }
+
+  // Settings page খুললেই শুধু Profile tab visible থাকবে।
+  // System/Users/Login History আলাদা tab-এ click করলে তবেই খুলবে।
+  switchSettingsSubTab("profile");
+  window.__finishAuthRender();
+});
+
+function wireProfileNameEditor(user, data) {
+  const input = document.getElementById("profileNameInput");
+  const btn = document.getElementById("saveProfileNameBtn");
+  if (!input || !btn || !user) return;
+
+  const current = (data?.name || "").trim();
+  input.value = current;
+
+  btn.onclick = async function () {
+    const newName = input.value.trim();
+    if (!newName) {
+      alert("একটি নাম লিখুন।");
+      input.focus();
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerText = "সংরক্ষণ হচ্ছে...";
+    try {
+      await setDoc(doc(db, "app_users", user.uid), {
+        uid: user.uid,
+        email: user.email || "",
+        name: newName,
+        role: window.currentUserRole || "member",
+        permissions: Array.isArray(window.userPermissions) ? window.userPermissions : [],
+        updatedAt: Date.now()
+      }, { merge: true });
+
+      try {
+        await updateProfile(user, { displayName: newName });
+      } catch (authNameError) {
+        console.warn("Auth displayName update failed:", authNameError);
+      }
+
+      const profileNameDisplay = document.getElementById("profileNameDisplay");
+      if (profileNameDisplay) profileNameDisplay.innerText = newName;
+
+      try {
+        const cached = window.__pujaAuthCache?.get?.() || {};
+        localStorage.setItem("pujaAuthSessionV2", JSON.stringify({
+          ...cached,
+          uid: user.uid,
+          email: user.email || "",
+          name: newName,
+          role: window.currentUserRole,
+          permissions: window.userPermissions,
+          savedAt: Date.now()
+        }));
+      } catch (_) {}
+
+      alert("প্রোফাইল নাম সফলভাবে সংরক্ষণ করা হয়েছে।");
+    } catch (e) {
+      console.error(e);
+      alert("নাম সংরক্ষণ করা যায়নি: " + (e?.message || e));
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "নাম সংরক্ষণ";
+    }
+  };
+}
+
+function roleName(role) { return ROLE_NAMES[role] || "সাধারণ সদস্য"; }
+function permissionText(perms) {
+  return (perms || []).map(p => PERMISSION_NAMES[p] || p).join(", ") || "কোনো Permission নেই";
+}
+
+function isMasterAdminUser(user) {
+  return (user?.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
+
+function loadAppUsers() {
+  onSnapshot(collection(db, "app_users"), (snapshot) => {
+    allUsersData = [];
+    snapshot.forEach((docSnap) => {
+      const data = docSnap.data();
+      if (
+        data.deleted !== true &&
+        data.disabled !== true &&
+        (window.isMasterAdmin || !isMasterAdminUser(data))
+      ) {
+        allUsersData.push({ id: docSnap.id, ...data });
+      }
+    });
+    renderUsersTable(allUsersData);
+  });
+}
+
+function renderUsersTable(users) {
+  const tbody = document.getElementById("usersTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+  users.forEach((u) => {
+    const tr = document.createElement("tr");
+    tr.className = "border-b hover:bg-gray-50";
+    tr.innerHTML = `
+      <td class="p-2.5 border-r font-medium text-gray-800 text-center">${u.email || "-"}</td>
+      <td class="p-2.5 border-r text-gray-700 text-center">${u.name || "-"}</td>
+      <td class="p-2.5 border-r text-center font-bold">${roleName(u.role)}</td>
+      <td class="p-2.5 border-r text-center text-xs">${permissionText(u.permissions)}</td>
+      <td class="p-2.5 text-center"><div class="flex justify-center gap-1">
+        <button onclick="editUserPermissions('${u.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">এডিট</button>
+        <button onclick="deleteUserAccount('${u.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">ডিলিট</button>
+      </div></td>`;
+    tbody.appendChild(tr);
+  });
+}
+
+window.handleSaveUser = async function(event) {
+  event.preventDefault();
+  if (!window.isMasterAdmin && window.currentUserRole !== "admin") return;
+
+  const editId = document.getElementById("editUserId").value;
+  const name = document.getElementById("uNameInput").value.trim();
+  const email = document.getElementById("uEmailInput").value.trim().toLowerCase();
+  const role = document.getElementById("uRoleInput").value;
+  const selectedPerms = ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"]
+    .filter(p => document.getElementById("perm_" + p)?.checked);
+
+  try {
+    if (editId) {
+      const existingUser = allUsersData.find(u => u.id === editId);
+      if (existingUser && !window.isMasterAdmin && isMasterAdminUser(existingUser)) {
+        alert("এই Master Admin-কে কোনো Admin এডিট করতে পারবেন না।");
+        return;
+      }
+      await updateDoc(doc(db, "app_users", editId), {
+        name, email, role, permissions: selectedPerms, updatedAt: Date.now(), disabled: false, deleted: false
+      });
+      alert("ব্যবহারকারীর তথ্য ও Permission আপডেট হয়েছে।");
+    } else {
+      const pass = document.getElementById("uPassInput").value;
+      if (pass.length < 6) { alert("পাসওয়ার্ড কমপক্ষে ৬ অক্ষরের হতে হবে।"); return; }
+
+      const secondaryName = "user-create-" + Date.now();
+      const secondaryApp = initializeApp(firebaseConfig, secondaryName);
+      
+      // এখানে initializeAuth ব্যবহার করা হয়েছে যাতে মেইন অ্যাডমিনের সেশন ওভাররাইট না হয়
+      const secondaryAuth = initializeAuth(secondaryApp, {
+        persistence: inMemoryPersistence
+      });
+      
+      const cred = await createUserWithEmailAndPassword(secondaryAuth, email, pass);
+      await setDoc(doc(db, "app_users", cred.user.uid), {
+        uid: cred.user.uid,
+        name, email, role, permissions: selectedPerms,
+        disabled: false, deleted: false,
+        createdAt: Date.now(),
+        createdBy: auth.currentUser.uid,
+        createdByEmail: auth.currentUser.email
+      });
+      await signOut(secondaryAuth);
+      alert("নতুন ব্যবহারকারী ID সফলভাবে তৈরি হয়েছে।");
+    }
+    closeCreateUserModal();
+  } catch (e) {
+    alert("ব্যবহারকারী তৈরি/আপডেট করা যায়নি: " + (e.code === "auth/email-already-in-use" ? "এই ইমেইল/ID আগে থেকেই আছে।" : e.message));
+  }
+};
+
+window.openCreateUserModal = function() {
+  document.getElementById("userModalTitle").innerText = "👤 নতুন ব্যবহারকারী তৈরি করুন";
+  document.getElementById("editUserId").value = "";
+  document.getElementById("uNameInput").value = "";
+  document.getElementById("uEmailInput").value = "";
+  document.getElementById("uPassInput").value = "";
+  document.getElementById("uRoleInput").value = "member";
+  document.getElementById("passInputContainer").style.display = "block";
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"].forEach(p => document.getElementById("perm_" + p).checked = false);
+  document.getElementById("createUserModal").classList.remove("hidden");
+};
+
+window.closeCreateUserModal = function() { document.getElementById("createUserModal").classList.add("hidden"); };
+
+window.editUserPermissions = function(uId) {
+  const user = allUsersData.find(u => u.id === uId);
+  if (!user) return;
+  if (!window.isMasterAdmin && isMasterAdminUser(user)) {
+    alert("এই Master Admin-কে কোনো Admin এডিট করতে পারবেন না।");
+    return;
+  }
+  document.getElementById("userModalTitle").innerText = "✏️ ব্যবহারকারী এডিট করুন";
+  document.getElementById("editUserId").value = user.id;
+  document.getElementById("uNameInput").value = user.name || "";
+  document.getElementById("uEmailInput").value = user.email || "";
+  document.getElementById("uRoleInput").value = user.role || "member";
+  document.getElementById("passInputContainer").style.display = "none";
+  const perms = user.permissions || [];
+  ["members","chada","expense","booking","sales","treasury","daitobonton","puja_dorkhasto","budget_plan"].forEach(p => document.getElementById("perm_" + p).checked = perms.includes(p));
+  document.getElementById("createUserModal").classList.remove("hidden");
+};
+
+window.deleteUserAccount = async function(uId) {
+  const user = allUsersData.find(u => u.id === uId);
+  if (!user) return;
+  if (!window.isMasterAdmin && isMasterAdminUser(user)) {
+    alert("এই Master Admin-কে কোনো Admin ডিলিট করতে পারবেন না।");
+    return;
+  }
+  if (!confirm(`"${user.name || user.email}"-কে নিষ্ক্রিয়/ডিলিট করতে চান?`)) return;
+  try {
+    await updateDoc(doc(db, "app_users", uId), {
+      disabled: true, permissions: [], deleted: true, deletedAt: Date.now(), deletedBy: auth.currentUser.uid
+    });
+    alert("ব্যবহারকারী এই অ্যাপ থেকে ডিলিট/নিষ্ক্রিয় করা হয়েছে।");
+  } catch (e) { alert("ডিলিট করা যায়নি: " + e.message); }
+};
+
+async function loadLoginHistory() {
+  try {
+    onSnapshot(
+      collection(db, "login_history"),
+      (snapshot) => {
+        allLoginHistory = [];
+        snapshot.forEach((docSnap) => {
+          allLoginHistory.push({
+            id: docSnap.id,
+            ...docSnap.data()
+          });
+        });
+
+        allLoginHistory.sort(
+          (a, b) => (Number(b.timestamp) || 0) - (Number(a.timestamp) || 0)
+        );
+
+        filterLoginHistory();
+      },
+      (error) => {
+        console.error("Login history load failed:", error);
+        const tbody = document.getElementById("historyTableBody");
+        if (tbody) {
+          tbody.innerHTML =
+            '<tr><td colspan="6" class="p-4 text-center text-red-600 font-semibold">লগইন ইতিহাস লোড করা যায়নি।</td></tr>';
+        }
+      }
+    );
+  } catch (error) {
+    console.error("Login history setup failed:", error);
+  }
+}
+
+function escHtml(value) {
+  return String(value ?? "").replace(/[&<>'"]/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[ch]));
+}
+
+function renderHistoryTable(data) {
+  const tbody = document.getElementById("historyTableBody");
+  if (!tbody) return;
+  tbody.innerHTML = "";
+
+  if (!data.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="p-4 text-center text-gray-500 font-semibold">কোনো লগইন ইতিহাস পাওয়া যায়নি।</td></tr>';
+    updateHistoryDeleteButton();
+    return;
+  }
+
+  data.forEach((h) => {
+    const tr = document.createElement("tr");
+    tr.className = "border-b hover:bg-gray-50";
+    const name = h.name || "নাম দেওয়া নেই";
+    const email = h.email || "-";
+    const userId = h.userId || "-";
+    const time = h.timestamp ? new Date(h.timestamp).toLocaleString("bn-IN") : "-";
+    const device = h.device || "";
+    tr.innerHTML = `
+      <td class="p-2.5 border-r text-center"><input type="checkbox" class="history-checkbox" value="${escHtml(h.id)}"></td>
+      <td class="p-2.5 border-r text-center font-semibold">${escHtml(name)}</td>
+      <td class="p-2.5 border-r text-center"><div>${escHtml(userId)}</div><div class="text-[11px] text-gray-500">${escHtml(email)}</div></td>
+      <td class="p-2.5 border-r text-center">${escHtml(time)}</td>
+      <td class="p-2.5 border-r text-center text-xs max-w-xs">${escHtml(device)}</td>
+      <td class="p-2.5 text-center"><button onclick="deleteOneHistory('${escHtml(h.id)}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">🗑️ ডিলিট</button></td>`;
+    tbody.appendChild(tr);
+  });
+
+  document.querySelectorAll(".history-checkbox").forEach(cb => cb.addEventListener("change", updateHistoryDeleteButton));
+  updateHistoryDeleteButton();
+}
+
+window.filterLoginHistory = function() {
+  const q = (document.getElementById("historySearchInput")?.value || "").trim().toLowerCase();
+  const filtered = !q ? allLoginHistory : allLoginHistory.filter(h =>
+    String(h.name || "").toLowerCase().includes(q) ||
+    String(h.userId || "").toLowerCase().includes(q) ||
+    String(h.email || "").toLowerCase().includes(q)
+  );
+  const selectAll = document.getElementById("selectAllHistory");
+  if (selectAll) selectAll.checked = false;
+  renderHistoryTable(filtered);
+};
+
+window.clearHistorySearch = function() {
+  const input = document.getElementById("historySearchInput");
+  if (input) input.value = "";
+  filterLoginHistory();
+};
+
+function updateHistoryDeleteButton() {
+  const selected = document.querySelectorAll(".history-checkbox:checked").length;
+  const btn = document.getElementById("deleteHistoryBtn");
+  if (btn) btn.classList.toggle("hidden", selected === 0);
+  const selectAll = document.getElementById("selectAllHistory");
+  const boxes = document.querySelectorAll(".history-checkbox");
+  if (selectAll) selectAll.checked = boxes.length > 0 && selected === boxes.length;
+}
+
+window.toggleSelectAllHistory = function() {
+  const selectAll = document.getElementById("selectAllHistory");
+  document.querySelectorAll(".history-checkbox").forEach(cb => cb.checked = !!selectAll?.checked);
+  updateHistoryDeleteButton();
+};
+
+window.deleteOneHistory = async function(id) {
+  if (!id || !confirm("এই লগইন ইতিহাসটি Firestore থেকে স্থায়ীভাবে ডিলিট করতে চান?")) {
+    return;
+  }
+
+  try {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error("আপনি লগইন করা নেই।");
+    }
+
+    // Force-refresh the ID token so the latest Firestore Rules are used.
+    await currentUser.getIdToken(true);
+
+    await deleteDoc(doc(db, "login_history", id));
+
+    allLoginHistory = allLoginHistory.filter(item => item.id !== id);
+    filterLoginHistory();
+  } catch (e) {
+    console.error("Login history delete failed:", e);
+    alert("ডিলিট করা যায়নি: " + (e?.message || e));
+  }
+};
+
+window.deleteSelectedHistory = async function() {
+  const selected = Array.from(
+    document.querySelectorAll(".history-checkbox:checked")
+  ).map(cb => cb.value);
+
+  if (!selected.length) return;
+
+  if (!confirm(
+    `নির্বাচিত ${selected.length}টি লগইন ইতিহাস Firestore থেকে স্থায়ীভাবে ডিলিট করতে চান?`
+  )) {
+    return;
+  }
+
+  try {
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      throw new Error("আপনি লগইন করা নেই।");
+    }
+
+    // Force-refresh the ID token before the delete request.
+    await currentUser.getIdToken(true);
+
+    const deletePromises = selected.map(id =>
+      deleteDoc(doc(db, "login_history", id))
+    );
+
+    await Promise.all(deletePromises);
+
+    allLoginHistory = allLoginHistory.filter(
+      item => !selected.includes(item.id)
+    );
+
+    filterLoginHistory();
+
+    const selectAll = document.getElementById("selectAllHistory");
+    if (selectAll) selectAll.checked = false;
+
+    updateHistoryDeleteButton();
+  } catch (e) {
+    console.error("Selected login history delete failed:", e);
+    alert("ডিলিট করা যায়নি: " + (e?.message || e));
+  }
+};
+
+window.handlePasswordChange = async function(event) {
+  event.preventDefault();
+
+  const newPass = document.getElementById("newPasswordInput").value;
+  const confirmPass = document.getElementById("confirmPasswordInput").value;
+  const errBox = document.getElementById("passErrorMsg");
+
+  errBox.classList.add("hidden");
+
+  if (newPass !== confirmPass) {
+    errBox.innerText = "পাসওয়ার্ড দুটি মিলছে না!";
+    errBox.classList.remove("hidden");
+    return;
+  }
+
+  try {
+    await updatePassword(auth.currentUser, newPass);
+    try {
+      await updateDoc(doc(db, "app_users", auth.currentUser.uid), {
+        passwordChangedAt: Date.now(),
+        passwordChangedBy: auth.currentUser.uid
+      });
+    } catch (e) {
+      console.warn("Password changed in Auth, but profile timestamp update failed:", e);
+    }
+    alert("পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!");
+    closePasswordModal();
+    document.getElementById("changePasswordForm").reset();
+  } catch (error) {
+    alert("ত্রুটি: " + error.message);
+  }
+};
+
+window.handleLogout = function() {
+  signOut(auth).then(() => { window.__pujaAuthCache.clear(); window.location.replace("index.html"); });
+};
+
+</script>
+
+<script>
+
+const defaultDevInfo = {
+  name: "MANABENDRA NATH SARKAR ",
+  mobile: "9002652507",
+  email: "manabendranathsarkar112@gmail.com"
+};
+
+function loadDevData() {
+  let saved = defaultDevInfo;
+  try { saved = JSON.parse(localStorage.getItem("pujaDevData") || "null") || defaultDevInfo; }
+  catch (_) { saved = defaultDevInfo; }
+
+  document.getElementById("devNameInput").value = saved.name || "";
+  document.getElementById("devMobileInput").value = saved.mobile || "";
+  document.getElementById("devEmailInput").value = saved.email || "";
+
+  document.getElementById("popDevName").textContent = saved.name || "";
+  document.getElementById("popDevMobile").textContent = saved.mobile || "";
+  document.getElementById("popDevMobile").href = `tel:${saved.mobile || ""}`;
+  document.getElementById("popDevEmail").textContent = saved.email || "";
+  document.getElementById("popDevEmail").href = `mailto:${saved.email || ""}`;
+}
+
+async function saveDevData(e) {
+  e.preventDefault();
+
+  const dev = {
+    name: document.getElementById("devNameInput").value.trim(),
+    mobile: document.getElementById("devMobileInput").value.trim(),
+    email: document.getElementById("devEmailInput").value.trim()
+  };
+
+  localStorage.setItem("pujaDevData", JSON.stringify(dev));
+  try {
+    if (!window.__saveDeveloperDetailsToCloud) {
+      alert("ক্লাউড সংযোগ তৈরি হচ্ছে, একটু পরে আবার চেষ্টা করুন।");
+      return;
+    }
+    await window.__saveDeveloperDetailsToCloud(dev);
+    loadDevData();
+    alert("ডেভেলপার তথ্য সেভ হয়েছে। এখন সব পেজে একই তথ্য দেখা যাবে।");
+  } catch (err) {
+    console.error("Developer details cloud save failed:", err);
+    loadDevData();
+    const code = err?.code || "";
+    if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
+      alert("ডেভেলপার তথ্য সেভ হয়নি: Firestore permission denied। Firebase Rules-এ settings collection-এর Admin write permission দিন।");
+    } else {
+      alert("ডেভেলপার তথ্য ক্লাউডে সেভ হয়নি। Firebase login/internet/Firestore সংযোগ পরীক্ষা করুন।");
+    }
+  }
+}
+
+function toggleDevModal() {
+  const modal = document.getElementById("devModal");
+  modal.classList.toggle("hidden");
+  if (!modal.classList.contains("hidden")) loadDevData();
+}
+
+function openPasswordModal() {
+  document.getElementById("changePasswordModal").classList.remove("hidden");
+}
+
+function closePasswordModal() {
+  document.getElementById("changePasswordModal").classList.add("hidden");
+}
+
+function switchSettingsSubTab(subTabName) {
+  ["profile","system","users","history"].forEach((tab) => {
+    const key = tab.charAt(0).toUpperCase() + tab.slice(1);
+    const section = document.getElementById("subSection" + key);
+    const button = document.getElementById("tabBtn" + key);
+
+    if (section) section.classList.add("hidden");
+    if (button) {
+      button.className =
+        "px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition";
+    }
+  });
+
+  const activeKey = subTabName.charAt(0).toUpperCase() + subTabName.slice(1);
+  const activeSection = document.getElementById("subSection" + activeKey);
+  const activeButton = document.getElementById("tabBtn" + activeKey);
+
+  if (activeSection) activeSection.classList.remove("hidden");
+  if (activeButton) {
+    activeButton.className =
+      "bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition";
+  }
+
+  if (subTabName === "system") {
+    loadClubLogo();
+    loadDevData();
+  }
+}
+
+function goDashboard() {
+  window.location.href = "dashboard.html";
+}
+
+function goMenu(tab) {
+  const routes = {
+    members: "members.html",
+    chada: "chada.html",
+    expense: "expense.html",
+    booking: "dashboard.html?tab=booking",
+    sales: "dashboard.html?tab=sales",
+    treasury: "dashboard.html?tab=treasury",
+    settings: "settings.html"
+  };
+  if (routes[tab]) {
+    window.location.href = routes[tab];
+  }
+}
+
+function closeMenu() {
+  const menu = document.getElementById("settingsMenu");
+  const arrow = document.getElementById("settingsMenuArrow");
+  if (menu) menu.classList.toggle("hidden");
+  if (arrow) arrow.style.transform = menu.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  loadDevData();
+  loadClubLogo();
+  switchSettingsSubTab("profile");
+});
+
+</script>
+
+
+<script type="module">
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-SxN0q",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
+  };
+  const DEFAULT_COMMITTEE_NAMES = {
+    dashboard: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', members: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', chada: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি',
+    expense: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', booking: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', sales: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি',
+    treasury: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', daitobonton: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি', settings: 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি'
+  };
+  const FIELD_IDS = { dashboard:'committeeNameDashboard', members:'committeeNameMembers', chada:'committeeNameChada', expense:'committeeNameExpense', booking:'committeeNameBooking', sales:'committeeNameSales', treasury:'committeeNameTreasury', daitobonton:'committeeNameDaitobonton', settings:'committeeNameSettings' };
+  const applyCommitteeNames = (raw) => {
+    const names = { ...DEFAULT_COMMITTEE_NAMES, ...(raw || {}) };
+    try { localStorage.setItem('pujaCommitteeNames', JSON.stringify(names)); } catch (_) {}
+    const pageKey = location.pathname.split('/').pop().replace(/\.html$/i,'') || 'dashboard';
+    const heading = document.getElementById('committeePageHeading');
+    if (heading) heading.textContent = names[pageKey] || DEFAULT_COMMITTEE_NAMES[pageKey] || 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
+    Object.keys(FIELD_IDS).forEach(key => { const el=document.getElementById(FIELD_IDS[key]); if(el && document.activeElement!==el) el.value=names[key] || DEFAULT_COMMITTEE_NAMES[key]; });
+  };
+  const loadLocal = () => { let d=DEFAULT_COMMITTEE_NAMES; try { d={...d,...JSON.parse(localStorage.getItem('pujaCommitteeNames')||'{}')}; } catch (_) {} applyCommitteeNames(d); };
+  window.saveCommitteeNames = async function(e) {
+    if(e) e.preventDefault();
+    const names={};
+    Object.keys(FIELD_IDS).forEach(key => names[key]=(document.getElementById(FIELD_IDS[key])?.value||'').trim() || DEFAULT_COMMITTEE_NAMES[key]);
+    try {
+      if(!window.__saveCommitteeNamesToCloud){ alert('ক্লাউড সংযোগ তৈরি হচ্ছে, একটু পরে আবার চেষ্টা করুন।'); return; }
+      await window.__saveCommitteeNamesToCloud(names);
+      alert('সব পেজের Heading সফলভাবে সেভ হয়েছে।');
+    } catch(err) { console.error(err); alert('Heading ক্লাউডে সেভ হয়নি। ইন্টারনেট/Firestore সংযোগ পরীক্ষা করুন।'); }
+  };
+  loadLocal();
+  import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js").then(async appMod => {
+    const fsMod = await import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js");
+    const { initializeApp } = appMod;
+    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
+    let app;
+    try { app=initializeApp(firebaseConfig,'committeeNamesSync'); } catch(e) { app=initializeApp(firebaseConfig,'committeeNamesSync_'+Math.random().toString(36).slice(2)); }
+    const db=getFirestore(app);
+    onSnapshot(doc(db,'settings','committeeNames'), snap => applyCommitteeNames(snap.exists()?snap.data():DEFAULT_COMMITTEE_NAMES), err => console.warn('Committee heading sync failed:',err));
+    window.__saveCommitteeNamesToCloud = async function(names){ await setDoc(doc(db,'settings','committeeNames'), {...names, updatedAt:Date.now()}, {merge:true}); applyCommitteeNames(names); };
+  }).catch(err => console.error('Committee heading sync init failed:',err));
+})();
+</script>
+
+<script type="module">
+(() => {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+  };
+  const DEFAULT_COMMITTEE = {
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
+    establishedYear: "2009",
+    registrationNo: "S0014684",
+    village: "সহরা",
+    post: "আদিনা স্টেশন",
+    policeDistrict: "মালদা",
+    pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা:- মালদা, জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702",
+    mobile2: ""
+  };
+  const DEFAULT_DEV = {
+    name: "MANABENDRA NATH SARKAR",
+    mobile: "9002652507",
+    email: "manabendranathsarkar112@gmail.com"
+  };
+
+  function setIfExists(id, value, property = "textContent") {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (property === "value" && document.activeElement === el) return;
+    el[property] = value;
+  }
+
+  function cleanPhone(value) {
+    return String(value || "").trim().replace(/[^0-9+]/g, "");
+  }
+
+  function applyCommitteeInfo(raw) {
+    const d = { ...DEFAULT_COMMITTEE, ...(raw || {}) };
+    const name = String(d.name || DEFAULT_COMMITTEE.name);
+    const establishedYear = String(d.establishedYear || DEFAULT_COMMITTEE.establishedYear);
+    const registrationNo = String(d.registrationNo || DEFAULT_COMMITTEE.registrationNo);
+    const village = String(d.village || "");
+    const post = String(d.post || "");
+    const policeDistrict = String(
+      d.policeDistrict || d.police || d.district || ""
+    );
+    const pincode = String(d.pincode || "");
+    const mobile = String(d.mobile || "");
+    const mobile2 = String(d.mobile2 || "");
+
+    const address = (village || post || policeDistrict || pincode)
+      ? [
+          village ? `সাং:- ${village}` : "",
+          post ? `পোস্ট:- ${post}` : "",
+          policeDistrict ? `থানা ও জেলা:- ${policeDistrict}` : "",
+          pincode ? `পিন:- ${pincode}` : ""
+        ].filter(Boolean).join(", ")
+      : String(d.address || DEFAULT_COMMITTEE.address);
+
+    try {
+      localStorage.setItem("pujaCommitteeInfo", JSON.stringify({
+        name, establishedYear, registrationNo, village, post, policeDistrict, pincode,
+        address, mobile, mobile2
+      }));
+    } catch (_) {}
+
+    setIfExists("committeePageHeading", name);
+    setIfExists("committeeEstablishedYear", establishedYear);
+    setIfExists("committeeRegistrationNo", registrationNo);
+    setIfExists("committeeAddress", address);
+
+    const wrap = document.getElementById("committeeMobileWrap");
+    if (wrap) {
+      wrap.innerHTML = "";
+      [mobile, mobile2].map(cleanPhone).filter(Boolean).forEach((num, i) => {
+        if (i) {
+          const sep = document.createElement("span");
+          sep.textContent = "/";
+          wrap.appendChild(sep);
+        }
+        const a = document.createElement("a");
+        a.href = "tel:" + num;
+        a.className = "hover:underline";
+        a.textContent = num;
+        wrap.appendChild(a);
+      });
+    }
+
+    setIfExists("committeeMobile", mobile || mobile2);
+    const oldLink = document.getElementById("committeeMobileLink");
+    if (oldLink) oldLink.href = "tel:" + cleanPhone(mobile || mobile2);
+
+    setIfExists("committeeInfoName", name, "value");
+    setIfExists("committeeInfoEstablished", establishedYear, "value");
+    setIfExists("committeeInfoReg", registrationNo, "value");
+    setIfExists("committeeInfoVillage", village, "value");
+    setIfExists("committeeInfoPost", post, "value");
+    setIfExists("committeeInfoPoliceDistrict", policeDistrict, "value");
+    setIfExists("committeeInfoPincode", pincode, "value");
+    setIfExists("committeeInfoMobile", mobile, "value");
+    setIfExists("committeeInfoMobile2", mobile2, "value");
+  }
+
+  function applyDeveloperInfo(raw) {
+    const d = {
+      name: String(raw?.name || DEFAULT_DEV.name),
+      mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
+      email: String(raw?.email || DEFAULT_DEV.email)
+    };
+    try {
+      localStorage.setItem("pujaDevData", JSON.stringify(d));
+      localStorage.setItem("pujaDevName", d.name);
+      localStorage.setItem("pujaDevMobile", d.mobile);
+      localStorage.setItem("pujaDevEmail", d.email);
+    } catch (_) {}
+
+    setIfExists("devNameInput", d.name, "value");
+    setIfExists("devMobileInput", d.mobile, "value");
+    setIfExists("devEmailInput", d.email, "value");
+    setIfExists("popDevName", d.name);
+    setIfExists("popDevMobile", d.mobile);
+    setIfExists("popDevEmail", d.email);
+    setIfExists("devName", d.name);
+    setIfExists("devPhone", d.mobile);
+    setIfExists("devEmail", d.email);
+
+    const a = document.getElementById("popDevMobile");
+    if (a) a.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
+    const p = document.getElementById("devPhone");
+    if (p) p.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
+    const e = document.getElementById("popDevEmail");
+    if (e) e.href = "mailto:" + d.email;
+    const de = document.getElementById("devEmail");
+    if (de) de.href = "mailto:" + d.email;
+  }
+
+  function readLocalCommittee() {
+    try { return JSON.parse(localStorage.getItem("pujaCommitteeInfo") || "null") || DEFAULT_COMMITTEE; }
+    catch (_) { return DEFAULT_COMMITTEE; }
+  }
+
+  function readLocalDev() {
+    try { return JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; }
+    catch (_) { return DEFAULT_DEV; }
+  }
+
+  applyCommitteeInfo(readLocalCommittee());
+  applyDeveloperInfo(readLocalDev());
+
+  Promise.all([
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
+    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
+  ]).then(async ([appMod, authMod, fsMod]) => {
+    const { getApps, getApp, initializeApp } = appMod;
+    const { getAuth, onAuthStateChanged } = authMod;
+    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
+
+    let app;
+    try { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
+    catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
+      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
+
+
+    let readyResolve;
+    window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
+
+    window.__saveDeveloperDetailsToCloud = async function(dev) {
+      const ctx = await window.__pujaGlobalReady;
+      if (!ctx || !ctx.user) throw new Error("auth-required: Firebase login session পাওয়া যায়নি");
+      await setDoc(doc(ctx.db, "settings", "developerInfo"), {
+        name: String(dev?.name || "").trim(),
+        mobile: String(dev?.mobile || "").trim(),
+        email: String(dev?.email || "").trim(),
+        updatedAt: Date.now()
+      }, { merge: true });
+      applyDeveloperInfo(dev);
+    };
+
+    window.__saveCommitteeInfoToCloud = async function(info) {
+      const ctx = await window.__pujaGlobalReady;
+      if (!ctx || !ctx.user) throw new Error("auth-required: Firebase login session পাওয়া যায়নি");
+      const data = {
+        name: String(info?.name || DEFAULT_COMMITTEE.name).trim() || DEFAULT_COMMITTEE.name,
+        establishedYear: String(info?.establishedYear || DEFAULT_COMMITTEE.establishedYear).trim() || DEFAULT_COMMITTEE.establishedYear,
+        registrationNo: String(info?.registrationNo || DEFAULT_COMMITTEE.registrationNo).trim() || DEFAULT_COMMITTEE.registrationNo,
+        village: String(info?.village || "").trim(),
+        post: String(info?.post || "").trim(),
+        policeDistrict: String(info?.policeDistrict || "").trim(),
+        pincode: String(info?.pincode || "").trim(),
+        mobile: String(info?.mobile || "").trim(),
+        mobile2: String(info?.mobile2 || "").trim()
+      };
+      data.address = [
+        data.village ? `সাং:- ${data.village}` : "",
+        data.post ? `পোস্ট:- ${data.post}` : "",
+        data.policeDistrict ? `থানা ও জেলা:- ${data.policeDistrict}` : "",
+        data.pincode ? `পিন:- ${data.pincode}` : ""
+      ].filter(Boolean).join(", ") || DEFAULT_COMMITTEE.address;
+      await setDoc(doc(ctx.db, "settings", "committeeInfo"), { ...data, updatedAt: Date.now() }, { merge: true });
+
+      // Keep the already-existing per-page heading system in sync with the common committee name.
+      const allNames = {
+        dashboard: data.name, members: data.name, chada: data.name,
+        expense: data.name, booking: data.name, sales: data.name,
+        treasury: data.name, daitobonton: data.name, settings: data.name
+      };
+      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...allNames, updatedAt: Date.now() }, { merge: true });
+      applyCommitteeInfo(data);
+      try { localStorage.setItem("pujaCommitteeNames", JSON.stringify(allNames)); } catch (_) {}
+    };
+
+    // Override the older heading helper so its save also uses the authenticated Firebase app.
+    window.__saveCommitteeNamesToCloud = async function(names) {
+      const ctx = await window.__pujaGlobalReady;
+      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...(names || {}), updatedAt: Date.now() }, { merge: true });
+    };
+
+    onAuthStateChanged(auth, user => {
+      if (!user) return;
+      readyResolve({ auth, db, user });
+
+      onSnapshot(doc(db, "settings", "developerInfo"), snap => {
+        applyDeveloperInfo(snap.exists() ? snap.data() : DEFAULT_DEV);
+      }, err => console.warn("Developer details sync failed:", err));
+
+      onSnapshot(doc(db, "settings", "committeeInfo"), snap => {
+        applyCommitteeInfo(snap.exists() ? snap.data() : readLocalCommittee());
+      }, err => console.warn("Committee info sync failed:", err));
+    });
+  }).catch(err => console.error("Global settings sync init failed:", err));
+
+  window.saveCommitteeInfo = async function(e) {
+    if (e) e.preventDefault();
+
+    const info = {
+      name: document.getElementById("committeeInfoName")?.value.trim() || "",
+      establishedYear: document.getElementById("committeeInfoEstablished")?.value.trim() || "",
+      registrationNo: document.getElementById("committeeInfoReg")?.value.trim() || "",
+      village: document.getElementById("committeeInfoVillage")?.value.trim() || "",
+      post: document.getElementById("committeeInfoPost")?.value.trim() || "",
+      policeDistrict: document.getElementById("committeeInfoPoliceDistrict")?.value.trim() || "",
+      pincode: document.getElementById("committeeInfoPincode")?.value.trim() || "",
+      mobile: document.getElementById("committeeInfoMobile")?.value.trim() || "",
+      mobile2: document.getElementById("committeeInfoMobile2")?.value.trim() || ""
+    };
+
+    try {
+      if (!window.__saveCommitteeInfoToCloud) throw new Error("cloud_not_ready");
+      await window.__saveCommitteeInfoToCloud(info);
+      alert("কমিটির তথ্য সফলভাবে সেভ হয়েছে।");
+    } catch (err) {
+      console.error("Committee info cloud save failed:", err);
+      const code = err?.code || "";
+      if (code === "permission-denied" || /permission/i.test(err?.message || "")) {
+        alert("কমিটির তথ্য সেভ হয়নি: Firestore permission denied। Firebase Rules-এ settings collection-এর Admin write permission দিন।");
+      } else {
+        alert("কমিটির তথ্য সেভ হয়নি: " + (err?.message || err));
+      }
+    }
+  };
+})();
+</script>
+
+<script type="module" id="committee-global-sync">
+(() => {
+  const FIREBASE_CONFIG = {
+    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-Sx0Nqs",
+    authDomain: "durgapuja-2026.firebaseapp.com",
+    projectId: "durgapuja-2026",
+    storageBucket: "durgapuja-2026.firebasestorage.app",
+    messagingSenderId: "625976130920",
+    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
+  };
+  const DEFAULT = {
+    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
+    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
+    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
+    mobile: "9933371702", mobile2: ""
+  };
+  const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
+  const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
+  const normalize = raw => {
+    const d={...DEFAULT,...(raw||{})};
+    const village=String(d.village||'').trim(), post=String(d.post||'').trim(), police=String(d.policeDistrict||d.police||d.district||'').trim(), pin=String(d.pincode||'').trim();
+    const address=(village||post||police||pin) ? [village?`সাং:- ${village}`:'',post?`পোস্ট:- ${post}`:'',police?`থানা ও জেলা:- ${police}`:'',pin?`পিন:- ${pin}`:''].filter(Boolean).join(', ') : String(d.address||DEFAULT.address);
+    return {name:String(d.name||DEFAULT.name),establishedYear:String(d.establishedYear||DEFAULT.establishedYear),registrationNo:String(d.registrationNo||DEFAULT.registrationNo),village,post,policeDistrict:police,pincode:pin,address,mobile:String(d.mobile||''),mobile2:String(d.mobile2||'')};
+  };
+  function reveal(){
+    const h=document.getElementById('committeePageHeading');
+    if(h){h.style.visibility='visible'; h.parentElement?.querySelectorAll(':scope > p').forEach(x=>x.style.visibility='visible');}
+  }
+  function apply(raw, revealNow=true){
+    const d=normalize(raw);
+    try{localStorage.setItem('pujaCommitteeInfo',JSON.stringify(d));}catch(_){}
+    set('committeePageHeading',d.name);
+    set('committeeEstablishedYear',d.establishedYear);
+    set('committeeRegistrationNo',d.registrationNo);
+    set('committeeAddress',d.address);
+    const wrap=document.getElementById('committeeMobileWrap');
+    if(wrap){wrap.innerHTML=''; [d.mobile,d.mobile2].map(phoneClean).filter(Boolean).forEach((n,i)=>{if(i){const sep=document.createElement('span');sep.textContent=' / ';wrap.appendChild(sep);} const a=document.createElement('a');a.href='tel:'+n;a.className='hover:underline';a.textContent=n;wrap.appendChild(a);});}
+    const mobileEl=document.getElementById('committeeMobile');
+    if(mobileEl) mobileEl.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');
+    const link=document.getElementById('committeeMobileLink');
+    if(link){link.href='tel:'+phoneClean(d.mobile||d.mobile2); if(mobileEl) link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');}
+    try{localStorage.setItem('pujaCommitteeNames',JSON.stringify({dashboard:d.name,members:d.name,chada:d.name,expense:d.name,booking:d.name,sales:d.name,treasury:d.name,daitobonton:d.name,settings:d.name}));}catch(_){}
+    try{localStorage.setItem('pujaCommitteeName',d.name);}catch(_){}
+    window.__getCommitteeNameForOutput = () => { try { return JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null')?.name || d.name; } catch(_) { return d.name; } };
+    if(revealNow) reveal();
+  }
+  let cached=null; try{cached=JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null');}catch(_){}
+  apply(cached || DEFAULT, !!cached);
+  const revealTimer=setTimeout(reveal,7000);
+  Promise.all([
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
+    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
+  ]).then(([am,authm,fsm])=>{
+    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
+    let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
+    const auth=getAuth(app), db=getFirestore(app);
+    const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
+    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
+  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
+})();
+</script>
+
+<script id="dpms-unified-list-minimize">
+(() => {
+  const headerStyle='width:100%;background:#fffbeb;padding:8px 12px;border-bottom:1px solid #fde68a;display:flex;align-items:center;justify-content:space-between;text-align:left;cursor:pointer;box-sizing:border-box;';
+  const titleStyle='font-size:13px;font-weight:800;color:#374151;';
+  const arrowStyle='color:#b45309;font-weight:800;font-size:18px;line-height:1;';
+  function setOpen(state,open){
+    if(!state||!state.content||!state.header)return;
+    state.open=!!open;
+    state.content.style.display=state.open?'':'none';
+    state.header.querySelectorAll('.dpms-list-arrow').forEach(a=>a.textContent=state.open?'⌃':'⌄');
+    state.header.querySelectorAll('.dpms-minimize-text').forEach(a=>a.remove());
+    (state.pagination||[]).forEach(p=>p.style.display=state.open?'':'none');
+  }
+  function createControl(header,content,initiallyOpen,pagination=[]){
+    if(!header||!content)return;
+    const state=header._dpmsState||{header,content,open:false,pagination};
+    state.pagination=pagination; state.content=content; state.header=header;
+    header._dpmsState=state; content._dpmsState=state; header.dataset.dpmsListControl='1';
+    let arrow=header.querySelector('.dpms-list-arrow');
+    if(!arrow){ arrow=document.createElement('span'); arrow.className='dpms-list-arrow'; arrow.style.cssText=arrowStyle; header.appendChild(arrow); }
+    header.querySelectorAll('.dpms-minimize-text').forEach(x=>x.remove());
+    setOpen(state,initiallyOpen);
+    if(!header.dataset.dpmsClickBound){
+      header.dataset.dpmsClickBound='1';
+      header.addEventListener('click',e=>{
+        if(e.target.closest('input,select,textarea,a,[data-no-list-toggle]')) return;
+        setOpen(state,!state.open);
+      });
+    }
+  }
+  function wrapTable(table){
+    if(table.dataset.dpmsTableDone==='1')return;
+    const wrap=table.closest('.overflow-x-auto')||table.parentElement; if(!wrap)return;
+    const parent=wrap.parentElement; if(!parent)return;
+    table.dataset.dpmsTableDone='1';
+    let existing=parent.querySelector(':scope > [data-dpms-list-header]');
+    if(existing)return;
+    const h=document.createElement('button'); h.type='button'; h.dataset.dpmsListHeader='1'; h.style.cssText=headerStyle+'border:0;border-radius:8px 8px 0 0;margin-top:6px;';
+    h.innerHTML='<span style="'+titleStyle+'">📋 তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>';
+    parent.insertBefore(h,wrap);
+    const content=document.createElement('div'); content.dataset.dpmsListContent='1';
+    parent.insertBefore(content,wrap); content.appendChild(wrap);
+    const pagination=[...parent.querySelectorAll('[id*="Pagination"],.pagination')].filter(x=>x!==h&&x!==content);
+    pagination.forEach(x=>content.appendChild(x));
+    createControl(h,content,false,pagination);
+  }
+  function wrapCards(){
+    document.querySelectorAll('.sub-list-card,.sale-list-card').forEach(card=>{
+      if(card.dataset.dpmsUnified==='1')return; card.dataset.dpmsUnified='1';
+      const children=[...card.children]; if(!children.length)return;
+      let header=children[0];
+      const looks=header.matches('.bg-orange-50,.bg-amber-50,.bg-gray-50,[data-list-header]')||header.querySelector('h3,h2');
+      if(!looks){ header=document.createElement('div'); header.style.cssText=headerStyle; header.innerHTML='<span style="'+titleStyle+'">📋 তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>'; card.insertBefore(header,card.firstChild); }
+      else { header.querySelectorAll('.dpms-minimize-text').forEach(x=>x.remove()); if(!header.querySelector('.dpms-list-arrow')){const a=document.createElement('span');a.className='dpms-list-arrow';a.style.cssText=arrowStyle;header.appendChild(a);} }
+      const content=document.createElement('div'); content.dataset.dpmsListContent='1'; [...card.children].filter(x=>x!==header).forEach(x=>content.appendChild(x)); card.appendChild(content);
+      createControl(header,content,false,[]);
+    });
+  }
+  function process(){
+    wrapCards();
+    document.querySelectorAll('table').forEach(wrapTable);
+    const tabs=document.getElementById('tabs');
+    if(tabs&&!tabs.dataset.dpmsTabsDone){
+      tabs.dataset.dpmsTabsDone='1'; const parent=tabs.parentElement;
+      if(parent){ const h=document.createElement('button'); h.type='button'; h.style.cssText=headerStyle+'border:0;border-radius:8px;margin-bottom:6px;'; h.innerHTML='<span style="'+titleStyle+'">📋 দরখাস্তের তালিকা</span><span class="dpms-list-arrow" style="'+arrowStyle+'">⌄</span>'; parent.insertBefore(h,tabs); createControl(h,tabs,false,[]); }
+    }
+  }
+  function openSearchList(el){
+    // Clicking/focusing a search box is an explicit request to inspect the list.
+    const listStates=[...document.querySelectorAll('[data-dpms-list-control="1"]')].map(h=>h._dpmsState).filter(Boolean);
+    listStates.forEach(s=>{ if(!s.open) setOpen(s,true); });
+  }
+  document.addEventListener('focusin',e=>{ const el=e.target; if(!(el instanceof HTMLInputElement))return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  document.addEventListener('click',e=>{ const el=e.target instanceof Element ? e.target.closest('input') : null; if(!el)return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  document.addEventListener('input',e=>{ const el=e.target; if(!(el instanceof HTMLInputElement))return; const t=((el.id||'')+' '+(el.name||'')+' '+(el.placeholder||'')).toLowerCase(); if(/search|খুঁজ|নাম|সদস্য|গ্রাম|মোবাইল|ইমেইল/.test(t)) setTimeout(()=>openSearchList(el),0); },true);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',process);else process();
+  new MutationObserver(process).observe(document.body,{childList:true,subtree:true});
+})();
+</script>
+
+</body>
+</html>
