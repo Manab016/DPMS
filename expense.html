@@ -11,6 +11,8 @@
 /* Prevent protected expense page from flashing before Firebase auth is resolved. */
 body.auth-pending{visibility:hidden!important;opacity:0!important;}
 #expenseTable td,#expenseTable th{vertical-align:middle;white-space:nowrap;text-align:center}
+.expense-card{border:1px solid #fde68a;background:linear-gradient(135deg,#fff,#fffbeb);border-radius:14px;padding:12px;box-shadow:0 1px 3px rgba(0,0,0,.06)}
+.expense-card:hover{box-shadow:0 3px 10px rgba(0,0,0,.08)}
 .hide-scrollbar::-webkit-scrollbar{display:none}.hide-scrollbar{-ms-overflow-style:none;scrollbar-width:none}
 .dashboard-menu-btn.menu-active{background:#ea580c!important;color:#fff!important;border-color:#ea580c!important}
 </style>
@@ -69,26 +71,14 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
     <div id="providerSummary" class="mb-4 hidden"></div>
 
     <div class="mb-4">
-      <p class="text-xs font-bold text-gray-700 mb-2">খরচ ও অগ্রিম হিসাব তালিকা:</p>
-      <div class="overflow-x-auto border rounded-lg">
-        <table id="expenseTable" class="w-full text-left border-collapse text-sm min-w-[780px]">
-          <thead>
-            <tr class="bg-gray-100 text-gray-700 border-b">
-              <th id="selectHead" class="p-2.5 border-r text-center align-middle hidden"><input type="checkbox" id="selectAllExpenses" onchange="toggleAllExpenses(this.checked)" title="সব নির্বাচন করুন" class="w-4 h-4"></th>
-              <th class="p-2.5 border-r text-center align-middle">তারিখ</th>
-              <th class="p-2.5 border-r text-center align-middle">প্রাপকের নাম</th>
-              <th class="p-2.5 border-r text-center align-middle">বিবরণ</th>
-              <th class="p-2.5 border-r text-center align-middle">অগ্রিম (₹)</th>
-              <th class="p-2.5 border-r text-center align-middle">আসল খরচ (₹)</th>
-              <th class="p-2.5 border-r text-center align-middle">ফেরত / Due অবস্থা</th>
-              <th class="p-2.5 border-r text-center align-middle">খরচ প্রদানকারী</th>
-              <th class="p-2.5 border-r text-center align-middle">কোষাধ্যক্ষকে শোধ (₹)</th>
-              <th class="p-2.5 border-r text-center align-middle">বাকি (₹)</th>
-              <th id="actionHead" class="p-2.5 text-center align-middle hidden">অ্যাকশন</th>
-            </tr>
-          </thead>
-          <tbody id="expenseTableBody"><tr><td colspan="11" class="p-8 text-center text-gray-400">লোড হচ্ছে...</td></tr></tbody>
-        </table>
+      <div class="flex items-center justify-between mb-2">
+        <p class="text-xs font-bold text-gray-700">খরচ ও অগ্রিম হিসাব তালিকা:</p>
+      </div>
+      <div id="expenseTableSection" class="relative">
+      <div id="expenseTableBody" class="space-y-2">
+        <div class="p-8 text-center text-gray-400 border rounded-xl bg-white">লোড হচ্ছে...</div>
+      </div>
+      <div id="expensePagination" class="flex items-center justify-center gap-1.5 mt-4 flex-wrap"></div>
       </div>
     </div>
   </div>
@@ -140,8 +130,8 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
     </div>
     <label class="block text-xs font-semibold text-gray-600 mb-1">প্রাপকের নাম লিখুন</label>
     <div class="relative">
-      <input id="recipientWiseExpenseSearch" type="text" autocomplete="off" placeholder="প্রাপকের নাম লিখুন / Search করুন" onfocus="showExpenseNameList('recipient')" oninput="handleExpenseNameInput('recipient')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
-      <div id="recipientExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-orange-300 rounded-lg shadow-xl overflow-y-auto max-h-56 z-[70]"></div>
+      <input id="recipientWiseExpenseSearch" type="text" autocomplete="off" placeholder="প্রাপকের নাম লিখুন / Search করুন" onfocus="showExpenseNameDropdown('recipient')" oninput="handleExpenseNameInput('recipient')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500">
+      <div id="recipientExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl z-[70] max-h-56 overflow-y-auto"></div>
     </div>
     <div id="recipientWiseExpensePreview" class="mt-4 p-3 rounded-xl bg-orange-50 border border-orange-200 text-sm text-gray-700">নাম লিখলে ওই প্রাপকের খরচের তালিকা এখানে দেখা যাবে।</div>
     <div class="flex justify-end gap-2 mt-5">
@@ -160,8 +150,8 @@ body.auth-pending{visibility:hidden!important;opacity:0!important;}
     </div>
     <label class="block text-xs font-semibold text-gray-600 mb-1">খরচ প্রদানকারীর নাম লিখুন</label>
     <div class="relative">
-      <input id="providerWiseExpenseSearch" type="text" autocomplete="off" placeholder="খরচ প্রদানকারীর নাম লিখুন / Search করুন" onfocus="showExpenseNameList('provider')" oninput="handleExpenseNameInput('provider')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-purple-500">
-      <div id="providerExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-purple-300 rounded-lg shadow-xl overflow-y-auto max-h-56 z-[70]"></div>
+      <input id="providerWiseExpenseSearch" type="text" autocomplete="off" placeholder="খরচ প্রদানকারীর নাম লিখুন / Search করুন" onfocus="showExpenseNameDropdown('provider')" oninput="handleExpenseNameInput('provider')" class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-purple-500">
+      <div id="providerExpenseNameList" class="hidden absolute left-0 right-0 top-full mt-1 bg-white border border-gray-300 rounded-lg shadow-xl z-[70] max-h-56 overflow-y-auto"></div>
     </div>
     <div id="providerWiseExpensePreview" class="mt-4 p-3 rounded-xl bg-purple-50 border border-purple-200 text-sm text-gray-700">নাম লিখলে ওই খরচ প্রদানকারীর তালিকা এখানে দেখা যাবে।</div>
     <div class="flex justify-end gap-2 mt-5">
@@ -325,77 +315,132 @@ function renderProviderSummary(list){
  const providers=[...new Set(list.map(providerName).filter(n=>n && n!=="-"))];
  if(!providers.length){ box.classList.add("hidden"); box.innerHTML=""; return; }
  box.classList.remove("hidden");
- box.innerHTML=`<div class="p-3 rounded-xl border border-emerald-200 bg-emerald-50">
-   <div class="text-xs font-bold text-emerald-800 mb-2">খরচ প্রদানকারী অনুযায়ী মোট হিসাব</div>
-   <div class="overflow-x-auto">
-    <table class="w-full text-xs border-collapse bg-white rounded-lg overflow-hidden">
-      <thead><tr class="bg-emerald-100 text-gray-700">
-        <th class="p-2 border text-center">খরচ প্রদানকারী</th><th class="p-2 border text-center">মোট খরচ</th><th class="p-2 border text-center">কোষাধ্যক্ষ শোধ</th><th class="p-2 border text-center">বাকি</th>
-      </tr></thead><tbody>
-      ${providers.map(name=>{ const spent=providerSpent(name, list); const paid=providerPaid(name,list); const bal=Math.max(0,spent-paid); return `<tr><td class="p-2 border text-center font-bold">${esc(name)}</td><td class="p-2 border text-center font-bold text-orange-600">${money(spent)}</td><td class="p-2 border text-center font-bold text-emerald-600">${money(Math.min(paid,spent))}</td><td class="p-2 border text-center font-bold ${bal>0?'text-red-600':'text-emerald-600'}">${money(bal)}</td></tr>`; }).join("")}
-      </tbody>
-    </table>
+ const wasOpen=box.dataset.open !== "false";
+ box.innerHTML=`<div class="rounded-xl border border-emerald-200 bg-emerald-50 overflow-hidden">
+   <button type="button" onclick="toggleProviderSummary()" class="w-full p-3 flex items-center justify-between text-left">
+     <span class="text-xs font-bold text-emerald-800">খরচ প্রদানকারীর মোট হিসাব</span>
+     <span id="providerSummaryArrow" class="text-emerald-700 font-bold transition-transform ${wasOpen?'':'rotate-180'}">⌃</span>
+   </button>
+   <div id="providerSummaryContent" class="${wasOpen?'':'hidden'} px-3 pb-3">
+     <div class="overflow-x-auto">
+      <table class="w-full text-xs border-collapse bg-white rounded-lg overflow-hidden">
+        <thead><tr class="bg-emerald-100 text-gray-700">
+          <th class="p-2 border text-center">খরচ প্রদানকারী</th><th class="p-2 border text-center">মোট খরচ</th><th class="p-2 border text-center">কোষাধ্যক্ষ শোধ</th><th class="p-2 border text-center">বাকি</th>
+        </tr></thead><tbody>
+        ${providers.map(name=>{ const spent=providerSpent(name, list); const paid=providerPaid(name,list); const bal=Math.max(0,spent-paid); return `<tr><td class="p-2 border text-center font-bold">${esc(name)}</td><td class="p-2 border text-center font-bold text-orange-600">${money(spent)}</td><td class="p-2 border text-center font-bold text-emerald-600">${money(Math.min(paid,spent))}</td><td class="p-2 border text-center font-bold ${bal>0?'text-red-600':'text-emerald-600'}">${money(bal)}</td></tr>`; }).join("")}
+        </tbody>
+      </table>
+     </div>
    </div>
  </div>`;
 }
 
+window.toggleProviderSummary=function(){
+ const box=document.getElementById("providerSummary");
+ const content=document.getElementById("providerSummaryContent");
+ const arrow=document.getElementById("providerSummaryArrow");
+ if(!box||!content)return;
+ const willOpen=content.classList.contains("hidden");
+ content.classList.toggle("hidden",!willOpen);
+ if(arrow)arrow.classList.toggle("rotate-180",!willOpen);
+ box.dataset.open=willOpen?"true":"false";
+};
+
+window.expenseListOpen = false;
+window.toggleExpenseList=function(){
+ const content=document.getElementById("expenseListContent");
+ const pagination=document.getElementById("expensePagination");
+ const arrow=document.getElementById("expenseListArrow");
+ const open=!window.expenseListOpen;
+ window.expenseListOpen=open;
+ if(content) content.classList.toggle("hidden",!open);
+ if(pagination) pagination.classList.toggle("hidden",!open);
+ if(arrow) arrow.textContent=open?"⌃":"⌄";
+};
+
 function renderExpenses(list=allExpenses){
- const body=document.getElementById("expenseTableBody"),actionHead=document.getElementById("actionHead"),selectHead=document.getElementById("selectHead");
- actionHead.classList.toggle("hidden",!canManage());
- selectHead.classList.toggle("hidden",!canManage());
+ const body=document.getElementById("expenseTableBody"), pagination=document.getElementById("expensePagination");
  renderProviderSummary(list);
- if(!list.length){body.innerHTML='<tr><td colspan="11" class="p-10 text-center text-gray-400">কোনো খরচের তথ্য নেই</td></tr>'; return;}
+ if(!list.length){
+   body.innerHTML='<div class="p-8 text-center text-gray-400 border rounded-xl bg-white">কোনো খরচের তথ্য নেই</div>';
+   pagination.innerHTML="";
+   document.getElementById("totalExpense").innerText=money(0); document.getElementById("totalAdvance").innerText=money(0); document.getElementById("totalDue").innerText=money(0); document.getElementById("totalReturned").innerText=money(0); return;
+ }
 
- body.innerHTML=list.map(x=>{
-    const adv = Number(x.advance ?? x.amount ?? 0);
-    const spent = Number(x.spent ?? x.amount ?? 0);
-    const due = Number(x.dueAmount ?? 0);
-    const ret = Number(x.returned ?? 0);
-    const extraDue = Number(x.extraDueAmount ?? Math.max(0, spent - adv));
-    const extraReturned = Number(x.extraReturned ?? 0);
-    const extraBalance = Math.max(0, extraDue - extraReturned);
-    const provider=providerName(x);
-    const paid=Number(x.treasurerPaid||0);
-    const providerTotal=providerSpent(provider, allExpenses);
-    const providerPaidTotal=providerPaid(provider, allExpenses);
-    const providerBalance=Math.max(0,providerTotal-providerPaidTotal);
-    
-    let statusBadge = "";
-    if (x.returnDue && due > 0) {
-      statusBadge = `<div class="flex flex-col items-center gap-1"><span class="bg-red-100 text-red-700 px-2 py-0.5 rounded text-xs font-bold">🔴 Due: ${money(due)}</span>${canManage() ? `<button onclick="clearDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ ফেরত পেলাম</button>` : ''}</div>`;
-    } else if (adv > spent) {
-      statusBadge = `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-xs font-bold">🟢 ফেরত জমা: ${money(ret)}</span>`;
-    } else if (spent > adv) {
-      statusBadge = `<div class="flex flex-col items-center gap-1"><span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded text-xs font-bold">🟠 অতিরিক্ত খরচ: ${money(extraDue)}</span>${extraBalance > 0 && canManage() ? `<button onclick="clearExtraDue('${x.id}')" class="bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 shadow-sm font-semibold">✅ অতিরিক্ত টাকা পরিশোধ</button>` : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold">${extraDue > 0 ? 'পরিশোধ হয়েছে' : ''}</span>`}</div>`;
-    } else {
-      statusBadge = `<span class="bg-gray-100 text-gray-600 px-2 py-0.5 rounded text-xs font-semibold">হিসাব ঠিক আছে</span>`;
-    }
-    const paidButton = canManage() ? `<button onclick="markTreasurerPaid('${x.id}')" class="mt-1 bg-emerald-600 text-white text-[10px] px-2 py-0.5 rounded hover:bg-emerald-700 font-semibold">${paid>0?'✏️ শোধ বদলান':'💰 শোধ করুন'}</button>` : '';
-    return `<tr class="border-b hover:bg-gray-50">
-      <td class="p-2.5 text-center align-middle ${canManage()?"":"hidden"}"><input type="checkbox" class="expense-checkbox w-4 h-4" value="${esc(x.id)}" onchange="syncExpenseSelectAll()"></td>
-      <td class="p-2.5 text-center align-middle">${esc(x.date||"-")}</td>
-      <td class="p-2.5 text-center align-middle font-medium">${esc(x.name||x.payerName||"-")}</td>
-      <td class="p-2.5 text-center align-middle text-gray-600">${esc(x.description||x.note||"-")}</td>
-      <td class="p-2.5 text-center font-bold text-blue-600">${money(adv)}</td>
-      <td class="p-2.5 text-center font-bold text-orange-600">${money(spent)}</td>
-      <td class="p-2.5 text-center align-middle">${statusBadge}</td>
-      <td class="p-2.5 text-center align-middle font-semibold">${esc(provider)}</td>
-      <td class="p-2.5 text-center align-middle"><div class="font-bold text-emerald-600">${money(paid)}</div>${paidButton}</td>
-      <td class="p-2.5 text-center align-middle"><div class="font-bold ${providerBalance>0?'text-red-600':'text-emerald-600'}">${money(providerBalance)}</div><div class="text-[10px] text-gray-500">মোট ${money(providerTotal)}</div></td>
-      <td class="p-2.5 text-center ${canManage()?"":"hidden"}"><button onclick="editExpense('${x.id}')" class="bg-gray-100 hover:bg-gray-200 p-1 rounded mr-1" title="এডিট">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 hover:bg-red-100 p-1 rounded text-red-600" title="ডিলিট">🗑️</button></td>
-    </tr>`;
- }).join("");
+ const pageSize=5;
+ const totalPages=Math.ceil(list.length/pageSize);
+ if(window.expenseCurrentPage>totalPages) window.expenseCurrentPage=totalPages;
+ if(!window.expenseCurrentPage) window.expenseCurrentPage=1;
+ const start=(window.expenseCurrentPage-1)*pageSize;
+ const pageItems=list.slice(start,start+pageSize);
 
- const totalSpent = list.reduce((s,x)=>s+Number(x.spent ?? x.amount ?? 0), 0);
- const totalAdv = list.reduce((s,x)=>s+Number(x.advance ?? x.amount ?? 0), 0);
- const totalDue = list.reduce((z,x)=>z+Number(x.dueAmount || 0), 0);
- const totalRet = list.reduce((z,x)=>z+Number(x.returned || 0), 0);
- document.getElementById("totalExpense").innerText = money(totalSpent);
- document.getElementById("totalAdvance").innerText = money(totalAdv);
- document.getElementById("totalDue").innerText = money(totalDue);
- document.getElementById("totalReturned").innerText = money(totalRet);
- syncExpenseSelectAll();
+ body.innerHTML=`<div class="border border-amber-200 rounded-xl overflow-hidden bg-white shadow-sm">
+   <button type="button" onclick="toggleExpenseList()" class="w-full bg-amber-50 px-3 py-2 border-b border-amber-200 flex items-center justify-between text-left">
+     <div class="font-bold text-gray-800 text-sm">💰 খরচের তালিকা</div>
+     <span id="expenseListArrow" class="text-amber-700 font-bold text-lg leading-none">${window.expenseListOpen?"⌃":"⌄"}</span>
+   </button>
+   <div id="expenseListContent" class="${window.expenseListOpen?'':'hidden'}">
+   <div class="overflow-x-auto">
+    <table class="w-full text-xs border-collapse min-w-[900px]">
+      <thead>
+       <tr class="bg-gray-100 text-gray-700">
+        <th class="px-2 py-2 border-b border-gray-200 text-center w-10">${canManage()?`<input type="checkbox" id="selectAllExpenses" onchange="toggleAllExpenses(this.checked)" class="w-4 h-4 align-middle" title="সব নির্বাচন">`:""}</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-left">প্রাপকের নাম</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">তারিখ</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">অগ্রিম</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">আসল খরচ</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">ফেরত / Due</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-left">খরচ প্রদানকারী</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">শোধ / বাকি</th>
+        <th class="px-2 py-2 border-b border-gray-200 text-center">অ্যাকশন</th>
+       </tr>
+      </thead>
+      <tbody>
+       ${pageItems.map(x=>{
+        const adv=Number(x.advance ?? x.amount ?? 0), spent=Number(x.spent ?? x.amount ?? 0), due=Number(x.dueAmount ?? 0), ret=Number(x.returned ?? 0);
+        const extraDue=Number(x.extraDueAmount ?? Math.max(0,spent-adv)), extraReturned=Number(x.extraReturned ?? 0), extraBalance=Math.max(0,extraDue-extraReturned);
+        const provider=providerName(x), paid=Number(x.treasurerPaid||0), providerTotal=providerSpent(provider,allExpenses), providerPaidTotal=providerPaid(provider,allExpenses), providerBalance=Math.max(0,providerTotal-providerPaidTotal);
+        let statusBadge="";
+        if(x.returnDue&&due>0) statusBadge=`<div class="flex flex-col items-center gap-1"><span class="bg-red-100 text-red-700 px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">🔴 ${money(due)}</span>${canManage()?`<button onclick="clearDue('${x.id}')" class="bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded font-semibold whitespace-nowrap">ফেরত পেলাম</button>`:""}</div>`;
+        else if(adv>spent) statusBadge=`<span class="bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">🟢 ${money(ret)} ফেরত</span>`;
+        else if(spent>adv) statusBadge=`<div class="flex flex-col items-center gap-1"><span class="bg-amber-100 text-amber-800 px-2 py-1 rounded-full text-[10px] font-bold whitespace-nowrap">🟠 ${money(extraDue)} অতিরিক্ত</span>${extraBalance>0&&canManage()?`<button onclick="clearExtraDue('${x.id}')" class="bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded font-semibold whitespace-nowrap">পরিশোধ</button>`:`<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[9px] font-bold whitespace-nowrap">${extraDue>0?'পরিশোধ হয়েছে':''}</span>`}</div>`;
+        else statusBadge='<span class="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap">ঠিক আছে</span>';
+        const paidButton=canManage()?`<button onclick="markTreasurerPaid('${x.id}')" class="mt-1 bg-emerald-600 text-white text-[9px] px-2 py-0.5 rounded font-semibold whitespace-nowrap">${paid>0?'✏️ বদলান':'💰 শোধ'}</button>`:"";
+        return `<tr class="hover:bg-amber-50/40 border-b border-gray-100 last:border-b-0">
+          <td class="px-2 py-2 text-center">${canManage()?`<input type="checkbox" class="expense-checkbox w-4 h-4" value="${esc(x.id)}" onchange="syncExpenseSelectAll()">`:''}</td>
+          <td class="px-2 py-2 font-bold text-gray-800 text-left max-w-[190px] truncate" title="${esc(x.name||x.payerName||'-')}">${esc(x.name||x.payerName||'-')}</td>
+          <td class="px-2 py-2 text-center text-gray-600 whitespace-nowrap">${esc(x.date||'-')}</td>
+          <td class="px-2 py-2 text-center font-bold text-blue-700 whitespace-nowrap">${money(adv)}</td>
+          <td class="px-2 py-2 text-center font-bold text-orange-700 whitespace-nowrap">${money(spent)}</td>
+          <td class="px-2 py-2 text-center">${statusBadge}</td>
+          <td class="px-2 py-2 text-left font-semibold text-gray-700 max-w-[150px] truncate" title="${esc(provider)}">${esc(provider)}</td>
+          <td class="px-2 py-2 text-center whitespace-nowrap"><div class="font-bold text-emerald-700">${money(paid)}</div><div class="font-bold ${providerBalance>0?'text-red-600':'text-emerald-600'}">বাকি ${money(providerBalance)}</div>${paidButton}</td>
+          <td class="px-2 py-2 text-center whitespace-nowrap">${canManage()?`<button onclick="editExpense('${x.id}')" class="bg-gray-100 hover:bg-gray-200 px-2 py-1 rounded mr-1">✏️</button><button onclick="deleteExpense('${x.id}')" class="bg-red-50 hover:bg-red-100 px-2 py-1 rounded text-red-600">🗑️</button>`:''}</td>
+        </tr>`;
+       }).join('')}
+      </tbody>
+    </table>
+   </div>
+ </div>
+ </div>`;
+
+ let pagesHtml='';
+ if(totalPages>1){
+   pagesHtml += `<button onclick="changeExpensePage(${window.expenseCurrentPage-1})" ${window.expenseCurrentPage===1?'disabled':''} class="px-3 py-1.5 rounded-lg border bg-white text-sm font-semibold disabled:opacity-40">«</button>`;
+   for(let p=1;p<=totalPages;p++){
+     pagesHtml += `<button onclick="changeExpensePage(${p})" class="px-3 py-1.5 rounded-lg border text-sm font-semibold ${p===window.expenseCurrentPage?'bg-orange-600 text-white border-orange-600':'bg-white text-gray-700 hover:bg-orange-50'}">${p}</button>`;
+   }
+   pagesHtml += `<button onclick="changeExpensePage(${window.expenseCurrentPage+1})" ${window.expenseCurrentPage===totalPages?'disabled':''} class="px-3 py-1.5 rounded-lg border bg-white text-sm font-semibold disabled:opacity-40">»</button>`;
+ }
+ pagination.innerHTML=pagesHtml;
+ pagination.classList.toggle("hidden", !window.expenseListOpen);
+
+ const totalSpent=list.reduce((s,x)=>s+Number(x.spent??x.amount??0),0),totalAdv=list.reduce((s,x)=>s+Number(x.advance??x.amount??0),0),totalDue=list.reduce((z,x)=>z+Number(x.dueAmount||0),0),totalRet=list.reduce((z,x)=>z+Number(x.returned||0),0);
+ document.getElementById("totalExpense").innerText=money(totalSpent); document.getElementById("totalAdvance").innerText=money(totalAdv); document.getElementById("totalDue").innerText=money(totalDue); document.getElementById("totalReturned").innerText=money(totalRet); syncExpenseSelectAll();
 }
+
+window.expenseCurrentPage=1;
+window.changeExpensePage=function(page){ const total=Math.max(1,Math.ceil(getFilteredExpenses().length/5)); window.expenseCurrentPage=Math.min(total,Math.max(1,page)); renderExpenses(getFilteredExpenses()); };
 
 window.clearExtraDue = async (id) => {
   if(!canManage()) return;
@@ -431,10 +476,7 @@ window.clearDue = async (id) => {
   }
 };
 
-window.filterExpenses=()=>{
- const list=getFilteredExpenses();
- renderExpenses(list);
-};
+window.filterExpenses=()=>{ window.expenseCurrentPage=1; const q=(document.getElementById("expenseSearch")?.value||"").trim(); const list=getFilteredExpenses(); if(q && list.length){ window.expenseListOpen=true; } else if(!q){ window.expenseListOpen=false; } renderExpenses(list); };
 
 window.updateReturnCalculation=()=>{
  const advance=Number(document.getElementById("expenseAdvance").value||0);
@@ -940,11 +982,11 @@ function normalizeExpensePersonName(value){
 function getExpenseNameList(searchName, field){
   const q=normalizeExpensePersonName(searchName);
   if(!q) return [];
-  return allExpenses.filter(x => normalizeExpensePersonName(field === "provider" ? (x.treasurer || x.pujaTreasurer || "") : (x.name || x.payerName || "")) === q);
+  return allExpenses.filter(x => normalizeExpensePersonName(field === "provider" ? (x.treasurer || "") : (x.name || x.payerName || "")) === q);
 }
 
 function getExpenseUniqueNames(field){
-  return [...new Set(allExpenses.map(x => String(field === "provider" ? (x.treasurer || x.pujaTreasurer || "") : (x.name || x.payerName || "")).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"bn"));
+  return [...new Set(allExpenses.map(x => String(field === "provider" ? (x.treasurer || "") : (x.name || x.payerName || "")).trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b,"bn"));
 }
 
 function safeExpenseExportFileName(value){
@@ -952,70 +994,64 @@ function safeExpenseExportFileName(value){
   return name || "নাম";
 }
 
-function fillExpenseNameDatalist(id, field){
+function fillExpenseNameDatalist(id, field, searchText=""){
   const list=document.getElementById(id);
   if(!list)return;
-  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
-  const input=document.getElementById(inputId);
-  const q=normalizeExpensePersonName(input?.value||"");
-  const names=getExpenseUniqueNames(field).filter(name=>!q||normalizeExpensePersonName(name).includes(q));
+  const q=normalizeExpensePersonName(searchText);
+  const names=getExpenseUniqueNames(field).filter(name=>!q || normalizeExpensePersonName(name).includes(q));
   if(!names.length){
-    list.innerHTML=`<div class="px-4 py-3 text-sm text-gray-500">কোনো নাম পাওয়া যায়নি</div>`;
+    list.innerHTML='<div class="px-4 py-3 text-sm text-gray-500">কোনো নাম পাওয়া যায়নি</div>';
     return;
   }
-  list.innerHTML=names.map(name=>`<button type="button" class="expense-name-option w-full text-left px-4 py-3 border-b last:border-b-0 hover:bg-gray-100 active:bg-gray-200 text-sm font-semibold text-gray-800">${esc(name)}</button>`).join("");
-  list.querySelectorAll(".expense-name-option").forEach((btn,index)=>{
-    btn.addEventListener("click",function(ev){
-      ev.preventDefault();
-      ev.stopPropagation();
-      selectExpenseName(field,names[index]);
-    });
-  });
+  list.innerHTML=names.map(name=>`<button type="button" class="expense-name-option w-full text-left px-4 py-3 text-sm font-semibold text-gray-700 hover:bg-amber-50 border-b last:border-b-0" data-field="${field}" data-name="${esc(name)}">${esc(name)}</button>`).join("");
 }
 
-window.showExpenseNameList=function(field){
-  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
-  fillExpenseNameDatalist(id,field);
-  document.getElementById(id)?.classList.remove("hidden");
+function showExpenseNameDropdown(field){
+  const input=document.getElementById(field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch");
+  const list=document.getElementById(field==="provider"?"providerExpenseNameList":"recipientExpenseNameList");
+  if(!input||!list)return;
+  fillExpenseNameDatalist(list.id,field,input.value.trim());
+  list.classList.remove("hidden");
 }
 
-window.hideExpenseNameList=function(field){
-  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
-  document.getElementById(id)?.classList.add("hidden");
+function hideExpenseNameDropdown(field){
+  const list=document.getElementById(field==="provider"?"providerExpenseNameList":"recipientExpenseNameList");
+  if(list)list.classList.add("hidden");
 }
 
-window.handleExpenseNameInput=function(field){
-  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
-  const input=document.getElementById(inputId);
-  const id=field==="provider"?"providerExpenseNameList":"recipientExpenseNameList";
-  fillExpenseNameDatalist(id,field);
-  document.getElementById(id)?.classList.remove("hidden");
+function handleExpenseNameInput(field){
+  const input=document.getElementById(field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch");
+  if(!input)return;
+  fillExpenseNameDatalist(field==="provider"?"providerExpenseNameList":"recipientExpenseNameList",field,input.value.trim());
+  showExpenseNameDropdown(field);
   if(field==="provider") previewProviderWiseExpenseExport();
   else previewRecipientWiseExpenseExport();
 }
 
-window.selectExpenseName=function(field,name){
-  const inputId=field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch";
-  const input=document.getElementById(inputId);
-  if(input) input.value=name;
-  hideExpenseNameList(field);
-  if(field==="provider") {
-    previewProviderWiseExpenseExport();
-  } else {
-    previewRecipientWiseExpenseExport();
-  }
-}
-
 document.addEventListener("click",function(e){
-  if(!e.target.closest("#recipientWiseExpenseSearch") && !e.target.closest("#recipientExpenseNameList")){hideExpenseNameList("recipient");}
-  if(!e.target.closest("#providerWiseExpenseSearch") && !e.target.closest("#providerExpenseNameList")){hideExpenseNameList("provider");}
+  const option=e.target.closest(".expense-name-option");
+  if(option){
+    const field=option.dataset.field;
+    const name=option.dataset.name||"";
+    const input=document.getElementById(field==="provider"?"providerWiseExpenseSearch":"recipientWiseExpenseSearch");
+    if(input){
+      input.value=name;
+      hideExpenseNameDropdown(field);
+      if(field==="provider") previewProviderWiseExpenseExport();
+      else previewRecipientWiseExpenseExport();
+    }
+    return;
+  }
+  if(!e.target.closest("#recipientWiseExpenseSearch") && !e.target.closest("#recipientExpenseNameList")) hideExpenseNameDropdown("recipient");
+  if(!e.target.closest("#providerWiseExpenseSearch") && !e.target.closest("#providerExpenseNameList")) hideExpenseNameDropdown("provider");
 });
 
 window.openRecipientWiseExpenseExport=()=>{
   if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}
   const input=document.getElementById("recipientWiseExpenseSearch");
   if(input) input.value="";
-  showExpenseNameList("recipient");
+  hideExpenseNameDropdown("recipient");
+  fillExpenseNameDatalist("recipientExpenseNameList","recipient","");
   const preview=document.getElementById("recipientWiseExpensePreview");
   if(preview)preview.innerHTML="নাম লিখলে ওই প্রাপকের খরচের তালিকা এখানে দেখা যাবে।";
   const modal=document.getElementById("recipientWiseExpenseExportModal");
@@ -1026,6 +1062,7 @@ window.openRecipientWiseExpenseExport=()=>{
 window.closeRecipientWiseExpenseExport=()=>{
   const modal=document.getElementById("recipientWiseExpenseExportModal");
   if(!modal)return; modal.classList.add("hidden");modal.classList.remove("flex");
+  hideExpenseNameDropdown("recipient");
 };
 
 window.previewRecipientWiseExpenseExport=()=>{
@@ -1043,7 +1080,8 @@ window.openProviderWiseExpenseExport=()=>{
   if(!canManage()){alert("আপনার খরচ ব্যবস্থাপনার Permission নেই।");return;}
   const input=document.getElementById("providerWiseExpenseSearch");
   if(input)input.value="";
-  showExpenseNameList("provider");
+  hideExpenseNameDropdown("provider");
+  fillExpenseNameDatalist("providerExpenseNameList","provider","");
   const preview=document.getElementById("providerWiseExpensePreview");
   if(preview)preview.innerHTML="নাম লিখলে ওই খরচ প্রদানকারীর তালিকা এখানে দেখা যাবে।";
   const modal=document.getElementById("providerWiseExpenseExportModal");
@@ -1054,6 +1092,7 @@ window.openProviderWiseExpenseExport=()=>{
 window.closeProviderWiseExpenseExport=()=>{
   const modal=document.getElementById("providerWiseExpenseExportModal");
   if(!modal)return;modal.classList.add("hidden");modal.classList.remove("flex");
+  hideExpenseNameDropdown("provider");
 };
 
 window.previewProviderWiseExpenseExport=()=>{
