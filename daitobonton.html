@@ -50,6 +50,7 @@ setTimeout(function(){
 <div class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"><h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1><p class="text-xs md:text-sm text-gray-700 mt-1">স্থাপিত:- <span id="committeeEstablishedYear">2009</span> | <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong></p><p class="text-xs md:text-sm text-gray-700" id="committeeAddress">সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128</p><p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">📞 <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a></p></div>
 <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200 mb-5"><div class="flex items-center justify-between mb-4 border-b pb-3"><div class="flex items-center gap-2"><button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button><h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ও দায়িত্ব বণ্টন</h2></div></div>
 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5"><div class="bg-emerald-50 border border-emerald-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">মোট চাঁদা</div><div id="totalChada" class="text-xl font-bold text-emerald-700 mt-1">₹০</div></div><div class="bg-blue-50 border border-blue-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">দায়িত্ব বণ্টন</div><div id="totalAssigned" class="text-xl font-bold text-blue-700 mt-1">₹০</div></div><div class="bg-rose-50 border border-rose-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">বাকি</div><div id="totalDue" class="text-xl font-bold text-rose-700 mt-1">₹০</div></div><div class="bg-orange-50 border border-orange-200 p-3 rounded-xl text-center"><div class="text-xs text-gray-600 font-semibold">পূজা কোষাধ্যক্ষের কাছে জমা</div><div id="totalDeposited" class="text-xl font-bold text-orange-700 mt-1">₹০</div></div></div>
+<div class="mb-5"><div class="bg-purple-50 border border-purple-200 p-3 rounded-xl text-center max-w-full md:max-w-xs"><div class="text-xs text-gray-600 font-semibold">🎟️ টিকিট বিক্রির মোট টাকা</div><div id="totalTicketSales" class="text-xl font-bold text-purple-700 mt-1">₹০</div></div></div>
 <div class="flex flex-wrap gap-2 mb-4">
 <button onclick="openAddModal()" class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm">➕ নতুন দায়িত্ব</button>
 <button onclick="openOtherModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-orange-700 shadow-sm">➕ অন্যান্য</button>
@@ -429,7 +430,7 @@ import{getFirestore,collection,addDoc,updateDoc,deleteDoc,doc,onSnapshot,getDocs
 const firebaseConfig={apiKey:"AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",authDomain:"durgapuja-2026.firebaseapp.com",projectId:"durgapuja-2026",storageBucket:"durgapuja-2026.firebasestorage.app",messagingSenderId:"625976130920",appId:"1:625976130920:web:60190b21f1c7563cdd2add"};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app);
 setPersistence(auth,browserLocalPersistence).catch(()=>{});
-let rows=[],currentUser=null,subscriptionTotal=0;
+let rows=[],currentUser=null,subscriptionTotal=0,ticketSalesTotal=0;
 const ADMIN_EMAIL="bappasarkar1173@gmail.com";
 const ROW_CACHE_KEY="daitobonton_rows_cache_v5";
 const MEMBER_CACHE_KEY="daitobonton_members_cache_v5";
@@ -563,6 +564,7 @@ function renderVillageFilter(){
 window.render=render;
 
 loadPageCaches();
+loadTicketSalesTotal();
 async function loadDaitobontonFromCloud(){
  try{
    const s=await getDocs(collection(db,"daitobonton"));
@@ -686,6 +688,19 @@ function renderRowCard(x){
      ${!isEvent && Math.max(0,amount-deposited)>0?`<div class="mt-3 flex justify-end"><button type="button" onclick='depositToTreasurer(${id})' title="পূজা কোষাধ্যক্ষের কাছে জমা" aria-label="পূজা কোষাধ্যক্ষের কাছে জমা" class="bg-orange-100 text-orange-700 px-3 py-1.5 rounded-lg border border-orange-200 text-xs font-bold hover:bg-orange-200">💰 কোষাধ্যক্ষে জমা</button></div>`:""}
    </div>
  </div>`;
+}
+
+function loadTicketSalesTotal(){
+ onSnapshot(collection(db,"sales"),(snapshot)=>{
+   ticketSalesTotal=0;
+   snapshot.forEach(docSnap=>{ticketSalesTotal += Number(docSnap.data()?.totalAmount || 0) || 0;});
+   const el=document.getElementById("totalTicketSales");
+   if(el) el.textContent=money(ticketSalesTotal);
+ },()=>{
+   ticketSalesTotal=0;
+   const el=document.getElementById("totalTicketSales");
+   if(el) el.textContent=money(0);
+ });
 }
 
 function render(){

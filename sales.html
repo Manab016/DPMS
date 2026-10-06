@@ -96,46 +96,69 @@
       font-weight: 800;
     }
 
-    /* নির্বাচিত সদস্যের booking/ticket details */
+    /* নির্বাচিত সদস্যের booking/ticket details — compact list */
     .booking-detail-card {
       margin-top: 7px;
-      padding: 10px;
+      padding: 7px;
       border: 1px solid #fed7aa;
       border-radius: 10px;
       background: #fff7ed;
       box-sizing: border-box;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+    .booking-detail-card .booking-detail-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 2px 3px 6px;
+      color: #374151;
+      font-size: 10px;
+      font-weight: 800;
     }
     .booking-detail-card .booking-detail-row {
       display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 6px;
-    }
-    .booking-detail-card .booking-detail-item {
-      padding: 7px 8px;
+      grid-template-columns: minmax(72px, .8fr) minmax(105px, 1.25fr) minmax(58px, .6fr);
+      align-items: center;
+      gap: 5px;
+      padding: 6px 7px;
+      margin-top: 4px;
       border: 1px solid #fde68a;
       border-radius: 7px;
       background: #fff;
+    }
+    .booking-detail-card .booking-detail-item {
       min-width: 0;
     }
     .booking-detail-card .booking-detail-label {
       display: block;
       color: #78716c;
-      font-size: 9px;
+      font-size: 8px;
+      line-height: 1.1;
       margin-bottom: 2px;
     }
     .booking-detail-card .booking-detail-value {
       display: block;
       color: #374151;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 800;
-      overflow-wrap: anywhere;
+      line-height: 1.2;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     @media (max-width: 480px) {
       .member-search-item { padding: 10px 10px; }
       .member-search-name { font-size: 12px; }
       .selected-member-card { padding-left: 10px; }
-      .booking-detail-card .booking-detail-row { grid-template-columns: 1fr 1fr; }
+      .booking-detail-card { max-height: 165px; padding: 6px; }
+      .booking-detail-card .booking-detail-row {
+        grid-template-columns: minmax(65px, .75fr) minmax(100px, 1.25fr) minmax(52px, .55fr);
+        gap: 4px;
+        padding: 5px 6px;
+      }
     }
 
     @media print {
@@ -149,7 +172,7 @@
   #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
 </style>
 </head>
-<body class="bg-amber-50/40 p-3 font-sans pb-20 text-gray-800">
+<body class="bg-amber-50/40 p-3 font-sans pb-20 text-gray-800" style="visibility:hidden;">
 
   <script>
   (function(){
@@ -186,6 +209,17 @@
         <div>মোট বিক্রীত: <strong id="totalTicketsSoldDisplay" class="text-orange-700">০ টিকিট</strong></div>
         <div class="border-x px-4 border-amber-200">মোট বিক্রয়: <strong id="totalSalesAmountDisplay" class="text-emerald-700">₹০</strong></div>
         <div>মোট বাকি: <strong id="totalDueAmountDisplay" class="text-red-600">₹০</strong></div>
+      </div>
+
+      <div id="dateWiseSalesSummary" class="bg-white border border-emerald-200 rounded-xl p-3 mb-4 hidden">
+        <div class="flex items-center justify-between gap-2 mb-2">
+          <div class="flex items-center gap-2 min-w-0">
+            <div class="text-xs md:text-sm font-extrabold text-emerald-800">📅 তারিখ অনুযায়ী টিকিট বিক্রয়</div>
+            <button id="dateWiseSalesToggle" type="button" onclick="toggleDateWiseSalesSummary()" class="shrink-0 w-7 h-7 rounded-lg border border-emerald-200 bg-emerald-50 text-emerald-700 font-bold text-sm hover:bg-emerald-100" title="Minimize/Expand">⌃</button>
+          </div>
+          <div id="dateWiseSalesGrandTotal" class="text-xs font-bold text-emerald-700">মোট: ₹০</div>
+        </div>
+        <div id="dateWiseSalesRows" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-64 overflow-y-auto pr-1"></div>
       </div>
 
       <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
@@ -600,8 +634,11 @@
     }
 
     function getPaidAmount(sale) {
-      const related = paymentsData.filter(p => p.saleId === sale.id);
-      return related.reduce((sum,p) => sum + Number(p.amount || 0), Number(sale.initialPaid || 0));
+      // initialPaid is the source of truth for the amount entered in the sales form.
+      // The same initial payment is also stored in the payments collection, so do not add both.
+      const total = Math.max(0, Number(sale.totalAmount || 0));
+      const paid = Math.max(0, Number(sale.initialPaid || 0));
+      return Math.min(total, paid);
     }
 
     window.getTreasurerName = function() {
@@ -819,15 +856,10 @@
         return;
       }
 
-      const memberId = getMemberId(member);
-
       box.innerHTML = `
-        <div class="flex items-center justify-between gap-2 mb-2">
-          <div class="flex items-center gap-2 min-w-0">
-            <span class="text-orange-600 font-bold">🎫</span>
-            <strong class="text-xs text-gray-800">এই সদস্যের বুকিং টিকিট</strong>
-          </div>
-          ${memberId ? `<span class="shrink-0 rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold">ID: ${esc(memberId)}</span>` : ""}
+        <div class="booking-detail-heading">
+          <span>🎫 এই সদস্যের পূর্বের টিকিট</span>
+          <span>${memberBookings.length}টি</span>
         </div>
 
         ${memberBookings.map(b => {
@@ -837,29 +869,18 @@
           const start = b.startTicket ?? "-";
           const end = b.endTicket ?? "-";
           return `
-            <div class="bg-white rounded-lg border border-orange-200 p-2.5 mb-2 last:mb-0">
-              <div class="flex items-center justify-between gap-2 mb-2 min-w-0">
-                <strong class="text-xs text-gray-800 truncate">${esc(b.name || member.name || "")}</strong>
-                ${memberId ? `<span class="shrink-0 rounded-md bg-orange-600 text-white px-2 py-0.5 text-[10px] font-bold">ID: ${esc(memberId)}</span>` : ""}
+            <div class="booking-detail-row">
+              <div class="booking-detail-item">
+                <span class="booking-detail-label">তারিখ</span>
+                <span class="booking-detail-value">📅 ${esc(b.date || "-")}</span>
               </div>
-
-              <div class="booking-detail-row">
-                <div class="booking-detail-item">
-                  <span class="booking-detail-label">তারিখ</span>
-                  <span class="booking-detail-value">📅 ${esc(b.date || "-")}</span>
-                </div>
-                <div class="booking-detail-item">
-                  <span class="booking-detail-label">বই নম্বর</span>
-                  <span class="booking-detail-value">📖 ${esc(b.bookNo || "-")}</span>
-                </div>
-                <div class="booking-detail-item">
-                  <span class="booking-detail-label">টিকিট নম্বর</span>
-                  <span class="booking-detail-value">🎟️ ${esc(start)} - ${esc(end)}</span>
-                </div>
-                <div class="booking-detail-item">
-                  <span class="booking-detail-label">বুকিং / বাকি</span>
-                  <span class="booking-detail-value">${esc(total)} / <span class="text-emerald-700">${esc(rem)} টি</span></span>
-                </div>
+              <div class="booking-detail-item">
+                <span class="booking-detail-label">টিকিট নম্বর</span>
+                <span class="booking-detail-value">🎟️ ${esc(start)} - ${esc(end)}</span>
+              </div>
+              <div class="booking-detail-item">
+                <span class="booking-detail-label">টিকিট</span>
+                <span class="booking-detail-value">${esc(total)} টি / <span class="text-emerald-700">${esc(rem)} বাকি</span></span>
               </div>
             </div>
           `;
@@ -962,9 +983,18 @@
     };
 
     window.calcDueAmount = function() {
-      const total = parseInt(document.getElementById("saleTotalAmount").value) || 0;
-      const paid = parseInt(document.getElementById("salePaidAmount").value) || 0;
-      document.getElementById("saleDueDisplay").value = Math.max(0, total - paid);
+      const total = Math.max(0, parseInt(document.getElementById("saleTotalAmount").value) || 0);
+      const paidInput = document.getElementById("salePaidAmount");
+      const dueInput = document.getElementById("saleDueDisplay");
+      let paid = Math.max(0, parseInt(paidInput.value) || 0);
+
+      paidInput.max = total;
+      if (paid > total) {
+        paid = total;
+        paidInput.value = total;
+      }
+
+      dueInput.value = Math.max(0, total - paid);
     };
 
     window.saveSalesForm = async function() {
@@ -1007,6 +1037,14 @@
         if (isChecked && (startTicket < 1 || endTicket < 1 || startTicket > endTicket ||
             !Number.isSafeInteger(startTicket) || !Number.isSafeInteger(endTicket))) {
           alert("টিকিট নম্বর ১ বা তার বেশি হতে হবে এবং শুরু নম্বর শেষ নম্বরের চেয়ে বড় হতে পারবে না।");
+          btn.disabled = false;
+          return;
+        }
+
+        if (initialPaid > totalAmount) {
+          alert("জমা টাকা মোট টাকার চেয়ে বেশি হতে পারবে না!");
+          document.getElementById("salePaidAmount").value = totalAmount;
+          calcDueAmount();
           btn.disabled = false;
           return;
         }
@@ -1142,8 +1180,74 @@
       document.getElementById("totalSalesAmountDisplay").innerText = `₹${totalAmount}`;
       document.getElementById("totalDueAmountDisplay").innerText = `₹${Math.max(0,totalAmount-totalPaid)}`;
 
+      renderDateWiseSalesSummary();
       renderSalesGroup(memberSales, "member");
       renderSalesGroup(otherSales, "other");
+    }
+
+    let dateWiseSalesExpanded = true;
+
+    window.toggleDateWiseSalesSummary = function() {
+      dateWiseSalesExpanded = !dateWiseSalesExpanded;
+      const rowsBox = document.getElementById("dateWiseSalesRows");
+      const toggle = document.getElementById("dateWiseSalesToggle");
+      if (!rowsBox || !toggle) return;
+      rowsBox.classList.toggle("hidden", !dateWiseSalesExpanded);
+      toggle.textContent = dateWiseSalesExpanded ? "⌃" : "⌄";
+      toggle.title = dateWiseSalesExpanded ? "Minimize" : "Expand";
+    };
+
+    function renderDateWiseSalesSummary() {
+      const box = document.getElementById("dateWiseSalesSummary");
+      const rowsBox = document.getElementById("dateWiseSalesRows");
+      const grandEl = document.getElementById("dateWiseSalesGrandTotal");
+      const toggle = document.getElementById("dateWiseSalesToggle");
+      if (!box || !rowsBox || !grandEl) return;
+
+      const byDate = {};
+      salesData.forEach(sale => {
+        const date = String(sale.date || "").trim() || "তারিখ নেই";
+        const amount = Number(sale.totalAmount || 0) || 0;
+        const tickets = Number(sale.quantity || 0) || 0;
+        if (!byDate[date]) byDate[date] = { amount: 0, tickets: 0 };
+        byDate[date].amount += amount;
+        byDate[date].tickets += tickets;
+      });
+
+      const entries = Object.entries(byDate).sort((a, b) => {
+        if (a[0] === "তারিখ নেই") return 1;
+        if (b[0] === "তারিখ নেই") return -1;
+        return b[0].localeCompare(a[0]);
+      });
+
+      if (!entries.length) {
+        box.classList.add("hidden");
+        rowsBox.innerHTML = "";
+        grandEl.textContent = "মোট: ₹০";
+        return;
+      }
+
+      const total = entries.reduce((sum, [, v]) => sum + v.amount, 0);
+      grandEl.textContent = `মোট: ₹${total.toLocaleString("en-IN")}`;
+      rowsBox.innerHTML = entries.map(([date, v]) => {
+        const displayDate = date === "তারিখ নেই" ? date : formatSaleDate(date);
+        return `<div class="bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2 flex items-center justify-between gap-2 text-xs">
+          <div><span class="text-gray-600 font-semibold">📅 ${esc(displayDate)}</span><div class="text-[10px] text-gray-500 mt-0.5">${v.tickets.toLocaleString("en-IN")} টিকিট</div></div>
+          <b class="text-emerald-800">₹${v.amount.toLocaleString("en-IN")}</b>
+        </div>`;
+      }).join("");
+      rowsBox.classList.toggle("hidden", !dateWiseSalesExpanded);
+      if (toggle) {
+        toggle.textContent = dateWiseSalesExpanded ? "⌃" : "⌄";
+        toggle.title = dateWiseSalesExpanded ? "Minimize" : "Expand";
+      }
+      box.classList.remove("hidden");
+    }
+
+    function formatSaleDate(value) {
+      const parts = String(value || "").split("-");
+      if (parts.length === 3) return `${parts[2]}-${parts[1]}-${parts[0]}`;
+      return String(value || "-");
     }
 
     function renderSalesGroup(list, type) {

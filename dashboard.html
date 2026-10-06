@@ -603,6 +603,7 @@
         loadTotalExpenseCount();
         loadTotalBookingCount();
         loadTotalSalesCount();
+        loadTotalTicketSalesAmount();
         loadCommitteeExecutives();
         loadPastDocuments();
       }
@@ -882,6 +883,21 @@
         });
       }
 
+      function loadTotalTicketSalesAmount() {
+        onSnapshot(collection(db, "sales"), (snapshot) => {
+          let ticketSalesTotal = 0;
+          snapshot.forEach((docSnap) => {
+            const item = docSnap.data() || {};
+            ticketSalesTotal += Number(item.totalAmount || 0) || 0;
+          });
+          window.__dpmsTicketSalesTotal = ticketSalesTotal;
+          if (window.__dpmsUpdateDashboardChada) window.__dpmsUpdateDashboardChada();
+        }, () => {
+          window.__dpmsTicketSalesTotal = 0;
+          if (window.__dpmsUpdateDashboardChada) window.__dpmsUpdateDashboardChada();
+        });
+      }
+
       function calculateSubTotals(data) {
         let membersAmt = 0;
         let othersAmt = 0;
@@ -892,14 +908,17 @@
         });
 
         const subscriptionGrandTotal = membersAmt + othersAmt;
-        const updateDashboardChada = (dutyCollectedTotal = 0) => {
-          const grandTotal = subscriptionGrandTotal + (Number(dutyCollectedTotal) || 0);
+        let dutyCollectedTotal = 0;
+        const updateDashboardChada = () => {
+          const grandTotal = subscriptionGrandTotal + dutyCollectedTotal;
           const dashCardSub = document.querySelector("#dash-card-chada .text-2xl.font-bold");
           if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
         };
+        window.__dpmsUpdateDashboardChada = updateDashboardChada;
+        updateDashboardChada();
 
         onSnapshot(collection(db, "daitobonton"), (snapshot) => {
-          let dutyCollectedTotal = 0;
+          dutyCollectedTotal = 0;
           snapshot.forEach((docSnap) => {
             const item = docSnap.data() || {};
             if (item.dutyCategory === "event") return;
@@ -916,9 +935,10 @@
               dutyCollectedTotal += Number(item.amount) || 0;
             }
           });
-          updateDashboardChada(dutyCollectedTotal);
+          updateDashboardChada();
         }, () => {
-          updateDashboardChada(0);
+          dutyCollectedTotal = 0;
+          updateDashboardChada();
         });
       }
 
