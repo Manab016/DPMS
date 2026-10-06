@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>দুর্গাপূজা ব্যবস্থাপনা - চাঁদা সংগ্রহ</title>
+    <title>দুর্গাপূজা ব্যবস্থাপনা - ড্যাশবোর্ড</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- ExcelJS for Advanced Excel Export -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.3.0/exceljs.min.js"></script>
@@ -11,10 +11,12 @@
     <!-- QR Code Library -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
     <style>
-      th, td {
+      #subTableBody td,
+      #subTableBody th {
         text-align: center;
         vertical-align: middle;
         white-space: nowrap;
+        width: auto;
       }
 
       /* অটো স্লাইড বা স্ক্রোল অ্যানিমেশন (ডান থেকে বামে) */
@@ -59,58 +61,106 @@
           print-color-adjust: exact !important;
         }
       }
-      /* Dashboard menu active state */
-      #quickMenuContent .dashboard-menu-btn.menu-active { background-color:#ea580c !important; color:#fff !important; border-color:#ea580c !important; }
-      #quickMenuContent .dashboard-menu-btn.menu-active:hover { background-color:#c2410c !important; }
-
-      .sub-list-card{position:relative}
-      .sub-list-tab{display:inline-flex;align-items:center;gap:.4rem;background:#ea580c;color:#fff;padding:.45rem .8rem;border-radius:.65rem;font-size:.75rem;font-weight:800;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-      .sub-list-card table tbody tr{transition:background .15s}
-      .sub-list-card table tbody tr:hover{background:#fff7ed}
     </style>
-  
-<style id="committee-global-sync-style">
-  /* Committee header is revealed only after cached/cloud data has been applied. */
-  #committeePageHeading, #committeePageHeading ~ p { visibility: hidden; }
-</style>
-</head>
-  <body class="bg-amber-50/40 p-3 font-sans pb-20">
+  </head>
+  <body class="bg-amber-50/40 p-3 font-sans pb-20" style="visibility:hidden;">
     <!-- 👨‍💻 ফ্লটিং ডেভেলপার বাটন (অরেঞ্জ থিম) -->
-    <button onclick="toggleDevModal()" class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer">
-      <span class="text-base">👨‍💻</span><span class="hidden md:inline">ডেভেলপার</span>
+    <button
+      onclick="toggleDevModal()"
+      class="fixed bottom-5 right-5 z-40 bg-orange-600 text-white p-3 md:px-4 md:py-2.5 rounded-full shadow-2xl hover:bg-orange-700 transition flex items-center justify-center gap-2 text-xs font-bold border-2 border-white cursor-pointer"
+    >
+      <span class="text-base">👨‍💻</span>
+      <span class="hidden md:inline">ডেভেলপার</span>
     </button>
-    <div id="devModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
-      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
-        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
-        <div class="text-center mb-4">
-          <div class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl">👨‍💻</div>
-          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
-        </div>
-        <div class="space-y-2.5 text-xs border-t pt-3">
-          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">নাম:</span><span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span></div>
-          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">মোবাইল:</span><a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a></div>
-          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border"><span class="text-gray-500">ইমেইল:</span><a id="popDevEmail" href="#" class="font-bold text-gray-800 truncate">লোড হচ্ছে...</a></div>
-        </div>
-        <button onclick="toggleDevModal()" class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold">বন্ধ করুন</button>
-      </div>
-    </div>
 
     <div class="max-w-4xl mx-auto">
       <div
         class="bg-gradient-to-b from-amber-100 to-amber-50 p-4 rounded-xl shadow-sm text-center border border-amber-200 mb-4 relative"
       >
-        <h1 id="committeePageHeading" class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি</h1>
+        <h1 class="text-xl md:text-2xl font-bold text-orange-700">নেকড়ামারি সর্বজনীন দুর্গোৎসব কমিটি</h1>
         <p class="text-xs md:text-sm text-gray-700 mt-1">
-          স্থাপিত:- <span id="committeeEstablishedYear">2009</span> |
-          <strong>Regd.No.:- <span id="committeeRegistrationNo">S0014684</span></strong>
+          স্থাপিত:- ২০০৯ |
+          <strong>Regd.No.:- S0014684</strong>
         </p>
-        <p class="text-xs md:text-sm text-gray-700" id="committeeAddress">
-          সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128
+        <p class="text-xs md:text-sm text-gray-700">
+          সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- ৭৩২১২৮
         </p>
         <p class="text-xs md:text-sm text-gray-800 font-semibold mt-1">
           📞
-          <a id="committeeMobileLink" href="tel:9933371702" class="hover:underline"><span id="committeeMobile">9933371702</span></a>
+          <a href="tel:9933371702" class="hover:underline">৯৯৩৩৩৭১৭০২</a>
         </p>
+      </div>
+
+      <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200 mb-4">
+        <div
+          class="flex justify-between items-center bg-orange-600 text-white p-2.5 rounded-lg shadow-sm cursor-pointer"
+          onclick="toggleQuickMenu()"
+        >
+          <span class="text-sm font-bold flex items-center gap-1">📊 ড্যাশবোর্ড মেনু</span>
+          <div class="flex items-center gap-2">
+            <span
+              id="userRoleBadge"
+              class="bg-amber-800 text-white text-[11px] px-2.5 py-1 rounded-full font-semibold shadow-inner"
+            >
+              রোল: লোড হচ্ছে...
+            </span>
+            <span id="menuArrowIcon" class="text-lg font-bold transition-transform duration-300">▼</span>
+          </div>
+        </div>
+
+        <div id="quickMenuContent" class="grid grid-cols-4 gap-2 mt-3 transition-all duration-300">
+          <!-- ১. সদস্য বাটন (প্রথম স্থানে রাখা হয়েছে) -->
+          <button
+            id="menu-btn-members"
+            onclick="window.location.href='members.html'"
+            class="bg-blue-50 text-blue-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-blue-100 border border-blue-200"
+          >
+            👥 সদস্য
+          </button>
+          <!-- ২. চাঁদা বাটন -->
+          <button
+            id="menu-btn-subscription"
+            onclick="switchTab('subscription')"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            💰 চাঁদা
+          </button>
+          <button
+            id="menu-btn-expense"
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            💵 খরচ
+          </button>
+          <button
+            id="menu-btn-booking"
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            🎫 বুকিং
+          </button>
+          <button
+            id="menu-btn-sales"
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            🛒 বিক্রয়
+          </button>
+          <button
+            id="menu-btn-treasurer"
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            📊 কোষাধ্যক্ষ
+          </button>
+          <button
+            id="quickSettingsBtn"
+            onclick="window.location.href='dashboard.html'"
+            class="bg-gray-100 text-gray-700 p-2 rounded-lg text-xs font-semibold flex flex-col items-center justify-center gap-1 hover:bg-gray-200 border"
+          >
+            ⚙️ সেটিংস
+          </button>
+        </div>
       </div>
 
       <!-- ড্যাশবোর্ড সেকশন -->
@@ -120,7 +170,7 @@
         <div class="bg-gradient-to-r from-orange-600 to-amber-600 text-white p-3.5 rounded-xl shadow-md border border-orange-500">
           <div class="flex justify-between items-center cursor-pointer" onclick="toggleCommitteeList()">
             <div class="flex items-center gap-2 font-bold text-sm md:text-base">
-              <span>👬</span>
+              <span>👥</span>
               <span>কমিটির প্রধান পদাধিকারী</span>
             </div>
             <div class="flex items-center gap-2">
@@ -136,18 +186,20 @@
           </div>
         </div>
 
-        <!-- কার্ড সেকশন -->
+        <!-- কার্ড সেকশন (বামে: মোট সদস্য, ডানে: মোট চাঁদা) -->
         <div class="grid grid-cols-2 gap-3">
+          <!-- বামে: মোট সদস্য -->
           <div
             id="dash-card-members"
             onclick="window.location.href='members.html'"
             class="bg-blue-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-blue-700 transition flex flex-col items-center justify-center text-center"
           >
-            <div class="text-2xl mb-1">👬</div>
+            <div class="text-2xl mb-1">👥</div>
             <div class="text-xs opacity-90 font-medium">মোট সদস্য</div>
             <div class="text-2xl font-bold mt-1" id="dashTotalMembersCount">0</div>
           </div>
 
+          <!-- ডানে: মোট চাঁদা -->
           <div
             id="dash-card-subscription"
             onclick="switchTab('subscription')"
@@ -192,7 +244,7 @@
             onclick="window.location.href='dashboard.html'"
             class="bg-purple-600 text-white p-4 rounded-xl shadow-md cursor-pointer hover:bg-purple-700 transition flex flex-col items-center justify-center text-center"
           >
-            <div class="text-2xl mb-1">🎫</div>
+            <div class="text-2xl mb-1">🛒</div>
             <div class="text-xs opacity-90">বিক্রয়</div>
             <div class="text-xl font-bold mt-1">0</div>
           </div>
@@ -203,223 +255,94 @@
       <div id="section-subscription" class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
         <div class="flex items-center justify-between mb-4 border-b pb-3">
           <div class="flex items-center gap-2">
-            <button onclick="window.location.href='dashboard.html'" class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200">⬅️ হোম</button>
+            <button
+              onclick="window.location.href='dashboard.html'"
+              class="bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold hover:bg-gray-200"
+            >
+              ⬅️ হোম
+            </button>
             <h2 class="text-lg font-bold text-gray-800">চাঁদা সংগ্রহ ব্যবস্থাপনা</h2>
           </div>
         </div>
 
         <div class="bg-amber-50/50 p-3 rounded-xl border border-amber-200 mb-4 text-xs md:text-sm space-y-1">
-          <div>সদস্যদের মোট: <strong id="subTotalMembersAmount" class="text-orange-700">₹0</strong></div>
-          <div>অন্যান্যদের মোট: <strong id="subTotalOthersAmount" class="text-orange-700">₹0</strong></div>
-          <div>দায়িত্ব বণ্টন চাঁদা মোট: <strong id="daitobontonTotalAmount" class="text-orange-700">₹0</strong></div>
-          <div class="text-base font-bold text-emerald-700 pt-1 border-t border-amber-200">সর্বমোট: <span id="subGrandTotal">₹0</span></div>
-        </div>
-
-        <div id="adminSubControls" class="flex flex-wrap gap-2 mb-4">
-          <button onclick="openAddSubModal()" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">➕ চাঁদা যোগ</button>
-          <button onclick="deleteSelectedSubscriptions()" class="bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">🗑️ সিলেক্টেড ডিলিট</button>
-          <button onclick="deleteAllSubscriptions()" class="bg-red-700 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm">🗑️ সব ডিলিট</button>
-        </div>
-
-        <!-- চাঁদা যোগ popup: সদস্য ও দাতা আলাদা tab -->
-        <div id="subEntryModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 z-50">
-          <div class="bg-white w-full max-w-4xl max-h-[92vh] overflow-y-auto rounded-2xl shadow-2xl border border-orange-200 p-4 md:p-5">
-            <div class="flex items-center justify-between border-b pb-3 mb-4">
-              <h3 id="subEntryModalTitle" class="text-lg font-bold text-orange-700">➕ চাঁদা যোগ করুন</h3>
-              <button onclick="closeSubEntryModal()" class="text-gray-400 font-bold">✕</button>
-            </div>
-            <input type="hidden" id="editSubDocId">
-
-            <!-- দুইটি tab পাশাপাশি -->
-            <div class="grid grid-cols-2 gap-2 bg-orange-50 p-1.5 rounded-xl border border-orange-200 mb-4">
-              <button type="button" id="subTabMember" onclick="switchSubEntryTab('member')"
-                class="sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm">
-                👤 সদস্যের চাঁদা
-              </button>
-              <button type="button" id="subTabOther" onclick="switchSubEntryTab('other')"
-                class="sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold">
-                🤝 দাতার চাঁদা
-              </button>
-            </div>
-
-            <!-- সদস্যের চাঁদা tab -->
-            <div id="memberContributionForm" class="bg-orange-50/40 p-3 md:p-4 rounded-xl border border-orange-200">
-              <h4 class="text-sm font-bold text-orange-800 mb-3">👤 সদস্যের চাঁদা</h4>
-              <div class="space-y-3">
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 mb-1">সদস্য খুঁজুন *</label>
-                  <div class="relative">
-                    <input id="memberSearchInput" type="text" autocomplete="off"
-                      placeholder="নাম / মোবাইল / গ্রাম / Member ID দিয়ে খুঁজুন..."
-                      oninput="searchMemberForSub()"
-                      class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                    <div id="memberSearchResults" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-56 overflow-y-auto hidden"></div>
-                  </div>
-                  <input type="hidden" id="selectedMemberId">
-                  <div id="selectedMemberInfo" class="text-[11px] text-emerald-700 font-semibold mt-1"></div>
-                </div>
-
-                <div> 
-                  <label class="block text-xs font-bold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
-                  <div class="relative">
-                    <input id="subCollectorMember" type="text" value="" autocomplete="off"
-                      placeholder="কোষাধ্যক্ষের নাম"
-                      oninput="searchCollector('subCollectorMember')"
-                      class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                    <div id="collectorResultsMember" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto hidden"></div>
-                  </div>
-                </div>
-              
-                <div class="grid grid-cols-2 gap-2">
-                  <div><label class="block text-xs font-bold text-gray-600 mb-1">তারিখ *</label>
-                    <input type="date" id="subDateMember" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                  </div>
-                  <div><label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (₹) *</label>
-                    <input type="number" id="subAmountMember" min="1" value="2500" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                  </div>
-                </div>
-
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
-                  <input type="text" id="subNoteMember" placeholder="যেমন: বার্ষিক চাঁদা" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-orange-200">
-                  <button type="button" onclick="closeSubEntryModal()"
-                    class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-300">
-                    বাতিল
-                  </button>
-                  <button type="button" onclick="saveSubFromNewForm('member')" id="saveMemberSubBtn"
-                    class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-700">
-                    সেভ
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            <!-- দাতার চাঁদা tab -->
-            <div id="otherContributionForm" class="bg-orange-50/40 p-3 md:p-4 rounded-xl border border-orange-200 hidden">
-              <h4 class="text-sm font-bold text-orange-800 mb-3">🤝 দাতার চাঁদা</h4>
-              <div class="space-y-3">
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">দাতার নাম *</label>
-                  <input id="otherDataName" type="text" placeholder="দাতার নাম লিখুন" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                </div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">মোবাইল (ঐচ্ছিক)</label>
-                  <input id="otherDataMobile" type="tel" inputmode="numeric" maxlength="10"
-                    oninput="this.value=this.value.replace(/[^0-9]/g,'').slice(0,10)"
-                    class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                </div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">গ্রাম (ঐচ্ছিক)</label>
-                  <input id="otherDataVillage" type="text" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                </div>
-                <div>
-                  <label class="block text-xs font-bold text-gray-600 mb-1">পূজা কোষাধ্যক্ষ</label>
-                  <div class="relative">
-                    <input id="subCollectorOther" type="text" value="" autocomplete="off"
-                      placeholder="কোষাধ্যক্ষের নাম"
-                      oninput="searchCollector('subCollectorOther')"
-                      class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                    <div id="collectorResultsOther" class="absolute left-0 right-0 top-full mt-1 bg-white border rounded-lg shadow-xl z-50 max-h-40 overflow-y-auto hidden"></div>
-                  </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
-                  <div><label class="block text-xs font-bold text-gray-600 mb-1">তারিখ *</label>
-                    <input type="date" id="subDateOther" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                  </div>
-                  <div><label class="block text-xs font-bold text-gray-600 mb-1">পরিমাণ (₹) *</label>
-                    <input type="number" id="subAmountOther" min="1" value="2500" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                  </div>
-                </div>
-                <div><label class="block text-xs font-bold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
-                  <input type="text" id="subNoteOther" placeholder="যেমন: অনুদান / চাঁদা" class="w-full p-2.5 border rounded-lg text-sm bg-white">
-                </div>
-                <div class="flex justify-end gap-2 pt-2 border-t border-orange-200">
-                  <button type="button" onclick="closeSubEntryModal()"
-                    class="bg-gray-200 text-gray-700 px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-gray-300">
-                    বাতিল
-                  </button>
-                  <button type="button" onclick="saveSubFromNewForm('other')" id="saveOtherSubBtn"
-                    class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-sm font-bold hover:bg-orange-700">
-                    সেভ
-                  </button>
-                </div>
-              </div>
-            </div>
+          <div>
+            সদস্যদের মোট:
+            <strong id="subTotalMembersAmount" class="text-orange-700">₹0</strong>
+          </div>
+          <div>
+            অন্যান্যদের মোট:
+            <strong id="subTotalOthersAmount" class="text-orange-700">₹0</strong>
+          </div>
+          <div class="text-base font-bold text-emerald-700 pt-1 border-t border-amber-200">
+            সর্বমোট:
+            <span id="subGrandTotal">₹0</span>
           </div>
         </div>
 
-        <!-- সদস্য ও দাতার তালিকা -->
-        <div class="mb-4 bg-orange-50 p-1.5 rounded-xl border border-orange-200 grid grid-cols-2 gap-1.5">
-          <button type="button" id="contributionListTabMember" onclick="switchContributionListTab('member')"
-            class="contribution-list-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-sm">
-            👤 সদস্যদের চাঁদা
+        <div id="adminSubControls" class="flex flex-wrap gap-2 mb-4 hidden">
+          <button
+            onclick="openAddSubModal()"
+            class="bg-gray-900 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-gray-800 shadow-sm"
+          >
+            ➕ যোগ
           </button>
-          <button type="button" id="contributionListTabDonor" onclick="switchContributionListTab('donor')"
-            class="contribution-list-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold">
-            🤝 দাতাদের চাঁদা
+          <button
+            onclick="deleteAllSubscriptions()"
+            class="bg-red-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-1 hover:bg-red-600 shadow-sm"
+          >
+            🗑️ সব মুছুন
           </button>
         </div>
 
-        <div id="memberContributionListPanel">
-        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden mb-5 shadow-sm">
-          <div class="bg-orange-50 p-3 border-b">
-            <div class="flex flex-col md:flex-row md:items-center gap-2">
-              <h3 class="text-sm font-bold text-gray-800 whitespace-nowrap">👤 সদস্যদের চাঁদা</h3>
-              <div class="flex-1"></div>
-              <input id="memberListSearch" oninput="filterMemberContributionList()" placeholder="নাম / মোবাইল / গ্রাম / ID দিয়ে খুঁজুন..." class="w-full md:w-72 p-2 border rounded-lg text-xs bg-white">
-              <div class="flex flex-wrap justify-end gap-1.5">
-                <button onclick="exportMemberListReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 সব সদস্য</button>
-                <button onclick="exportMemberPaidReport()" class="bg-white border text-emerald-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">✅ যারা দিয়েছে</button>
-                <button onclick="exportMemberUnpaidReport()" class="bg-white border text-red-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">⬜ যারা দেয়নি</button>
-              </div>
-            </div>
-          </div>
-          <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
-            <table class="w-full border-collapse text-xs">
-              <thead class="sticky top-0 z-10">
-                <tr class="bg-gray-100 text-gray-700">
-                  <th class="p-2 border-r text-center w-10"><input type="checkbox" id="selectAllSub" onclick="toggleSelectAllSub()" class="cursor-pointer w-4 h-4"></th>
-                  <th class="p-2 border-r text-center">নাম</th>
-                  <th class="p-2 border-r text-center">মোবাইল</th>
-                  <th class="p-2 border-r text-center">গ্রাম</th>
-                  <th class="p-2 border-r text-center">Member ID</th>
-                  <th class="p-2 border-r text-center">চাঁদা</th>
-                  <th class="p-2 border-r text-center">তারিখ</th>
-                  <th class="p-2 border-r text-center">গ্রহণকারী</th>
-                  <th class="p-2 text-center">অ্যাকশন</th>
-                </tr>
-              </thead>
-              <tbody id="memberContributionTableBody"></tbody>
-            </table>
-          </div>
-          <div id="memberContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
-        </div>
+        <div class="mb-4">
+          <input
+            type="text"
+            id="subSearchInput"
+            onkeyup="filterSubscriptions()"
+            placeholder="নাম, পরিমাণ, তারিখ, মন্তব্য দিয়ে খুঁজুন..."
+            class="w-full p-2.5 border rounded-lg text-sm focus:outline-none focus:border-orange-500"
+          />
         </div>
 
-        <!-- দাতার তালিকা -->
-        <div id="donorContributionListPanel" class="hidden">
-        <div class="sub-list-card border-2 border-orange-200 rounded-2xl overflow-hidden shadow-sm">
-          <div class="bg-orange-50 p-3 border-b flex flex-wrap items-center justify-between gap-2">
-            <h3 class="text-sm font-bold text-gray-800">🤝 দাতাদের চাঁদা</h3>
-            <button onclick="exportOtherDataReport()" class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm">📥 দাতা Excel</button>
+        <div class="mb-4">
+          <p class="text-xs font-bold text-gray-700 mb-2">চাঁদা রিপোর্ট:</p>
+          <div class="flex flex-wrap gap-2">
+            <button
+              onclick="exportSubReport('members')"
+              class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 flex items-center gap-1"
+            >
+              📥 সদস্যদের চাঁদা
+            </button>
+            <button
+              onclick="exportSubReport('others')"
+              class="bg-white border text-gray-700 px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-gray-50 flex items-center gap-1"
+            >
+              📥 অন্যান্যদের চাঁদা
+            </button>
+            <button
+              onclick="exportSubReport('all')"
+              class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold shadow-sm hover:bg-emerald-700 flex items-center gap-1"
+            >
+              📥 সম্পূর্ণ চাঁদা রিপোর্ট
+            </button>
           </div>
-          <div class="overflow-x-auto overflow-y-auto max-h-[290px]">
-            <table class="w-full border-collapse text-xs">
-              <thead class="sticky top-0 z-10">
-                <tr class="bg-gray-100 text-gray-700">
-                  <th class="p-2 border-r text-center w-10"><input type="checkbox" id="selectAllDonor" onclick="toggleSelectAllDonor()" class="cursor-pointer w-4 h-4"></th>
-                  <th class="p-2 border-r text-center">নাম</th>
-                  <th class="p-2 border-r text-center">মোবাইল</th>
-                  <th class="p-2 border-r text-center">গ্রাম</th>
-                  <th class="p-2 border-r text-center">চাঁদা</th>
-                  <th class="p-2 border-r text-center">তারিখ</th>
-                  <th class="p-2 border-r text-center">গ্রহণকারী</th>
-                  <th class="p-2 text-center">অ্যাকশন</th>
-                </tr>
-              </thead>
-              <tbody id="otherContributionTableBody"></tbody>
-            </table>
-          </div>
-          <div id="donorContributionPagination" class="flex flex-wrap justify-center gap-1 p-2 bg-white"></div>
         </div>
+
+        <div class="overflow-x-auto border rounded-lg">
+          <table class="w-full text-left border-collapse text-sm">
+            <thead>
+              <tr class="bg-gray-100 text-gray-700 border-b">
+                <th class="p-2.5 border-r text-center align-middle">তারিখ</th>
+                <th class="p-2.5 border-r text-center align-middle">নাম</th>
+                <th class="p-2.5 border-r text-center align-middle">ধরণ</th>
+                <th class="p-2.5 border-r text-center align-middle">পরিমাণ (₹)</th>
+                <th class="p-2.5 border-r text-center align-middle">মন্তব্য</th>
+                <th class="p-2.5 text-center align-middle sub-action-col">অ্যাকশন</th>
+              </tr>
+            </thead>
+            <tbody id="subTableBody"></tbody>
+          </table>
         </div>
       </div>
 
@@ -440,7 +363,7 @@
         <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
           ⬅️ হোমে ফিরুন
         </button>
-        <h2 class="text-lg font-bold text-gray-800 mb-2">🎫 বিক্রয় প্যানেল</h2>
+        <h2 class="text-lg font-bold text-gray-800 mb-2">🛒 বিক্রয় প্যানেল</h2>
       </div>
       <div id="section-treasurer" class="bg-white p-6 rounded-xl shadow-sm border border-gray-200 hidden">
         <button onclick="window.location.href='dashboard.html'" class="mb-4 bg-gray-100 border px-3 py-1 rounded-lg text-sm font-bold">
@@ -463,11 +386,37 @@
           </button>
         </div>
 
-        <div class="flex bg-gray-100/70 rounded-lg p-1.5 mb-4 overflow-x-auto hide-scrollbar border border-gray-200/60 gap-1">
-          <button id="tabBtnProfile" onclick="switchSettingsSubTab('profile')" class="bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition">প্রোফাইল</button>
-          <button id="tabBtnSystem" onclick="switchSettingsSubTab('system')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">সিস্টেম</button>
-          <button id="tabBtnUsers" onclick="switchSettingsSubTab('users')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">ব্যবহারকারী</button>
-          <button id="tabBtnHistory" onclick="switchSettingsSubTab('history')" class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition">লগইন ইতিহাস</button>
+        <div
+          class="flex bg-gray-100/70 rounded-lg p-1.5 mb-4 overflow-x-auto hide-scrollbar border border-gray-200/60 gap-1"
+        >
+          <button
+            id="tabBtnProfile"
+            onclick="switchSettingsSubTab('profile')"
+            class="bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition"
+          >
+            প্রোফাইল
+          </button>
+          <button
+            id="tabBtnSystem"
+            onclick="switchSettingsSubTab('system')"
+            class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition"
+          >
+            সিস্টেম
+          </button>
+          <button
+            id="tabBtnUsers"
+            onclick="switchSettingsSubTab('users')"
+            class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition"
+          >
+            ব্যবহারকারী
+          </button>
+          <button
+            id="tabBtnHistory"
+            onclick="switchSettingsSubTab('history')"
+            class="px-5 py-2 text-sm font-semibold text-gray-500 hover:text-gray-800 whitespace-nowrap transition"
+          >
+            লগইন ইতিহাস
+          </button>
         </div>
 
         <div id="subSectionProfile" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100">
@@ -476,73 +425,402 @@
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">নাম</p>
-                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">MANABENDRA NATH SARKAR</p>
+                <p id="profileNameDisplay" class="text-[17px] font-semibold text-gray-800">Manabendra Nath Sarkar</p>
               </div>
             </div>
             <div class="flex items-start gap-4">
               <div>
                 <p class="text-xs font-semibold text-gray-500 mb-0.5">ব্যবহারকারী ইমেইল / আইডি</p>
-                <p id="profileEmailDisplay" class="text-[17px] font-semibold text-gray-800">manabendranathsarkar112@gmail.com</p>
-                <div id="profileRoleBadge" class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide">লোড হচ্ছে...</div>
+                <p id="profileEmailDisplay" class="text-[17px] font-semibold text-gray-800">manabendra@gmail.com</p>
+                <div
+                  id="profileRoleBadge"
+                  class="bg-gray-900 text-white text-[11px] px-3 py-0.5 rounded-full mt-1.5 w-max font-bold tracking-wide"
+                >
+                  লোড হচ্ছে...
+                </div>
               </div>
             </div>
           </div>
+          <div class="mt-7">
+            <p class="text-[15px] font-bold text-gray-800 mb-3">অনুমতি:</p>
+            <div id="profilePermissionsContainer" class="flex flex-wrap gap-2"></div>
+          </div>
           <div class="mt-8 flex gap-3">
-            <button onclick="openPasswordModal()" class="flex-1 border border-orange-500 bg-orange-50 rounded-lg py-3 text-[13px] font-bold text-orange-700 hover:bg-orange-100 transition shadow-sm">পাসওয়ার্ড পরিবর্তন</button>
-            <button onclick="handleLogout()" class="flex-1 bg-[#F04445] text-white rounded-lg py-3 text-[13px] font-bold hover:bg-red-600 transition shadow-sm">লগ আউট</button>
+            <button
+              onclick="openPasswordModal()"
+              class="flex-1 border border-orange-500 bg-orange-50 rounded-lg py-3 text-[13px] font-bold text-orange-700 hover:bg-orange-100 transition shadow-sm"
+            >
+              পাসওয়ার্ড পরিবর্তন
+            </button>
+            <button
+              onclick="handleLogout()"
+              class="flex-1 bg-[#F04445] text-white rounded-lg py-3 text-[13px] font-bold hover:bg-red-600 transition shadow-sm"
+            >
+              লগ আউট
+            </button>
           </div>
         </div>
 
         <div id="subSectionSystem" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
           <h2 class="text-2xl font-black text-gray-900 mb-2 tracking-tight">⚙️ সিস্টেম সেটিংস</h2>
+          <div class="mb-8 p-4 bg-orange-50/60 rounded-xl border border-orange-100">
+            <h3 class="text-sm font-bold text-orange-800 mb-3">🖼️ ক্লাবের লোগো পরিবর্তন</h3>
+            <div class="flex flex-col md:flex-row items-center gap-4">
+              <img
+                id="clubLogoPreview"
+                src="https://via.placeholder.com/100?text=Logo"
+                class="w-20 h-20 object-cover rounded-full border-2 border-orange-400 shadow-sm mx-auto"
+                alt="Logo"
+              />
+              <div class="flex-1 w-full space-y-2">
+                <input
+                  type="file"
+                  id="logoFileInput"
+                  accept="image/*"
+                  onchange="previewClubLogo(this)"
+                  class="w-full p-2 border rounded-lg text-xs bg-white cursor-pointer"
+                />
+                <button
+                  onclick="saveClubLogo()"
+                  class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-orange-700 transition w-full md:w-auto"
+                >
+                  💾 লোগো সেভ করুন
+                </button>
+              </div>
+            </div>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-orange-900 mb-3">🛠️ ডেভেলপার তথ্য সেটিংস</h3>
+            <form id="devConfigForm" onsubmit="saveDevData(event)" class="space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">ডেভেলপারের নাম</label>
+                <input type="text" id="devNameInput" required="" class="w-full p-2.5 border rounded-lg text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">মোবাইল নম্বর</label>
+                <input type="text" id="devMobileInput" required="" class="w-full p-2.5 border rounded-lg text-sm" />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-gray-700 mb-1">ইমেইল এড্রেস</label>
+                <input type="email" id="devEmailInput" required="" class="w-full p-2.5 border rounded-lg text-sm" />
+              </div>
+              <button
+                type="submit"
+                class="bg-orange-600 text-white px-5 py-2.5 rounded-lg text-xs font-bold hover:bg-orange-700 transition"
+              >
+                💾 ডেভেলপার তথ্য সেভ করুন
+              </button>
+            </form>
+          </div>
         </div>
 
         <div id="subSectionUsers" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
           <div class="flex justify-between items-center mb-4">
             <h2 class="text-xl font-bold text-gray-900">ব্যবহারকারী ব্যবস্থাপনা</h2>
-            <button onclick="openCreateUserModal()" class="bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-bold">➕ নতুন ব্যবহারকারী</button>
+            <button
+              onclick="openCreateUserModal()"
+              class="bg-orange-600 text-white px-3 py-2 rounded-lg text-xs font-bold"
+            >
+              ➕ নতুন ব্যবহারকারী
+            </button>
+          </div>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 border-b">
+                  <th class="p-2.5 border-r text-center align-middle">ID / ইমেইল</th>
+                  <th class="p-2.5 border-r text-center align-middle">নাম</th>
+                  <th class="p-2.5 border-r text-center align-middle">পারমিশন</th>
+                  <th class="p-2.5 text-center align-middle">অ্যাকশন</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody"></tbody>
+            </table>
           </div>
         </div>
 
         <div id="subSectionHistory" class="bg-white p-6 rounded-[1.25rem] shadow-sm border border-gray-100 hidden">
-          <h2 class="text-xl font-bold text-gray-900 mb-4">লগইন ইতিহাস</h2>
+          <div class="flex justify-between items-center mb-4">
+            <h2 class="text-xl font-bold text-gray-900">লগইন ইতিহাস</h2>
+            <button
+              id="deleteHistoryBtn"
+              onclick="deleteSelectedHistory()"
+              class="bg-red-600 text-white px-3 py-2 rounded-lg text-xs font-bold hidden"
+            >
+              🗑️ ডিলিট
+            </button>
+          </div>
+          <div class="overflow-x-auto border rounded-lg">
+            <table class="w-full text-left border-collapse text-sm">
+              <thead>
+                <tr class="bg-gray-100 text-gray-700 border-b">
+                  <th class="p-2.5 border-r text-center align-middle w-10">
+                    <input type="checkbox" id="selectAllHistory" onclick="toggleSelectAllHistory()" />
+                  </th>
+                  <th class="p-2.5 border-r text-center align-middle">ইমেইল</th>
+                  <th class="p-2.5 border-r text-center align-middle">সময়</th>
+                  <th class="p-2.5 text-center align-middle">ডিভাইস</th>
+                </tr>
+              </thead>
+              <tbody id="historyTableBody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 💰 চাঁদা যোগ করার মডাল -->
+    <div id="addSubModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-md p-6 rounded-xl shadow-lg max-h-[90vh] overflow-y-auto">
+        <h3 id="subModalTitle" class="text-lg font-bold text-orange-600 mb-4">চাঁদা সংগ্রহ যুক্ত করুন</h3>
+        <input type="hidden" id="editSubDocId" />
+
+        <label class="block text-xs font-semibold text-gray-600 mb-1">তারিখ *</label>
+        <input
+          type="date"
+          id="subDate"
+          class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
+        />
+
+        <label class="block text-xs font-semibold text-gray-600 mb-1">প্রদানকারীর ধরণ *</label>
+        <select
+          id="subDonorType"
+          onchange="toggleDonorInputType()"
+          class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white focus:outline-none focus:border-orange-500"
+        >
+          <option value="member">সদস্য</option>
+          <option value="other">অন্যান্য (অ-সদস্য)</option>
+        </select>
+
+        <div id="memberSelectContainer">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">সদস্যের নাম *</label>
+          <input
+            type="text"
+            id="subMemberNameInput"
+            placeholder="সদস্যের নাম লিখুন"
+            class="w-full p-2.5 border rounded-lg mb-3 text-sm bg-white focus:outline-none focus:border-orange-500"
+          />
+        </div>
+
+        <div id="otherNameContainer" class="hidden">
+          <label class="block text-xs font-semibold text-gray-600 mb-1">ব্যক্তির নাম *</label>
+          <input
+            type="text"
+            id="subOtherNameInput"
+            placeholder="নাম লিখুন"
+            class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
+          />
+        </div>
+
+        <label class="block text-xs font-semibold text-gray-600 mb-1">পরিমাণ (₹) *</label>
+        <input
+          type="number"
+          id="subAmountInput"
+          placeholder="টাকার পরিমাণ লিখুন"
+          class="w-full p-2.5 border rounded-lg mb-3 text-sm focus:outline-none focus:border-orange-500"
+        />
+
+        <label class="block text-xs font-semibold text-gray-600 mb-1">মন্তব্য (ঐচ্ছিক)</label>
+        <input
+          type="text"
+          id="subNoteInput"
+          placeholder="যেমন: অগ্রিম চাঁদা"
+          class="w-full p-2.5 border rounded-lg mb-4 text-sm focus:outline-none focus:border-orange-500"
+        />
+
+        <div class="flex justify-end gap-2">
+          <button
+            onclick="closeAddSubModal()"
+            class="bg-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm font-semibold"
+          >
+            বাতিল
+          </button>
+          <button
+            onclick="saveOrUpdateSubscription()"
+            id="saveSubBtn"
+            class="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-bold"
+          >
+            সেভ করুন
+          </button>
         </div>
       </div>
     </div>
 
     <!-- পাসওয়ার্ড পরিবর্তন মডাল -->
-    <div id="changePasswordModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+    <div id="changePasswordModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
       <div class="bg-white w-full max-w-sm p-6 rounded-2xl shadow-xl border border-gray-100">
         <h3 class="text-lg font-bold text-orange-600 mb-4">🔒 পাসওয়ার্ড পরিবর্তন করুন</h3>
         <form id="changePasswordForm" onsubmit="handlePasswordChange(event)" class="space-y-3">
-          <div><label class="block text-xs font-bold text-gray-600 mb-1">নতুন পাসওয়ার্ড *</label><input type="password" required="" minlength="6" class="w-full p-2.5 border rounded-lg text-sm" /></div>
-          <div><label class="block text-xs font-bold text-gray-600 mb-1">কনফার্ম পাসওয়ার্ড *</label><input type="password" required="" minlength="6" class="w-full p-2.5 border rounded-lg text-sm" /></div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">নতুন পাসওয়ার্ড *</label>
+            <input
+              type="password"
+              id="newPasswordInput"
+              required=""
+              minlength="6"
+              class="w-full p-2.5 border rounded-lg text-sm"
+            />
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-gray-600 mb-1">কনফার্ম পাসওয়ার্ড *</label>
+            <input
+              type="password"
+              id="confirmPasswordInput"
+              required=""
+              minlength="6"
+              class="w-full p-2.5 border rounded-lg text-sm"
+            />
+          </div>
+          <div id="passErrorMsg" class="text-xs font-bold text-red-600 hidden"></div>
           <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
-            <button type="button" onclick="closePasswordModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold">বাতিল</button>
-            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold">আপডেট করুন</button>
+            <button
+              type="button"
+              onclick="closePasswordModal()"
+              class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              id="savePassBtn"
+              class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold"
+            >
+              আপডেট করুন
+            </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- ডেভেলপার মডাল -->
+    <div id="devModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+      <div class="bg-white w-full max-w-xs p-5 rounded-2xl shadow-2xl border-2 border-orange-500 relative">
+        <button onclick="toggleDevModal()" class="absolute top-3 right-3 text-gray-400 font-bold">✕</button>
+        <div class="text-center mb-4">
+          <div
+            class="w-12 h-12 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center mx-auto mb-2 text-2xl"
+          >
+            👨‍💻
+          </div>
+          <h3 class="text-base font-bold text-gray-800">ডেভেলপার ডিটেইলস</h3>
+        </div>
+        <div class="space-y-2.5 text-xs border-t pt-3">
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">নাম:</span>
+            <span id="popDevName" class="font-bold text-gray-800">লোড হচ্ছে...</span>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">মোবাইল:</span>
+            <a id="popDevMobile" href="#" class="font-bold text-orange-700">লোড হচ্ছে...</a>
+          </div>
+          <div class="flex justify-between bg-gray-50 p-2 rounded-lg border">
+            <span class="text-gray-500">ইমেইল:</span>
+            <a id="popDevEmail" href="#" class="font-bold text-gray-800">লোড হচ্ছে...</a>
+          </div>
+        </div>
+        <button
+          onclick="toggleDevModal()"
+          class="w-full mt-4 bg-orange-600 text-white py-2 rounded-lg text-xs font-bold"
+        >
+          বন্ধ করুন
+        </button>
       </div>
     </div>
 
     <!-- ইউজার মডাল -->
-    <div id="createUserModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-4 z-50">
+    <div id="createUserModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
       <div class="bg-white w-full max-w-md p-6 rounded-2xl shadow-xl">
-        <h3 id="userModalTitle" class="text-lg font-bold text-orange-600 mb-4">নতুন ব্যবহারকারী</h3>
-        <form id="createUserForm" onsubmit="handleUserSave(event)" class="space-y-3">
-          <div><label class="block text-xs font-bold text-gray-600 mb-1">ইমেইল / ইউজার আইডি *</label><input type="email" required="" class="w-full p-2.5 border rounded-lg text-sm" /></div>
+        <h3 id="userModalTitle" class="text-lg font-bold text-orange-600 mb-4">👤 নতুন ব্যবহারকারী তৈরি করুন</h3>
+        <form id="createUserForm" onsubmit="handleSaveUser(event)" class="space-y-3">
+          <input type="hidden" id="editUserId" />
+          <input
+            type="text"
+            id="uNameInput"
+            required=""
+            placeholder="পূর্ণ নাম"
+            class="w-full p-2.5 border rounded-lg text-sm"
+          />
+          <input
+            type="email"
+            id="uEmailInput"
+            required=""
+            placeholder="ইমেইল"
+            class="w-full p-2.5 border rounded-lg text-sm"
+          />
+          <div id="passInputContainer">
+            <input
+              type="password"
+              id="uPassInput"
+              minlength="6"
+              placeholder="পাসওয়ার্ড"
+              class="w-full p-2.5 border rounded-lg text-sm"
+            />
+          </div>
+          <div class="grid grid-cols-2 gap-2 text-xs">
+            <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
+              <input type="checkbox" id="perm_subscription" />
+              চাঁদা
+            </label>
+            <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
+              <input type="checkbox" id="perm_expense" />
+              খরচ
+            </label>
+            <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
+              <input type="checkbox" id="perm_booking" />
+              বুকিং
+            </label>
+            <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
+              <input type="checkbox" id="perm_sales" />
+              বিক্রয়
+            </label>
+            <label class="flex items-center gap-2 border p-2 rounded-lg cursor-pointer">
+              <input type="checkbox" id="perm_treasurer" />
+              কোষাধ্যক্ষ
+            </label>
+          </div>
           <div class="flex justify-end gap-2 mt-4 pt-2 border-t">
-            <button type="button" onclick="closeCreateUserModal()" class="bg-gray-200 text-gray-700 px-4 py-2 rounded-lg text-xs font-bold">বাতিল</button>
-            <button type="submit" class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold">সেভ করুন</button>
+            <button
+              type="button"
+              onclick="closeCreateUserModal()"
+              class="bg-gray-200 px-4 py-2 rounded-lg text-xs font-bold"
+            >
+              বাতিল
+            </button>
+            <button
+              type="submit"
+              id="saveUserBtn"
+              class="bg-orange-600 text-white px-4 py-2 rounded-lg text-xs font-bold"
+            >
+              সেভ করুন
+            </button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- Firebase ও মূল লজিক স্ক্রিপ্ট -->
     <script type="module">
       import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-      import { getAuth, setPersistence, browserLocalPersistence, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-      import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, onSnapshot, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+      import {
+        getAuth,
+        setPersistence,
+        browserSessionPersistence,
+        onAuthStateChanged,
+        signOut,
+        updatePassword,
+      } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        updateDoc,
+        deleteDoc,
+        doc,
+        onSnapshot,
+        setDoc,
+        getDoc,
+        getDocs,
+      } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
       const firebaseConfig = {
         apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
@@ -555,1164 +833,743 @@
 
       const app = initializeApp(firebaseConfig);
       const auth = getAuth(app);
-      setPersistence(auth, browserLocalPersistence);
+      setPersistence(auth, browserSessionPersistence);
       const db = getFirestore(app);
-      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
-      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
 
+      let allSubscriptionsData = [];
+      let allUsersData = [];
+      let allLoginHistory = [];
 
       const ADMIN_EMAIL = "bappasarkar1173@gmail.com";
       window.currentUserRole = "user";
-      window.isMasterAdmin = false;
+      window.userPermissions = [];
+
+      window.history.replaceState({ tab: "dashboard" }, "", window.location.href);
 
       onAuthStateChanged(auth, async (user) => {
-        // Directly opening this page is allowed only after Firebase has restored a valid login.
-        if (!user) {
+        if (user) {
+          document.body.style.visibility = "visible";
+          if (user.email === ADMIN_EMAIL) {
+            window.currentUserRole = "admin";
+            window.userPermissions = ["subscription", "expense", "booking", "sales", "treasurer"];
+          } else {
+            window.currentUserRole = "user";
+            try {
+              const userDoc = await getDoc(doc(db, "app_users", user.uid));
+              if (userDoc.exists()) {
+                window.userPermissions = userDoc.data().permissions || [];
+              } else {
+                window.userPermissions = [];
+              }
+            } catch (e) {
+              window.userPermissions = [];
+            }
+          }
+
+          logUserLogin(user);
+          setupUIBasedOnRoleAndPermissions(user);
+          loadSubscriptions();
+          loadTotalMembersCount();
+          loadCommitteeExecutives();
+
+          if (window.currentUserRole === "admin") {
+            loadAppUsers();
+            loadLoginHistory();
+          }
+        } else {
           window.location.replace("index.html");
-          return;
         }
-
-        window.isMasterAdmin = (user.email || "").toLowerCase() === ADMIN_EMAIL.toLowerCase();
-        window.currentUserRole = window.isMasterAdmin ? "admin" : "member";
-        const profileEmailDisplay = document.getElementById("profileEmailDisplay");
-        if (profileEmailDisplay) profileEmailDisplay.innerText = user.email || "";
-        const profileRoleBadge = document.getElementById("profileRoleBadge");
-        if (profileRoleBadge) profileRoleBadge.innerText = window.isMasterAdmin ? "প্রধান প্রশাসক" : "সদস্য";
-
-        loadMembersData();
-        loadSubscriptionsData();
-        loadDaitobontonTotal();
       });
 
-      window.handleLogout = async function() {
-        try {
-          await signOut(auth);
-          localStorage.clear();
-          window.location.href = "index.html";
-        } catch (e) {
-          console.error(e);
-        }
-      };
+      // 👑 পদাধিকারীদের ডেটা ফেচ (committee ও members উভয় কালেকশন থেকেই পদাধিকারী থাকলে স্ক্রোলারে দেখাবে)
+      function loadCommitteeExecutives() {
+        let committeeList = [];
+        let membersList = [];
 
-      let allMembers = [];
-      let allSubscriptions = [];
+        function renderExecutiveTicker() {
+          const container = document.getElementById("committeeTickerContent");
+          if (!container) return;
 
-      function loadMembersData() {
-        onSnapshot(collection(db, "members"), (snapshot) => {
-          allMembers = [];
-          snapshot.forEach((docSnap) => { allMembers.push({ id: docSnap.id, ...docSnap.data() }); });
-          allMembers.sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
-          allMembers.forEach((m, idx) => (m.autoId = "M" + String(idx + 1).padStart(3, "0")));
-          try { localStorage.setItem("membersData", JSON.stringify(allMembers)); } catch(e){}
-          const dashCount = document.getElementById('dashTotalMembersCount');
-          if (dashCount) dashCount.innerText = allMembers.length;
-          renderMemberSubscriptionTable();
-        });
-      }
+          const combined = [...committeeList];
 
-      function loadSubscriptionsData() {
-        onSnapshot(collection(db, "subscriptions"), (snapshot) => {
-          allSubscriptions = [];
-          snapshot.forEach((docSnap) => { allSubscriptions.push({ id: docSnap.id, ...docSnap.data() }); });
-          allSubscriptions.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-          try { localStorage.setItem("subscriptionsData", JSON.stringify(allSubscriptions)); } catch(e){}
-          updateSubscriptionTotals();
-          renderMemberSubscriptionTable();
-          renderOtherSubscriptionTable();
-        });
-      }
-
-      function updateSubscriptionTotals() {
-        let memberTotal = 0;
-        let otherTotal = 0;
-        allSubscriptions.forEach(sub => {
-          const amt = parseFloat(sub.amount) || 0;
-          if (sub.type === 'member') memberTotal += amt;
-          else if (sub.type === 'other') otherTotal += amt;
-        });
-        const grandTotal = memberTotal + otherTotal;
-        
-        const mEl = document.getElementById('subTotalMembersAmount');
-        const oEl = document.getElementById('subTotalOthersAmount');
-        const gEl = document.getElementById('subGrandTotal');
-        const dashSub = document.getElementById('dashTotalSubAmount');
-
-        if (mEl) mEl.innerText = `₹${memberTotal}`;
-        if (oEl) oEl.innerText = `₹${otherTotal}`;
-        if (gEl) gEl.innerText = `₹${grandTotal}`;
-        if (dashSub) dashSub.innerText = `₹${grandTotal}`;
-      }
-
-      // 📋 দায়িত্ব বণ্টন থেকে কোষাধ্যক্ষের কাছে জমা হওয়া চাঁদার মোট
-      function loadDaitobontonTotal() {
-        onSnapshot(collection(db, "daitobonton"), (snapshot) => {
-          let total = 0;
-          snapshot.forEach((docSnap) => {
-            const data = docSnap.data() || {};
-            total += Number(data.deposited) || 0;
+          // members কালেকশন থেকে পদ (সভাপতি/সম্পাদক/অন্যান্য পদ) বিশিষ্ট মেম্বার যুক্ত করা
+          membersList.forEach((m) => {
+            const post = m.designation || m.post || m.role || m.position || "";
+            if (post && post.trim() !== "" && post !== "সাধারণ সদস্য" && post !== "সদস্য") {
+              const exists = combined.some((c) => (c.name || "").trim() === (m.name || "").trim());
+              if (!exists) {
+                combined.push({
+                  name: m.name,
+                  designation: post,
+                  mobile: m.mobile || m.phone || m.contact || "",
+                });
+              }
+            }
           });
-          const el = document.getElementById("daitobontonTotalAmount");
-          if (el) el.innerText = `₹${total}`;
-        }, (err) => {
-          console.error("দায়িত্ব বণ্টনের চাঁদা মোট আনা যায়নি:", err);
+
+          if (combined.length === 0) {
+            container.innerHTML = `<span class="text-xs text-orange-100 italic px-2">কোনো প্রধান পদাধিকারী যুক্ত নেই</span>`;
+            return;
+          }
+
+          let itemsHtml = "";
+          combined.forEach((data) => {
+            const designation = data.designation ? `${data.designation}: ` : (data.post ? `${data.post}: ` : "");
+            const name = data.name || "নামহীন";
+            const mobile = data.mobile || data.phone || data.contact || "";
+
+            itemsHtml += `
+              <div class="inline-flex items-center bg-white text-gray-800 text-xs px-3 py-1.5 rounded-full font-bold shadow-sm gap-2 whitespace-nowrap">
+                <span>👑 ${designation}${name}</span>
+                ${
+                  mobile
+                    ? `<a href="tel:${mobile}" onclick="event.stopPropagation()" class="bg-orange-600 hover:bg-orange-700 text-white px-2.5 py-0.5 rounded-full text-[11px] font-semibold flex items-center gap-1 transition">📞 ${mobile}</a>`
+                    : ""
+                }
+              </div>
+            `;
+          });
+
+          // মসৃণ স্লাইড অ্যানিমেশনের জন্য দুইবার লোড করা হচ্ছে
+          container.innerHTML = itemsHtml + itemsHtml;
+        }
+
+        // committee কালেকশন রিয়েলটাইম লিসেনার
+        onSnapshot(collection(db, "committee"), (snapshot) => {
+          committeeList = [];
+          snapshot.forEach((docSnap) => {
+            committeeList.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          renderExecutiveTicker();
+        });
+
+        // members কালেকশন রিয়েলটাইম লিসেনার
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          membersList = [];
+          snapshot.forEach((docSnap) => {
+            membersList.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          renderExecutiveTicker();
         });
       }
 
-      // 👨‍💻 Developer Modal Script
-      window.toggleDevModal = function() {
-        const m = document.getElementById("devModal");
-        if(!m) return;
-        const open = m.classList.contains("hidden");
-        m.classList.toggle("hidden");
-        m.classList.toggle("flex");
-        if(open){
-          let d = {};
-          try{ d = JSON.parse(localStorage.getItem("pujaDevData") || "{}") }catch(e){}
-          d.name = d.name || localStorage.getItem("pujaDevName") || "MANABENDRA NATH SARKAR";
-          d.mobile = d.mobile || localStorage.getItem("pujaDevMobile") || "9002652507";
-          d.email = d.email || localStorage.getItem("pujaDevEmail") || "manabendranathsarkar112@gmail.com";
-          document.getElementById("popDevName").textContent = d.name;
-          document.getElementById("popDevMobile").textContent = d.mobile;
-          document.getElementById("popDevMobile").href = "tel:" + d.mobile;
-          document.getElementById("popDevEmail").textContent = d.email;
-          document.getElementById("popDevEmail").href = "mailto:" + d.email;
-        }
-      };
+      // 👥 মোট সদস্যের সংখ্যা ফেচ করা
+      function loadTotalMembersCount() {
+        onSnapshot(collection(db, "members"), (snapshot) => {
+          const count = snapshot.size;
+          const el = document.getElementById("dashTotalMembersCount");
+          if (el) el.innerText = count.toLocaleString("bn-IN");
+        });
+      }
 
-      function getPujaKosadhokkoName() {
+      async function logUserLogin(user) {
         try {
-          let membersList = allMembers;
-          if (!membersList || membersList.length === 0) {
-            try {
-              membersList = JSON.parse(localStorage.getItem("membersData") || "[]");
-            } catch(e) {}
-          }
-          
-          if (membersList && membersList.length > 0) {
-            let found = membersList.find(item => {
-              const role = (item.role || item.designation || item.position || "").toLowerCase();
-              return role.includes('পূজা কোষাধ্যক্ষ') || role.includes('puja kosadhokko');
-            });
-            if (!found) {
-              found = membersList.find(item => {
-                const role = (item.role || item.designation || item.position || "").toLowerCase();
-                return role.includes('কোষাধ্যক্ষ') || role.includes('treasurer') || role.includes('kosadhokko');
-              });
-            }
-            if (found && found.name) return found.name;
-          }
-        } catch(e) {}
-        
-        return localStorage.getItem("pujaKosadhokkoName") || "";
+          await addDoc(collection(db, "login_history"), {
+            userId: user.uid,
+            email: user.email,
+            name: user.displayName || user.email.split("@")[0],
+            timestamp: Date.now(),
+            device: navigator.userAgent,
+          });
+        } catch (e) {}
       }
 
-      window.openAddSubModal = function() {
-        const modal = document.getElementById("subEntryModal");
-        if(modal) {
-          document.getElementById("editSubDocId").value = "";
-          document.getElementById("subEntryModalTitle").innerText = "➕ চাঁদা যোগ করুন";
-          modal.classList.remove("hidden");
-          modal.classList.add("flex");
+      function setupUIBasedOnRoleAndPermissions(user) {
+        const roleBadge = document.getElementById("userRoleBadge");
+        const profileEmail = document.getElementById("profileEmailDisplay");
+        const profileName = document.getElementById("profileNameDisplay");
+        const profileBadge = document.getElementById("profileRoleBadge");
+        const adminSubControls = document.getElementById("adminSubControls");
+        const adminCols = document.querySelectorAll(".admin-only-col");
+        const subActionCols = document.querySelectorAll(".sub-action-col");
 
-          const today = new Date().toISOString().split('T')[0];
-          const dateMember = document.getElementById("subDateMember");
-          const dateOther = document.getElementById("subDateOther");
-          if(dateMember && !dateMember.value) dateMember.value = today;
-          if(dateOther && !dateOther.value) dateOther.value = today;
-
-          const kosadhokkoName = getPujaKosadhokkoName();
-          const colMember = document.getElementById("subCollectorMember");
-          const colOther = document.getElementById("subCollectorOther");
-          if(colMember) colMember.value = kosadhokkoName;
-          if(colOther) colOther.value = kosadhokkoName;
+        if (profileEmail) profileEmail.innerText = user.email || "ইউজার";
+        if (profileName && user.email) {
+          profileName.innerText = user.displayName || user.email.split("@")[0];
         }
-      };
 
-      window.closeSubEntryModal = function() {
-        const modal = document.getElementById("subEntryModal");
-        if(modal) {
-          modal.classList.add("hidden");
-          modal.classList.remove("flex");
+        const permContainer = document.getElementById("profilePermissionsContainer");
+        if (permContainer) {
+          permContainer.innerHTML = "";
+          const permMap = {
+            subscription: "চাঁদা সংগ্রহ",
+            expense: "খরচ ট্র্যাকিং",
+            booking: "টিকিট বুকিং",
+            sales: "টিকিট বিক্রয়",
+            treasurer: "প্রধান কোষাধ্যক্ষ",
+          };
+          window.userPermissions.forEach((p) => {
+            if (permMap[p]) {
+              permContainer.innerHTML += `<span class="border border-gray-200 bg-gray-50 text-gray-700 px-3 py-1.5 rounded-md text-[11px] font-bold">${permMap[p]}</span>`;
+            }
+          });
         }
-      };
 
-      window.searchMemberForSub = function() {
-        const query = document.getElementById('memberSearchInput').value.toLowerCase().trim();
-        const resultsDiv = document.getElementById('memberSearchResults');
-        if (!query) {
-            resultsDiv.classList.add('hidden');
-            resultsDiv.innerHTML = '';
-            return;
-        }
-        const filtered = allMembers.filter(m => 
-            (m.name && m.name.toLowerCase().includes(query)) ||
-            (m.mobile && m.mobile.toLowerCase().includes(query)) ||
-            (m.village && m.village.toLowerCase().includes(query)) ||
-            (m.autoId && m.autoId.toLowerCase().includes(query))
-        );
-        if (filtered.length === 0) {
-            resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো সদস্য পাওয়া যায়নি</div>';
-            resultsDiv.classList.remove('hidden');
-            return;
-        }
-        let html = '';
-        filtered.forEach(m => {
-            const displayId = m.autoId || m.id || '';
-            html += `<div onclick="selectMemberForSub('${m.id || ''}', '${m.name || ''}', '${m.mobile || ''}', '${m.village || ''}', '${displayId}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs">
-                <div class="font-bold text-gray-800">${m.name}</div>
-                <div class="text-gray-500 text-[11px]">ID: ${displayId} | মোবাইল: ${m.mobile || 'নেই'} | গ্রাম: ${m.village || 'নেই'}</div>
-            </div>`;
-        });
-        resultsDiv.innerHTML = html;
-        resultsDiv.classList.remove('hidden');
-      };
+        const menuBtnMembers = document.getElementById("menu-btn-members");
+        const dashCardMembers = document.getElementById("dash-card-members");
 
-      window.selectMemberForSub = function(id, name, mobile, village, memberId) {
-        document.getElementById('selectedMemberId').value = id;
-        document.getElementById('memberSearchInput').value = name;
-        const infoDiv = document.getElementById('selectedMemberInfo');
-        if (infoDiv) {
-            infoDiv.innerText = `নির্বাচিত: ${name} (${memberId}) - ${village || ''}`;
-        }
-        document.getElementById('memberSearchResults').classList.add('hidden');
-      };
-
-      window.searchCollector = function(inputId) {
-        const query = document.getElementById(inputId).value.toLowerCase().trim();
-        const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
-        const resultsDiv = document.getElementById(resultsId);
-        if (!query) {
-            resultsDiv.classList.add('hidden');
-            resultsDiv.innerHTML = '';
-            return;
-        }
-        const filtered = allMembers.filter(m => m.name && m.name.toLowerCase().includes(query));
-        if (filtered.length === 0) {
-            resultsDiv.innerHTML = '<div class="p-2 text-xs text-gray-500 text-center">কোনো নাম পাওয়া যায়নি</div>';
-            resultsDiv.classList.remove('hidden');
-            return;
-        }
-        let html = '';
-        filtered.forEach(m => {
-            html += `<div onclick="selectCollector('${inputId}', '${m.name}')" class="p-2.5 hover:bg-orange-50 cursor-pointer border-b text-xs font-semibold text-gray-800">
-                ${m.name}
-            </div>`;
-        });
-        resultsDiv.innerHTML = html;
-        resultsDiv.classList.remove('hidden');
-      };
-
-      window.selectCollector = function(inputId, name) {
-        document.getElementById(inputId).value = name;
-        const resultsId = inputId === 'subCollectorMember' ? 'collectorResultsMember' : 'collectorResultsOther';
-        document.getElementById(resultsId).classList.add('hidden');
-      };
-
-      window.switchSubEntryTab = function(tab) {
-        const memberForm = document.getElementById('memberContributionForm');
-        const otherForm = document.getElementById('otherContributionForm');
-        const memberTab = document.getElementById('subTabMember');
-        const otherTab = document.getElementById('subTabOther');
-
-        if (tab === 'member') {
-            memberForm.classList.remove('hidden');
-            otherForm.classList.add('hidden');
-            memberTab.className = "sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm";
-            otherTab.className = "sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
-        } else {
-            memberForm.classList.add('hidden');
-            otherForm.classList.remove('hidden');
-            otherTab.className = "sub-entry-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-sm font-bold shadow-sm";
-            memberTab.className = "sub-entry-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-sm font-bold";
-        }
-      };
-
-      window.switchContributionListTab = function(tab) {
-        const memberPanel = document.getElementById('memberContributionListPanel');
-        const donorPanel = document.getElementById('donorContributionListPanel');
-        const memberTab = document.getElementById('contributionListTabMember');
-        const donorTab = document.getElementById('contributionListTabDonor');
-
-        if (tab === 'member') {
-            memberPanel.classList.remove('hidden');
-            donorPanel.classList.add('hidden');
-            memberTab.className = "contribution-list-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-sm";
-            donorTab.className = "contribution-list-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold";
-        } else {
-            memberPanel.classList.add('hidden');
-            donorPanel.classList.remove('hidden');
-            donorTab.className = "contribution-list-tab bg-orange-600 text-white px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold shadow-sm";
-            memberTab.className = "contribution-list-tab bg-white text-gray-700 px-3 py-2.5 rounded-lg text-xs md:text-sm font-bold";
-        }
-      };
-
-      window.saveSubFromNewForm = async function(type) {
-        let docId = document.getElementById("editSubDocId").value;
-        if (type === 'member') {
-          const memberId = document.getElementById('selectedMemberId').value;
-          const memberName = document.getElementById('memberSearchInput').value.trim();
-          const collector = document.getElementById('subCollectorMember').value.trim() || getPujaKosadhokkoName() || '-';
-          const date = document.getElementById('subDateMember').value;
-          const amount = parseFloat(document.getElementById('subAmountMember').value) || 0;
-          const note = document.getElementById('subNoteMember').value.trim();
-
-          if (!memberName) {
-            alert("সদস্য নির্বাচন করুন!");
-            return;
-          }
-          if (!date || amount <= 0) {
-            alert("সঠিক তারিখ এবং পরিমাণ দিন!");
-            return;
-          }
-
-          const memberObj = allMembers.find(m => m.id === memberId) || {};
+        if (window.currentUserRole === "admin") {
+          if (roleBadge) roleBadge.innerText = "রোল: Admin";
+          if (profileBadge) profileBadge.innerText = "Admin";
+          if (adminSubControls) adminSubControls.classList.remove("hidden");
+          adminCols.forEach((col) => col.classList.remove("hidden"));
+          subActionCols.forEach((col) => (col.style.display = "table-cell"));
           
-          const existingSubs = allSubscriptions.filter(s => s.type === 'member' && s.memberId === memberId);
-          if (!docId && existingSubs.length > 0) {
-            docId = existingSubs[0].id;
-          }
-
-          const subData = {
-            type: 'member',
-            memberId: memberId || memberObj.id || '',
-            name: memberName,
-            mobile: memberObj.mobile || '-',
-            village: memberObj.village || '-',
-            displayMemberId: memberObj.autoId || '',
-            collector: collector,
-            date,
-            amount,
-            note: note || '-',
-            updatedAt: Date.now()
-          };
-
-          try {
-            if (docId) {
-              await updateDoc(doc(db, "subscriptions", docId), subData);
-              for (let i = 1; i < existingSubs.length; i++) {
-                if (existingSubs[i].id !== docId) {
-                  await deleteDoc(doc(db, "subscriptions", existingSubs[i].id));
-                }
-              }
-              alert("চাঁদার তথ্য সফলভাবে আপডেট হয়েছে!");
-            } else {
-              subData.createdAt = Date.now();
-              await addDoc(collection(db, "subscriptions"), subData);
-              alert("সদস্যের চাঁদা সফলভাবে যুক্ত হয়েছে!");
-            }
-            closeSubEntryModal();
-          } catch(e) {
-            console.error(e);
-            alert("সংরক্ষণ করতে সমস্যা হয়েছে!");
-          }
+          if(menuBtnMembers) menuBtnMembers.style.display = "flex";
+          if(dashCardMembers) dashCardMembers.style.display = "flex";
         } else {
-          const name = document.getElementById('otherDataName').value.trim();
-          const mobile = document.getElementById('otherDataMobile').value.trim();
-          const village = document.getElementById('otherDataVillage').value.trim();
-          const collector = document.getElementById('subCollectorOther').value.trim() || getPujaKosadhokkoName() || '-';
-          const date = document.getElementById('subDateOther').value;
-          const amount = parseFloat(document.getElementById('subAmountOther').value) || 0;
-          const note = document.getElementById('subNoteOther').value.trim();
+          if (roleBadge) roleBadge.innerText = "রোল: User";
+          if (profileBadge) profileBadge.innerText = "User";
+          if (adminSubControls) adminSubControls.classList.add("hidden");
+          adminCols.forEach((col) => col.classList.add("hidden"));
+          subActionCols.forEach(
+            (col) => (col.style.display = window.userPermissions.includes("subscription") ? "table-cell" : "none"),
+          );
+          
+          if(menuBtnMembers) menuBtnMembers.style.display = "none";
+          if(dashCardMembers) dashCardMembers.style.display = "none";
 
-          if (!name) {
-            alert("দাতার নাম লিখুন!");
-            return;
-          }
-          if (!date || amount <= 0) {
-            alert("সঠিক তারিখ এবং পরিমাণ দিন!");
-            return;
-          }
-
-          const subData = {
-            type: 'other',
-            name,
-            mobile: mobile || '-',
-            village: village || '-',
-            collector: collector,
-            date,
-            amount,
-            note: note || '-',
-            updatedAt: Date.now()
-          };
-
-          try {
-            if (docId) {
-              await updateDoc(doc(db, "subscriptions", docId), subData);
-              alert("দাতার চাঁদার তথ্য সফলভাবে আপডেট হয়েছে!");
-            } else {
-              subData.createdAt = Date.now();
-              await addDoc(collection(db, "subscriptions"), subData);
-              alert("দাতার চাঁদা সফলভাবে যুক্ত হয়েছে!");
-            }
-            closeSubEntryModal();
-          } catch(e) {
-            console.error(e);
-            alert("সংরক্ষণ করতে সমস্যা হয়েছে!");
-          }
-        }
-      };
-
-      window.openEditSubscription = function(id) {
-        const sub = allSubscriptions.find(s => s.id === id);
-        if (!sub) return;
-        openAddSubModal();
-        document.getElementById("editSubDocId").value = sub.id;
-        document.getElementById("subEntryModalTitle").innerText = "✏️ চাঁদার তথ্য আপডেট করুন";
-
-        if (sub.type === 'member') {
-          switchSubEntryTab('member');
-          document.getElementById('selectedMemberId').value = sub.memberId || '';
-          document.getElementById('memberSearchInput').value = sub.name || '';
-          document.getElementById('subCollectorMember').value = sub.collector || getPujaKosadhokkoName() || '';
-          document.getElementById('subDateMember').value = sub.date || '';
-          document.getElementById('subAmountMember').value = sub.amount || 1500;
-          document.getElementById('subNoteMember').value = sub.note || '';
-          const infoDiv = document.getElementById('selectedMemberInfo');
-          if (infoDiv) infoDiv.innerText = `নির্বাচিত: ${sub.name} (${sub.displayMemberId || ''}) - ${sub.village || ''}`;
-        } else {
-          switchSubEntryTab('other');
-          document.getElementById('otherDataName').value = sub.name || '';
-          document.getElementById('otherDataMobile').value = sub.mobile !== '-' ? sub.mobile : '';
-          document.getElementById('otherDataVillage').value = sub.village !== '-' ? sub.village : '';
-          document.getElementById('subCollectorOther').value = sub.collector || getPujaKosadhokkoName() || '';
-          document.getElementById('subDateOther').value = sub.date || '';
-          document.getElementById('subAmountOther').value = sub.amount || 1500;
-          document.getElementById('subNoteOther').value = sub.note || '';
-        }
-      };
-
-      window.openAddSubForMember = function(memberId, encodedName) {
-        const name = decodeURIComponent(encodedName);
-        openAddSubModal();
-        switchSubEntryTab('member');
-        const m = allMembers.find(item => item.id === memberId);
-        if (m) {
-          selectMemberForSub(m.id, m.name || '', m.mobile || '', m.village || '', m.autoId || '');
-        } else {
-          document.getElementById('selectedMemberId').value = memberId;
-          document.getElementById('memberSearchInput').value = name;
+          document.getElementById("tabBtnUsers").style.display = "none";
+          document.getElementById("tabBtnHistory").style.display = "none";
+          document.getElementById("tabBtnSystem").style.display = "none";
         }
 
-        const existingSub = allSubscriptions.find(s => s.type === 'member' && s.memberId === memberId);
-        if (existingSub) {
-          document.getElementById("editSubDocId").value = existingSub.id;
-          document.getElementById("subEntryModalTitle").innerText = "✏️ চাঁদার তথ্য আপডেট করুন";
-          document.getElementById('subCollectorMember').value = existingSub.collector || getPujaKosadhokkoName() || '';
-          document.getElementById('subDateMember').value = existingSub.date || '';
-          document.getElementById('subAmountMember').value = existingSub.amount || 1500;
-          document.getElementById('subNoteMember').value = existingSub.note || '';
-        }
-      };
-
-      window.deleteSubscription = async function(id) {
-        if (confirm("আপনি কি নিশ্চিত যে এই চাঁদার এন্ট্রি মুছে ফেলতে চান?")) {
-          try {
-            const subToDelete = allSubscriptions.find(s => s.id === id);
-            if (subToDelete && subToDelete.type === 'member' && subToDelete.memberId) {
-              const duplicates = allSubscriptions.filter(s => s.type === 'member' && s.memberId === subToDelete.memberId);
-              for (let dup of duplicates) {
-                await deleteDoc(doc(db, "subscriptions", dup.id));
-              }
-            } else {
-              await deleteDoc(doc(db, "subscriptions", id));
-            }
-            alert("সফলভাবে মুছে ফেলা হয়েছে।");
-          } catch(e) {
-            alert("মুছে ফেলতে সমস্যা হয়েছে!");
-          }
-        }
-      };
-
-      window.deleteSelectedSubscriptions = async function() {
-        const boxes = document.querySelectorAll(".sub-checkbox:checked");
-        if (boxes.length === 0) {
-          alert("কোনো এন্ট্রি নির্বাচন করা হয়নি!");
-          return;
-        }
-        const validSubIds = Array.from(boxes)
-          .map(cb => cb.value)
-          .filter(val => val && !val.startsWith('member_'));
-
-        if (validSubIds.length === 0) {
-          alert("নির্বাচিত এন্ট্রিগুলির মধ্যে কোনো চাঁদার রেকর্ড নেই (সবগুলো বাকি সদস্য)!");
-          return;
-        }
-
-        if (confirm(`আপনি কি নিশ্চিত যে নির্বাচিত ${validSubIds.length}টি এন্ট্রি মুছে ফেলতে চান?`)) {
-          try {
-            for (let id of validSubIds) {
-              const subToDelete = allSubscriptions.find(s => s.id === id);
-              if (subToDelete && subToDelete.type === 'member' && subToDelete.memberId) {
-                const duplicates = allSubscriptions.filter(s => s.type === 'member' && s.memberId === subToDelete.memberId);
-                for (let dup of duplicates) {
-                  await deleteDoc(doc(db, "subscriptions", dup.id));
-                }
-              } else {
-                await deleteDoc(doc(db, "subscriptions", id));
-              }
-            }
-            alert("নির্বাচিত এন্ট্রিগুলি সফলভাবে মুছে ফেলা হয়েছে।");
-          } catch(e) {
-            alert("ডিলিট করতে সমস্যা হয়েছে!");
-          }
-        }
-      };
-
-      window.deleteAllSubscriptions = async function() {
-        if (confirm("সতর্কতা! সমস্ত চাঁদার রেকর্ড মুছে ফেলতে চান?")) {
-          try {
-            for (let sub of allSubscriptions) {
-              await deleteDoc(doc(db, "subscriptions", sub.id));
-            }
-            alert("সমস্ত রেকর্ড মুছে ফেলা হয়েছে।");
-          } catch(e) {
-            alert("সমস্যা হয়েছে!");
-          }
-        }
-      };
-
-      window.toggleSelectAllSub = function() {
-        const isChecked = document.getElementById("selectAllSub").checked;
-        document.querySelectorAll(".sub-checkbox").forEach(cb => cb.checked = isChecked);
-      };
-
-      window.toggleSelectAllDonor = function() {
-        const isChecked = document.getElementById("selectAllDonor").checked;
-        document.querySelectorAll(".donor-checkbox").forEach(cb => cb.checked = isChecked);
-      };
-
-      // Rendering Member Subscription Table with Paid/Unpaid status and action buttons (✏️ and 🗑️)
-      window.renderMemberSubscriptionTable = function() {
-        const tbody = document.getElementById("memberContributionTableBody");
-        if (!tbody) return;
-        tbody.innerHTML = "";
-
-        const searchText = (document.getElementById("memberListSearch")?.value || "").toLowerCase();
-        
-        const memberSubsMap = {};
-        allSubscriptions.filter(s => s.type === 'member').forEach(s => {
-          if (s.memberId && !memberSubsMap[s.memberId]) memberSubsMap[s.memberId] = s;
-        });
-
-        const displayList = allMembers.filter(m => {
-          const name = (m.name || "").toLowerCase();
-          const mobile = (m.mobile || "").toLowerCase();
-          const village = (m.village || "").toLowerCase();
-          const autoId = (m.autoId || "").toLowerCase();
-          return name.includes(searchText) || mobile.includes(searchText) || village.includes(searchText) || autoId.includes(searchText);
-        });
-
-        displayList.forEach(m => {
-          const sub = memberSubsMap[m.id];
-          const tr = document.createElement("tr");
-          tr.className = "border-b hover:bg-gray-50";
-
-          let actionHtml = '';
-          if (sub) {
-            actionHtml = `
-              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট">✏️</button>
-              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
-            `;
+        const allModules = ["subscription", "expense", "booking", "sales", "treasurer"];
+        allModules.forEach((mod) => {
+          const menuBtn = document.getElementById(`menu-btn-${mod}`);
+          const dashCard = document.getElementById(`dash-card-${mod}`);
+          if (window.currentUserRole === "admin" || window.userPermissions.includes(mod)) {
+            if (menuBtn) menuBtn.style.display = "flex";
+            if (dashCard) dashCard.style.display = "flex";
           } else {
-            actionHtml = `
-              <button onclick="openAddSubForMember('${m.id}', '${encodeURIComponent(m.name || '')}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট / চাঁদা যোগ">✏️</button>
-              <button onclick="alert('এই সদস্যের কোনো চাঁদার রেকর্ড নেই!')" class="bg-red-50 text-red-400 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
-            `;
+            if (menuBtn) menuBtn.style.display = "none";
+            if (dashCard) dashCard.style.display = "none";
           }
-
-          tr.innerHTML = `
-            <td class="p-2 border-r text-center"><input type="checkbox" class="sub-checkbox" value="${sub ? sub.id : 'member_' + m.id}"></td>
-            <td class="p-2 border-r font-bold text-gray-800 text-center">${m.name || ''}</td>
-            <td class="p-2 border-r text-gray-700 text-center">${m.mobile || ''}</td>
-            <td class="p-2 border-r text-gray-700 text-center">${m.village || ''}</td>
-            <td class="p-2 border-r font-bold text-orange-600 text-center">${m.autoId || ''}</td>
-            <td class="p-2 border-r text-center font-bold ${sub ? 'text-emerald-700' : 'text-red-600'}">${sub ? '₹' + sub.amount : '₹0 (বাকি)'}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub ? sub.date : '-'}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub ? (sub.collector || getPujaKosadhokkoName() || '-') : '-'}</td>
-            <td class="p-2 text-center">${actionHtml}</td>
-          `;
-          tbody.appendChild(tr);
         });
-      };
+      }
 
-      window.filterMemberContributionList = function() {
-        renderMemberSubscriptionTable();
-      };
+      // --- 💰 চাঁদা সংগ্রহ মডিউল লজিক ---
+      function loadSubscriptions() {
+        onSnapshot(collection(db, "subscriptions"), (snapshot) => {
+          allSubscriptionsData = [];
+          snapshot.forEach((docSnap) => {
+            allSubscriptionsData.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          allSubscriptionsData.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+          renderSubscriptionsTable(allSubscriptionsData);
+          calculateSubTotals(allSubscriptionsData);
+        });
+      }
 
-      window.renderOtherSubscriptionTable = function() {
-        const tbody = document.getElementById("otherContributionTableBody");
+      function calculateSubTotals(data) {
+        let membersAmt = 0;
+        let othersAmt = 0;
+        data.forEach((item) => {
+          const amt = Number(item.amount) || 0;
+          if (item.donorType === "member") {
+            membersAmt += amt;
+          } else {
+            othersAmt += amt;
+          }
+        });
+        const grandTotal = membersAmt + othersAmt;
+
+        document.getElementById("subTotalMembersAmount").innerText = `₹${membersAmt.toLocaleString("en-IN")}`;
+        document.getElementById("subTotalOthersAmount").innerText = `₹${othersAmt.toLocaleString("en-IN")}`;
+        document.getElementById("subGrandTotal").innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+
+        const dashCardSub = document.querySelector("#dash-card-subscription .text-2xl.font-bold");
+        if (dashCardSub) dashCardSub.innerText = `₹${grandTotal.toLocaleString("en-IN")}`;
+      }
+
+      window.renderSubscriptionsTable = function (data) {
+        const tbody = document.getElementById("subTableBody");
         if (!tbody) return;
         tbody.innerHTML = "";
-
-        const donorSubs = allSubscriptions.filter(s => s.type === 'other');
-        donorSubs.forEach(sub => {
-          const tr = document.createElement("tr");
-          tr.className = "border-b hover:bg-gray-50";
-          tr.innerHTML = `
-            <td class="p-2 border-r text-center"><input type="checkbox" class="donor-checkbox sub-checkbox" value="${sub.id}"></td>
-            <td class="p-2 border-r font-bold text-gray-800 text-center">${sub.name || ''}</td>
-            <td class="p-2 border-r text-gray-700 text-center">${sub.mobile || ''}</td>
-            <td class="p-2 border-r text-gray-700 text-center">${sub.village || ''}</td>
-            <td class="p-2 border-r font-bold text-emerald-700 text-center">₹${sub.amount || 0}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub.date || ''}</td>
-            <td class="p-2 border-r text-center text-gray-600">${sub.collector || getPujaKosadhokkoName() || '-'}</td>
-            <td class="p-2 text-center">
-              <button onclick="openEditSubscription('${sub.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs" title="এডিট">✏️</button>
-              <button onclick="deleteSubscription('${sub.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs ml-1" title="ডিলিট">🗑️</button>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      };
-
-      // Excel Exports styled matching members page (`members (2).html`) with summary at bottom
-      window.exportMemberListReport = async function() {
-        await generateMemberReportExcel('all');
-      };
-
-      window.exportMemberPaidReport = async function() {
-        await generateMemberReportExcel('paid');
-      };
-
-      window.exportMemberUnpaidReport = async function() {
-        await generateMemberReportExcel('unpaid');
-      };
-
-      async function generateMemberReportExcel(filterType) {
-        const memberSubsMap = {};
-        allSubscriptions.filter(s => s.type === 'member').forEach(s => {
-          if (s.memberId && !memberSubsMap[s.memberId]) memberSubsMap[s.memberId] = s;
-        });
-
-        let data = allMembers.map(m => ({
-          member: m,
-          sub: memberSubsMap[m.id]
-        }));
-
-        let titleText = "সকল সদস্যের চাঁদা তালিকা";
-        if (filterType === 'paid') {
-          data = data.filter(item => item.sub);
-          titleText = "চাঁদা প্রদানকারী সদস্যদের তালিকা";
-        } else if (filterType === 'unpaid') {
-          data = data.filter(item => !item.sub);
-          titleText = "চাঁদা প্রদান করেননি এমন সদস্যদের তালিকা";
-        }
 
         if (data.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">কোনো চাঁডার তথ্য পাওয়া যায়নি।</td></tr>`;
+          return;
+        }
+
+        const canEdit = window.currentUserRole === "admin" || window.userPermissions.includes("subscription");
+
+        data.forEach((item) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+
+          let actionBtns = `-`;
+          if (canEdit) {
+            actionBtns = `
+                        <button onclick="openEditSubModal('${item.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs font-semibold mr-1">এডিট</button>
+                        <button onclick="deleteSubscription('${item.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-semibold">ডিলিট</button>
+                    `;
+          }
+
+          tr.innerHTML = `
+                    <td class="p-2.5 border-r text-center">${item.date || "-"}</td>
+                    <td class="p-2.5 border-r font-medium text-gray-800 text-center">${item.name || "-"}</td>
+                    <td class="p-2.5 border-r text-center"><span class="bg-orange-100 text-orange-700 px-2 py-0.5 rounded text-[10px] font-bold">${item.donorType === "member" ? "সদস্য" : "অন্যান্য"}</span></td>
+                    <td class="p-2.5 border-r font-bold text-emerald-600 text-center">₹${Number(item.amount || 0).toLocaleString("en-IN")}</td>
+                    <td class="p-2.5 border-r text-gray-600 text-center">${item.note || "-"}</td>
+                    <td class="p-2.5 text-center sub-action-col">${actionBtns}</td>
+                `;
+          tbody.appendChild(tr);
+        });
+      };
+
+      window.openAddSubModal = function () {
+        document.getElementById("subModalTitle").innerText = "নতুন চাঁদা সংগ্রহ যুক্ত করুন";
+        document.getElementById("editSubDocId").value = "";
+        document.getElementById("subDate").value = new Date().toISOString().split("T")[0];
+        document.getElementById("subDonorType").value = "member";
+        document.getElementById("subAmountInput").value = "1500";
+        document.getElementById("subNoteInput").value = "";
+        document.getElementById("subMemberNameInput").value = "";
+        document.getElementById("subOtherNameInput").value = "";
+
+        toggleDonorInputType();
+
+        document.getElementById("addSubModal").classList.remove("hidden");
+      };
+
+      window.openEditSubModal = function (id) {
+        const item = allSubscriptionsData.find((s) => s.id === id);
+        if (!item) return;
+
+        document.getElementById("subModalTitle").innerText = "চাঁদার তথ্য সংশোধন করুন";
+        document.getElementById("editSubDocId").value = item.id;
+        document.getElementById("subDate").value = item.date || new Date().toISOString().split("T")[0];
+        document.getElementById("subDonorType").value = item.donorType || "member";
+        document.getElementById("subAmountInput").value = item.amount || "";
+        document.getElementById("subNoteInput").value = item.note || "";
+
+        toggleDonorInputType();
+
+        if (item.donorType === "member") {
+          document.getElementById("subMemberNameInput").value = item.name || "";
+        } else {
+          document.getElementById("subOtherNameInput").value = item.name || "";
+        }
+
+        document.getElementById("addSubModal").classList.remove("hidden");
+      };
+
+      window.closeAddSubModal = function () {
+        document.getElementById("addSubModal").classList.add("hidden");
+      };
+
+      window.toggleDonorInputType = function () {
+        const type = document.getElementById("subDonorType").value;
+        if (type === "member") {
+          document.getElementById("memberSelectContainer").classList.remove("hidden");
+          document.getElementById("otherNameContainer").classList.add("hidden");
+        } else {
+          document.getElementById("memberSelectContainer").classList.add("hidden");
+          document.getElementById("otherNameContainer").classList.remove("hidden");
+        }
+      };
+
+      window.saveOrUpdateSubscription = async function () {
+        const docId = document.getElementById("editSubDocId").value;
+        const date = document.getElementById("subDate").value;
+        const donorType = document.getElementById("subDonorType").value;
+        const amount = Number(document.getElementById("subAmountInput").value);
+        const note = document.getElementById("subNoteInput").value.trim();
+
+        let name = "";
+        if (donorType === "member") {
+          name = document.getElementById("subMemberNameInput").value.trim();
+        } else {
+          name = document.getElementById("subOtherNameInput").value.trim();
+        }
+
+        if (!date || !amount || !name) {
+          alert("দয়া করে তারিখ, নাম এবং পরিমাণ সঠিকভাবে পূরণ করুন।");
+          return;
+        }
+
+        const btn = document.getElementById("saveSubBtn");
+        btn.innerText = "সেভ হচ্ছে...";
+        btn.disabled = true;
+
+        try {
+          if (docId) {
+            await updateDoc(doc(db, "subscriptions", docId), {
+              date,
+              donorType,
+              name,
+              amount,
+              note,
+            });
+          } else {
+            await addDoc(collection(db, "subscriptions"), {
+              date,
+              donorType,
+              name,
+              amount,
+              note,
+              timestamp: Date.now(),
+            });
+          }
+          closeAddSubModal();
+        } catch (e) {
+          alert("ত্রুটি: " + e.message);
+        } finally {
+          btn.innerText = "সেভ করুন";
+          btn.disabled = false;
+        }
+      };
+
+      window.deleteSubscription = async function (id) {
+        if (confirm("আপনি কি নিশ্চিতভাবে এই চাঁদার রেকর্ড ডিলিট করতে চান?")) {
+          try {
+            await deleteDoc(doc(db, "subscriptions", id));
+          } catch (e) {
+            alert("ত্রুটি: " + e.message);
+          }
+        }
+      };
+
+      window.deleteAllSubscriptions = async function () {
+        if (confirm("সতর্কতা! আপনি কি নিশ্চিতভাবে সমস্ত চাঁদার রেকর্ড মুছে ফেলতে চান?")) {
+          try {
+            const snap = await getDocs(collection(db, "subscriptions"));
+            await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+            alert("সকল চাঁদার রেকর্ড সফলভাবে মুছে ফেলা হয়েছে!");
+          } catch (e) {
+            alert("ত্রুটি: " + e.message);
+          }
+        }
+      };
+
+      window.filterSubscriptions = function () {
+        const query = document.getElementById("subSearchInput").value.toLowerCase();
+        const filtered = allSubscriptionsData.filter(
+          (item) =>
+            (item.name || "").toLowerCase().includes(query) ||
+            String(item.amount || "")
+              .toLowerCase()
+              .includes(query) ||
+            (item.date || "").toLowerCase().includes(query) ||
+            (item.note || "").toLowerCase().includes(query),
+        );
+        renderSubscriptionsTable(filtered);
+      };
+
+      window.exportSubReport = function (type) {
+        let dataToExport = allSubscriptionsData;
+        let titleText = "সম্পূর্ণ চাঁদা রিপোর্ট";
+
+        if (type === "members") {
+          dataToExport = allSubscriptionsData.filter((s) => s.donorType === "member");
+          titleText = "সদস্যদের চাঁদা রিপোর্ট";
+        } else if (type === "others") {
+          dataToExport = allSubscriptionsData.filter((s) => s.donorType === "other");
+          titleText = "অন্যান্যদের চাঁদা রিপোর্ট";
+        }
+
+        if (dataToExport.length === 0) {
           alert("এক্সপোর্ট করার মতো কোনো ডেটা নেই!");
           return;
         }
 
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("সদস্য চাঁদা রিপোর্ট", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-        worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
-        worksheet.columns = [{ width: 14 }, { width: 25 }, { width: 18 }, { width: 20 }, { width: 16 }, { width: 16 }, { width: 18 }, { width: 22 }];
-
-        // Title Block
-        worksheet.mergeCells("A1:H1");
-        const title1 = worksheet.getCell("A1");
-        title1.value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
-        title1.font = { name: "Kalpurush", size: 18, bold: true };
-        title1.alignment = { horizontal: "center", vertical: "middle" };
-        title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
-        title1.border = { top:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
-        worksheet.getRow(1).height = 35;
-
-        worksheet.mergeCells("A2:H2");
-        const title2 = worksheet.getCell("A2");
-        title2.value = titleText;
-        title2.font = { name: "Kalpurush", size: 16, bold: true };
-        title2.alignment = { horizontal: "center", vertical: "middle" };
-        title2.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
-        title2.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
-        worksheet.getRow(2).height = 30;
-
-        const headers = ["Member ID", "নাম", "মোবাইল", "গ্রাম", "পরিমাণ", "তারিখ", "গ্রহণকারী", "স্ট্যাটাস"];
-        const headerRow = worksheet.getRow(4);
-        headerRow.values = headers;
-        headerRow.height = 30;
-        headerRow.eachCell({ includeEmpty: false }, cell => {
-          cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
-          cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
-          cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        let csvContent = "\uFEFFতারিখ,নাম,ধরণ,পরিমাণ (₹),মন্তব্য\n";
+        dataToExport.forEach((item) => {
+          csvContent += `"${item.date || ""}","${item.name || ""}","${item.donorType === "member" ? "সদস্য" : "অন্যান্য"}","${item.amount || 0}","${item.note || ""}"\n`;
         });
 
-        let rowNo = 5;
-        let totalAmountCollected = 0;
-        let paidCount = 0;
-        let unpaidCount = 0;
-
-        allMembers.forEach(m => {
-          const sub = memberSubsMap[m.id];
-          if (filterType === 'paid' && !sub) return;
-          if (filterType === 'unpaid' && sub) return;
-
-          if (sub) {
-            totalAmountCollected += parseFloat(sub.amount) || 0;
-            paidCount++;
-          } else {
-            unpaidCount++;
-          }
-
-          const row = worksheet.getRow(rowNo);
-          row.values = [
-            m.autoId || "",
-            m.name || "",
-            m.mobile !== "-" ? (m.mobile || "") : "",
-            m.village || "",
-            sub ? sub.amount : 0,
-            sub ? sub.date : "-",
-            sub ? (sub.collector || getPujaKosadhokkoName() || "-") : "-",
-            sub ? "পরিশোধিত" : "বাকি"
-          ];
-          row.height = 25;
-          row.eachCell({ includeEmpty: false }, cell => {
-            cell.font = { name:"Kalpurush", size:11 };
-            cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
-            cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-            cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
-          });
-          rowNo++;
-        });
-
-        // Summary Rows at the bottom
-        const summaryRows = [
-          { label: "মোট চাঁদা আদায় (Total Amount)", val: `₹${totalAmountCollected}` },
-          { label: "চাঁদা দিয়েছে (Paid Count)", val: `${paidCount} জন` },
-          { label: "চাঁদা দেয়নি (Unpaid Count)", val: `${unpaidCount} জন` }
-        ];
-
-        summaryRows.forEach(s => {
-          worksheet.mergeCells(`A${rowNo}:D${rowNo}`);
-          worksheet.mergeCells(`E${rowNo}:H${rowNo}`);
-          
-          const lblCell = worksheet.getCell(`A${rowNo}`);
-          lblCell.value = s.label;
-          lblCell.font = { name: "Kalpurush", size: 12, bold: true };
-          lblCell.alignment = { horizontal: "center", vertical: "middle" };
-          lblCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
-
-          const valCell = worksheet.getCell(`E${rowNo}`);
-          valCell.value = s.val;
-          valCell.font = { name: "Kalpurush", size: 12, bold: true };
-          valCell.alignment = { horizontal: "center", vertical: "middle" };
-          valCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
-
-          for (let col = 1; col <= 8; col++) {
-            worksheet.getCell(rowNo, col).border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
-          }
-          worksheet.getRow(rowNo).height = 28;
-          rowNo++;
-        });
-
-        worksheet.pageSetup.printTitlesRow = "4:4";
-        worksheet.pageSetup.printArea = `A1:H${rowNo-1}`;
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), `Member_Subscription_${filterType}.xlsx`);
+        const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `${titleText}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       };
 
-      window.exportOtherDataReport = async function() {
-        const donorSubs = allSubscriptions.filter(s => s.type === 'other');
-        if (donorSubs.length === 0) {
-          alert("এক্সপোর্ট করার মতো কোনো দাতার ডেটা নেই!");
+      // --- অন্যান্য সাধারণ ফাংশন ---
+      function loadAppUsers() {
+        onSnapshot(collection(db, "app_users"), (snapshot) => {
+          allUsersData = [];
+          snapshot.forEach((docSnap) => {
+            allUsersData.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          renderUsersTable(allUsersData);
+        });
+      }
+
+      function renderUsersTable(users) {
+        const tbody = document.getElementById("usersTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        users.forEach((u) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+          tr.innerHTML = `
+                    <td class="p-2.5 border-r font-medium text-gray-800 text-center">${u.email}</td>
+                    <td class="p-2.5 border-r text-gray-700 text-center">${u.name || "-"}</td>
+                    <td class="p-2.5 border-r text-center">${(u.permissions || []).join(", ")}</td>
+                    <td class="p-2.5 text-center flex justify-center gap-1">
+                        <button onclick="editUserPermissions('${u.id}')" class="bg-amber-100 text-amber-700 px-2 py-1 rounded text-xs">এডিট</button>
+                        <button onclick="deleteUserAccount('${u.id}')" class="bg-red-100 text-red-600 px-2 py-1 rounded text-xs">ডিলিট</button>
+                    </td>
+                `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      window.handleSaveUser = async function (event) {
+        event.preventDefault();
+        const editId = document.getElementById("editUserId").value;
+        const name = document.getElementById("uNameInput").value.trim();
+        const email = document.getElementById("uEmailInput").value.trim();
+        const selectedPerms = [];
+        ["subscription", "expense", "booking", "sales", "treasurer"].forEach((p) => {
+          if (document.getElementById("perm_" + p).checked) selectedPerms.push(p);
+        });
+
+        try {
+          if (editId) {
+            await updateDoc(doc(db, "app_users", editId), { name, email, permissions: selectedPerms });
+          } else {
+            const uId = "user_" + Date.now();
+            await setDoc(doc(db, "app_users", uId), { name, email, permissions: selectedPerms, createdAt: Date.now() });
+          }
+          closeCreateUserModal();
+        } catch (e) {
+          alert("ত্রুটি: " + e.message);
+        }
+      };
+
+      window.openCreateUserModal = function () {
+        document.getElementById("userModalTitle").innerText = "👤 নতুন ব্যবহারকারী তৈরি করুন";
+        document.getElementById("editUserId").value = "";
+        document.getElementById("uNameInput").value = "";
+        document.getElementById("uEmailInput").value = "";
+        document.getElementById("uPassInput").value = "";
+        document.getElementById("passInputContainer").style.display = "block";
+        ["subscription", "expense", "booking", "sales", "treasurer"].forEach((p) => {
+          document.getElementById("perm_" + p).checked = false;
+        });
+        document.getElementById("createUserModal").classList.remove("hidden");
+      };
+
+      window.closeCreateUserModal = function () {
+        document.getElementById("createUserModal").classList.add("hidden");
+      };
+
+      window.editUserPermissions = function (uId) {
+        const user = allUsersData.find((u) => u.id === uId);
+        if (!user) return;
+        document.getElementById("userModalTitle").innerText = "✏️ ব্যবহারকারী এডিট করুন";
+        document.getElementById("editUserId").value = user.id;
+        document.getElementById("uNameInput").value = user.name || "";
+        document.getElementById("uEmailInput").value = user.email || "";
+        document.getElementById("passInputContainer").style.display = "none";
+        const userPerms = user.permissions || [];
+        ["subscription", "expense", "booking", "sales", "treasurer"].forEach((p) => {
+          document.getElementById("perm_" + p).checked = userPerms.includes(p);
+        });
+        document.getElementById("createUserModal").classList.remove("hidden");
+      };
+
+      window.deleteUserAccount = async function (uId) {
+        if (confirm("নিশ্চিতভাবে ডিলিট করতে চান?")) {
+          await deleteDoc(doc(db, "app_users", uId));
+        }
+      };
+
+      function loadLoginHistory() {
+        onSnapshot(collection(db, "login_history"), (snapshot) => {
+          allLoginHistory = [];
+          snapshot.forEach((docSnap) => {
+            allLoginHistory.push({ id: docSnap.id, ...docSnap.data() });
+          });
+          allLoginHistory.sort((a, b) => b.timestamp - a.timestamp);
+          renderHistoryTable(allLoginHistory);
+        });
+      }
+
+      function renderHistoryTable(data) {
+        const tbody = document.getElementById("historyTableBody");
+        if (!tbody) return;
+        tbody.innerHTML = "";
+        data.forEach((h) => {
+          const tr = document.createElement("tr");
+          tr.className = "border-b hover:bg-gray-50";
+          tr.innerHTML = `
+                    <td class="p-2.5 border-r text-center"><input type="checkbox" class="history-checkbox" value="${h.id}"></td>
+                    <td class="p-2.5 border-r text-center">${h.email}</td>
+                    <td class="p-2.5 border-r text-center">${new Date(h.timestamp).toLocaleString("bn-IN")}</td>
+                    <td class="p-2.5 text-center text-xs truncate max-w-xs">${h.device || ""}</td>
+                `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      window.toggleSelectAllHistory = function () {
+        const selectAll = document.getElementById("selectAllHistory");
+        document.querySelectorAll(".history-checkbox").forEach((cb) => (cb.checked = selectAll.checked));
+        document.getElementById("deleteHistoryBtn").classList.toggle("hidden", !selectAll.checked);
+      };
+
+      window.deleteSelectedHistory = async function () {
+        const selected = Array.from(document.querySelectorAll(".history-checkbox:checked")).map((cb) => cb.value);
+        if (selected.length > 0 && confirm("সিলেক্ট করা ইতিহাস ডিলিট করতে চান?")) {
+          await Promise.all(selected.map((id) => deleteDoc(doc(db, "login_history", id))));
+        }
+      };
+
+      window.handlePasswordChange = async function (event) {
+        event.preventDefault();
+        const newPass = document.getElementById("newPasswordInput").value;
+        const confirmPass = document.getElementById("confirmPasswordInput").value;
+        const errBox = document.getElementById("passErrorMsg");
+        if (newPass !== confirmPass) {
+          errBox.innerText = "পাসওয়ার্ড দুটি মিলছে না!";
+          errBox.classList.remove("hidden");
           return;
         }
-
-        const workbook = new ExcelJS.Workbook();
-        const worksheet = workbook.addWorksheet("দাতার চাঁদা তালিকা", { pageSetup: { paperSize: 9, orientation: "landscape", fitToPage: true, fitToWidth: 1, fitToHeight: 0 } });
-        worksheet.pageSetup.margins = { left: 0.25, right: 0.25, top: 0.5, bottom: 0.5, header: 0.2, footer: 0.2 };
-        worksheet.columns = [{ width: 25 }, { width: 18 }, { width: 20 }, { width: 16 }, { width: 16 }, { width: 22 }, { width: 22 }];
-
-        worksheet.mergeCells("A1:G1");
-        const title1 = worksheet.getCell("A1");
-        title1.value = window.__getCommitteeNameForOutput?.() || "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি";
-        title1.font = { name: "Kalpurush", size: 18, bold: true };
-        title1.alignment = { horizontal: "center", vertical: "middle" };
-        title1.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
-        title1.border = { top:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
-        worksheet.getRow(1).height = 35;
-
-        worksheet.mergeCells("A2:G2");
-        const title2 = worksheet.getCell("A2");
-        title2.value = "অন্যান্য দাতাদের চাঁদা তালিকা";
-        title2.font = { name: "Kalpurush", size: 16, bold: true };
-        title2.alignment = { horizontal: "center", vertical: "middle" };
-        title2.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF4D6" } };
-        title2.border = { bottom:{style:"medium"}, left:{style:"medium"}, right:{style:"medium"} };
-        worksheet.getRow(2).height = 30;
-
-        const headers = ["দাতার নাম", "মোবাইল", "গ্রাম", "পরিমাণ", "তারিখ", "গ্রহণকারী", "মন্তব্য"];
-        const headerRow = worksheet.getRow(4);
-        headerRow.values = headers;
-        headerRow.height = 30;
-        headerRow.eachCell({ includeEmpty: false }, cell => {
-          cell.font = { name:"Kalpurush", size:12, bold:true, color:{argb:"FFFFFFFF"} };
-          cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFF26522"} };
-          cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-          cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
-        });
-
-        let rowNo = 5;
-        let totalDonorAmount = 0;
-
-        donorSubs.forEach(sub => {
-          totalDonorAmount += parseFloat(sub.amount) || 0;
-          const row = worksheet.getRow(rowNo);
-          row.values = [
-            sub.name || "",
-            sub.mobile !== "-" ? (sub.mobile || "") : "",
-            sub.village || "",
-            sub.amount || 0,
-            sub.date || "",
-            sub.collector || getPujaKosadhokkoName() || "-",
-            sub.note || ""
-          ];
-          row.height = 25;
-          row.eachCell({ includeEmpty: false }, cell => {
-            cell.font = { name:"Kalpurush", size:11 };
-            cell.fill = { type:"pattern", pattern:"solid", fgColor:{argb:"FFFFFBF0"} };
-            cell.alignment = { horizontal:"center", vertical:"middle", wrapText:true };
-            cell.border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
-          });
-          rowNo++;
-        });
-
-        // Summary row at bottom
-        worksheet.mergeCells(`A${rowNo}:C${rowNo}`);
-        worksheet.mergeCells(`D${rowNo}:G${rowNo}`);
-
-        const lblCell = worksheet.getCell(`A${rowNo}`);
-        lblCell.value = `মোট দাতা: ${donorSubs.length} জন | মোট পরিমাণ`;
-        lblCell.font = { name: "Kalpurush", size: 12, bold: true };
-        lblCell.alignment = { horizontal: "center", vertical: "middle" };
-        lblCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
-
-        const valCell = worksheet.getCell(`D${rowNo}`);
-        valCell.value = `₹${totalDonorAmount}`;
-        valCell.font = { name: "Kalpurush", size: 12, bold: true };
-        valCell.alignment = { horizontal: "center", vertical: "middle" };
-        valCell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFD966" } };
-
-        for (let col = 1; col <= 7; col++) {
-          worksheet.getCell(rowNo, col).border = { top:{style:"thin"}, left:{style:"thin"}, bottom:{style:"thin"}, right:{style:"thin"} };
+        try {
+          await updatePassword(auth.currentUser, newPass);
+          alert("পাসওয়ার্ড সফলভাবে পরিবর্তিত হয়েছে!");
+          closePasswordModal();
+        } catch (error) {
+          alert("ত্রুটি: " + error.message);
         }
-        worksheet.getRow(rowNo).height = 28;
-
-        worksheet.pageSetup.printTitlesRow = "4:4";
-        worksheet.pageSetup.printArea = `A1:G${rowNo}`;
-        const buffer = await workbook.xlsx.writeBuffer();
-        saveAs(new Blob([buffer], { type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }), "Donor_Subscriptions.xlsx");
       };
 
-      window.switchTab = function(tabName) {
-        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
-          const sec = document.getElementById("section-" + t);
-          if (sec) {
-            if (t === tabName) sec.classList.remove("hidden");
-            else sec.classList.add("hidden");
-          }
-        });
+      window.checkAdminPermissionForTab = function (tabName) {
+        if (tabName === "settings" && window.currentUserRole !== "admin") {
+          alert("এই সেটিংস পেজটি শুধুমাত্র প্রধান অ্যাডমিনের জন্য!");
+          return false;
+        }
+        return true;
+      };
+
+      window.handleLogout = function () {
+        signOut(auth).then(() => window.location.replace("index.html"));
       };
     </script>
-  
-<script type="module">
-(() => {
-  const firebaseConfig = {
-    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-SxN0q",
-    authDomain: "durgapuja-2026.firebaseapp.com",
-    projectId: "durgapuja-2026",
-    storageBucket: "durgapuja-2026.firebasestorage.app",
-    messagingSenderId: "625976130920",
-    appId: "1:625976130920:web:60190b21f1c7563cdd2add",
-  };
-  const DEFAULT_NAME = 'নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি';
-  const pageKey = 'chada';
-  const applyCommitteeHeading = (raw) => {
-    const name = String(raw?.[pageKey] || DEFAULT_NAME);
-    const heading = document.getElementById('committeePageHeading');
-    if (heading) heading.textContent = name;
-    try {
-      const old = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
-      old[pageKey] = name;
-      localStorage.setItem('pujaCommitteeNames', JSON.stringify(old));
-    } catch (_) {}
-  };
-  try {
-    const local = JSON.parse(localStorage.getItem('pujaCommitteeNames') || '{}');
-    applyCommitteeHeading(local);
-  } catch (_) { applyCommitteeHeading({}); }
-  Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
-  ]).then(([appMod, fsMod]) => {
-    const { initializeApp } = appMod;
-    const { getFirestore, doc, onSnapshot } = fsMod;
-    let app;
-    try { app=initializeApp(firebaseConfig,'committeeHeadingSync'); } catch(e) { app=initializeApp(firebaseConfig,'committeeHeadingSync_'+Math.random().toString(36).slice(2)); }
-    const db=getFirestore(app);
-    onSnapshot(doc(db,'settings','committeeNames'), snap => applyCommitteeHeading(snap.exists()?snap.data():{}), err => console.warn('Committee heading sync failed:',err));
-  }).catch(err => console.error('Committee heading sync init failed:',err));
-})();
-</script>
 
-<script type="module">
-(() => {
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMX1zchs8sJV9MNZL-Sx0Nqs",
-    authDomain: "durgapuja-2026.firebaseapp.com",
-    projectId: "durgapuja-2026",
-    storageBucket: "durgapuja-2026.firebasestorage.app",
-    messagingSenderId: "625976130920",
-    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
-  };
-  const DEFAULT_COMMITTEE = {
-    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি",
-    establishedYear: "2009",
-    registrationNo: "S0014684",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
-    mobile: "9933371702"
-  };
-  const DEFAULT_DEV = {
-    name: "MANABENDRA NATH SARKAR",
-    mobile: "9002652507",
-    email: "manabendranathsarkar112@gmail.com"
-  };
+    <!-- সেটিংস ও ইউজার ইন্টারফেস স্ক্রিপ্ট -->
+    <script>
+      const defaultDevInfo = { name: "Manabendra Nath Sarkar", mobile: "9933371702", email: "manabendra@gmail.com" };
+      let tempLogoBase64 = "";
 
-  function setIfExists(id, value, property = "textContent") {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (property === "value" && document.activeElement === el) return;
-    el[property] = value;
-  }
+      function toggleCommitteeList() {
+        const wrapper = document.getElementById("committeeTickerWrapper");
+        const arrow = document.getElementById("commArrowIcon");
+        if (wrapper) {
+          wrapper.classList.toggle("hidden");
+          if (arrow) {
+            arrow.style.transform = wrapper.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+          }
+        }
+      }
 
-  function applyCommitteeInfo(raw) {
-    const d = { ...DEFAULT_COMMITTEE, ...(raw || {}) };
-    const name = String(d.name || DEFAULT_COMMITTEE.name);
-    const establishedYear = String(d.establishedYear || DEFAULT_COMMITTEE.establishedYear);
-    const registrationNo = String(d.registrationNo || DEFAULT_COMMITTEE.registrationNo);
-    const address = String(d.address || DEFAULT_COMMITTEE.address);
-    const mobile = String(d.mobile || "");
+      function previewClubLogo(input) {
+        const file = input.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function (e) {
+          tempLogoBase64 = e.target.result;
+          document.getElementById("clubLogoPreview").src = tempLogoBase64;
+        };
+        reader.readAsDataURL(file);
+      }
 
-    try { localStorage.setItem("pujaCommitteeInfo", JSON.stringify({ name, establishedYear, registrationNo, address, mobile })); } catch (_) {}
+      function saveClubLogo() {
+        if (!tempLogoBase64) return alert("লোগো সিলেক্ট করুন!");
+        localStorage.setItem("pujaClubLogo", tempLogoBase64);
+        loadClubLogo();
+        alert("লোগো সেভ হয়েছে!");
+      }
 
-    setIfExists("committeePageHeading", name);
-    setIfExists("committeeEstablishedYear", establishedYear);
-    setIfExists("committeeRegistrationNo", registrationNo);
-    setIfExists("committeeAddress", address);
-    setIfExists("committeeMobile", mobile);
-    const mobileLink = document.getElementById("committeeMobileLink");
-    if (mobileLink) mobileLink.href = "tel:" + mobile.replace(/[^0-9+]/g, "");
+      function loadClubLogo() {
+        const saved = localStorage.getItem("pujaClubLogo");
+        if (saved) document.getElementById("clubLogoPreview").src = saved;
+      }
 
-    setIfExists("committeeInfoName", name, "value");
-    setIfExists("committeeInfoEstablished", establishedYear, "value");
-    setIfExists("committeeInfoReg", registrationNo, "value");
-    setIfExists("committeeInfoAddress", address, "value");
-    setIfExists("committeeInfoMobile", mobile, "value");
-  }
+      function loadDevData() {
+        const saved = JSON.parse(localStorage.getItem("pujaDevData")) || defaultDevInfo;
+        document.getElementById("devNameInput").value = saved.name;
+        document.getElementById("devMobileInput").value = saved.mobile;
+        document.getElementById("devEmailInput").value = saved.email;
+        document.getElementById("popDevName").textContent = saved.name;
+        document.getElementById("popDevMobile").textContent = saved.mobile;
+        document.getElementById("popDevMobile").href = `tel:${saved.mobile}`;
+        document.getElementById("popDevEmail").textContent = saved.email;
+        document.getElementById("popDevEmail").href = `mailto:${saved.email}`;
+      }
 
-  function applyDeveloperInfo(raw) {
-    const d = {
-      name: String(raw?.name || DEFAULT_DEV.name),
-      mobile: String(raw?.mobile || DEFAULT_DEV.mobile),
-      email: String(raw?.email || DEFAULT_DEV.email)
-    };
-    try {
-      localStorage.setItem("pujaDevData", JSON.stringify(d));
-      localStorage.setItem("pujaDevName", d.name);
-      localStorage.setItem("pujaDevMobile", d.mobile);
-      localStorage.setItem("pujaDevEmail", d.email);
-    } catch (_) {}
+      function saveDevData(e) {
+        e.preventDefault();
+        const dev = {
+          name: document.getElementById("devNameInput").value.trim(),
+          mobile: document.getElementById("devMobileInput").value.trim(),
+          email: document.getElementById("devEmailInput").value.trim(),
+        };
+        localStorage.setItem("pujaDevData", JSON.stringify(dev));
+        loadDevData();
+        alert("ডেভেলপার তথ্য সেভ হয়েছে!");
+      }
 
-    setIfExists("devNameInput", d.name, "value");
-    setIfExists("devMobileInput", d.mobile, "value");
-    setIfExists("devEmailInput", d.email, "value");
-    setIfExists("popDevName", d.name);
-    setIfExists("popDevMobile", d.mobile);
-    setIfExists("popDevEmail", d.email);
-    setIfExists("devName", d.name);
-    setIfExists("devPhone", d.mobile);
-    setIfExists("devEmail", d.email);
+      function toggleDevModal() {
+        const modal = document.getElementById("devModal");
+        modal.classList.toggle("hidden");
+        if (!modal.classList.contains("hidden")) loadDevData();
+      }
 
-    const a = document.getElementById("popDevMobile");
-    if (a) a.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
-    const p = document.getElementById("devPhone");
-    if (p) p.href = "tel:" + d.mobile.replace(/[^0-9+]/g, "");
-    const e = document.getElementById("popDevEmail");
-    if (e) e.href = "mailto:" + d.email;
-    const de = document.getElementById("devEmail");
-    if (de) de.href = "mailto:" + d.email;
-  }
+      function openPasswordModal() {
+        document.getElementById("changePasswordModal").classList.remove("hidden");
+      }
 
-  function readLocalCommittee() {
-    try { return JSON.parse(localStorage.getItem("pujaCommitteeInfo") || "null") || DEFAULT_COMMITTEE; }
-    catch (_) { return DEFAULT_COMMITTEE; }
-  }
+      function closePasswordModal() {
+        document.getElementById("changePasswordModal").classList.add("hidden");
+      }
 
-  function readLocalDev() {
-    try { return JSON.parse(localStorage.getItem("pujaDevData") || "null") || DEFAULT_DEV; }
-    catch (_) { return DEFAULT_DEV; }
-  }
+      function switchSettingsSubTab(subTabName) {
+        ["profile", "system", "users", "history"].forEach((tab) => {
+          document.getElementById("subSection" + tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add("hidden");
+          document.getElementById("tabBtn" + tab.charAt(0).toUpperCase() + tab.slice(1)).className =
+            "px-5 py-2 text-sm font-semibold text-gray-500 whitespace-nowrap transition";
+        });
+        document
+          .getElementById("subSection" + subTabName.charAt(0).toUpperCase() + subTabName.slice(1))
+          .classList.remove("hidden");
+        document.getElementById("tabBtn" + subTabName.charAt(0).toUpperCase() + subTabName.slice(1)).className =
+          "bg-white shadow-sm px-5 py-2 rounded-md text-sm font-bold text-gray-800 whitespace-nowrap transition";
+        if (subTabName === "system") {
+          loadClubLogo();
+          loadDevData();
+        }
+      }
 
-  applyCommitteeInfo(readLocalCommittee());
-  applyDeveloperInfo(readLocalDev());
+      function switchTab(tabName) {
+        if (tabName === "settings" && !checkAdminPermissionForTab(tabName)) return;
+        ["dashboard", "subscription", "expense", "booking", "sales", "treasurer", "settings"].forEach((t) => {
+          const el = document.getElementById("section-" + t);
+          if (el) el.classList.add("hidden");
+        });
+        const target = document.getElementById("section-" + tabName);
+        if (target) target.classList.remove("hidden");
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
 
-  Promise.all([
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js"),
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js"),
-    import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js")
-  ]).then(async ([appMod, authMod, fsMod]) => {
-    const { getApps, getApp, initializeApp } = appMod;
-    const { getAuth, onAuthStateChanged } = authMod;
-    const { getFirestore, doc, onSnapshot, setDoc } = fsMod;
+      function toggleQuickMenu() {
+        const content = document.getElementById("quickMenuContent");
+        const arrow = document.getElementById("menuArrowIcon");
+        content.classList.toggle("hidden");
+        arrow.style.transform = content.classList.contains("hidden") ? "rotate(-90deg)" : "rotate(0deg)";
+      }
 
-    let app;
-    try { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
-    catch (e) { app = getApps().length ? getApp() : initializeApp(FIREBASE_CONFIG); }
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-      // Keep Firestore data available in browser IndexedDB so pages can render from local cache first.
-      try { import("https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js").then(({enableIndexedDbPersistence}) => enableIndexedDbPersistence(db).catch(() => {})).catch(() => {}); } catch (_) {}
-
-
-    let readyResolve;
-    window.__pujaGlobalReady = new Promise(resolve => { readyResolve = resolve; });
-
-    window.__saveDeveloperDetailsToCloud = async function(dev) {
-      const ctx = await window.__pujaGlobalReady;
-      await setDoc(doc(ctx.db, "settings", "developerInfo"), {
-        name: String(dev?.name || "").trim(),
-        mobile: String(dev?.mobile || "").trim(),
-        email: String(dev?.email || "").trim(),
-        updatedAt: Date.now()
-      }, { merge: true });
-      applyDeveloperInfo(dev);
-    };
-
-    window.__saveCommitteeInfoToCloud = async function(info) {
-      const ctx = await window.__pujaGlobalReady;
-      const data = {
-        name: String(info?.name || DEFAULT_COMMITTEE.name).trim() || DEFAULT_COMMITTEE.name,
-        establishedYear: String(info?.establishedYear || DEFAULT_COMMITTEE.establishedYear).trim() || DEFAULT_COMMITTEE.establishedYear,
-        registrationNo: String(info?.registrationNo || DEFAULT_COMMITTEE.registrationNo).trim() || DEFAULT_COMMITTEE.registrationNo,
-        address: String(info?.address || DEFAULT_COMMITTEE.address).trim() || DEFAULT_COMMITTEE.address,
-        mobile: String(info?.mobile || "").trim()
-      };
-      await setDoc(doc(ctx.db, "settings", "committeeInfo"), { ...data, updatedAt: Date.now() }, { merge: true });
-
-      // Keep the already-existing per-page heading system in sync with the common committee name.
-      const allNames = {
-        dashboard: data.name, members: data.name, chada: data.name,
-        expense: data.name, booking: data.name, sales: data.name,
-        treasury: data.name, daitobonton: data.name, settings: data.name
-      };
-      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...allNames, updatedAt: Date.now() }, { merge: true });
-      applyCommitteeInfo(data);
-      try { localStorage.setItem("pujaCommitteeNames", JSON.stringify(allNames)); } catch (_) {}
-    };
-
-    // Override the older heading helper so its save also uses the authenticated Firebase app.
-    window.__saveCommitteeNamesToCloud = async function(names) {
-      const ctx = await window.__pujaGlobalReady;
-      await setDoc(doc(ctx.db, "settings", "committeeNames"), { ...(names || {}), updatedAt: Date.now() }, { merge: true });
-    };
-
-    onAuthStateChanged(auth, user => {
-      if (!user) return;
-      readyResolve({ auth, db, user });
-
-      onSnapshot(doc(db, "settings", "developerInfo"), snap => {
-        applyDeveloperInfo(snap.exists() ? snap.data() : DEFAULT_DEV);
-      }, err => console.warn("Developer details sync failed:", err));
-
-      onSnapshot(doc(db, "settings", "committeeInfo"), snap => {
-        applyCommitteeInfo(snap.exists() ? snap.data() : readLocalCommittee());
-      }, err => console.warn("Committee info sync failed:", err));
-    });
-  }).catch(err => console.error("Global settings sync init failed:", err));
-
-  window.saveCommitteeInfo = async function(e) {
-    if (e) e.preventDefault();
-    const info = {
-      name: document.getElementById("committeeInfoName")?.value || "",
-      establishedYear: document.getElementById("committeeInfoEstablished")?.value || "",
-      registrationNo: document.getElementById("committeeInfoReg")?.value || "",
-      address: document.getElementById("committeeInfoAddress")?.value || "",
-      mobile: document.getElementById("committeeInfoMobile")?.value || ""
-    };
-    try {
-      if (!window.__saveCommitteeInfoToCloud) throw new Error("cloud_not_ready");
-      await window.__saveCommitteeInfoToCloud(info);
-      alert("কমিটির তথ্য সেভ হয়েছে। এখন সব পেজে একই তথ্য দেখা যাবে।");
-    } catch (err) {
-      console.error("Committee info cloud save failed:", err);
-      alert("কমিটির তথ্য সেভ হয়নি। ইন্টারনেট/Firestore সংযোগ পরীক্ষা করুন।");
-    }
-  };
-})();
-</script>
-
-<script type="module" id="committee-global-sync">
-(() => {
-  const FIREBASE_CONFIG = {
-    apiKey: "AIzaSyByG-eBGnsUMx1Zchs8sJV9MNZL-Sx0Nqs",
-    authDomain: "durgapuja-2026.firebaseapp.com",
-    projectId: "durgapuja-2026",
-    storageBucket: "durgapuja-2026.firebasestorage.app",
-    messagingSenderId: "625976130920",
-    appId: "1:625976130920:web:60190b21f1c7563cdd2add"
-  };
-  const DEFAULT = {
-    name: "নেকড়ামারী সর্বজনীন দুর্গোৎসব কমিটি", establishedYear: "2009", registrationNo: "S0014684",
-    village: "সহরা", post: "আদিনা স্টেশন", policeDistrict: "মালদা", pincode: "732128",
-    address: "সাং:- সহরা, পোস্ট:- আদিনা স্টেশন, থানা ও জেলা:- মালদা, পিন:- 732128",
-    mobile: "9933371702", mobile2: ""
-  };
-  const phoneClean = v => String(v || '').trim().replace(/[^0-9+]/g,'');
-  const set = (id, value, prop='textContent') => { const el=document.getElementById(id); if(el) el[prop]=value; };
-  const normalize = raw => {
-    const d={...DEFAULT,...(raw||{})};
-    const village=String(d.village||'').trim(), post=String(d.post||'').trim(), police=String(d.policeDistrict||d.police||d.district||'').trim(), pin=String(d.pincode||'').trim();
-    const address=(village||post||police||pin) ? [village?`সাং:- ${village}`:'',post?`পোস্ট:- ${post}`:'',police?`থানা ও জেলা:- ${police}`:'',pin?`পিন:- ${pin}`:''].filter(Boolean).join(', ') : String(d.address||DEFAULT.address);
-    return {name:String(d.name||DEFAULT.name),establishedYear:String(d.establishedYear||DEFAULT.establishedYear),registrationNo:String(d.registrationNo||DEFAULT.registrationNo),village,post,policeDistrict:police,pincode:pin,address,mobile:String(d.mobile||''),mobile2:String(d.mobile2||'')};
-  };
-  function reveal(){
-    const h=document.getElementById('committeePageHeading');
-    if(h){h.style.visibility='visible'; h.parentElement?.querySelectorAll(':scope > p').forEach(x=>x.style.visibility='visible');}
-  }
-  function apply(raw, revealNow=true){
-    const d=normalize(raw);
-    try{localStorage.setItem('pujaCommitteeInfo',JSON.stringify(d));}catch(_){}
-    set('committeePageHeading',d.name);
-    set('committeeEstablishedYear',d.establishedYear);
-    set('committeeRegistrationNo',d.registrationNo);
-    set('committeeAddress',d.address);
-    const wrap=document.getElementById('committeeMobileWrap');
-    if(wrap){wrap.innerHTML=''; [d.mobile,d.mobile2].map(phoneClean).filter(Boolean).forEach((n,i)=>{if(i){const sep=document.createElement('span');sep.textContent=' / ';wrap.appendChild(sep);} const a=document.createElement('a');a.href='tel:'+n;a.className='hover:underline';a.textContent=n;wrap.appendChild(a);});}
-    const mobileEl=document.getElementById('committeeMobile');
-    if(mobileEl) mobileEl.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');
-    const link=document.getElementById('committeeMobileLink');
-    if(link){link.href='tel:'+phoneClean(d.mobile||d.mobile2); if(mobileEl) link.textContent=[d.mobile,d.mobile2].filter(Boolean).join(' / ');}
-    try{localStorage.setItem('pujaCommitteeNames',JSON.stringify({dashboard:d.name,members:d.name,chada:d.name,expense:d.name,booking:d.name,sales:d.name,treasury:d.name,daitobonton:d.name,settings:d.name}));}catch(_){}
-    try{localStorage.setItem('pujaCommitteeName',d.name);}catch(_){}
-    window.__getCommitteeNameForOutput = () => { try { return JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null')?.name || d.name; } catch(_) { return d.name; } };
-    if(revealNow) reveal();
-  }
-  let cached=null; try{cached=JSON.parse(localStorage.getItem('pujaCommitteeInfo')||'null');}catch(_){}
-  apply(cached || DEFAULT, !!cached);
-  const revealTimer=setTimeout(reveal,7000);
-  Promise.all([
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js'),
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js'),
-    import('https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js')
-  ]).then(([am,authm,fsm])=>{
-    const {getApps,getApp,initializeApp}=am, {getAuth,onAuthStateChanged}=authm, {getFirestore,doc,onSnapshot}=fsm;
-    let app; try{app=getApps().length?getApp():initializeApp(FIREBASE_CONFIG);}catch(_){app=getApps()[0]||initializeApp(FIREBASE_CONFIG,'committeeGlobalSync');}
-    const auth=getAuth(app), db=getFirestore(app);
-    const start=()=>onSnapshot(doc(db,'settings','committeeInfo'), snap=>{apply(snap.exists()?snap.data():(cached||DEFAULT)); clearTimeout(revealTimer); reveal();}, err=>{console.warn('Global committee info sync failed:',err); reveal();});
-    onAuthStateChanged(auth,user=>{ if(user) start(); else reveal(); });
-  }).catch(err=>{console.warn('Global committee sync init failed:',err); reveal();});
-})();
-</script>
-</body>
+      window.addEventListener("DOMContentLoaded", () => {
+        loadDevData();
+        loadClubLogo();
+      });
+    </script>
+  </body>
 </html>
