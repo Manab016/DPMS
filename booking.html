@@ -1377,7 +1377,7 @@
         if(!stockStartTicket || !stockEndTicket || stockEndTicket < stockStartTicket){alert("আগে টিকিট স্টকের শুরু ও শেষ নম্বর সেভ করুন।");return;}
 
         const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Stock Books");
-        const headers=["টিকিট থেকে","টিকিট পর্যন্ত","Stock","Sell","স্ট্যাটাস"],rows=[];
+        const headers=["টিকিট থেকে","টিকিট পর্যন্ত","স্টক","সেল","স্ট্যাটাস"],rows=[];
         let actualStockTotal=0;
         let actualSellTotal=0;
 
@@ -1424,16 +1424,15 @@
 
           const sell=soldNumbers.length;
           const stock=Math.max(0,totalInBook-sell);
+          const status=stock===0 ? "নেই" : "স্টক";
 
-          // পুরো বই বিক্রি হয়ে গেলে Stock Export-এ বইটি থাকবে না।
-          if(stock<=0) continue;
-
+          // সম্পূর্ণ বিক্রি হওয়া বইও দেখানো হবে: স্টক ০, সেল ২৫, স্ট্যাটাস "নেই"।
           actualStockTotal += stock;
           actualSellTotal += sell;
-          rows.push([from,to,stock,sell,"স্টক"]);
+          rows.push([from,to,stock,sell,status]);
         }
 
-        // কোনো stock না থাকলে কোনো বই দেখানোর দরকার নেই।
+        // Actual Total-এ শুধু বর্তমান Stock এবং মোট Sell দেখানো হবে; মোট Ticket নয়।
         const totalRow={1:"Actual Total",3:actualStockTotal,4:actualSellTotal};
         styleExportSheet(ws,headers,rows,"টিকিট স্টক ও বই তালিকা",totalRow);
         await downloadWorkbook(wb,"টিকিট স্টক ও বই তালিকা.xlsx");
