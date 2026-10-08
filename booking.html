@@ -1375,15 +1375,67 @@
       window.exportStockBookReport=async function(){
         if(typeof ExcelJS==="undefined"){alert("ExcelJS লোড হয়নি।");return;}
         if(!stockStartTicket || !stockEndTicket || stockEndTicket < stockStartTicket){alert("আগে টিকিট স্টকের শুরু ও শেষ নম্বর সেভ করুন।");return;}
+
         const wb=new ExcelJS.Workbook(),ws=wb.addWorksheet("Stock Books");
-        const bookCount=Math.ceil(ticketStock/TICKETS_PER_BOOK);
-        const headers=["বই নম্বর","টিকিট থেকে","টিকিট পর্যন্ত","প্রতি বই টিকিট","স্ট্যাটাস"],rows=[];
+        const headers=["টিকিট থেকে","টিকিট পর্যন্ত","Stock","Sell","স্ট্যাটাস"],rows=[];
+        let actualStockTotal=0;
+        let actualSellTotal=0;
+
+        const soldTicketSet=new Set();
+        const quantityOnlySales=[];
+
+        // বিক্রির প্রকৃত ticket number থাকলে সেটাই authoritative ধরা হবে।
+        allSalesData.forEach(sale=>{
+          const ticketNumbers=getSaleTicketNumbers(sale);
+          if(ticketNumbers.size>0){
+            ticketNumbers.forEach(n=>{
+              if(n>=stockStartTicket && n<=stockEndTicket) soldTicketSet.add(n);
+            });
+          }else{
+            quantityOnlySales.push(sale);
+          }
+        });
+
+        const bookCount=Math.ceil((stockEndTicket-stockStartTicket+1)/TICKETS_PER_BOOK);
+
         for(let b=0;b<bookCount;b++){
           const from=stockStartTicket+(b*TICKETS_PER_BOOK);
           const to=Math.min(stockEndTicket,from+TICKETS_PER_BOOK-1);
-          rows.push([from,from,to,to-from+1,"স্টক"]);
+          const totalInBook=to-from+1;
+
+          let soldNumbers=[];
+          for(let n=from;n<=to;n++){
+            if(soldTicketSet.has(n)) soldNumbers.push(n);
+          }
+
+          // পুরনো quantity-only sales record থাকলে সেই বইয়ের quantity-ও হিসাব করা হবে।
+          // Explicit ticket-number sales আগে থেকেই counted থাকলে আবার যোগ হবে না।
+          if(soldNumbers.length===0){
+            const bookNoKey=normalizeBookNo(String(from));
+            let quantitySold=0;
+            quantityOnlySales.forEach(sale=>{
+              const saleBook=normalizeBookNo(sale.bookNo ?? sale.book ?? sale.bookNumber);
+              if(saleBook!==bookNoKey) return;
+              quantitySold += Math.max(0,Number(sale.quantity ?? sale.tickets ?? sale.ticketCount ?? sale.count ?? 0)||0);
+            });
+            quantitySold=Math.min(totalInBook,quantitySold);
+            for(let i=0;i<quantitySold;i++) soldNumbers.push(from+i);
+          }
+
+          const sell=soldNumbers.length;
+          const stock=Math.max(0,totalInBook-sell);
+
+          // পুরো বই বিক্রি হয়ে গেলে Stock Export-এ বইটি থাকবে না।
+          if(stock<=0) continue;
+
+          actualStockTotal += stock;
+          actualSellTotal += sell;
+          rows.push([from,to,stock,sell,"স্টক"]);
         }
-        styleExportSheet(ws,headers,rows,"টিকিট স্টক ও বই তালিকা",{1:"সর্বমোট",4:ticketStock,5:`${bookCount} বই`});
+
+        // কোনো stock না থাকলে কোনো বই দেখানোর দরকার নেই।
+        const totalRow={1:"Actual Total",3:actualStockTotal,4:actualSellTotal};
+        styleExportSheet(ws,headers,rows,"টিকিট স্টক ও বই তালিকা",totalRow);
         await downloadWorkbook(wb,"টিকিট স্টক ও বই তালিকা.xlsx");
       };
 
