@@ -1518,14 +1518,24 @@
         return;
       }
 
-      let target = salesData;
-      let title = "সম্পূর্ণ টিকিট বিক্রয় রিপোর্ট";
+      // Export exactly the same search-matched sales that are shown in the tables.
+      const search = (document.getElementById("salesSearchInput")?.value || "").trim().toLowerCase();
+      const searchedSales = salesData.filter(sale => {
+        const member = sale.type === "member" ? (findMemberByName(sale.name) || {}) : {};
+        const mid = sale.memberId || getMemberId(member);
+        return !search || [
+          sale.name, mid, sale.bookNo, sale.date, sale.startTicket, sale.endTicket
+        ].some(v => String(v || "").toLowerCase().includes(search));
+      });
+
+      let target = searchedSales;
+      let title = search ? "সার্চ করা টিকিট বিক্রয় রিপোর্ট" : "সম্পূর্ণ টিকিট বিক্রয় রিপোর্ট";
       if (type === "member") {
-        target = salesData.filter(s => (s.type || "member") === "member");
-        title = "সদস্য টিকিট বিক্রয় রিপোর্ট";
+        target = searchedSales.filter(s => (s.type || "member") === "member");
+        title = search ? "সার্চ করা সদস্য টিকিট বিক্রয় রিপোর্ট" : "সদস্য টিকিট বিক্রয় রিপোর্ট";
       } else if (type === "other") {
-        target = salesData.filter(s => s.type === "other");
-        title = "অন্যান্য টিকিট বিক্রয় রিপোর্ট";
+        target = searchedSales.filter(s => s.type === "other");
+        title = search ? "সার্চ করা অন্যান্য টিকিট বিক্রয় রিপোর্ট" : "অন্যান্য টিকিট বিক্রয় রিপোর্ট";
       }
 
       const wb = new ExcelJS.Workbook();
