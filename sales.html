@@ -227,6 +227,9 @@
           <button onclick="openAddSalesModal()" class="bg-orange-600 hover:bg-orange-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">
             ➕ নতুন টিকিট বিক্রয়
           </button>
+          <button type="button" onclick="openQuickBookSaleModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">
+            ⚡ বই নম্বর দিয়ে দ্রুত বিক্রয়
+          </button>
           <button onclick="deleteMarkedSales()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-xs md:text-sm font-bold shadow-sm flex items-center gap-1">
             ☑️ মার্ক ডিলিট
           </button>
@@ -434,6 +437,41 @@
           <button type="button" onclick="closeSalesModal()" class="w-full bg-white border border-gray-300 text-gray-700 py-2.5 rounded-xl font-bold hover:bg-gray-100">বাতিল</button>
           <button type="button" onclick="saveSalesForm()" id="saveSaleBtn" class="w-full bg-orange-600 text-white py-2.5 rounded-xl font-bold hover:bg-orange-700 shadow-md">যোগ করুন</button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- বই নম্বর দিয়ে দ্রুত টিকিট বিক্রয় -->
+  <div id="quickBookSaleModal" class="fixed inset-0 bg-black/60 hidden items-center justify-center p-3 sm:p-5 z-50 overflow-y-auto">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-emerald-200 p-5 relative my-auto">
+      <button type="button" onclick="closeQuickBookSaleModal()" class="absolute top-3 right-4 text-gray-400 hover:text-gray-700 text-lg font-bold">✕</button>
+      <h3 class="text-lg font-bold text-emerald-700 mb-1 pr-7">⚡ বই নম্বর দিয়ে দ্রুত বিক্রয়</h3>
+      <p class="text-xs text-gray-500 mb-4">শুধু বই নম্বর দিন। বইটি কার, মোট কত টিকিট এবং আগে কত বিক্রি হয়েছে দেখা যাবে।</p>
+      <label class="block text-xs font-bold text-gray-600 mb-1">বই নম্বর *</label>
+      <input id="quickSaleBookNo" type="text" oninput="checkQuickBookSale()" placeholder="বই নম্বর লিখুন" class="w-full p-2.5 border rounded-lg text-sm mb-3">
+      <div id="quickSaleBookInfo" class="hidden rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-sm mb-3"></div>
+      <div id="quickSaleDateBox" class="hidden mb-3">
+        <label class="block text-xs font-bold text-gray-600 mb-1">তারিখ *</label>
+        <input id="quickSaleDate" type="date" class="w-full p-2.5 border rounded-lg text-sm">
+      </div>
+      <div id="quickSaleQuantityBox" class="hidden">
+        <label class="block text-xs font-bold text-gray-600 mb-1">এবার কতটি টিকিট বিক্রি হলো? *</label>
+        <input id="quickSaleQuantity" type="number" min="1" step="1" oninput="updateQuickSaleAmount()" placeholder="বিক্রিত টিকিটের সংখ্যা" class="w-full p-2.5 border rounded-lg text-sm">
+        <div class="grid grid-cols-2 gap-2 mt-3">
+          <div class="rounded-lg bg-gray-50 border p-3">
+            <div class="text-[11px] text-gray-500">প্রতি টিকিট</div>
+            <div class="font-bold text-gray-800">₹<span id="quickSalePrice">100</span></div>
+          </div>
+          <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-3">
+            <div class="text-[11px] text-emerald-700">মোট বিক্রির টাকা (বাকি)</div>
+            <div class="font-extrabold text-emerald-700">₹<span id="quickSaleTotal">0</span></div>
+          </div>
+        </div>
+        <p class="text-[11px] text-orange-700 mt-2">এই দ্রুত এন্ট্রিতে জমা ₹০ থাকবে। পুরো বিক্রির টাকা বাকি হিসেবে থাকবে; পূজা কোষাধ্যক্ষের নামে জমা দেখানো হবে না।</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3 mt-4">
+        <button type="button" onclick="closeQuickBookSaleModal()" class="border border-gray-300 rounded-xl py-2.5 font-bold text-gray-700">বাতিল</button>
+        <button type="button" id="quickSaleSaveBtn" onclick="saveQuickBookSale()" disabled class="bg-emerald-600 disabled:opacity-50 text-white rounded-xl py-2.5 font-bold">বাকি হিসেবে সেভ</button>
       </div>
     </div>
   </div>
@@ -889,13 +927,8 @@
 
       box.classList.remove("hidden");
 
-      // Keep the existing convenience behavior: if this member has a booking,
-      // use its book number to populate the sale form.
-      const first = memberBookings.find(b => b.bookNo) || memberBookings[0];
-      if (first?.bookNo) {
-        document.getElementById("saleBookNo").value = first.bookNo;
-        checkBookDetails();
-      }
+      // Show previous ticket bookings only. Do not change the book number
+      // entered in the sale form when a member is selected.
     }
 
     window.toggleTicketNumbers = function() {
@@ -939,7 +972,13 @@
       });
 
       const startInput = document.getElementById("saleStartTicket");
-      if (maxEndTicket > 0 && !editSaleId) startInput.value = maxEndTicket + 1;
+      // Always recalculate the next ticket from the current active sales list.
+      // If the last sale (or every sale) was deleted, reset to this booking's
+      // own starting ticket instead of leaving an old ticket number in the form.
+      if (!editSaleId) {
+        const bookingStart = Math.max(1, Number(book?.startTicket || 1));
+        startInput.value = maxEndTicket > 0 ? maxEndTicket + 1 : bookingStart;
+      }
 
       if (book) {
         const total = Number(book.quantity || 0);
@@ -958,6 +997,179 @@
         window.currentBookingSold = 0;
       }
       calcSaleQty();
+    };
+
+    let quickSaleBooking = null;
+    let quickSaleMember = null;
+
+    window.openQuickBookSaleModal = function() {
+      quickSaleBooking = null;
+      quickSaleMember = null;
+      document.getElementById("quickSaleBookNo").value = "";
+      document.getElementById("quickSaleDate").value = new Date().toISOString().split("T")[0];
+      document.getElementById("quickSaleBookInfo").innerHTML = "";
+      document.getElementById("quickSaleBookInfo").classList.add("hidden");
+      document.getElementById("quickSaleDateBox").classList.add("hidden");
+      document.getElementById("quickSaleQuantityBox").classList.add("hidden");
+      document.getElementById("quickSaleQuantity").value = "";
+      document.getElementById("quickSaleTotal").textContent = "0";
+      document.getElementById("quickSaleSaveBtn").disabled = true;
+      const modal = document.getElementById("quickBookSaleModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      setTimeout(() => document.getElementById("quickSaleBookNo").focus(), 50);
+    };
+
+    window.closeQuickBookSaleModal = function() {
+      const modal = document.getElementById("quickBookSaleModal");
+      modal.classList.add("hidden");
+      modal.classList.remove("flex");
+      quickSaleBooking = null;
+      quickSaleMember = null;
+    };
+
+    window.checkQuickBookSale = function() {
+      const bookNo = document.getElementById("quickSaleBookNo").value.trim();
+      const info = document.getElementById("quickSaleBookInfo");
+      const qtyBox = document.getElementById("quickSaleQuantityBox");
+      const dateBox = document.getElementById("quickSaleDateBox");
+      const saveBtn = document.getElementById("quickSaleSaveBtn");
+      quickSaleBooking = null;
+      quickSaleMember = null;
+      qtyBox.classList.add("hidden");
+      dateBox.classList.add("hidden");
+      saveBtn.disabled = true;
+      document.getElementById("quickSaleQuantity").value = "";
+      document.getElementById("quickSaleTotal").textContent = "0";
+
+      if (!bookNo) {
+        info.classList.add("hidden");
+        return;
+      }
+
+      const book = bookingsData.find(b => String(b.bookNo || "").trim().toLowerCase() === bookNo.toLowerCase());
+      if (!book) {
+        info.innerHTML = '<div class="font-bold text-red-600">এই বই নম্বরটি বুকিং তালিকায় পাওয়া যায়নি।</div>';
+        info.classList.remove("hidden");
+        return;
+      }
+
+      const ownerName = book.name || book.memberName || book.assignedMember || book.customerName || "";
+      const ownerMember = membersData.find(m => bookingBelongsToMember(book, m)) ||
+        findMemberByName(ownerName);
+      const assigned = Math.max(0, Number(book.quantity || 0));
+      const alreadySoldFromSales = salesData
+        .filter(s => String(s.bookNo || "").trim().toLowerCase() === bookNo.toLowerCase())
+        .reduce((sum, sale) => sum + Math.max(0, Number(sale.quantity || 0)), 0);
+      // Sales records are the source of truth for this Sales page. A stale
+      // bookings.sold counter must not block tickets after a sale is deleted.
+      const sold = alreadySoldFromSales;
+      const remaining = Math.max(0, assigned - sold);
+      // Quick sale always continues inside THIS booking's own ticket range.
+      // Do not use an old/corrupted sale endTicket to decide the next ticket number.
+      const bookingStart = Math.max(1, Number(book.startTicket || 1));
+      const rangeStart = bookingStart + sold;
+      const rangeEnd = Number(book.endTicket || (bookingStart + assigned - 1));
+      const availableByRange = Math.max(0, rangeEnd - rangeStart + 1);
+      const canSell = Math.min(remaining, availableByRange);
+
+      quickSaleBooking = book;
+      quickSaleMember = ownerMember || null;
+      info.innerHTML = `
+        <div class="font-extrabold text-gray-800 mb-2">বই নম্বর: ${esc(book.bookNo || bookNo)}</div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="bg-white rounded-lg p-2 border"><div class="text-[10px] text-gray-500">বইটি যার</div><div class="font-bold text-gray-800">${esc(ownerMember?.name || ownerName || "নাম পাওয়া যায়নি")}</div></div>
+          <div class="bg-white rounded-lg p-2 border"><div class="text-[10px] text-gray-500">মোট বরাদ্দ</div><div class="font-bold">${assigned} টি</div></div>
+          <div class="bg-white rounded-lg p-2 border"><div class="text-[10px] text-gray-500">আগে বিক্রি</div><div class="font-bold text-orange-700">${sold} টি</div></div>
+          <div class="bg-white rounded-lg p-2 border"><div class="text-[10px] text-gray-500">এখনও বাকি</div><div class="font-bold text-emerald-700">${canSell} টি</div></div>
+        </div>
+        ${!ownerMember && !ownerName ? '<div class="text-red-600 text-xs mt-2">বইটির বরাদ্দপ্রাপ্ত সদস্যের নাম পাওয়া যায়নি। বুকিং তথ্য যাচাই করুন।</div>' : ''}
+        ${canSell <= 0 ? '<div class="text-red-600 font-bold text-xs mt-2">এই বইয়ে আর বিক্রির টিকিট বাকি নেই।</div>' : ''}
+      `;
+      info.classList.remove("hidden");
+      dateBox.classList.remove("hidden");
+
+      if (canSell > 0 && (ownerMember || ownerName)) {
+        qtyBox.classList.remove("hidden");
+        const qtyInput = document.getElementById("quickSaleQuantity");
+        qtyInput.max = canSell;
+        qtyInput.placeholder = `১ থেকে ${canSell} টি`;
+        document.getElementById("quickSalePrice").textContent = "100";
+        updateQuickSaleAmount();
+      }
+      quickSaleBooking._quickCanSell = canSell;
+      quickSaleBooking._quickSold = sold;
+      quickSaleBooking._quickStart = rangeStart;
+      quickSaleBooking._quickEnd = rangeEnd;
+    };
+
+    window.updateQuickSaleAmount = function() {
+      const qtyInput = document.getElementById("quickSaleQuantity");
+      const qty = Math.max(0, Math.floor(Number(qtyInput.value || 0)));
+      const max = Number(quickSaleBooking?._quickCanSell || 0);
+      document.getElementById("quickSaleTotal").textContent = String(qty * 100);
+      document.getElementById("quickSaleSaveBtn").disabled = !(quickSaleBooking && qty >= 1 && qty <= max);
+    };
+
+    window.saveQuickBookSale = async function() {
+      const btn = document.getElementById("quickSaleSaveBtn");
+      if (!quickSaleBooking) return;
+      const qty = Math.floor(Number(document.getElementById("quickSaleQuantity").value || 0));
+      const max = Number(quickSaleBooking._quickCanSell || 0);
+      if (!qty || qty < 1 || qty > max) {
+        alert(`১ থেকে ${max} টি টিকিটের মধ্যে সংখ্যা লিখুন।`);
+        return;
+      }
+
+      btn.disabled = true;
+      const book = quickSaleBooking;
+      // Save exactly the book number currently entered in the shortcut form.
+      const enteredBookNo = String(document.getElementById("quickSaleBookNo").value || "").trim();
+      const bookNo = enteredBookNo;
+      if (!bookNo || String(book.bookNo || "").trim().toLowerCase() !== bookNo.toLowerCase()) {
+        alert("বই নম্বরটি আবার যাচাই করুন।");
+        btn.disabled = false;
+        return;
+      }
+      const ownerName = quickSaleMember?.name || book.name || book.memberName || book.assignedMember || book.customerName || "";
+      const startTicket = Number(book._quickStart || 1);
+      const endTicket = startTicket + qty - 1;
+      const assignedEnd = Number(book._quickEnd || (Number(book.startTicket || 1) + Number(book.quantity || 0) - 1));
+      if (endTicket > assignedEnd) {
+        alert("এই বইয়ের বরাদ্দ টিকিট নম্বরের বাইরে বিক্রি করা যাবে না।");
+        btn.disabled = false;
+        return;
+      }
+
+      try {
+        const payload = {
+          type: "member",
+          name: ownerName,
+          memberId: quickSaleMember ? getMemberId(quickSaleMember) : (book.memberId || book.memberID || book.autoId || null),
+          date: document.getElementById("quickSaleDate").value || new Date().toISOString().split("T")[0],
+          bookNo,
+          startTicket,
+          endTicket,
+          hasTicketNumbers: true,
+          quantity: qty,
+          pricePerTicket: 100,
+          totalAmount: qty * 100,
+          initialPaid: 0,
+          collector: "",
+          timestamp: Date.now(),
+          quickBookEntry: true
+        };
+        await addDoc(collection(db, "sales"), payload);
+        await updateDoc(doc(db, "bookings", book.id), {
+          sold: Number(book._quickSold || book.sold || 0) + qty
+        });
+        closeQuickBookSaleModal();
+        alert(`দ্রুত বিক্রয় সেভ হয়েছে। ${qty} টি টিকিটের ₹${qty * 100} টাকা সম্পূর্ণ বাকি হিসেবে রাখা হয়েছে; পূজা কোষাধ্যক্ষের নামে জমা হয়নি।`);
+      } catch (e) {
+        console.error(e);
+        alert("দ্রুত বিক্রয় সেভ করা যায়নি: " + (e?.message || e));
+        btn.disabled = false;
+      }
     };
 
     window.calcSaleQty = function() {
@@ -1022,11 +1234,24 @@
         const isChecked = document.getElementById("useTicketNumbers").checked;
         const startTicket = isChecked ? (parseInt(document.getElementById("saleStartTicket").value) || 0) : "";
         const endTicket = isChecked ? (parseInt(document.getElementById("saleEndTicket").value) || 0) : "";
-        const quantity = parseInt(document.getElementById("saleQuantity").value) || 0;
         const pricePerTicket = parseInt(document.getElementById("salePricePerTicket").value) || 100;
-        const totalAmount = parseInt(document.getElementById("saleTotalAmount").value) || 0;
-        const initialPaid = parseInt(document.getElementById("salePaidAmount").value) || 0;
-        const collector = document.getElementById("saleCollector").value.trim();
+        const quantity = isChecked
+          ? (startTicket > 0 && endTicket >= startTicket ? endTicket - startTicket + 1 : 0)
+          : (parseInt(document.getElementById("saleQuantity").value) || 0);
+        const totalAmount = quantity * pricePerTicket;
+        document.getElementById("saleQuantity").value = quantity || "";
+        document.getElementById("saleTotalAmount").value = totalAmount || "";
+        const editingSale = editSaleId ? salesData.find(s => s.id === editSaleId) : null;
+        const isQuickBookSale = !!editingSale?.quickBookEntry;
+        const initialPaid = isQuickBookSale ? 0 : (parseInt(document.getElementById("salePaidAmount").value) || 0);
+        const collector = isQuickBookSale ? "" : document.getElementById("saleCollector").value.trim();
+
+        // A quick-book sale is intentionally saved as outstanding, not as a
+        // payment received by the treasurer.
+        if (isQuickBookSale) {
+          document.getElementById("salePaidAmount").value = "0";
+          document.getElementById("saleCollector").value = "";
+        }
 
         if (!date || !bookNo || quantity <= 0) {
           alert("সব ঘর সঠিকভাবে পূরণ করুন (পরিমাণ 0 হতে পারে না)");
@@ -1088,6 +1313,7 @@
           totalAmount,
           initialPaid,
           collector,
+          ...(isQuickBookSale ? { quickBookEntry: true } : {}),
           timestamp: Date.now()
         };
 
@@ -1352,13 +1578,19 @@
       document.querySelectorAll(`.${type}-sale-checkbox`).forEach(cb => cb.checked = source.checked);
     };
 
-    async function decrementBooking(bookNo, qty) {
-      if (!bookNo || !qty) return;
-      const book = bookingsData.find(b => String(b.bookNo || "").toLowerCase() === String(bookNo).toLowerCase());
-      if (book) {
-        const newSold = Math.max(0, Number(book.sold || 0) - Number(qty));
-        await updateDoc(doc(db, "bookings", book.id), { sold: newSold });
-      }
+    async function syncBookingSoldFromSales(bookNo, excludedSaleIds = []) {
+      if (!bookNo) return;
+      const normalizedBookNo = String(bookNo).trim().toLowerCase();
+      const excluded = new Set(excludedSaleIds.map(String));
+      const book = bookingsData.find(b => String(b.bookNo || "").trim().toLowerCase() === normalizedBookNo);
+      if (!book) return;
+
+      // Recalculate from the remaining sales records instead of subtracting
+      // from bookings.sold, which can already be stale or out of sync.
+      const remainingSold = salesData
+        .filter(s => !excluded.has(String(s.id)) && String(s.bookNo || "").trim().toLowerCase() === normalizedBookNo)
+        .reduce((sum, s) => sum + Math.max(0, Number(s.quantity || 0)), 0);
+      await updateDoc(doc(db, "bookings", book.id), { sold: remainingSold });
     }
 
     window.editSale = function(id) {
@@ -1434,8 +1666,16 @@
       document.getElementById("bookDetailsDisplay").classList.add("hidden");
       if (sale.bookNo) checkBookDetails();
 
-      document.getElementById("saleQuantity").value = sale.quantity || 0;
-      document.getElementById("saleTotalAmount").value = sale.totalAmount || 0;
+      const actualTicketCount = sale.hasTicketNumbers !== false &&
+        Number(sale.startTicket) > 0 && Number(sale.endTicket) >= Number(sale.startTicket)
+          ? Number(sale.endTicket) - Number(sale.startTicket) + 1
+          : Number(sale.quantity || 0);
+      document.getElementById("saleQuantity").value = actualTicketCount;
+      document.getElementById("saleTotalAmount").value = actualTicketCount * (Number(sale.pricePerTicket) || 100);
+      if (sale.quickBookEntry) {
+        document.getElementById("salePaidAmount").value = "0";
+        document.getElementById("saleCollector").value = "";
+      }
       calcDueAmount();
 
       const modal = document.getElementById("salesModal");
@@ -1447,7 +1687,7 @@
       if (!confirm("আপনি কি এই বিক্রয় রেকর্ডটি মুছে ফেলতে চান?")) return;
       try {
         await deleteDoc(doc(db, "sales", id));
-        await decrementBooking(bookNo, qty);
+        await syncBookingSoldFromSales(bookNo, [id]);
       } catch (e) {
         alert("মুছে ফেলা সম্ভব হয়নি: " + e.message);
       }
@@ -1461,23 +1701,20 @@
       }
       if (!confirm(`আপনি কি নির্বাচিত ${checked.length} টি বিক্রয় রেকর্ড মুছে ফেলতে চান?`)) return;
 
-      const decrements = {};
+      const removedIds = [];
+      const affectedBooks = new Set();
       try {
         for (const cb of checked) {
           const sale = salesData.find(s => s.id === cb.value);
           if (!sale) continue;
           await deleteDoc(doc(db, "sales", sale.id));
-          const key = String(sale.bookNo || "").toLowerCase();
-          if (key && sale.quantity) decrements[key] = (decrements[key] || 0) + Number(sale.quantity || 0);
+          removedIds.push(sale.id);
+          const key = String(sale.bookNo || "").trim().toLowerCase();
+          if (key) affectedBooks.add(String(sale.bookNo).trim());
         }
 
-        for (const key in decrements) {
-          const book = bookingsData.find(b => String(b.bookNo || "").toLowerCase() === key);
-          if (book) {
-            await updateDoc(doc(db, "bookings", book.id), {
-              sold: Math.max(0, Number(book.sold || 0) - decrements[key])
-            });
-          }
+        for (const bookNo of affectedBooks) {
+          await syncBookingSoldFromSales(bookNo, removedIds);
         }
       } catch (e) {
         alert("মুছে ফেলার সময় ত্রুটি হয়েছে: " + e.message);
@@ -1491,21 +1728,18 @@
       }
       if (!confirm("সতর্কতা! সমস্ত টিকিট বিক্রয় রেকর্ড মুছে ফেলা হবে। আপনি কি নিশ্চিত?")) return;
 
-      const decrements = {};
+      const removedIds = [];
+      const affectedBooks = new Set();
       try {
         for (const sale of salesData) {
           await deleteDoc(doc(db, "sales", sale.id));
-          const key = String(sale.bookNo || "").toLowerCase();
-          if (key && sale.quantity) decrements[key] = (decrements[key] || 0) + Number(sale.quantity || 0);
+          removedIds.push(sale.id);
+          const key = String(sale.bookNo || "").trim().toLowerCase();
+          if (key) affectedBooks.add(String(sale.bookNo).trim());
         }
 
-        for (const key in decrements) {
-          const book = bookingsData.find(b => String(b.bookNo || "").toLowerCase() === key);
-          if (book) {
-            await updateDoc(doc(db, "bookings", book.id), {
-              sold: Math.max(0, Number(book.sold || 0) - decrements[key])
-            });
-          }
+        for (const bookNo of affectedBooks) {
+          await syncBookingSoldFromSales(bookNo, removedIds);
         }
       } catch (e) {
         alert("সব বিক্রয় মুছতে সমস্যা হয়েছে: " + e.message);
